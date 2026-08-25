@@ -39,7 +39,7 @@ import { isWidgetInputSlot } from "./node/slotUtils"
 import { Reroute, type RerouteId } from "./Reroute"
 import { stringOrEmpty } from "./strings"
 import { type GraphOrSubgraph, Subgraph } from "./subgraph/Subgraph"
-import { topologicalSortSubgraphs } from "./subgraph/subgraphDeduplication"
+import { deduplicateSubgraphNodeIds, topologicalSortSubgraphs } from "./subgraph/subgraphDeduplication"
 import { SubgraphInput } from "./subgraph/SubgraphInput"
 import { SubgraphOutput } from "./subgraph/SubgraphOutput"
 import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables, walkSegment } from "./subgraph/subgraphUtils"
@@ -2436,15 +2436,33 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         this[i] = data[i]
       }
 
-      // Subgraph definitions
+      // Subgraph definitions — deduplicate node IDs before configuring.
       const subgraphs = data.definitions?.subgraphs
+      let effectiveNodesData = nodesData
       if (subgraphs) {
-        for (const subgraph of subgraphs) this.createSubgraph(subgraph)
+        const reservedNodeIds = new Set<number>()
+        for (const node of this._nodes) {
+          if (typeof node.id === "number") reservedNodeIds.add(node.id)
+        }
+        for (const sg of this.subgraphs.values()) {
+          for (const node of sg.nodes) {
+            if (typeof node.id === "number") reservedNodeIds.add(node.id)
+          }
+        }
+        for (const n of nodesData ?? []) {
+          if (typeof n.id === "number") reservedNodeIds.add(n.id)
+        }
 
-        // Configure in leaf-first order so that when a SubgraphNode is
-        // configured, its referenced subgraph definition already has its
-        // nodes/links/inputs populated.
-        const configureOrder = topologicalSortSubgraphs(subgraphs)
+        const deduplicated = this.isRootGraph
+          ? deduplicateSubgraphNodeIds(subgraphs, reservedNodeIds, this.state, nodesData)
+          : undefined
+
+        const finalSubgraphs = deduplicated?.subgraphs ?? subgraphs
+        effectiveNodesData = deduplicated?.rootNodes ?? nodesData
+
+        for (const subgraph of finalSubgraphs) this.createSubgraph(subgraph)
+
+        const configureOrder = topologicalSortSubgraphs(finalSubgraphs)
         for (const subgraph of configureOrder) {
           this.subgraphs.get(subgraph.id)?.configure(subgraph)
         }
@@ -2455,8 +2473,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       // create nodes
       this._nodes = []
-      if (nodesData) {
-        for (const n_info of nodesData) {
+      if (effectiveNodesData) {
+        for (const n_info of effectiveNodesData) {
           // stored info
           let node = LiteGraph.createNode(String(n_info.type), n_info.title)
           if (!node) {
