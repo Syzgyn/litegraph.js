@@ -236,6 +236,13 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
       console.debug("disconnectNodeInput: link ID not found in subgraphInput linkIds", link.id)
     }
 
+    if (subgraphInput.linkIds.length === 0) {
+      subgraphInput._widget = undefined
+    }
+    subgraphInput.events.dispatch("input-disconnected", {
+      input: subgraphInput,
+    })
+
     node.onConnectionsChange?.(
       NodeSlotType.OUTPUT,
       index,

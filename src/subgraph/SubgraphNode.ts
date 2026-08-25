@@ -3,7 +3,7 @@ import type { ISubgraphInput } from "@/interfaces"
 import type { BaseLGraph, LGraph } from "@/LGraph"
 import type { GraphOrSubgraph, Subgraph } from "@/subgraph/Subgraph"
 import type { ExportedSubgraphInstance } from "@/types/serialisation"
-import type { IBaseWidget } from "@/types/widgets"
+import type { IBaseWidget, TWidgetValue } from "@/types/widgets"
 import type { UUID } from "@/utils/uuid"
 
 import { RecursionError } from "@/infrastructure/RecursionError"
@@ -177,11 +177,22 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
     subgraphInput.events.addEventListener(
       "input-connected",
-      () => {
-        if (input._widget) return
+      (e) => {
+        const hasStaleBoundWidget =
+          input._widget &&
+          !this.widgets.includes(input._widget)
 
-        const widget = subgraphInput._widget
+        if (input._widget && !hasStaleBoundWidget) return
+
+        const widget = e.detail.widget ?? subgraphInput._widget
         if (!widget) return
+
+        if (hasStaleBoundWidget) {
+          this.removeWidgetByName(input.name)
+          delete input.pos
+          delete input.widget
+          input._widget = undefined
+        }
 
         this.#setWidget(subgraphInput, input, widget)
       },
@@ -295,28 +306,72 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       }
 
       this.#addSubgraphInputListeners(subgraphInput, input)
+      this.#resolveInputWidget(subgraphInput, input)
+    }
+  }
 
-      // Find the first widget that this slot is connected to
-      for (const linkId of subgraphInput.linkIds) {
-        const link = this.subgraph.getLink(linkId)
-        if (!link) {
-          console.warn(`[SubgraphNode.configure] No link found for link ID ${linkId}`, this)
-          continue
-        }
+  /**
+   * Clears all cached promoted widget views and re-resolves `input._widget`
+   * bindings from the current subgraph connections. Called after ancestor
+   * host nodes need refreshing during nested subgraph packing.
+   */
+  rebuildInputWidgetBindings(): void {
+    this.widgets.length = 0
 
-        const resolved = link.resolve(this.subgraph)
-        if (!resolved.input || !resolved.inputNode) {
-          console.warn("Invalid resolved link", resolved, this)
-          continue
-        }
+    for (const input of this.inputs) {
+      delete input.widget
+      delete input.pos
+      input._widget = undefined
+      const subgraphInput = input._subgraphSlot
+      if (!subgraphInput) continue
+      this.#resolveInputWidget(subgraphInput, input)
+    }
+  }
 
-        // No widget - ignore this link
-        const widget = resolved.inputNode.getWidgetFromSlot(resolved.input)
-        if (!widget) continue
+  /**
+   * Rebinds promoted widgets and applies saved values after nested packing.
+   */
+  restorePromotedWidgetValues(values: Map<string, TWidgetValue>): void {
+    this.rebuildInputWidgetBindings()
 
-        this.#setWidget(subgraphInput, input, widget)
-        break
+    for (const input of this.inputs) {
+      const saved = values.get(input.name)
+      if (saved === undefined) continue
+
+      const widget = this.widgets.find(w => w.name === input.name)
+      if (widget) {
+        widget.value = saved
+        continue
       }
+
+      const subgraphInput = input._subgraphSlot
+      const sourceWidget = subgraphInput?.getConnectedWidgets()[0]
+      if (!subgraphInput || !sourceWidget) continue
+
+      this.#setWidget(subgraphInput, input, sourceWidget)
+      this.widgets.at(-1)!.value = saved
+    }
+  }
+
+  #resolveInputWidget(subgraphInput: SubgraphInput, input: INodeInputSlot): void {
+    for (const linkId of subgraphInput.linkIds) {
+      const link = this.subgraph.getLink(linkId)
+      if (!link) {
+        console.warn(`[SubgraphNode.configure] No link found for link ID ${linkId}`, this)
+        continue
+      }
+
+      const resolved = link.resolve(this.subgraph)
+      if (!resolved.input || !resolved.inputNode) {
+        console.warn("Invalid resolved link", resolved, this)
+        continue
+      }
+
+      const widget = resolved.inputNode.getWidgetFromSlot(resolved.input)
+      if (!widget) continue
+
+      this.#setWidget(subgraphInput, input, widget)
+      break
     }
   }
 

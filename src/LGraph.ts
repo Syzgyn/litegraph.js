@@ -18,6 +18,7 @@ import type {
   SerialisableGraph,
   SerialisableReroute,
 } from "./types/serialisation"
+import type { IBaseWidget, TWidgetValue } from "./types/widgets"
 import type { UUID } from "@/utils/uuid"
 
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
@@ -31,6 +32,7 @@ import { LiteGraph, SubgraphNode } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import { MapProxyHandler } from "./MapProxyHandler"
 import { alignOutsideContainer, alignToContainer, createBounds } from "./measure"
+import { isWidgetInputSlot } from "./node/slotUtils"
 import { Reroute, type RerouteId } from "./Reroute"
 import { stringOrEmpty } from "./strings"
 import { type GraphOrSubgraph, Subgraph } from "./subgraph/Subgraph"
@@ -40,6 +42,7 @@ import { SubgraphOutput } from "./subgraph/SubgraphOutput"
 import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables } from "./subgraph/subgraphUtils"
 import { Alignment, LGraphEventMode } from "./types/globalEnums"
 import { getAllNestedItems } from "./utils/collections"
+import { toConcreteWidget } from "./widgets/widgetMap"
 
 /**
  * Monotonic ID counters persisted with the graph during serialisation.
@@ -1650,8 +1653,17 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const boundingRect = createBounds(items)
     if (!boundingRect) throw new Error("Failed to create bounding rect for subgraph")
 
+    const hostWidgetValues = !this.isRootGraph
+      ? this.#snapshotHostSubgraphWidgetValues()
+      : undefined
+
     const resolvedInputLinks = boundaryInputLinks.map(x => x.resolve(this))
     const resolvedOutputLinks = boundaryOutputLinks.map(x => x.resolve(this))
+
+    const widgetBackup = new Map<NodeId, readonly IBaseWidget[]>()
+    for (const node of nodes) {
+      if (node.widgets?.length) widgetBackup.set(node.id, node.widgets)
+    }
 
     const clonedNodes = multiClone(nodes)
 
@@ -1688,6 +1700,23 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const subgraph = this.createSubgraph(data)
     subgraph.configure(data)
 
+    for (const subgraphNode of subgraph.nodes) {
+      const sourceWidgets = widgetBackup.get(subgraphNode.id)
+      if (!sourceWidgets) continue
+
+      subgraphNode.widgets = sourceWidgets.map((widget) => {
+        const copy = toConcreteWidget(widget, subgraphNode).createCopyForNode(subgraphNode)
+        copy.value = widget.value
+        return copy
+      })
+
+      for (const input of subgraphNode.inputs) {
+        if (!isWidgetInputSlot(input)) continue
+        const widget = subgraphNode.widgets.find(w => w.name === input.widget.name)
+        if (widget) input.widget = { name: widget.name }
+      }
+    }
+
     // Position the subgraph input nodes
     subgraph.inputNode.arrange()
     subgraph.outputNode.arrange()
@@ -1717,10 +1746,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
     // Create subgraph node object
     const subgraphNode = LiteGraph.createNode(subgraph.id, subgraph.name, {
-      inputs: structuredClone(inputs),
       outputs: structuredClone(outputs),
     })
     if (!subgraphNode) throw new Error("Failed to create subgraph node")
+
+    subgraphNode._setConcreteSlots()
+    subgraphNode.arrange()
 
     // Resize to inputs/outputs
     subgraphNode.setSize(subgraphNode.computeSize())
@@ -1809,7 +1840,56 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       }
     }
 
+    // When nodes are packed into a nested subgraph, host SubgraphNode instances
+    // may hold stale promoted widget bindings that must be re-resolved.
+    if (!this.isRootGraph) {
+      if (subgraphNode.isSubgraphNode()) subgraphNode.rebuildInputWidgetBindings()
+      this.#refreshHostSubgraphWidgetBindings(hostWidgetValues)
+    }
+
     return { subgraph, node: subgraphNode as SubgraphNode }
+  }
+
+  #snapshotHostSubgraphWidgetValues(): Map<NodeId, Map<string, TWidgetValue>> {
+    const snapshots = new Map<NodeId, Map<string, TWidgetValue>>()
+    const allGraphs: LGraph[] = [
+      this.rootGraph,
+      ...this.rootGraph._subgraphs.values(),
+    ]
+
+    for (const graph of allGraphs) {
+      for (const node of graph._nodes) {
+        if (!node.isSubgraphNode() || node.type !== this.id) continue
+        snapshots.set(
+          node.id,
+          new Map(node.widgets.map(widget => [widget.name, widget.value])),
+        )
+      }
+    }
+
+    return snapshots
+  }
+
+  /**
+   * After packing nodes into a nested subgraph, refresh promoted widget
+   * bindings on all host {@link SubgraphNode} instances of this subgraph.
+   */
+  #refreshHostSubgraphWidgetBindings(
+    hostWidgetValues?: Map<NodeId, Map<string, TWidgetValue>>,
+  ): void {
+    const allGraphs: LGraph[] = [
+      this.rootGraph,
+      ...this.rootGraph._subgraphs.values(),
+    ]
+
+    for (const graph of allGraphs) {
+      for (const node of graph._nodes) {
+        if (!node.isSubgraphNode() || node.type !== this.id) continue
+        const values = hostWidgetValues?.get(node.id)
+        if (values) node.restorePromotedWidgetValues(values)
+        else node.rebuildInputWidgetBindings()
+      }
+    }
   }
 
   /**
