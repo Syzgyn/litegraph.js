@@ -11,3 +11,6 @@ export const SUBGRAPH_INPUT_ID = -10
 
 /** ID of the virtual output node of a subgraph. */
 export const SUBGRAPH_OUTPUT_ID = -20
+
+/** Sentinel node id for unassigned link endpoints. */
+export const UNASSIGNED_NODE_ID = -1

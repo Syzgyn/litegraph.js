@@ -11,7 +11,7 @@ import { LGraphGroup } from "@/LGraphGroup"
 import { LGraphNode } from "@/LGraphNode"
 import { createUuidv4, LiteGraph } from "@/litegraph"
 import { LLink, type ResolvedConnection } from "@/LLink"
-import { Reroute } from "@/Reroute"
+import { Reroute, type RerouteId } from "@/Reroute"
 import { nextUniqueName } from "@/strings"
 
 import { SubgraphInputNode } from "./SubgraphInputNode"
@@ -461,4 +461,41 @@ export function isSubgraphOutput(slot: unknown): slot is SubgraphOutput {
 export function isNodeSlot(slot: unknown): slot is INodeInputSlot | INodeOutputSlot {
   return slot != null && typeof slot === "object" &&
     ("link" in slot || "links" in slot)
+}
+
+interface ChainSegment {
+  segment: RerouteId[]
+  complete: boolean
+}
+
+type ChainStep = (
+  id: RerouteId,
+) => { emit: RerouteId, next: RerouteId | undefined } | undefined
+
+/**
+ * Walks a reroute chain, resolving each hop with `step`, until it runs out,
+ * hits a broken reference, or detects a cycle.
+ */
+export function walkSegment(
+  start: RerouteId | undefined,
+  step: ChainStep,
+): ChainSegment {
+  const segment: RerouteId[] = []
+  const visited = new Set<RerouteId>()
+  let id = start
+  while (id !== undefined) {
+    if (visited.has(id)) {
+      console.error("Infinite parentId loop when unpacking")
+      return { segment, complete: false }
+    }
+    visited.add(id)
+    const hop = step(id)
+    if (!hop) {
+      console.error("Broken Id link when unpacking")
+      return { segment, complete: false }
+    }
+    segment.push(hop.emit)
+    id = hop.next
+  }
+  return { segment, complete: true }
 }

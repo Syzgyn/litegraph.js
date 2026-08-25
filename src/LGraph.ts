@@ -2,6 +2,7 @@ import type { DragAndScaleState } from "./DragAndScale"
 import type { LGraphEventMap } from "./infrastructure/LGraphEventMap"
 import type {
   Dictionary,
+  HasBoundingRect,
   IContextMenuValue,
   LinkNetwork,
   LinkSegment,
@@ -9,6 +10,7 @@ import type {
   OptionalProps,
   Point,
   Positionable,
+  Size,
 } from "./interfaces"
 import type {
   ExportedSubgraph,
@@ -21,7 +23,7 @@ import type {
 import type { IBaseWidget, TWidgetValue } from "./types/widgets"
 import type { UUID } from "@/utils/uuid"
 
-import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
+import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID, UNASSIGNED_NODE_ID } from "@/constants"
 import { createUuidv4, zeroUuid } from "@/utils/uuid"
 
 import { CustomEventTarget } from "./infrastructure/CustomEventTarget"
@@ -32,6 +34,7 @@ import { LiteGraph, SubgraphNode } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import { MapProxyHandler } from "./MapProxyHandler"
 import { alignOutsideContainer, alignToContainer, createBounds } from "./measure"
+import { inputLink, outputLinks } from "./node/slotLinks"
 import { isWidgetInputSlot } from "./node/slotUtils"
 import { Reroute, type RerouteId } from "./Reroute"
 import { stringOrEmpty } from "./strings"
@@ -39,7 +42,7 @@ import { type GraphOrSubgraph, Subgraph } from "./subgraph/Subgraph"
 import { topologicalSortSubgraphs } from "./subgraph/subgraphDeduplication"
 import { SubgraphInput } from "./subgraph/SubgraphInput"
 import { SubgraphOutput } from "./subgraph/SubgraphOutput"
-import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables } from "./subgraph/subgraphUtils"
+import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables, walkSegment } from "./subgraph/subgraphUtils"
 import { Alignment, LGraphEventMode } from "./types/globalEnums"
 import { getAllNestedItems } from "./utils/collections"
 import { toConcreteWidget } from "./widgets/widgetMap"
@@ -1882,6 +1885,286 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     return { subgraph, node: subgraphNode as SubgraphNode }
+  }
+
+  /**
+   * Expands a {@link SubgraphNode} back into its interior nodes on the parent graph.
+   * Inverse of {@link convertToSubgraph}: rewires boundary links and migrates reroutes.
+   */
+  unpackSubgraph(
+    subgraphNode: SubgraphNode,
+    options?: { skipMissingNodes?: boolean },
+  ): void {
+    if (!(subgraphNode instanceof SubgraphNode))
+      throw new Error("Can only unpack Subgraph Nodes")
+
+    this.beforeChange()
+
+    try {
+      this.#unpackSubgraphImpl(subgraphNode, options)
+    } finally {
+      this.afterChange()
+    }
+  }
+
+  #unpackSubgraphImpl(
+    subgraphNode: SubgraphNode,
+    options?: { skipMissingNodes?: boolean },
+  ): void {
+    const skipMissingNodes = options?.skipMissingNodes ?? false
+
+    const positionables = [
+      ...subgraphNode.subgraph.nodes,
+      ...subgraphNode.subgraph.reroutes.values(),
+      ...subgraphNode.subgraph.groups,
+    ].map((p: { pos: Point, size?: Size }): HasBoundingRect => ({
+      boundingRect: [p.pos[0], p.pos[1], p.size?.[0] ?? 0, p.size?.[1] ?? 0],
+    }))
+    const bounds = createBounds(positionables) ?? [0, 0, 0, 0]
+    const center = [bounds[0] + bounds[2] / 2, bounds[1] + bounds[3] / 2]
+
+    const toSelect: Positionable[] = []
+    const offsetX = subgraphNode.pos[0] - center[0] + subgraphNode.size[0] / 2
+    const offsetY = subgraphNode.pos[1] - center[1] + subgraphNode.size[1] / 2
+    const movedNodes = multiClone(subgraphNode.subgraph.nodes)
+    const nodeIdMap = new Map<NodeId, NodeId>()
+
+    // Detach boundary links from external reroute linkIds before rewiring.
+    for (const islot of subgraphNode.inputs) {
+      if (islot.link == null) continue
+      const link = this.links.get(islot.link)
+      if (!link) continue
+      for (const reroute of LLink.getReroutes(this, link)) {
+        reroute.linkIds.delete(link.id)
+      }
+    }
+    for (const oslot of subgraphNode.outputs) {
+      for (const linkId of oslot.links ?? []) {
+        const link = this.links.get(linkId)
+        if (!link) continue
+        for (const reroute of LLink.getReroutes(this, link)) {
+          reroute.linkIds.delete(link.id)
+        }
+      }
+    }
+
+    for (const n_info of movedNodes) {
+      let node = LiteGraph.createNode(String(n_info.type), n_info.title)
+      if (!node) {
+        if (skipMissingNodes) {
+          console.warn(
+            `Cannot unpack node of type "${n_info.type}" - node type not found. Creating placeholder node.`,
+          )
+          node = new LGraphNode(
+            n_info.title || String(n_info.type) || "Missing Node",
+            String(n_info.type),
+          )
+          node.last_serialization = n_info
+          node.has_errors = true
+        } else {
+          throw new Error(
+            `Cannot unpack: node type "${n_info.type}" is not registered`,
+          )
+        }
+      }
+
+      const newNodeId = ++this.state.lastNodeId
+      nodeIdMap.set(n_info.id, newNodeId)
+      node.id = newNodeId
+      n_info.id = newNodeId
+
+      for (const input of n_info.inputs ?? []) {
+        input.link = null
+      }
+      for (const output of n_info.outputs ?? []) {
+        output.links = []
+      }
+
+      this.add(node, true)
+      node.configure(n_info)
+      node.pos[0] += offsetX
+      node.pos[1] += offsetY
+      toSelect.push(node)
+    }
+
+    const groups = structuredClone(
+      [...subgraphNode.subgraph.groups].map(g => g.serialize()),
+    )
+    const newLinks: {
+      oid: NodeId
+      oslot: number
+      tid: NodeId
+      tslot: number
+      id: LinkId
+      iparent?: RerouteId
+      eparent?: RerouteId
+      externalFirst: boolean
+    }[] = []
+
+    for (const [, link] of subgraphNode.subgraph.links) {
+      const outerLink = link.origin_id === SUBGRAPH_INPUT_ID
+        ? inputLink(this, subgraphNode.id, link.origin_slot)
+        : undefined
+      const originId = link.origin_id === SUBGRAPH_INPUT_ID
+        ? outerLink?.origin_id
+        : (link.origin_id === UNASSIGNED_NODE_ID
+          ? undefined
+          : nodeIdMap.get(link.origin_id))
+      if (originId == null) {
+        console.error("Missing Link ID when unpacking")
+        continue
+      }
+
+      const originSlot = outerLink?.origin_slot ?? link.origin_slot
+      const externalParentId = outerLink?.parentId
+
+      if (link.target_id === SUBGRAPH_OUTPUT_ID) {
+        for (const sublink of outputLinks(this, subgraphNode.id, link.target_slot)) {
+          newLinks.push({
+            oid: originId,
+            oslot: originSlot,
+            tid: sublink.target_id,
+            tslot: sublink.target_slot,
+            id: link.id,
+            iparent: link.parentId,
+            eparent: sublink.parentId,
+            externalFirst: true,
+          })
+          sublink.parentId = undefined
+        }
+        continue
+      }
+
+      const targetId = link.target_id === UNASSIGNED_NODE_ID
+        ? undefined
+        : nodeIdMap.get(link.target_id)
+      if (targetId == null) {
+        console.error("Missing Link ID when unpacking")
+        continue
+      }
+
+      newLinks.push({
+        oid: originId,
+        oslot: originSlot,
+        tid: targetId,
+        tslot: link.target_slot,
+        id: link.id,
+        iparent: link.parentId,
+        eparent: externalParentId,
+        externalFirst: false,
+      })
+    }
+
+    this.remove(subgraphNode)
+
+    for (const groupInfo of groups) {
+      const groupId = ++this.state.lastGroupId
+      groupInfo.id = groupId
+      const group = new LGraphGroup(groupInfo.title, groupId)
+      this.add(group, true)
+      group.configure(groupInfo)
+      group.pos[0] += offsetX
+      group.pos[1] += offsetY
+      toSelect.push(group)
+    }
+
+    const seenLinks = new Set<string>()
+    const dedupedNewLinks = newLinks.filter((link) => {
+      const key = `${link.oid}\0${link.oslot}\0${link.tid}\0${link.tslot}`
+      if (seenLinks.has(key)) return false
+      seenLinks.add(key)
+      return true
+    })
+
+    for (const newLink of dedupedNewLinks) {
+      let created: LLink | null | undefined
+      if (newLink.oid === SUBGRAPH_INPUT_ID) {
+        if (!(this instanceof Subgraph)) {
+          console.error("Ignoring link to subgraph outside subgraph")
+          continue
+        }
+        if (newLink.tid === UNASSIGNED_NODE_ID) continue
+        const tnode = this.getNodeById(newLink.tid)
+        if (!tnode) continue
+        created = this.inputNode.slots[newLink.oslot].connect(
+          tnode.inputs[newLink.tslot],
+          tnode,
+        )
+      } else if (newLink.tid === SUBGRAPH_OUTPUT_ID) {
+        if (!(this instanceof Subgraph)) {
+          console.error("Ignoring link to subgraph outside subgraph")
+          continue
+        }
+        if (newLink.oid === UNASSIGNED_NODE_ID) continue
+        const tnode = this.getNodeById(newLink.oid)
+        if (!tnode) continue
+        created = this.outputNode.slots[newLink.tslot].connect(
+          tnode.outputs[newLink.oslot],
+          tnode,
+        )
+      } else {
+        if (newLink.oid === UNASSIGNED_NODE_ID || newLink.tid === UNASSIGNED_NODE_ID) continue
+        const originNode = this.getNodeById(newLink.oid)
+        const targetNode = this.getNodeById(newLink.tid)
+        if (!originNode || !targetNode) continue
+        created = originNode.connect(newLink.oslot, targetNode, newLink.tslot)
+      }
+      if (!created) {
+        console.error("Failed to create link")
+        continue
+      }
+      newLink.id = created.id
+    }
+
+    const rerouteIdMap = new Map<RerouteId, RerouteId>()
+    const oldReroutes = subgraphNode.subgraph.reroutes
+    for (const reroute of oldReroutes.values()) {
+      const migratedReroute = this.setReroute({
+        pos: [reroute.pos[0] + offsetX, reroute.pos[1] + offsetY],
+        linkIds: [],
+      })
+      rerouteIdMap.set(reroute.id, migratedReroute.id)
+      toSelect.push(migratedReroute)
+    }
+
+    for (const newLink of dedupedNewLinks) {
+      const linkInstance = this.links.get(newLink.id)
+      if (!linkInstance) continue
+
+      const internal = walkSegment(newLink.iparent, (id) => {
+        const emit = rerouteIdMap.get(id)
+        return emit === undefined
+          ? undefined
+          : { emit, next: oldReroutes.get(id)?.parentId }
+      })
+      const external = walkSegment(newLink.eparent, (id) => {
+        const reroute = this.reroutes.get(id)
+        return reroute && { emit: id, next: reroute.parentId }
+      })
+      const [first, second] = newLink.externalFirst
+        ? [external, internal]
+        : [internal, external]
+      const chain = first.complete
+        ? [...first.segment, ...second.segment]
+        : first.segment
+
+      let segmentEnd: LLink | Reroute = linkInstance
+      for (const rerouteId of chain) {
+        segmentEnd.parentId = rerouteId
+        const next = this.reroutes.get(rerouteId)
+        if (!next) break
+        next.linkIds.add(linkInstance.id)
+        segmentEnd = next
+      }
+    }
+
+    for (const nodeId of nodeIdMap.values()) {
+      const node = this._nodes_by_id[nodeId]
+      node._setConcreteSlots()
+      node.arrange()
+    }
+
+    this.canvasAction(c => c.selectItems(toSelect))
   }
 
   #snapshotHostSubgraphWidgetValues(): Map<NodeId, Map<string, TWidgetValue>> {

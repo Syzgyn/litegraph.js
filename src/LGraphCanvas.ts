@@ -7893,6 +7893,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           callback: LGraphCanvas.showMenuNodeOptionalOutputs,
         },
         null,
+        ...(node instanceof SubgraphNode
+          ? [
+            {
+              content: "Unpack Subgraph",
+              callback: () => {
+                this._graph.unpackSubgraph(node)
+              },
+            },
+          ]
+          : []),
         {
           content: "Convert to Subgraph 🆕",
           callback: () => {
