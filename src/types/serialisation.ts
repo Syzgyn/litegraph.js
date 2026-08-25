@@ -143,6 +143,8 @@ export interface ISerialisedNode {
    * See example in https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite/blob/8629188458dc6cb832f871ece3bd273507e8a766/web/js/VHS.core.js#L59-L84
    */
   widgets_values?: TWidgetValue[]
+  /** Widget values keyed by widget name; used when {@link LiteGraphGlobal.namedValuesRestore} is enabled. */
+  widgets_values_named?: Record<string, TWidgetValue>
 }
 
 /** Properties shared between a serialised node and a subgraph instance on the parent graph. */

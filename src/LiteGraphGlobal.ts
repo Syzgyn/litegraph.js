@@ -386,6 +386,13 @@ export class LiteGraphGlobal {
    */
   saveViewportWithGraph: boolean = true
 
+  /**
+   * If `true`, widget values are deserialised using a map of widget names to values instead of a list.
+   * This is intended as a temporary setting. It is planned to be made the default and eventually removed.
+   * @default false
+   */
+  namedValuesRestore: boolean = false
+
   /** @see {@link LGraph} Legacy constructor reference on the global object. */
   LGraph = LGraph
   /** @see {@link LLink} Legacy constructor reference on the global object. */

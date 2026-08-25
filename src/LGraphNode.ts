@@ -234,6 +234,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   static filter?: string
   /** When `true`, excluded from node picker lists. */
   static skip_list?: boolean
+  /** Optional node-definition metadata from the host application (e.g. widget value migration maps). */
+  static nodeData?: {
+    /** Maps legacy `widgets_values` indices to widget names for named-value restore. */
+    fallbackWidgetsValuesNames?: string[]
+  }
 
   /** Pixel size of corner resize handles. @see {@link findResizeDirection} */
   static resizeHandleSize = 15
@@ -924,11 +929,32 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           w.value = JSON.parse(JSON.stringify(this.properties[w.options.property]))
       }
 
-      if (info.widgets_values) {
-        const widgetsWithValue = this.widgets
-          .filter(w => w.serialize !== false)
-          .filter((_w, idx) => idx < info.widgets_values!.length)
-        for (const [i, widget] of widgetsWithValue.entries()) (widget.value = info.widgets_values![i])
+      const getNamedValues = (): Record<string, TWidgetValue> | undefined => {
+        if (info.widgets_values_named) return info.widgets_values_named
+
+        const map = (this.constructor as typeof LGraphNode).nodeData?.fallbackWidgetsValuesNames
+        if (!info.widgets_values || !map) return
+
+        return Object.fromEntries(
+          info.widgets_values.flatMap((v, i) => (map[i] ? [[map[i], v]] : [])),
+        )
+      }
+
+      const namedValues = getNamedValues()
+      if (namedValues && LiteGraph.namedValuesRestore) {
+        for (const widget of this.widgets) {
+          if (widget.serialize === false || !(widget.name in namedValues)) continue
+
+          widget.value = namedValues[widget.name]
+        }
+      } else if (info.widgets_values) {
+        let i = 0
+        for (const widget of this.widgets ?? []) {
+          if (widget.serialize === false) continue
+
+          widget.value = info.widgets_values[i]
+          i++
+        }
       }
     }
 
@@ -970,12 +996,18 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     if (this.properties) o.properties = LiteGraph.cloneObject(this.properties)
 
     const { widgets } = this
-    if (widgets && this.serialize_widgets) {
+    if (widgets?.length && this.serialize_widgets) {
       o.widgets_values = []
+      o.widgets_values_named = {}
       for (const [i, widget] of widgets.entries()) {
         if (widget.serialize === false) continue
-        // @ts-expect-error #595 No-null
-        o.widgets_values[i] = widget ? widget.value : null
+        const val = widget.value
+        const serialisedVal =
+          val != null && typeof val === "object"
+            ? JSON.parse(JSON.stringify(val))
+            : (val ?? null)
+        o.widgets_values[i] = serialisedVal
+        o.widgets_values_named[widget.name] = serialisedVal
       }
     }
 
