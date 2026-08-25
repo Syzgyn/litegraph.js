@@ -171,6 +171,7 @@ Summarize for the user:
 5. Test command run and result
 6. Whether `docs/PORTED.md` was updated
 7. If any notable changes were made to the resulting code compared to the upstream PR
+8. A suggested Commit title and body
 
 ## Examples
 

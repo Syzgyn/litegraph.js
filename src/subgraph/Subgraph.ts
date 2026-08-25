@@ -3,8 +3,10 @@ import type { DefaultConnectionColors, INodeInputSlot, INodeOutputSlot } from "@
 import type { LGraphCanvas } from "@/LGraphCanvas"
 import type { ExportedSubgraph, ExposedWidget, ISerialisedGraph, Serialisable, SerialisableGraph } from "@/types/serialisation"
 
+import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 import { CustomEventTarget } from "@/infrastructure/CustomEventTarget"
 import { type BaseLGraph, LGraph } from "@/LGraph"
+import { type LinkId, LLink } from "@/LLink"
 import { createUuidv4 } from "@/utils/uuid"
 
 import { SubgraphInput } from "./SubgraphInput"
@@ -127,6 +129,10 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
       }
     }
 
+    // Repair IO slot linkIds that reference links removed by
+    // _removeDuplicateLinks during super.configure().
+    this.#repairIOSlotLinkIds()
+
     if (widgets) {
       this.widgets.length = 0
       for (const widget of widgets) {
@@ -149,6 +155,50 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
 
     this.#configureSubgraph(data)
     return r
+  }
+
+  /**
+   * Repairs SubgraphInput/Output `linkIds` that reference links removed
+   * by `_removeDuplicateLinks` during `super.configure()`.
+   *
+   * For each stale link ID, finds the surviving link that connects to the
+   * same IO node and slot index, and substitutes it.
+   */
+  #repairIOSlotLinkIds(): void {
+    for (const [slotIndex, slot] of this.inputs.entries()) {
+      this.#repairSlotLinkIds(slot.linkIds, SUBGRAPH_INPUT_ID, slotIndex)
+    }
+    for (const [slotIndex, slot] of this.outputs.entries()) {
+      this.#repairSlotLinkIds(slot.linkIds, SUBGRAPH_OUTPUT_ID, slotIndex)
+    }
+  }
+
+  #repairSlotLinkIds(
+    linkIds: LinkId[],
+    ioNodeId: number,
+    slotIndex: number,
+  ): void {
+    const repaired = linkIds.map(id =>
+      this._links.has(id)
+        ? id
+        : (this.#findLinkBySlot(ioNodeId, slotIndex)?.id ?? id))
+    for (const [i, id] of repaired.entries()) {
+      linkIds[i] = id
+    }
+  }
+
+  #findLinkBySlot(
+    nodeId: number,
+    slotIndex: number,
+  ): LLink | undefined {
+    for (const link of this._links.values()) {
+      if (
+        (link.origin_id === nodeId && link.origin_slot === slotIndex) ||
+        (link.target_id === nodeId && link.target_slot === slotIndex)
+      ) {
+        return link
+      }
+    }
   }
 
   /**

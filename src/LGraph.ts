@@ -34,6 +34,7 @@ import { alignOutsideContainer, alignToContainer, createBounds } from "./measure
 import { Reroute, type RerouteId } from "./Reroute"
 import { stringOrEmpty } from "./strings"
 import { type GraphOrSubgraph, Subgraph } from "./subgraph/Subgraph"
+import { topologicalSortSubgraphs } from "./subgraph/subgraphDeduplication"
 import { SubgraphInput } from "./subgraph/SubgraphInput"
 import { SubgraphOutput } from "./subgraph/SubgraphOutput"
 import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables } from "./subgraph/subgraphUtils"
@@ -2042,7 +2043,14 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       const subgraphs = data.definitions?.subgraphs
       if (subgraphs) {
         for (const subgraph of subgraphs) this.createSubgraph(subgraph)
-        for (const subgraph of subgraphs) this.subgraphs.get(subgraph.id)?.configure(subgraph)
+
+        // Configure in leaf-first order so that when a SubgraphNode is
+        // configured, its referenced subgraph definition already has its
+        // nodes/links/inputs populated.
+        const configureOrder = topologicalSortSubgraphs(subgraphs)
+        for (const subgraph of configureOrder) {
+          this.subgraphs.get(subgraph.id)?.configure(subgraph)
+        }
       }
 
       let error = false
