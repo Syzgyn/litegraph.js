@@ -90,16 +90,16 @@ export class LiteGraphGlobal {
   /** Colour used to indicate node execution errors. */
   NODE_ERROR_COLOUR = "#E00"
   /** Default font family for node text. */
-  NODE_FONT = "Arial"
+  NODE_FONT = "Inter"
 
   /** Default UI font family. */
-  DEFAULT_FONT = "Arial"
+  DEFAULT_FONT = "Inter"
   /** Default drop-shadow colour for canvas text. */
   DEFAULT_SHADOW_COLOR = "rgba(0,0,0,0.5)"
 
   GROUP_TEXT_SIZE = 20
   /** Font family for group titles. */
-  GROUP_FONT = "Arial"
+  GROUP_FONT = "Inter"
 
   /** Default widget background colour. */
   WIDGET_BGCOLOR = "#222"

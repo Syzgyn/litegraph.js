@@ -353,7 +353,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   /** @internal Leaves {@link ctx} dirty. */
   protected drawSlots(ctx: CanvasRenderingContext2D, colorContext: DefaultConnectionColors, fromSlot?: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput, editorAlpha?: number): void {
     ctx.fillStyle = "#AAA"
-    ctx.font = "12px Arial"
+    ctx.font = "12px Inter, sans-serif"
     ctx.textBaseline = "middle"
 
     for (const slot of this.allSlots) {

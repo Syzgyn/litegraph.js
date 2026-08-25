@@ -41,7 +41,7 @@ export class InputIndicators implements Disposable {
   colour3 = "#dea7ff"
 
   /** Font used for modifier-key text labels. */
-  fontString = "bold 12px Arial"
+  fontString = "bold 12px Inter, sans-serif"
   // #endregion
 
   // #region state
