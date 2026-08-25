@@ -43,6 +43,7 @@ import DOMPurify from "dompurify"
 import { AutoPanController } from "@/canvas/AutoPanController"
 import { LinkConnector } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
+import { isMiddleButtonEvent } from "@/utils/pointerUtils"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
 import { CanvasPointer } from "./CanvasPointer"
@@ -1915,7 +1916,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Prevents default for middle-click auxclick only. */
   _preventMiddleAuxClick(e: MouseEvent): void {
-    if (e.button === 1) e.preventDefault()
+    if (isMiddleButtonEvent(e)) e.preventDefault()
   }
 
   /** Captures an event and prevents default - returns false. */
@@ -2223,7 +2224,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // left button mouse / single finger
     if (e.button === 0 && !pointer.isDouble) {
       this.#processPrimaryButton(e, node)
-    } else if (e.button === 1) {
+    } else if (isMiddleButtonEvent(e)) {
       this.#processMiddleButton(e, node)
     } else if (
       (e.button === 2 || pointer.isDouble) &&
@@ -3544,7 +3545,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           y - this.node_capturing_input.pos[1],
         ])
       }
-    } else if (e.button === 1) {
+    } else if (isMiddleButtonEvent(e)) {
       // middle button
       this.dirty_canvas = true
       this.dragging_canvas = false
@@ -4894,8 +4895,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     x = x || 10
     y = y ||
       this.canvas.height /
-        ((this.canvas.ownerDocument.defaultView ?? window).devicePixelRatio ||
-          1) -
+      ((this.canvas.ownerDocument.defaultView ?? window).devicePixelRatio ||
+        1) -
         80
 
     ctx.save()

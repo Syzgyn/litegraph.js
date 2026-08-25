@@ -1,5 +1,7 @@
 import type { LGraphCanvas } from "@/LGraphCanvas"
 
+import { isMiddleButtonHeld } from "@/utils/pointerUtils"
+
 /**
  * Overlay that renders pointer and keyboard status indicators on the canvas front layer.
  *
@@ -119,7 +121,7 @@ export class InputIndicators implements Disposable {
    */
   onPointerDownOrMove(e: MouseEvent): void {
     this.mouse0Down = (e.buttons & 1) === 1
-    this.mouse1Down = (e.buttons & 4) === 4
+    this.mouse1Down = isMiddleButtonHeld(e)
     this.mouse2Down = (e.buttons & 2) === 2
 
     this.x = e.clientX
