@@ -23,7 +23,7 @@ export interface SubgraphInputEventMap extends LGraphEventMap {
     /** The input slot that received the connection. */
     input: INodeInputSlot
     /** Widget associated with the input, when the input is widget-backed. */
-    widget: IBaseWidget
+    widget?: IBaseWidget
   }
 
   /** An external link was disconnected from this subgraph input. */
