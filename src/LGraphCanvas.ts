@@ -44,8 +44,8 @@ import DOMPurify from "dompurify"
 import { AutoPanController } from "@/canvas/AutoPanController"
 import { LinkConnector } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
-import { isMiddleButtonEvent } from "@/utils/pointerUtils"
 import { forEachNode } from "@/utils/graphTraversal"
+import { isMiddleButtonEvent } from "@/utils/pointerUtils"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
 import { CanvasPointer } from "./CanvasPointer"
@@ -6370,10 +6370,15 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       height = parent.offsetHeight
     }
 
-    if (this.canvas.width == width && this.canvas.height == height) return
+    const view = this.canvas.ownerDocument.defaultView ?? window
+    const dpr = Math.max(view.devicePixelRatio ?? 1, 1)
+    const bufferWidth = Math.round((width ?? 0) * dpr)
+    const bufferHeight = Math.round((height ?? 0) * dpr)
 
-    this.canvas.width = width ?? 0
-    this.canvas.height = height ?? 0
+    if (this.canvas.width == bufferWidth && this.canvas.height == bufferHeight) return
+
+    this.canvas.width = bufferWidth
+    this.canvas.height = bufferHeight
     this.bgcanvas.width = this.canvas.width
     this.bgcanvas.height = this.canvas.height
     this.setDirty(true, true)
