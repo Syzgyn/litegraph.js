@@ -87,6 +87,7 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 
 ### Canvas & input
 
+- ~~**Ghost node placement mode** — semi-transparent node follows cursor until placed ([#8694](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8694))~~
 - ~~**Ghost node placement cleanup** — document listeners / `isDragging` / auto-pan leaked when `ghostNodeId` cleared early ([#12031](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12031))~~
 - ~~Escape / graph navigation cancels ghost placement ([#11779](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11779))~~
 - ~~Edge autopan during ghost placement ([#10308](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10308))~~
@@ -122,12 +123,12 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 
 - ~~**Clear widget/preview store state for incoming graph id on `configure`** ([#15613](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15613)) — stale widget labels survive reload~~
 - Centralized **WidgetValueStore** (Comfy Pinia store; widget `.value` delegates to store) ([#8594](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8594))
-- `widgets_values_named` serialization format ([#10392](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10392))
+- ~~`widgets_values_named` serialization format ([#10392](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10392))~~
 - Tolerate un-keyable widget ids in value store ([#13773](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13773))
-- Assign valid id when root graph has zero UUID ([#10825](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10825))
+- ~~Assign valid id when root graph has zero UUID ([#10825](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10825))~~
 - ~~`onNodeRemoved` not called when loading a new graph ([#5407](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5407))~~
 - Do not delay fit-to-view on graph restore ([#7645](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7645))
-- Restore `onMouseDown` override in node subclasses ([#5079](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5079))
+- ~~Restore `onMouseDown` override in node subclasses ([#5079](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5079))~~
 
 ### Nodes & widgets (canvas mode)
 

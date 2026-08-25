@@ -77,3 +77,6 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#8275](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8275) | 2026-08-25 | `01362d5f` | `src/LGraphGroup.ts` | `test/LGraphGroup.test.ts` |
 | [#11250](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11250) | 2026-08-25 | `e28c1e7e` | `src/node/NodeSlot.ts` | — |
 | [#7220](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7220) | 2026-08-25 | `5139e056` | `public/css/litegraph.css`, `src/LiteGraphGlobal.ts`, `src/canvas/InputIndicators.ts`, `src/subgraph/SubgraphIONodeBase.ts` | — |
+| [#5079](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5079) | 2026-08-25 | `0daacfd914` | `src/LGraphCanvas.ts`, `src/LGraphNode.ts` | `test/LGraphNode.onMouseDownOverride.test.ts`, `test/LGraphNode.titleButtons.test.ts`, `test/subgraph/SubgraphNode.titleButton.test.ts` |
+| [#10825](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10825) | 2026-08-25 | `0b83926c3e` | `src/LGraph.ts` | `test/LGraph.zeroUuid.test.ts` |
+| [#10392](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10392) | 2026-08-25 | `b1e7d57308` | `src/LGraphNode.ts`, `src/LiteGraphGlobal.ts`, `src/types/serialisation.ts` (no Pinia/shadow-diff telemetry) | `test/LGraphNode.widgetsValuesNamed.test.ts` |
