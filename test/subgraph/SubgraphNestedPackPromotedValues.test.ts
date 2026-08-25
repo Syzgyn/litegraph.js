@@ -101,6 +101,16 @@ function setupParentSubgraphWithWidgets() {
 }
 
 describe("nested pack promoted widget values", () => {
+  test("preserves host value when source is converted to nested subgraph", () => {
+    const { parentSubgraph, interiorNode, hostNode } = setupParentSubgraphWithWidgets()
+
+    hostNode.widgets[0].value = "host value"
+    parentSubgraph.convertToSubgraph(new Set<Positionable>([interiorNode]))
+
+    expect(hostNode.widgets).toHaveLength(1)
+    expect(hostNode.widgets[0].value).toBe("host value")
+  })
+
   test("preserves host promoted widget values when packing interior nodes into nested subgraph", () => {
     const { parentSubgraph, interiorNode, hostNode } = setupParentSubgraphWithWidgets()
 
