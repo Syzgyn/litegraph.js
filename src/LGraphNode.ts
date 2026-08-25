@@ -291,6 +291,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   freeWidgetSpace?: number
 
+  /**
+   * Set to true when widget-backed input slot positions need recalculation.
+   * Cleared after arrange() runs. Avoids per-frame O(N) scans in drawConnections.
+   */
+  _widgetSlotsDirty = false
+
   locked?: boolean
 
   /** Execution order, automatically computed during run @see {@link LGraph.computeExecutionOrder} */
@@ -1997,6 +2003,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     this.widgets ||= []
     const widget = toConcreteWidget(custom_widget, this, false) ?? custom_widget
     this.widgets.push(widget)
+    this._widgetSlotsDirty = true
+
     return widget
   }
 
@@ -2051,9 +2059,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         if (input._widget === widget) {
           input._widget = undefined
           delete input.widget
+          input.pos = undefined
         }
       }
     }
+    this._widgetSlotsDirty = true
 
     this.widgets.splice(widgetIndex, 1)
   }
@@ -4047,25 +4057,24 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * Arranges the layout of the node's widget input slots.
    */
   #arrangeWidgetInputSlots(): void {
-    if (!this.widgets) return
+    if (!this.widgets?.length) return
 
-    const slotByWidgetName = new Map<string, INodeInputSlot & { index: number }>()
+    // Build a name→widget map for fast lookup.
+    const widgetByName = new Map<string, IBaseWidget>()
+    for (const w of this.widgets) widgetByName.set(w.name, w)
 
-    for (const [i, slot] of this.inputs.entries()) {
+    // Set widget-backed slot positions from widget Y coordinates.
+    for (const [i, slot] of this.#concreteInputs.entries()) {
       if (!isWidgetInputSlot(slot)) continue
 
-      slotByWidgetName.set(slot.widget.name, { ...slot, index: i })
-    }
-    if (!slotByWidgetName.size) return
+      // Prefer the slot's direct _widget binding (1:1 for promoted inputs).
+      // Fall back to name-map lookup for regular nodes without _widget set.
+      const widget = slot._widget ?? widgetByName.get(slot.widget.name)
+      if (!widget) continue
 
-    for (const widget of this.widgets) {
-      const slot = slotByWidgetName.get(widget.name)
-      if (!slot) continue
-
-      const actualSlot = this.#concreteInputs[slot.index]
       const offset = LiteGraph.NODE_SLOT_HEIGHT * 0.5
-      actualSlot.pos = [offset, widget.y + offset]
-      this.#measureSlot(actualSlot, slot.index, true)
+      slot.pos = [offset, widget.y + offset]
+      this.#measureSlot(slot, i, true)
     }
   }
 
@@ -4089,6 +4098,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     const widgetStartY = slotsBounds ? slotsBounds[1] + slotsBounds[3] - this.pos[1] : 0
     this.#arrangeWidgets(widgetStartY)
     this.#arrangeWidgetInputSlots()
+    this._widgetSlotsDirty = false
   }
 
   /**

@@ -426,6 +426,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
     input.widget = { name: subgraphInput.name }
     input._widget = promotedWidget
+    this._widgetSlotsDirty = true
   }
 
   /**
