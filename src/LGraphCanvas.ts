@@ -42,6 +42,7 @@ import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
 import { LinkConnector } from "@/canvas/LinkConnector"
+import { MovingInputLink } from "@/canvas/MovingInputLink"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
 import { CanvasPointer } from "./CanvasPointer"
@@ -2667,7 +2668,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
               if (shouldBreakLink || LiteGraph.click_do_break_link_to) {
                 node.disconnectInput(i, true)
               } else if (e.shiftKey || this.allow_reconnect_links) {
-                linkConnector.moveInputLink(graph, input)
+                linkConnector.moveInputLink(graph, input, { startPoint: link_pos })
               }
             }
 
@@ -4677,6 +4678,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             ctx.arc(highlightPos[0], highlightPos[1], 4, 0, Math.PI * 2)
           }
           ctx.fill()
+          if (renderLink instanceof MovingInputLink) this.setDirty(false, true)
         }
 
         // Gradient half-border over target node
