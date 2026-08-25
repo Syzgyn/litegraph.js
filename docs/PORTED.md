@@ -48,3 +48,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#12575](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12575) | 2026-08-25 | `1938ba80` | `src/LGraph.ts` | — |
 | [#10195](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10195) | 2026-08-25 | `657ae6a6` | `src/LGraphNode.ts`, `src/LGraphCanvas.ts`, `src/subgraph/SubgraphNode.ts` (no Pinia/PromotedWidgetViewManager) | `test/LGraphCanvas.drawConnections.test.ts` |
 | [#6661](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6661) | 2026-08-25 | `bc553f12` | `src/LGraphNode.ts` (`spliceInputs`, configure `widgets_values` by index) | — |
+| [#6752](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6752) | 2026-08-25 | `a832141a` | Already present via #15613 (`syncWidgetLabelsFromInputs` in configure) | `test/LGraph.configureStoreScope.test.ts`, `test/utils/widget.rename.test.ts` |

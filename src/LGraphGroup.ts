@@ -11,6 +11,7 @@ import type { LGraph } from "./LGraph"
 import type { ISerialisedGroup } from "./types/serialisation"
 
 import { NullGraphError } from "@/infrastructure/NullGraphError"
+import { hexToRgb, luminance, readableTextColor } from "@/utils/colorUtil"
 
 import { strokeShape } from "./draw"
 import { LGraphCanvas } from "./LGraphCanvas"
@@ -51,6 +52,13 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   static padding = 4
   /** Fallback fill/stroke colour when {@link color} is unset. */
   static defaultColour = "#335"
+  /**
+   * Background luminance (0-255) below which the title text is lightened for
+   * readability. Most colours keep title text in the same family as the
+   * background even at low contrast; only very dark/black-ish backgrounds
+   * are adjusted.
+   */
+  static darkBgLuminanceThreshold = 80
 
   /** Unique identifier within the owning {@link LGraph}. Assigned on {@link LGraph.add} if unset. */
   id: number
@@ -81,6 +89,11 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   flags: IGraphGroupFlags = {}
   /** Whether the group is currently selected on the canvas. */
   selected?: boolean
+
+  /** Background colour last used to compute {@link _titleTextColor} */
+  _lastTitleBgColor?: string
+  /** Title text colour, cached until the background colour changes */
+  _titleTextColor: string = LGraphGroup.defaultColour
 
   /**
    * @param title Initial title bar label. Defaults to `"Group"`.
@@ -213,12 +226,21 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
    * @param ctx 2D rendering context in graph space.
    */
   draw(graphCanvas: LGraphCanvas, ctx: CanvasRenderingContext2D): void {
-    const { padding, resizeLength, defaultColour } = LGraphGroup
+    const { padding, resizeLength, defaultColour, darkBgLuminanceThreshold } =
+      LGraphGroup
     const font_size = this.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE
 
     const [x, y] = this._pos
     const [width, height] = this._size
     const color = this.color || defaultColour
+
+    if (this._lastTitleBgColor !== color) {
+      this._lastTitleBgColor = color
+      this._titleTextColor =
+        luminance(hexToRgb(color)) < darkBgLuminanceThreshold
+          ? readableTextColor(color)
+          : color
+    }
 
     // Titlebar
     ctx.globalAlpha = 0.25 * graphCanvas.editor_alpha
@@ -247,6 +269,8 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     // Title
     ctx.font = `${font_size}px ${LiteGraph.GROUP_FONT}`
     ctx.textAlign = "left"
+    if (ctx.fillStyle !== this._titleTextColor)
+      ctx.fillStyle = this._titleTextColor
     ctx.fillText(this.title + (this.pinned ? "📌" : ""), x + padding, y + font_size)
 
     if (LiteGraph.highlight_selected_group && this.selected) {
