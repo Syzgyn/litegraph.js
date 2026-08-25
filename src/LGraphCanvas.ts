@@ -672,6 +672,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   #visibleReroutes: Set<Reroute> = new Set()
   private _autoPan: AutoPanController | null = null
   private _ghostPointerHandler: ((e: PointerEvent) => void) | null = null
+  private _ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
 
   /** When `true`, the foreground canvas needs to be redrawn on the next frame. */
   dirty_canvas: boolean = true
@@ -1818,6 +1819,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   setGraph(newGraph: LGraph | Subgraph): void {
     const { graph } = this
     if (newGraph === graph) return
+
+    if (this.state.ghostNodeId != null) this.finalizeGhostPlacement(true)
 
     this.clear()
     newGraph.attachCanvas(this)
@@ -3359,6 +3362,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param dragEvent Optional mouse event for positioning under cursor
    */
   startGhostPlacement(node: LGraphNode, dragEvent?: MouseEvent): void {
+    if (this.state.ghostNodeId != null) this.finalizeGhostPlacement(true)
+
+    this.emitBeforeChange()
+    this.graph?.beforeChange()
+
     if (dragEvent) {
       this.adjustMouseEvent(dragEvent)
       const e = dragEvent as CanvasPointerEvent
@@ -3386,6 +3394,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       "pointerleave",
       this._ghostPointerHandler,
     )
+
+    this._ghostKeyHandler = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" && e.key !== "Delete" && e.key !== "Backspace") {
+        return
+      }
+      this.finalizeGhostPlacement(true)
+      e.stopPropagation()
+      e.preventDefault()
+    }
+    document.addEventListener("keydown", this._ghostKeyHandler, true)
   }
 
   /**
@@ -3408,6 +3426,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this._ghostPointerHandler,
       )
       this._ghostPointerHandler = null
+    }
+
+    if (this._ghostKeyHandler) {
+      document.removeEventListener("keydown", this._ghostKeyHandler, true)
+      this._ghostKeyHandler = null
     }
 
     const node = this.graph?.getNodeById(nodeId)
@@ -3586,16 +3609,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     const { graph } = this
     if (!graph) return
-
-    if (
-      (e.key === "Escape" || e.key === "Delete" || e.key === "Backspace") &&
-      this.state.ghostNodeId != null
-    ) {
-      this.finalizeGhostPlacement(true)
-      e.stopPropagation()
-      e.preventDefault()
-      return
-    }
 
     let block_default = false
     // @ts-expect-error

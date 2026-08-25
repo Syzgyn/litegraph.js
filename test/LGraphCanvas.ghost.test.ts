@@ -187,3 +187,138 @@ describe("LGraphCanvas ghost placement auto-pan", () => {
     expect(canvas.ds.offset[0]).not.toBe(0)
   })
 })
+
+function dispatchKey(target: EventTarget, key: string): void {
+  target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }))
+}
+
+describe("LGraphCanvas ghost placement cancellation via document keydown", () => {
+  let canvas: LGraphCanvas
+  let canvasElement: HTMLCanvasElement
+  let graph: LGraph
+  let node: LGraphNode
+
+  beforeEach(() => {
+    ;({ canvas, canvasElement, graph, node } = createGhostTestHarness())
+  })
+
+  afterEach(() => {
+    if (canvas.state.ghostNodeId != null) canvas.finalizeGhostPlacement(false)
+    canvasElement.remove()
+  })
+
+  test("Escape on document removes the ghost node and clears ghost state", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    expect(canvas.state.ghostNodeId).toBe(node.id)
+
+    dispatchKey(document, "Escape")
+
+    expect(canvas.state.ghostNodeId).toBeNull()
+    expect(graph.getNodeById(node.id)).toBeUndefined()
+  })
+
+  test("Escape on document stops propagation so window-level keybindings do not fire", () => {
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      node.flags.ghost = true
+      canvas.startGhostPlacement(node)
+      dispatchKey(document, "Escape")
+      expect(windowSpy).not.toHaveBeenCalled()
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+
+  test("Delete and Backspace also cancel ghost placement", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    dispatchKey(document, "Delete")
+    expect(canvas.state.ghostNodeId).toBeNull()
+    expect(graph.getNodeById(node.id)).toBeUndefined()
+
+    const node2 = new LGraphNode("test-2")
+    node2.size = [200, 100]
+    node2.flags.ghost = true
+    graph.add(node2)
+    canvas.startGhostPlacement(node2)
+    dispatchKey(document, "Backspace")
+    expect(canvas.state.ghostNodeId).toBeNull()
+    expect(graph.getNodeById(node2.id)).toBeUndefined()
+  })
+
+  test("non-cancel keys do not finalize ghost placement", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      dispatchKey(document, "a")
+      expect(canvas.state.ghostNodeId).toBe(node.id)
+      expect(windowSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+
+  test("keydown listener is removed when ghost placement finalizes", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    canvas.finalizeGhostPlacement(false)
+
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      dispatchKey(document, "Escape")
+      expect(windowSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+
+  test("switching the active graph cancels any in-flight ghost", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    expect(canvas.state.ghostNodeId).toBe(node.id)
+
+    canvas.setGraph(new LGraph())
+
+    expect(canvas.state.ghostNodeId).toBeNull()
+    expect(graph.getNodeById(node.id)).toBeUndefined()
+
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      dispatchKey(document, "Escape")
+      expect(windowSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+
+  test("calling startGhostPlacement again cancels the previous ghost without leaking listeners", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+
+    const node2 = new LGraphNode("test-2")
+    node2.size = [200, 100]
+    node2.flags.ghost = true
+    graph.add(node2)
+    canvas.startGhostPlacement(node2)
+
+    expect(graph.getNodeById(node.id)).toBeUndefined()
+    expect(canvas.state.ghostNodeId).toBe(node2.id)
+
+    canvas.finalizeGhostPlacement(true)
+
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      dispatchKey(document, "Escape")
+      expect(windowSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+})
