@@ -17,15 +17,32 @@ import { nextUniqueName } from "@/strings"
 import { SubgraphInputNode } from "./SubgraphInputNode"
 import { SubgraphOutputNode } from "./SubgraphOutputNode"
 
+/**
+ * Result of partitioning a heterogeneous selection of canvas items by concrete type.
+ *
+ * Used when operations (e.g. "group selection into subgraph") need to process nodes,
+ * reroutes, groups, and IO boundary nodes separately.
+ */
 export interface FilteredItems {
+  /** Regular graph nodes in the selection. */
   nodes: Set<LGraphNode>
+  /** Reroute widgets in the selection. */
   reroutes: Set<Reroute>
+  /** Group frames in the selection. */
   groups: Set<LGraphGroup>
+  /** Subgraph input boundary nodes in the selection. */
   subgraphInputNodes: Set<SubgraphInputNode>
+  /** Subgraph output boundary nodes in the selection. */
   subgraphOutputNodes: Set<SubgraphOutputNode>
+  /** Items that did not match any known positionable type. */
   unknown: Set<Positionable>
 }
 
+/**
+ * Partitions a mixed iterable of canvas positionables into typed sets.
+ * @param items Any iterable of {@link Positionable} objects from a canvas selection.
+ * @returns Categorised sets for nodes, reroutes, groups, IO nodes, and unknown items.
+ */
 export function splitPositionables(items: Iterable<Positionable>): FilteredItems {
   const nodes = new Set<LGraphNode>()
   const reroutes = new Set<Reroute>()
@@ -76,6 +93,16 @@ interface BoundaryLinks {
   boundaryOutputLinks: LLink[]
 }
 
+/**
+ * Classifies links connected to a set of canvas items as internal or crossing the selection boundary.
+ *
+ * Walks node inputs/outputs and reroute link chains to determine which links would need subgraph
+ * IO slots when the selection is wrapped into a new subgraph.
+ * @param graph The graph containing the items and links.
+ * @param items The selected positionables whose boundary is being analysed.
+ * @returns Partitioned link lists for boundary inputs, boundary outputs, internal links, and
+ * floating links that cross the boundary via reroutes.
+ */
 export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): BoundaryLinks {
   const internalLinks: LLink[] = []
   const boundaryLinks: LLink[] = []
@@ -189,6 +216,14 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
   }
 }
 
+/**
+ * Deep-clones a set of nodes while preserving their IDs and link references.
+ *
+ * Used when duplicating a selection into a new subgraph definition. Each node is recreated via
+ * {@link LiteGraph.createNode} and configured from a cloned serialisation payload.
+ * @param nodes The nodes to clone.
+ * @returns Serialised node data ready to embed in a new graph or subgraph.
+ */
 export function multiClone(nodes: Iterable<LGraphNode>): ISerialisedNode[] {
   const clonedNodes: ISerialisedNode[] = []
 
@@ -234,6 +269,15 @@ export function groupResolvedByOutput(
   return groupedByOutput
 }
 
+/**
+ * Creates subgraph input slot definitions from boundary input links when wrapping a selection.
+ *
+ * Groups links by their external output, assigns unique names, rewrites link origins to
+ * {@link SUBGRAPH_INPUT_ID}, and appends serialised link data to the provided array.
+ * @param resolvedInputLinks Resolved connections whose input ends lie inside the new subgraph.
+ * @param links Mutable array that receives rewritten serialised links for the new subgraph.
+ * @returns definitions for each grouped external input.
+ */
 export function mapSubgraphInputsAndLinks(resolvedInputLinks: ResolvedConnection[], links: SerialisableLLink[]): SubgraphIO[] {
   // Group matching links
   const groupedByOutput = groupResolvedByOutput(resolvedInputLinks)

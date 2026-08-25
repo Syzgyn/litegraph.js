@@ -1,49 +1,90 @@
 import type { LGraphCanvas } from "@/LGraphCanvas"
 
 /**
- * A class that can be added to the render cycle to show pointer / keyboard status symbols.
+ * Overlay that renders pointer and keyboard status indicators on the canvas front layer.
  *
- * Used to create videos of feature changes.
- *
- * Example usage with ComfyUI_frontend, via console / devtools:
- *
+ * Hooks into {@link LGraphCanvas.drawFrontCanvas} to draw modifier-key labels, mouse-button
+ * dots, and undo/redo markers near the cursor. Intended for screen recordings and demos that
+ * need to show which inputs are active.
+ * @example
  * ```ts
  * const inputIndicators = new InputIndicators(canvas)
- * // Dispose:
+ * // Dispose when done:
  * inputIndicators.dispose()
  * ```
+ * @see {@link LGraphCanvas}
  */
 export class InputIndicators implements Disposable {
   // #region config
+
+  /** Radius in pixels of the mouse-button indicator dots. */
   radius = 8
+
+  /** Start angle (radians) for drawing indicator arcs. */
   startAngle = 0
+
+  /** End angle (radians) for drawing indicator arcs. */
   endAngle = Math.PI * 2
 
+  /** Colour used for inactive modifier-key and mouse-button indicators. */
   inactiveColour = "#ffffff10"
+
+  /** Highlight colour for the Shift modifier and left mouse button. */
   colour1 = "#ff5f00"
+
+  /** Highlight colour for the Alt modifier and middle mouse button. */
   colour2 = "#00ff7c"
+
+  /** Highlight colour for the Control modifier and right mouse button. */
   colour3 = "#dea7ff"
+
+  /** Font used for modifier-key text labels. */
   fontString = "bold 12px Arial"
   // #endregion
 
   // #region state
+
+  /** When `false`, {@link draw} is a no-op (listeners remain active). */
   enabled: boolean = true
 
+  /** Whether the Shift key is currently held. */
   shiftDown: boolean = false
+
+  /** Whether Ctrl+Z (undo) is currently pressed. */
   undoDown: boolean = false
+
+  /** Whether Ctrl+Y (redo) is currently pressed. */
   redoDown: boolean = false
+
+  /** Whether the Control key is currently held. */
   ctrlDown: boolean = false
+
+  /** Whether the Alt key is currently held. */
   altDown: boolean = false
+
+  /** Whether the left mouse button (button 0) is currently held. */
   mouse0Down: boolean = false
+
+  /** Whether the middle mouse button (button 1) is currently held. */
   mouse1Down: boolean = false
+
+  /** Whether the right mouse button (button 2) is currently held. */
   mouse2Down: boolean = false
 
+  /** Client-space X coordinate of the last pointer event. */
   x: number = 0
+
+  /** Client-space Y coordinate of the last pointer event. */
   y: number = 0
   // #endregion
 
+  /** AbortController used to remove all event listeners on {@link dispose}. */
   controller?: AbortController
 
+  /**
+   * @param canvas The {@link LGraphCanvas} whose front canvas will be overlaid with indicators.
+   * Registers pointer and keyboard listeners and wraps {@link LGraphCanvas.drawFrontCanvas}.
+   */
   constructor(public canvas: LGraphCanvas) {
     this.controller = new AbortController()
     const { signal } = this.controller
@@ -69,6 +110,13 @@ export class InputIndicators implements Disposable {
   }
 
   #onPointerDownOrMove = this.onPointerDownOrMove.bind(this)
+
+  /**
+   * Updates mouse-button and cursor position state from a pointer event.
+   *
+   * Called on `pointerdown` and `pointermove`. Marks the canvas dirty so the overlay redraws.
+   * @param e The pointer event from the canvas element.
+   */
   onPointerDownOrMove(e: MouseEvent): void {
     this.mouse0Down = (e.buttons & 1) === 1
     this.mouse1Down = (e.buttons & 4) === 4
@@ -81,6 +129,10 @@ export class InputIndicators implements Disposable {
   }
 
   #onPointerUp = this.onPointerUp.bind(this)
+
+  /**
+   * Clears all mouse-button state when the pointer is released.
+   */
   onPointerUp(): void {
     this.mouse0Down = false
     this.mouse1Down = false
@@ -88,6 +140,14 @@ export class InputIndicators implements Disposable {
   }
 
   #onKeyDownOrUp = this.onKeyDownOrUp.bind(this)
+
+  /**
+   * Updates modifier-key and undo/redo state from a keyboard event.
+   *
+   * Listens on the canvas element for `keydown` and on `document` for `keyup` so modifier
+   * release is detected even when focus leaves the canvas.
+   * @param e The keyboard event.
+   */
   onKeyDownOrUp(e: KeyboardEvent): void {
     this.ctrlDown = e.ctrlKey
     this.altDown = e.altKey
@@ -96,6 +156,12 @@ export class InputIndicators implements Disposable {
     this.redoDown = e.ctrlKey && e.code === "KeyY" && e.type === "keydown"
   }
 
+  /**
+   * Draws the indicator overlay onto the canvas front context.
+   *
+   * Renders modifier-key labels above the cursor, three mouse-button dots, and undo/redo
+   * emoji markers. Called automatically after each {@link LGraphCanvas.drawFrontCanvas} pass.
+   */
   draw() {
     const {
       canvas: { ctx },
@@ -160,11 +226,15 @@ export class InputIndicators implements Disposable {
     }
   }
 
+  /**
+   * Removes all event listeners and restores the original {@link LGraphCanvas.drawFrontCanvas}.
+   */
   dispose() {
     this.controller?.abort()
     this.controller = undefined
   }
 
+  /** {@link Disposable} protocol — delegates to {@link dispose}. */
   [Symbol.dispose](): void {
     this.dispose()
   }

@@ -15,8 +15,14 @@ import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 
 import { Subgraph } from "./litegraph"
 
+/** Numeric identifier for a link within an {@link LGraph}. */
 export type LinkId = number
 
+/**
+ * Legacy tuple serialisation of a link, used by schema version 0.4.
+ * @see {@link LLink.createFromArray}
+ * @see {@link LLink.serialize}
+ */
 export type SerialisedLLinkArray = [
   id: LinkId,
   origin_id: NodeId,
@@ -26,7 +32,13 @@ export type SerialisedLLinkArray = [
   type: ISlotType,
 ]
 
-// Resolved connection union; eliminates subgraph in/out as a possibility
+/**
+ * Fully resolved endpoints of a link after looking up nodes and slots in a {@link LinkNetwork}.
+ *
+ * Exactly one of the normal input/output pairs or subgraph IO pairs is populated, depending on
+ * whether the link crosses a subgraph boundary via {@link SUBGRAPH_INPUT_ID} or
+ * {@link SUBGRAPH_OUTPUT_ID}.
+ */
 export type ResolvedConnection = BaseResolvedConnection &
   (
     (ResolvedSubgraphInput & ResolvedNormalOutput) |
@@ -78,38 +90,60 @@ interface ResolvedSubgraphOutput {
 type BasicReadonlyNetwork = Pick<ReadonlyLinkNetwork, "getNodeById" | "links" | "getLink" | "inputNode" | "outputNode">
 
 // this is the class in charge of storing link information
+/**
+ * Represents a directed connection from an output slot to an input slot in a graph.
+ *
+ * Links store only primitive IDs ({@link origin_id}, {@link target_id}, slot indices) and resolve
+ * live node/slot references through their owning {@link LinkNetwork}. They may pass through zero or
+ * more {@link Reroute} points via {@link parentId}.
+ * @remarks
+ * Implements {@link LinkSegment} so links can participate in reroute chains and drag operations.
+ * Use {@link LLink.resolve} or {@link LLink.create} rather than constructing instances directly
+ * when deserialising.
+ * @see {@link LGraph.connectSlots}
+ * @see {@link LLink.getReroutes}
+ */
 export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
+  /** When `true`, renders debug overlays for link geometry during canvas draw. */
   static _drawDebug = false
 
-  /** Link ID */
+  /** Unique link identifier within the owning graph. */
   id: LinkId
+  /** ID of the first {@link Reroute} after the output slot in this link's path, if any. */
   parentId?: RerouteId
+  /** Connection type string used for colour and compatibility checks. */
   type: ISlotType
-  /** Output node ID */
+  /** ID of the node that owns the output (origin) slot. */
   origin_id: NodeId
-  /** Output slot index */
+  /** Index of the output slot on {@link origin_id}. */
   origin_slot: number
-  /** Input node ID */
+  /** ID of the node that owns the input (target) slot. */
   target_id: NodeId
-  /** Input slot index */
+  /** Index of the input slot on {@link target_id}. */
   target_slot: number
 
+  /** Runtime payload propagated along the link during execution. */
   data?: number | string | boolean | { toToolTip?(): string }
+  /** @deprecated Internal mirror of {@link data}. */
   _data?: unknown
-  /** Centre point of the link, calculated during render only - can be inaccurate */
+  /** Centre point of the link segment, calculated during render only — may be inaccurate. */
   _pos: Float32Array
-  /** @todo Clean up - never implemented in comfy. */
+  /** @todo Clean up - never implemented in comfy. Used to animate triggered slots. */
   _last_time?: number
-  /** The last canvas 2D path that was used to render this link */
+  /** The last canvas 2D path that was used to render this link. */
   path?: Path2D
-  /** @inheritdoc */
+  /** @inheritdoc LinkSegment._centreAngle */
   _centreAngle?: number
 
-  /** @inheritdoc */
+  /** @inheritdoc LinkSegment._dragging */
   _dragging?: boolean
 
   #color?: CanvasColour | null
-  /** Custom colour for this link only */
+  /**
+   * Custom colour override for this link only.
+   *
+   * Setting to an empty string clears the override (`null` internally).
+   */
   public get color(): CanvasColour | null | undefined {
     return this.#color
   }
@@ -118,14 +152,17 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     this.#color = value === "" ? null : value
   }
 
+  /** `true` when the output end is disconnected (`origin_id` and `origin_slot` are `-1`). */
   public get isFloatingOutput(): boolean {
     return this.origin_id === -1 && this.origin_slot === -1
   }
 
+  /** `true` when the input end is disconnected (`target_id` and `target_slot` are `-1`). */
   public get isFloatingInput(): boolean {
     return this.target_id === -1 && this.target_slot === -1
   }
 
+  /** `true` when either end of the link is floating. @see {@link isFloatingOutput} {@link isFloatingInput} */
   public get isFloating(): boolean {
     return this.isFloatingOutput || this.isFloatingInput
   }
@@ -140,6 +177,15 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     return this.target_id === SUBGRAPH_OUTPUT_ID
   }
 
+  /**
+   * @param id Unique link ID within the graph.
+   * @param type Slot type string shared by both ends.
+   * @param origin_id Output node ID.
+   * @param origin_slot Output slot index on the origin node.
+   * @param target_id Input node ID.
+   * @param target_slot Input slot index on the target node.
+   * @param parentId Optional first reroute in the link path after the output slot.
+   */
   constructor(
     id: LinkId,
     type: ISlotType,
@@ -162,7 +208,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     this._pos = new Float32Array(2)
   }
 
-  /** @deprecated Use {@link LLink.create} */
+  /** @deprecated Use {@link LLink.create}. Parses legacy 0.4 tuple format. */
   static createFromArray(data: SerialisedLLinkArray): LLink {
     return new LLink(data[0], data[5], data[1], data[2], data[3], data[4])
   }
@@ -199,6 +245,12 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
       ?.getReroutes() ?? []
   }
 
+  /**
+   * Returns the first reroute in the chain from the output slot toward this segment.
+   * @param network Graph providing the reroute map.
+   * @param linkSegment Starting segment (link or reroute) whose {@link parentId} begins the search.
+   * @returns The first reroute after the output, or `undefined` if there is no parent reroute.
+   */
   static getFirstReroute(
     network: Pick<ReadonlyLinkNetwork, "reroutes">,
     linkSegment: LinkSegment,
@@ -303,6 +355,12 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     return { inputNode, outputNode, input, output, subgraphInput, subgraphOutput, link: this }
   }
 
+  /**
+   * Restores link fields from serialised data.
+   *
+   * Accepts either the modern object form or the legacy {@link SerialisedLLinkArray} tuple.
+   * @param o Serialised link data or another {@link LLink} instance to copy from.
+   */
   configure(o: LLink | SerialisedLLinkArray) {
     if (Array.isArray(o)) {
       this.id = o[0]
@@ -417,8 +475,8 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   }
 
   /**
-   * @deprecated Prefer {@link LLink.asSerialisable} (returns an object, not an array)
-   * @returns An array representing this LLink
+   * @deprecated Prefer {@link LLink.asSerialisable}, which returns an object rather than a tuple.
+   * @returns Legacy array representation of this link.
    */
   serialize(): SerialisedLLinkArray {
     return [
@@ -431,6 +489,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     ]
   }
 
+  /**
+   * Prepares a shallow copy for serialisation.
+   * @returns Plain object including {@link parentId} only when set.
+   */
   asSerialisable(): SerialisableLLink {
     const copy: SerialisableLLink = {
       id: this.id,

@@ -1,4 +1,6 @@
 // Using a template string for this is resulting in complex type workarounds. No current benefit beyond dev reading.
+
+/** A UUID string in standard hyphenated format (e.g. `"550e8400-e29b-41d4-a716-446655440000"`). */
 export type UUID = string
 
 /** Special-case zero-UUID, consisting entirely of zeros. Used as a default value. */

@@ -15,32 +15,55 @@ import { SubgraphSlot } from "./SubgraphSlotBase"
 import { isNodeSlot, isSubgraphOutput } from "./subgraphUtils"
 
 /**
- * An input "slot" from a parent graph into a subgraph.
+ * An input boundary slot that bridges a parent graph into a subgraph interior.
  *
- * IMPORTANT: A subgraph "input" is both an input AND an output.  It creates an extra link connection point between
- * a parent graph and a subgraph, so is conceptually similar to a reroute.
+ * IMPORTANT: A subgraph "input" is both an input AND an output. It creates an extra link
+ * connection point between a parent graph and a subgraph, so is conceptually similar to a reroute.
  *
- * This can be a little confusing, but is easier to visualise when imagining editing a subgraph.
- * You have "Subgraph Inputs", because they are coming into the subgraph, which then connect to "node inputs".
- *
- * Functionally, however, when editing a subgraph, that "subgraph input" is the "origin" or "output side" of a link.
+ * When editing inside the subgraph, this slot is the **origin** (output side) of links that fan
+ * out to internal node inputs. On the parent {@link SubgraphNode}, the corresponding slot is a
+ * normal input.
+ * @remarks
+ * May promote a connected internal widget to the parent graph when all connected links target
+ * widget-backed inputs of the same type.
+ * @see {@link SubgraphOutput}
+ * @see {@link SubgraphInputNode}
  */
 export class SubgraphInput extends SubgraphSlot {
+  /** The IO boundary node that owns and lays out this slot. */
   declare parent: SubgraphInputNode
 
+  /** Dispatches connect/disconnect events for widget promotion and other listeners. */
   events = new CustomEventTarget<SubgraphInputEventMap>()
 
   /** The linked widget that this slot is connected to. */
   #widgetRef?: WeakRef<IBaseWidget>
 
+  /**
+   * The widget associated with this input, when the slot is connected to widget-backed inputs.
+   *
+   * Held weakly so promoted widgets can be garbage-collected when disconnected.
+   */
   get _widget() {
     return this.#widgetRef?.deref()
   }
 
+  /** Associates a widget with this input slot for promotion to the parent graph. */
   set _widget(widget) {
     this.#widgetRef = widget ? new WeakRef(widget) : undefined
   }
 
+  /**
+   * Connects this subgraph input to an internal node input slot.
+   *
+   * Creates a link whose origin is this slot (on the {@link SubgraphInputNode}) and whose target
+   * is the given node input. Disconnects any existing link on the target input first. When the
+   * target is widget-backed, validates widget compatibility and records the widget reference.
+   * @param slot The internal node input to connect to.
+   * @param node The node that owns {@link slot}.
+   * @param afterRerouteId Optional reroute ID when the link chain continues through reroutes.
+   * @returns The created {@link LLink}, or `undefined` if the connection was blocked.
+   */
   override connect(slot: INodeInputSlot, node: LGraphNode, afterRerouteId?: RerouteId): LLink | undefined {
     const { subgraph } = this.parent
 
@@ -129,11 +152,23 @@ export class SubgraphInput extends SubgraphSlot {
     return link
   }
 
+  /**
+   * Canvas-space position for rendering this slot's label.
+   *
+   * Vertically centred on the right edge of the slot bounding rectangle.
+   */
   get labelPos(): Point {
     const [x, y, , height] = this.boundingRect
     return [x, y + height * 0.5]
   }
 
+  /**
+   * Collects all widgets connected through this input's links.
+   *
+   * Walks each link ID, resolves the target input, and returns matching widgets from the
+   * connected nodes.
+   * @returns Widgets found on connected internal inputs.
+   */
   getConnectedWidgets(): IBaseWidget[] {
     const { subgraph } = this.parent
     const widgets: IBaseWidget[] = []
@@ -195,13 +230,21 @@ export class SubgraphInput extends SubgraphSlot {
     return true
   }
 
+  /**
+   * Disconnects all links on this input and dispatches `"input-disconnected"`.
+   */
   override disconnect(): void {
     super.disconnect()
 
     this.events.dispatch("input-disconnected", { input: this })
   }
 
-  /** For inputs, x is the right edge of the input node. */
+  /**
+   * Positions this slot within the input boundary node's layout.
+   *
+   * For inputs, the connection circle sits on the right edge of the IO node panel.
+   * @param rect `[right, top, width, height]` in canvas space.
+   */
   override arrange(rect: ReadOnlyRect): void {
     const [right, top, width, height] = rect
     const { boundingRect: b, pos } = this
@@ -219,6 +262,8 @@ export class SubgraphInput extends SubgraphSlot {
    * Checks if this slot is a valid target for a connection from the given slot.
    * For SubgraphInput (which acts as an output inside the subgraph),
    * the fromSlot should be an input slot.
+   * @param fromSlot The slot being dragged toward this input boundary slot.
+   * @returns `true` when types are compatible and the source is an input or subgraph output.
    */
   override isValidTarget(fromSlot: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput): boolean {
     if (isNodeSlot(fromSlot)) {

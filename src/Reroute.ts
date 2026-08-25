@@ -16,11 +16,12 @@ import { LGraphBadge } from "./LGraphBadge"
 import { type LinkId, LLink } from "./LLink"
 import { distance, isPointInRect } from "./measure"
 
+/** Numeric identifier for a {@link Reroute} within an {@link LGraph}. */
 export type RerouteId = number
 
-/** The input or output slot that an incomplete reroute link is connected to. */
+/** Describes which end of a floating reroute chain remains connected to a node slot. */
 export interface FloatingRerouteSlot {
-  /** Floating connection to an input or output */
+  /** Whether the floating end attaches to an input or output slot. */
   slotType: "input" | "output"
 }
 
@@ -32,12 +33,15 @@ export interface FloatingRerouteSlot {
  * and a `WeakRef` to a {@link LinkNetwork} to resolve them.
  */
 export class Reroute implements Positionable, LinkSegment, Serialisable<SerialisableReroute> {
+  /** Visual radius of the reroute circle in graph units. */
   static radius: number = 10
   /** Maximum distance from reroutes to their bezier curve control points. */
   static maxSplineOffset: number = 80
+  /** When `true`, draws the reroute ID above each reroute for debugging. */
   static drawIdBadge: boolean = false
+  /** Radius of the small input/output slot circles shown on hover. */
   static slotRadius: number = 5
-  /** Distance from reroute centre to slot centre. */
+  /** Distance from reroute centre to slot centre along the link axis. */
   static get slotOffset(): number {
     const gap = Reroute.slotRadius * 0.33
     return Reroute.radius + gap + Reroute.slotRadius
@@ -49,22 +53,32 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   #network: WeakRef<LinkNetwork>
 
   #parentId?: RerouteId
+  /** ID of the reroute closer to the output side in the chain; `undefined` for the first reroute after a node output. */
   public get parentId(): RerouteId | undefined {
     return this.#parentId
   }
 
-  /** Ignores attempts to create an infinite loop. @inheritdoc */
+  /**
+   * Sets the parent reroute in the chain.
+   *
+   * Ignores assignments that would create a self-loop or an infinite parent chain.
+   */
   public set parentId(value) {
     if (value === this.id) return
     if (this.getReroutes() === null) return
     this.#parentId = value
   }
 
+  /** The reroute immediately upstream (toward the output) in the chain, if any. */
   public get parent(): Reroute | undefined {
     return this.#network.deref()?.getReroute(this.#parentId)
   }
 
-  /** This property is only defined on the last reroute of a floating reroute chain (closest to input end). */
+  /**
+   * Present only on the last reroute of a floating chain (closest to the input end).
+   *
+   * Records which slot type ({@link FloatingRerouteSlot.slotType}) the dangling end connects to.
+   */
   floating?: FloatingRerouteSlot
 
   #pos = this.#malloc.subarray(0, 2)
@@ -147,18 +161,22 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   #inputSlot = new RerouteSlot(this, true)
   #outputSlot = new RerouteSlot(this, false)
 
+  /** Whether the pointer is over either the input or output slot affordance. */
   get isSlotHovered(): boolean {
     return this.isInputHovered || this.isOutputHovered
   }
 
+  /** Whether the pointer is over this reroute's input-side slot. */
   get isInputHovered(): boolean {
     return this.#inputSlot.hovering
   }
 
+  /** Whether the pointer is over this reroute's output-side slot. */
   get isOutputHovered(): boolean {
     return this.#outputSlot.hovering
   }
 
+  /** First regular (non-floating) link passing through this reroute, if any. */
   get firstLink(): LLink | undefined {
     const linkId = this.linkIds.values().next().value
     return linkId === undefined
@@ -169,6 +187,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
         .get(linkId)
   }
 
+  /** First floating link passing through this reroute, if any. */
   get firstFloatingLink(): LLink | undefined {
     const linkId = this.floatingLinkIds.values().next().value
     return linkId === undefined
@@ -375,6 +394,13 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * @param output The new origin output slot
    * @param index The slot index of {@link output}
    */
+  /**
+   * Updates floating links to originate from a new output node and slot.
+   * @param node The node that now owns the output end.
+   * @param output The output slot object on {@link node}.
+   * @param index Index of {@link output} on {@link node}.
+   * @throws If the reroute's network reference is invalid.
+   */
   setFloatingLinkOrigin(node: LGraphNode, output: INodeOutputSlot, index: number) {
     const network = this.#network.deref()
     const floatingOutLinks = this.getFloatingLinks("output")
@@ -398,7 +424,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     }
   }
 
-  /** @inheritdoc */
+  /** @inheritdoc Positionable.move */
   move(deltaX: number, deltaY: number) {
     this.#pos[0] += deltaX
     this.#pos[1] += deltaY
@@ -414,12 +440,21 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     return true
   }
 
+  /**
+   * Removes every floating link registered on this reroute.
+   *
+   * Delegates to {@link removeFloatingLink} for each ID in {@link floatingLinkIds}.
+   */
   removeAllFloatingLinks() {
     for (const linkId of this.floatingLinkIds) {
       this.removeFloatingLink(linkId)
     }
   }
 
+  /**
+   * Removes a single floating link from the graph and this reroute's tracking set.
+   * @param linkId ID of the floating link to remove.
+   */
   removeFloatingLink(linkId: LinkId) {
     const network = this.#network.deref()
     if (!network) return
@@ -451,6 +486,11 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     }
   }
 
+  /**
+   * Removes this reroute from its owning {@link LinkNetwork}.
+   *
+   * Equivalent to {@link LGraph.removeReroute} on the dereferenced network.
+   */
   remove() {
     const network = this.#network.deref()
     if (!network) return
@@ -458,6 +498,15 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     network.removeReroute(this.id)
   }
 
+  /**
+   * Computes bezier control-point geometry for rendering links through this reroute.
+   *
+   * Averages incoming link angles and stores {@link cos}, {@link sin}, and {@link controlPoint}.
+   * Runs at most once per render frame per reroute.
+   * @param lastRenderTime Monotonic render timestamp from the canvas.
+   * @param network Link network used to resolve downstream positions.
+   * @param linkStart Canvas position of the upstream link origin (output or prior reroute).
+   */
   calculateAngle(lastRenderTime: number, network: ReadonlyLinkNetwork, linkStart: Point): void {
     // Ensure we run once per render
     if (!(lastRenderTime > this.#lastRenderTime)) return
@@ -576,6 +625,11 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     this.#outputSlot.draw(ctx)
   }
 
+  /**
+   * Draws a highlight ring around the reroute when used as a drop target or selection affordance.
+   * @param ctx Canvas context in graph space.
+   * @param colour Stroke colour for the highlight ring.
+   */
   drawHighlight(ctx: CanvasRenderingContext2D, colour: CanvasColour): void {
     const { pos } = this
 
@@ -641,7 +695,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     return distance(this.pos, pos) <= Reroute.radius
   }
 
-  /** @inheritdoc */
+  /** @inheritdoc Serialisable.asSerialisable */
   asSerialisable(): SerialisableReroute {
     const { id, parentId, pos, linkIds } = this
     return {

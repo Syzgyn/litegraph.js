@@ -331,6 +331,15 @@ export function findPointOnCurve(
   out[1] = (c1 * a[1]) + (c2 * controlA[1]) + (c3 * controlB[1]) + (c4 * b[1])
 }
 
+/**
+ * Computes an axis-aligned bounding rectangle that encloses all {@link objects}.
+ *
+ * Each object must expose a {@link HasBoundingRect.boundingRect}. When no finite bounds
+ * can be derived (empty iterable or non-finite coordinates), returns `null`.
+ * @param objects Iterable of positionable items to measure.
+ * @param padding Extra space added on all sides of the computed bounds. Default: `10`.
+ * @returns Bounding rect as `[x, y, width, height]`, or `null` when bounds are undefined.
+ */
 export function createBounds(
   objects: Iterable<HasBoundingRect>,
   padding: number = 10,
@@ -455,6 +464,13 @@ export function alignOutsideContainer(
   return rect
 }
 
+/**
+ * Clamps {@link value} to the inclusive range `[min, max]`.
+ * @param value The number to clamp.
+ * @param min Lower bound (inclusive).
+ * @param max Upper bound (inclusive).
+ * @returns `min` when `value < min`, `max` when `value > max`, otherwise `value`.
+ */
 export function clamp(value: number, min: number, max: number): number {
   return value < min ? min : (value > max ? max : value)
 }

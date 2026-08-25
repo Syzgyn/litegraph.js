@@ -2,9 +2,22 @@ import type { IBooleanWidget } from "@/types/widgets"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
+/**
+ * Boolean toggle widget (`type: "toggle"`) rendered as a capsule with an on/off indicator disc.
+ *
+ * Clicking anywhere on the widget flips {@link value}. Display strings come from
+ * `options.on` / `options.off` when provided, defaulting to `"true"` / `"false"`.
+ * @see {@link IBooleanWidget}
+ */
 export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBooleanWidget {
+  /** Widget type discriminator; always `"toggle"`. */
   override type = "toggle" as const
 
+  /**
+   * Draws the toggle capsule, coloured status disc, label, and on/off text.
+   * @param ctx Canvas 2D context.
+   * @param options Node width and quality flags.
+   */
   override drawWidget(ctx: CanvasRenderingContext2D, {
     width,
     showText = true,
@@ -31,6 +44,11 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
     }
   }
 
+  /**
+   * Draws the widget label at the given X coordinate.
+   * @param ctx Canvas context.
+   * @param x Left edge X position for the label text.
+   */
   drawLabel(ctx: CanvasRenderingContext2D, x: number): void {
     // Draw label
     ctx.fillStyle = this.secondary_text_color
@@ -38,6 +56,11 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
     if (displayName) ctx.fillText(displayName, x, this.labelBaseline)
   }
 
+  /**
+   * Draws the on/off display string aligned to the right at the given X coordinate.
+   * @param ctx Canvas context.
+   * @param x Right-edge X position for the value text.
+   */
   drawValue(ctx: CanvasRenderingContext2D, x: number): void {
     // Draw value
     ctx.fillStyle = this.value ? this.text_color : this.secondary_text_color
@@ -46,6 +69,10 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
     ctx.fillText(value, x, this.labelBaseline)
   }
 
+  /**
+   * Toggles {@link value} on click.
+   * @param options Pointer event context passed to {@link setValue}.
+   */
   override onClick(options: WidgetEventOptions) {
     this.setValue(!this.value, options)
   }

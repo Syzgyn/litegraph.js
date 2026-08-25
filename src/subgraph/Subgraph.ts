@@ -12,34 +12,74 @@ import { SubgraphInputNode } from "./SubgraphInputNode"
 import { SubgraphOutput } from "./SubgraphOutput"
 import { SubgraphOutputNode } from "./SubgraphOutputNode"
 
-/** Internal; simplifies type definitions. */
+/**
+ * Union of graph types that may contain or be contained by a {@link Subgraph}.
+ *
+ * Used where APIs accept either a root {@link LGraph} or a nested subgraph definition.
+ */
 export type GraphOrSubgraph = LGraph | Subgraph
 
-/** A subgraph definition. */
+/**
+ * A reusable subgraph definition that can be instantiated as {@link SubgraphNode} instances.
+ *
+ * Extends {@link LGraph} with named inputs/outputs, IO boundary nodes, and widget promotion.
+ * When opened in the canvas, the editor displays the subgraph's internal node network while
+ * preserving links to the parent graph through {@link SubgraphInput} and {@link SubgraphOutput}.
+ * @remarks
+ * Subgraph instances on a parent graph mirror this definition's IO slots. Changes to inputs,
+ * outputs, or promoted widgets propagate to all live instances via events.
+ * @see {@link SubgraphNode}
+ * @see {@link SubgraphInput}
+ * @see {@link SubgraphOutput}
+ */
 export class Subgraph extends LGraph implements BaseLGraph, Serialisable<ExportedSubgraph> {
+  /** Typed event target for subgraph lifecycle and IO slot changes. */
   declare readonly events: CustomEventTarget<SubgraphEventMap>
 
-  /** Limits the number of levels / depth that subgraphs may be nested.  Prevents uncontrolled programmatic nesting. */
+  /**
+   * Maximum nesting depth for programmatically created subgraphs.
+   *
+   * Guards against unbounded recursive subgraph creation.
+   */
   static MAX_NESTED_SUBGRAPHS = 1000
 
-  /** The display name of the subgraph. */
+  /** Human-readable name shown in the editor and on {@link SubgraphNode} instances. */
   name: string = "Unnamed Subgraph"
 
+  /** Fixed boundary node listing all subgraph inputs on the left side of the subgraph canvas. */
   readonly inputNode = new SubgraphInputNode(this)
+  /** Fixed boundary node listing all subgraph outputs on the right side of the subgraph canvas. */
   readonly outputNode = new SubgraphOutputNode(this)
 
-  /** Ordered list of inputs to the subgraph itself. Similar to a reroute, with the input side in the graph, and the output side in the subgraph. */
+  /**
+   * Ordered list of inputs exposed on the subgraph boundary.
+   *
+   * Each input connects from the parent graph into the subgraph interior (origin side in parent,
+   * target side inside). Conceptually similar to a reroute.
+   */
   readonly inputs: SubgraphInput[] = []
-  /** Ordered list of outputs from the subgraph itself. Similar to a reroute, with the input side in the subgraph, and the output side in the graph. */
+  /**
+   * Ordered list of outputs exposed on the subgraph boundary.
+   *
+   * Each output connects from the subgraph interior to the parent graph (origin side inside,
+   * target side in parent).
+   */
   readonly outputs: SubgraphOutput[] = []
-  /** A list of node widgets displayed in the parent graph, on the subgraph object. */
+  /**
+   * Node widgets promoted to the parent graph and displayed on {@link SubgraphNode} instances.
+   */
   readonly widgets: ExposedWidget[] = []
 
   #rootGraph: LGraph
+  /** The top-level {@link LGraph} that owns this subgraph definition in the registry. */
   override get rootGraph(): LGraph {
     return this.#rootGraph
   }
 
+  /**
+   * @param rootGraph The root graph that registers and owns this subgraph definition.
+   * @param data Serialised subgraph configuration used to populate IO slots, nodes, and layout.
+   */
   constructor(
     rootGraph: LGraph,
     data: ExportedSubgraph,
@@ -55,6 +95,12 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     this.#configureSubgraph(cloned)
   }
 
+  /**
+   * Returns the IO boundary node under the given canvas coordinates, if any.
+   * @param x Canvas-space X coordinate.
+   * @param y Canvas-space Y coordinate.
+   * @returns The input or output boundary node at that position, or `undefined`.
+   */
   getIoNodeOnPos(x: number, y: number): SubgraphInputNode | SubgraphOutputNode | undefined {
     const { inputNode, outputNode } = this
     if (inputNode.containsPoint([x, y])) return inputNode
@@ -92,6 +138,12 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     this.outputNode.configure(data.outputNode)
   }
 
+  /**
+   * Reconfigures this subgraph from serialised data.
+   * @param data The serialised graph and subgraph metadata.
+   * @param keep_old When `true`, merges with existing state instead of replacing it.
+   * @returns The result of the base {@link LGraph.configure} call.
+   */
   override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, keep_old?: boolean): boolean | undefined {
     const r = super.configure(data, keep_old)
 
@@ -99,11 +151,23 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     return r
   }
 
+  /**
+   * Attaches a canvas and sets it as the active subgraph editor view.
+   * @param canvas The canvas to attach.
+   */
   override attachCanvas(canvas: LGraphCanvas): void {
     super.attachCanvas(canvas)
     canvas.subgraph = this
   }
 
+  /**
+   * Adds a new input slot to the subgraph boundary.
+   *
+   * Dispatches `"adding-input"` before creation and `"input-added"` after the slot is registered.
+   * @param name Display name for the new input.
+   * @param type Slot type string used for connection validation.
+   * @returns The created {@link SubgraphInput}.
+   */
   addInput(name: string, type: string): SubgraphInput {
     this.events.dispatch("adding-input", { name, type })
 
@@ -119,6 +183,14 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     return input
   }
 
+  /**
+   * Adds a new output slot to the subgraph boundary.
+   *
+   * Dispatches `"adding-output"` before creation and `"output-added"` after the slot is registered.
+   * @param name Display name for the new output.
+   * @param type Slot type string used for connection validation.
+   * @returns The created {@link SubgraphOutput}.
+   */
   addOutput(name: string, type: string): SubgraphOutput {
     this.events.dispatch("adding-output", { name, type })
 
@@ -206,6 +278,13 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     }
   }
 
+  /**
+   * Draws both IO boundary nodes on the subgraph canvas.
+   * @param ctx The canvas rendering context.
+   * @param colorContext Connection colour palette for slot rendering.
+   * @param fromSlot When dragging a link, the slot being dragged (used for highlight validation).
+   * @param editorAlpha Opacity multiplier for editor overlays.
+   */
   draw(ctx: CanvasRenderingContext2D, colorContext: DefaultConnectionColors, fromSlot?: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput, editorAlpha?: number): void {
     this.inputNode.draw(ctx, colorContext, fromSlot, editorAlpha)
     this.outputNode.draw(ctx, colorContext, fromSlot, editorAlpha)
@@ -213,7 +292,8 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
 
   /**
    * Clones the subgraph, creating an identical copy with a new ID.
-   * @returns A new subgraph with the same configuration, but a new ID.
+   * @param keepId When `true`, preserves the original subgraph ID instead of generating a new one.
+   * @returns A new subgraph with the same configuration.
    */
   clone(keepId: boolean = false): Subgraph {
     const exported = this.asSerialisable()
@@ -224,6 +304,10 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     return subgraph
   }
 
+  /**
+   * Serialises this subgraph definition for persistence or cloning.
+   * @returns Exported subgraph data including nodes, groups, links, IO slots, and widgets.
+   */
   override asSerialisable(): ExportedSubgraph & Required<Pick<SerialisableGraph, "nodes" | "groups" | "extra">> {
     return {
       id: this.id,

@@ -5,12 +5,21 @@ import { getWidgetStep } from "@/utils/widget"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
+/**
+ * Radial knob widget (`type: "knob"`) for numeric values within `options.min` / `options.max`.
+ *
+ * Renders a circular dial with conic gradient fill proportional to the current value. Supports
+ * drag-to-adjust (horizontal or vertical movement) with shift-modified coarse steps. Height is
+ * layout-driven via {@link computeLayoutSize} and {@link computedHeight}.
+ * @see {@link IKnobWidget}
+ */
 export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
+  /** Widget type discriminator; always `"knob"`. */
   override type = "knob" as const
 
   /**
-   * Compute the layout size of the widget.
-   * @returns The layout size of the widget.
+   * Reports flexible min/max dimensions so layout can allocate a tall knob region.
+   * @returns Minimum 60px height and 20px width with very large max bounds.
    */
   override computeLayoutSize(): {
     minHeight: number
@@ -26,10 +35,16 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     }
   }
 
+  /** Uses {@link computedHeight} when layout has assigned extra vertical space. */
   override get height(): number {
     return this.computedHeight || super.height
   }
 
+  /**
+   * Draws the radial knob, value arc, optional outline, and centred label/value text.
+   * @param ctx Canvas 2D context.
+   * @param options Node width and quality flags.
+   */
   drawWidget(
     ctx: CanvasRenderingContext2D,
     {
@@ -181,11 +196,25 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     Object.assign(ctx, { textAlign, strokeStyle, fillStyle })
   }
 
+  /**
+   * Resets accumulated drag offset when the user begins a new drag gesture.
+   */
   onClick(): void {
     this.current_drag_offset = 0
   }
 
+  /**
+   * Accumulated pointer movement since {@link onClick}; used to threshold discrete step changes
+   * during drag.
+   */
   current_drag_offset = 0
+
+  /**
+   * Adjusts the value based on horizontal or vertical drag delta.
+   * @param options Pointer deltas and shift key state; no-op when `options.read_only` is set.
+   * @remarks Vertical drag is inverted so upward motion increases the value. Shift uses ~10%
+   * range steps when larger than the base step.
+   */
   override onDrag(options: WidgetEventOptions): void {
     if (this.options.read_only) return
     const { e } = options

@@ -11,15 +11,54 @@ import type { NodeLike } from "@/types/NodeLike"
 
 import { LinkDirection } from "@/types/globalEnums"
 
-/** Connecting TO an input slot. */
-
+/**
+ * Represents a link being dragged **from** a subgraph input boundary **to** an input slot.
+ *
+ * Created by {@link LinkConnector.dragNewFromSubgraphInput}, {@link LinkConnector.dragFromReroute},
+ * and {@link LinkConnector.moveInputLink} (for subgraph input links). The origin is a
+ * {@link SubgraphInput} exposed on the subgraph's {@link SubgraphInputNode}.
+ * @remarks
+ * Subgraph inputs act as virtual outputs inside the subgraph — data flows from the parent graph
+ * into the subgraph through these boundary slots. This class handles both creating new links and
+ * moving existing subgraph-input links.
+ * @see {@link ToOutputFromIoNodeLink}
+ * @see {@link LinkConnector.dragNewFromSubgraphInput}
+ */
 export class ToInputFromIoNodeLink implements RenderLink {
+  /** Always `"input"` — this link is being dragged toward an input slot. */
   readonly toType = "input"
+
+  /** Index of {@link fromSlot} on {@link node}. */
   readonly fromSlotIndex: number
+
+  /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
+
+  /**
+   * The direction the link segment faces as it leaves {@link fromPos}.
+   *
+   * Defaults to {@link LinkDirection.RIGHT}. May be overridden to {@link LinkDirection.NONE}
+   * when dragging from a reroute.
+   */
   fromDirection: LinkDirection = LinkDirection.RIGHT
+
+  /**
+   * When set, the drag is repositioning an existing link rather than creating a new one.
+   *
+   * Set by {@link LinkConnector.moveInputLink} for subgraph input links. Affects which event
+   * is dispatched on connect (`"input-moved"` vs `"link-created"`).
+   */
   readonly existingLink?: LLink
 
+  /**
+   * @param network The subgraph that owns the input boundary.
+   * @param node The {@link SubgraphInputNode} displaying the subgraph inputs.
+   * @param fromSlot The {@link SubgraphInput} at the origin of the drag.
+   * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
+   * @param dragDirection Controls how the free end of the link follows the cursor.
+   * @param existingLink When repositioning an existing link, the {@link LLink} being moved.
+   * @throws When {@link fromSlot} is not found on {@link node} (unless it is the empty slot).
+   */
   constructor(
     readonly network: LinkNetwork,
     readonly node: SubgraphInputNode,
@@ -40,14 +79,34 @@ export class ToInputFromIoNodeLink implements RenderLink {
     this.existingLink = existingLink
   }
 
+  /**
+   * Determines whether dropping onto the given input slot would produce a valid connection.
+   *
+   * Delegates to {@link SubgraphInputNode.canConnectTo}, passing this link's origin
+   * {@link SubgraphInput} as the upstream source.
+   * @param inputNode The node that owns the candidate input slot.
+   * @param input The input slot being hovered or dropped on.
+   */
   canConnectToInput(inputNode: NodeLike, input: INodeInputSlot): boolean {
     return this.node.canConnectTo(inputNode, input, this.fromSlot)
   }
 
+  /**
+   * Input-directed drags never terminate on an output slot.
+   * @returns Always `false`.
+   */
   canConnectToOutput(): false {
     return false
   }
 
+  /**
+   * Completes the drag by connecting the subgraph input to an input slot inside the subgraph.
+   *
+   * Dispatches `"input-moved"` when {@link existingLink} is set, otherwise `"link-created"`.
+   * @param node The node that owns the target input slot.
+   * @param input The input slot to connect to.
+   * @param events Event target for dispatching connection lifecycle events.
+   */
   connectToInput(node: LGraphNode, input: INodeInputSlot, events: CustomEventTarget<LinkConnectorEventMap>) {
     const { fromSlot, fromReroute, existingLink } = this
 
@@ -62,10 +121,25 @@ export class ToInputFromIoNodeLink implements RenderLink {
     }
   }
 
+  /**
+   * Subgraph-input drags cannot terminate on a subgraph output boundary.
+   * @throws Always throws — not implemented for this link type.
+   */
   connectToSubgraphOutput(): void {
     throw new Error("Not implemented")
   }
 
+  /**
+   * Completes the drag by connecting through a reroute's input side.
+   *
+   * Parents the drop-target reroute to {@link fromReroute}, creates the link via
+   * {@link SubgraphInput.connect}, cleans up orphaned reroutes, and dispatches the appropriate
+   * lifecycle event based on whether {@link existingLink} is set.
+   * @param reroute The reroute being dropped on.
+   * @param param1 The target input node, slot, and existing link at the reroute terminus.
+   * @param events Dispatches `"input-moved"` or `"link-created"`.
+   * @param originalReroutes Reroutes in the chain between the drop target and the drag origin.
+   */
   connectToRerouteInput(
     reroute: Reroute,
     {
@@ -116,14 +190,26 @@ export class ToInputFromIoNodeLink implements RenderLink {
     }
   }
 
+  /**
+   * Input-directed drags cannot terminate on an output slot.
+   * @throws Always throws — this operation is not supported for this link type.
+   */
   connectToOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")
   }
 
+  /**
+   * Input-directed drags cannot terminate on a subgraph input boundary.
+   * @throws Always throws — subgraph inputs are sources, not sinks, for this operation.
+   */
   connectToSubgraphInput(): void {
     throw new Error("ToInputRenderLink cannot connect to a subgraph input.")
   }
 
+  /**
+   * Input-directed drags cannot terminate on a reroute's output side.
+   * @throws Always throws — use {@link connectToRerouteInput} instead.
+   */
   connectToRerouteOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")
   }

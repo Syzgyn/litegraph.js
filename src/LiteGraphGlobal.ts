@@ -26,156 +26,228 @@ import {
 import { createUuidv4 } from "./utils/uuid"
 
 /**
- * The Global Scope. It contains all the registered node classes.
+ * Global litegraph runtime: configuration, constants, and node type registry.
+ *
+ * A single instance is exported as {@link LiteGraph} from the package entry point.
+ * Register node classes with {@link registerNodeType}, create nodes with {@link createNode},
+ * and read/write editor-wide defaults (colours, grid size, interaction flags) on this object.
+ * @see {@link LiteGraph}
  */
 export class LiteGraphGlobal {
-  // Enums
+  /** @see {@link SlotShape} Re-exported for legacy global access. */
   SlotShape = SlotShape
+  /** @see {@link SlotDirection} Re-exported for legacy global access. */
   SlotDirection = SlotDirection
+  /** @see {@link SlotType} Re-exported for legacy global access. */
   SlotType = SlotType
+  /** @see {@link LabelPosition} Re-exported for legacy global access. */
   LabelPosition = LabelPosition
 
-  /** Used in serialised graphs at one point. */
+  /** Serialised graph format version written into saved graphs. */
   VERSION = 0.4 as const
 
+  /** Default canvas grid spacing in graph units. */
   CANVAS_GRID_SIZE = 10
 
+  /** Default height of node title bars in pixels. */
   NODE_TITLE_HEIGHT = 30
+  /** Default Y offset for title text baseline within the title bar. */
   NODE_TITLE_TEXT_Y = 20
+  /** Vertical spacing between node slot rows in pixels. */
   NODE_SLOT_HEIGHT = 20
+  /** Default height allocated per widget row in pixels. */
   NODE_WIDGET_HEIGHT = 20
+  /** Default node width in pixels. */
   NODE_WIDTH = 140
+  /** Minimum node width when resizing. */
   NODE_MIN_WIDTH = 50
+  /** Radius of collapsed node circle representation. */
   NODE_COLLAPSED_RADIUS = 10
+  /** Width of collapsed node card representation. */
   NODE_COLLAPSED_WIDTH = 80
+  /** Default node title bar text colour. */
   NODE_TITLE_COLOR = "#999"
+  /** Title bar text colour when the node is selected. */
   NODE_SELECTED_TITLE_COLOR = "#FFF"
+  /** Default node body label font size. */
   NODE_TEXT_SIZE = 14
+  /** Default node body text colour. */
   NODE_TEXT_COLOR = "#AAA"
+  /** Text colour for highlighted node labels. */
   NODE_TEXT_HIGHLIGHT_COLOR = "#EEE"
+  /** Font size for node sub-labels. */
   NODE_SUBTEXT_SIZE = 12
+  /** Default node accent/border colour. */
   NODE_DEFAULT_COLOR = "#333"
+  /** Default node background fill colour. */
   NODE_DEFAULT_BGCOLOR = "#353535"
+  /** Default node outline/box colour. */
   NODE_DEFAULT_BOXCOLOR = "#666"
+  /** Default node corner shape. */
   NODE_DEFAULT_SHAPE = RenderShape.ROUND
+  /** Outline colour drawn around selected node boxes. */
   NODE_BOX_OUTLINE_COLOR = "#FFF"
+  /** Colour used to indicate node execution errors. */
   NODE_ERROR_COLOUR = "#E00"
+  /** Default font family for node text. */
   NODE_FONT = "Arial"
 
+  /** Default UI font family. */
   DEFAULT_FONT = "Arial"
+  /** Default drop-shadow colour for canvas text. */
   DEFAULT_SHADOW_COLOR = "rgba(0,0,0,0.5)"
 
+  /** Default font size for group titles. */
   DEFAULT_GROUP_FONT = 24
+  /** @deprecated Legacy group font size override. */
   DEFAULT_GROUP_FONT_SIZE?: any
+  /** Font family for group titles. */
   GROUP_FONT = "Arial"
 
+  /** Default widget background colour. */
   WIDGET_BGCOLOR = "#222"
+  /** Default widget outline colour. */
   WIDGET_OUTLINE_COLOR = "#666"
+  /** Outline colour for advanced widget types. */
   WIDGET_ADVANCED_OUTLINE_COLOR = "rgba(56, 139, 253, 0.8)"
+  /** Default widget label/value text colour. */
   WIDGET_TEXT_COLOR = "#DDD"
+  /** Secondary widget text colour. */
   WIDGET_SECONDARY_TEXT_COLOR = "#999"
+  /** Text colour for disabled widgets. */
   WIDGET_DISABLED_TEXT_COLOR = "#666"
 
+  /** Default colour for data links. */
   LINK_COLOR = "#9A9"
+  /** Colour for event/action links. */
   EVENT_LINK_COLOR = "#A86"
+  /** Colour for in-progress link being dragged. */
   CONNECTING_LINK_COLOR = "#AFA"
 
-  /** avoid infinite loops */
+  /** Maximum nodes allowed per graph (guard against infinite loops). */
   MAX_NUMBER_OF_NODES = 10_000
-  /** default node position */
+  /** Default `[x, y]` position for newly created nodes. */
   DEFAULT_POSITION = [100, 100]
-  /** ,"circle" */
+  /** Valid {@link RenderShape} name strings for node configuration. */
   VALID_SHAPES = ["default", "box", "round", "card"] satisfies ("default" | Lowercase<keyof typeof RenderShape>)[]
+  /** Corner radius for {@link RenderShape.ROUND} nodes. */
   ROUND_RADIUS = 8
 
-  // shapes are used for nodes but also for slots
+  /** @see {@link RenderShape.BOX} */
   BOX_SHAPE = RenderShape.BOX
+  /** @see {@link RenderShape.ROUND} */
   ROUND_SHAPE = RenderShape.ROUND
+  /** @see {@link RenderShape.CIRCLE} */
   CIRCLE_SHAPE = RenderShape.CIRCLE
+  /** @see {@link RenderShape.CARD} */
   CARD_SHAPE = RenderShape.CARD
+  /** @see {@link RenderShape.ARROW} */
   ARROW_SHAPE = RenderShape.ARROW
-  /** intended for slot arrays */
+  /** @see {@link RenderShape.GRID} Intended for slot arrays. */
   GRID_SHAPE = RenderShape.GRID
 
-  // enums
+  /** @see {@link NodeSlotType.INPUT} */
   INPUT = NodeSlotType.INPUT
+  /** @see {@link NodeSlotType.OUTPUT} */
   OUTPUT = NodeSlotType.OUTPUT
 
   // TODO: -1 can lead to ambiguity in JS; these should be updated to a more explicit constant or Symbol.
-  /** for outputs */
+  /** Event slot type sentinel for outputs. @see {@link NodeSlotType} */
   EVENT = -1 as const
-  /** for inputs */
+  /** Action slot type sentinel for inputs. @see {@link NodeSlotType} */
   ACTION = -1 as const
 
-  /** helper, will add "On Request" and more in the future */
+  /** Human-readable node execution mode names. */
   NODE_MODES = ["Always", "On Event", "Never", "On Trigger"]
-  /** use with node_box_coloured_by_mode */
+  /** Title/box colours indexed by node mode when {@link node_box_coloured_by_mode} is enabled. */
   NODE_MODES_COLORS = ["#666", "#422", "#333", "#224", "#626"]
+  /** @see {@link LGraphEventMode.ALWAYS} */
   ALWAYS = LGraphEventMode.ALWAYS
+  /** @see {@link LGraphEventMode.ON_EVENT} */
   ON_EVENT = LGraphEventMode.ON_EVENT
+  /** @see {@link LGraphEventMode.NEVER} */
   NEVER = LGraphEventMode.NEVER
+  /** @see {@link LGraphEventMode.ON_TRIGGER} */
   ON_TRIGGER = LGraphEventMode.ON_TRIGGER
 
+  /** @see {@link LinkDirection.UP} */
   UP = LinkDirection.UP
+  /** @see {@link LinkDirection.DOWN} */
   DOWN = LinkDirection.DOWN
+  /** @see {@link LinkDirection.LEFT} */
   LEFT = LinkDirection.LEFT
+  /** @see {@link LinkDirection.RIGHT} */
   RIGHT = LinkDirection.RIGHT
+  /** @see {@link LinkDirection.CENTER} */
   CENTER = LinkDirection.CENTER
 
-  /** helper */
+  /** Human-readable link render mode names. */
   LINK_RENDER_MODES = ["Straight", "Linear", "Spline"]
+  /** @see {@link LinkRenderType.HIDDEN_LINK} */
   HIDDEN_LINK = LinkRenderType.HIDDEN_LINK
+  /** @see {@link LinkRenderType.STRAIGHT_LINK} */
   STRAIGHT_LINK = LinkRenderType.STRAIGHT_LINK
+  /** @see {@link LinkRenderType.LINEAR_LINK} */
   LINEAR_LINK = LinkRenderType.LINEAR_LINK
+  /** @see {@link LinkRenderType.SPLINE_LINK} */
   SPLINE_LINK = LinkRenderType.SPLINE_LINK
 
+  /** @see {@link TitleMode.NORMAL_TITLE} */
   NORMAL_TITLE = TitleMode.NORMAL_TITLE
+  /** @see {@link TitleMode.NO_TITLE} */
   NO_TITLE = TitleMode.NO_TITLE
+  /** @see {@link TitleMode.TRANSPARENT_TITLE} */
   TRANSPARENT_TITLE = TitleMode.TRANSPARENT_TITLE
+  /** @see {@link TitleMode.AUTOHIDE_TITLE} */
   AUTOHIDE_TITLE = TitleMode.AUTOHIDE_TITLE
 
-  /** arrange nodes vertically */
+  /** Layout mode string for vertically stacked slot arrays. */
   VERTICAL_LAYOUT = "vertical"
 
-  /** used to redirect calls */
+  /** Legacy proxy target for redirected global calls. */
   proxy = null
+  /** Base URL/path prefix for node icon images. */
   node_images_path = ""
 
+  /** When `true`, logs node registration and debug information to the console. */
   debug = false
+  /** When `true`, {@link createNode} catches constructor exceptions and returns `null`. */
   catch_exceptions = true
+  /** When `true`, rethrows errors from {@link reloadNodes}. */
   throw_errors = true
-  /** if set to true some nodes like Formula would be allowed to evaluate code that comes from unsafe sources (like node configuration), which could lead to exploits */
+  /** When `true`, allows nodes such as Formula to evaluate code from untrusted configuration (security risk). */
   allow_scripts = false
-  /** nodetypes by string */
+  /** Map of registered node type path → node class constructor. */
   registered_node_types: Record<string, typeof LGraphNode> = {}
-  /** @deprecated used for dropping files in the canvas.  It appears the code that enables this was removed, but the object remains and is references by built-in drag drop. */
+  /** @deprecated Used for dropping files in the canvas. Legacy drag-drop mapping by file extension. */
   node_types_by_file_extension: Record<string, { type: string }> = {}
-  /** node types by classname */
+  /** Map of node class name → constructor for legacy lookup. */
   Nodes: Record<string, typeof LGraphNode> = {}
-  /** used to store vars between graphs */
+  /** Shared global variables persisted between graph instances. */
   Globals = {}
 
   /** @deprecated Unused and will be deleted. */
   searchbox_extras: Dictionary<unknown> = {}
 
-  /** [true!] this make the nodes box (top left circle) coloured when triggered (execute/action), visual feedback */
+  /** When `true`, colours the node box when the node is triggered (execute/action feedback). */
   node_box_coloured_when_on = false
-  /** [true!] nodebox based on node mode, visual feedback */
+  /** When `true`, node box colour reflects the current node execution mode. */
   node_box_coloured_by_mode = false
 
-  /** [false on mobile] better true if not touch device, TODO add an helper/listener to close if false */
+  /** When `true`, closes dialogs when the pointer leaves the dialog area. */
   dialog_close_on_mouse_leave = false
+  /** Delay in ms before {@link dialog_close_on_mouse_leave} closes a dialog. */
   dialog_close_on_mouse_leave_delay = 500
 
-  /** [false!] prefer false if results too easy to break links - implement with ALT or TODO custom keys */
+  /** When `true`, Shift+click breaks links from an output slot. */
   shift_click_do_break_link_from = false
-  /** [false!]prefer false, way too easy to break links */
+  /** When `true`, click breaks links to an input slot. */
   click_do_break_link_to = false
-  /** [true!] who accidentally ctrl-alt-clicks on an in/output? nobody! that's who! */
+  /** When `true`, Ctrl+Alt+click breaks links under the pointer. */
   ctrl_alt_click_do_break_link = true
-  /** [true!] snaps links when dragging connections over valid targets */
+  /** When `true`, dragged links snap to compatible nearby slots (ComfyUI-style). */
   snaps_for_comfy = true
-  /** [true!] renders a partial border to highlight when a dragged link is snapped to a node */
+  /** When `true`, draws a highlight on nodes when a dragged link snaps to them. */
   snap_highlights_node = true
 
   /**
@@ -193,78 +265,68 @@ export class LiteGraphGlobal {
    */
   snapToGrid?: number
 
-  /** [false on mobile] better true if not touch device, TODO add an helper/listener to close if false */
+  /** When `true`, hides the node search box when the pointer leaves it. */
   search_hide_on_mouse_leave = true
   /**
-   * [true!] enable filtering slots type in the search widget
-   * !requires auto_load_slot_types or manual set registered_slot_[in/out]_types and slot_types_[in/out]
+   * When `true`, the node search widget filters results by compatible slot type.
+   * Requires {@link auto_load_slot_types} or manually populated slot type registries.
    */
   search_filter_enabled = false
-  /** [true!] opens the results list when opening the search widget */
+  /** When `true`, opens the full search result list when the search widget opens. */
   search_show_all_on_open = true
 
   /**
-   * [if want false, use true, run, get vars values to be statically set, than disable]
-   * nodes types and nodeclass association with node types need to be calculated,
-   * if dont want this, calculate once and set registered_slot_[in/out]_types and slot_types_[in/out]
+   * When `true`, instantiates each registered node class once at registration time
+   * to discover and populate slot type metadata automatically.
    */
   auto_load_slot_types = false
 
-  // set these values if not using auto_load_slot_types
-  /** slot types for nodeclass */
+  /** Maps input slot type → node type paths that expose that type. */
   registered_slot_in_types: Record<string, { nodes: string[] }> = {}
-  /** slot types for nodeclass */
+  /** Maps output slot type → node type paths that expose that type. */
   registered_slot_out_types: Record<string, { nodes: string[] }> = {}
-  /** slot types IN */
+  /** Sorted list of known input slot type strings (lowercase). */
   slot_types_in: string[] = []
-  /** slot types OUT */
+  /** Sorted list of known output slot type strings (lowercase). */
   slot_types_out: string[] = []
-  /**
-   * specify for each IN slot type a(/many) default node(s), use single string, array, or object
-   * (with node, title, parameters, ..) like for search
-   */
+  /** Default node type(s) suggested for each input slot type in search/create menus. */
   slot_types_default_in: Record<string, string[]> = {}
-  /**
-   * specify for each OUT slot type a(/many) default node(s), use single string, array, or object
-   * (with node, title, parameters, ..) like for search
-   */
+  /** Default node type(s) suggested for each output slot type in search/create menus. */
   slot_types_default_out: Record<string, string[]> = {}
 
-  /** [true!] very handy, ALT click to clone and drag the new node */
+  /** When `true`, Alt+drag clones the selected node(s) instead of moving them. */
   alt_drag_do_clone_nodes = false
 
   /**
-   * [true!] will create and connect event slots when using action/events connections,
-   * !WILL CHANGE node mode when using onTrigger (enable mode colors), onExecuted does not need this
+   * When `true`, automatically creates event/action slots when connecting triggers.
+   * Changes node mode colours when using `onTrigger`.
    */
   do_add_triggers_slots = false
 
-  /** [false!] being events, it is strongly reccomended to use them sequentially, one by one */
+  /** When `true`, allows multiple event outputs to connect from a single event slot. */
   allow_multi_output_for_events = true
 
-  /** [true!] allows to create and connect a ndoe clicking with the third button (wheel) */
+  /** When `true`, middle-click on a slot creates and connects a default node. */
   middle_click_slot_add_default_node = false
 
-  /** [true!] dragging a link to empty space will open a menu, add from list, search or defaults */
+  /** When `true`, releasing a link on empty canvas opens the node search/create menu. */
   release_link_on_empty_shows_menu = false
 
-  /** "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now) */
+  /** DOM event API to use: `"pointer"` or legacy `"mouse"`. */
   pointerevents_method = "pointer"
 
   /**
-   * [true!] allows ctrl + shift + v to paste nodes with the outputs of the unselected nodes connected
-   * with the inputs of the newly pasted nodes
+   * When `true`, Ctrl+Shift+V paste connects unselected output links to pasted node inputs.
    */
   ctrl_shift_v_paste_connect_unselected_outputs = true
 
-  // if true, all newly created nodes/links will use string UUIDs for their id fields instead of integers.
-  // use this if you must have node IDs that are unique across all graphs and subgraphs.
+  /** When `true`, new nodes and links use string UUIDs instead of integer IDs. */
   use_uuids = false
 
-  // Whether to highlight the bounding box of selected groups
+  /** When `true`, draws a highlight around the bounding box of selected groups. */
   highlight_selected_group = true
 
-  /** Whether to scale context with the graph when zooming in.  Zooming out never makes context menus smaller. */
+  /** When `true`, context menus scale up with canvas zoom (never shrink below 1×). */
   context_menu_scaling = false
 
   /**
@@ -296,8 +358,9 @@ export class LiteGraphGlobal {
   macGesturesRequireMac: boolean = true
 
   /**
-   * "standard": change the dragging on left mouse button click to select, enable middle-click or spacebar+left-click dragging
-   * "legacy": Enable dragging on left-click (original behavior)
+   * Canvas navigation interaction mode.
+   * - `"standard"`: left-click selects; pan via middle-click or spacebar+drag.
+   * - `"legacy"`: left-click pans (original litegraph behaviour).
    * @default "legacy"
    */
   canvasNavigationMode: "standard" | "legacy" = "legacy"
@@ -324,21 +387,34 @@ export class LiteGraphGlobal {
    */
   saveViewportWithGraph: boolean = true
 
-  // TODO: Remove legacy accessors
+  /** @see {@link LGraph} Legacy constructor reference on the global object. */
   LGraph = LGraph
+  /** @see {@link LLink} Legacy constructor reference on the global object. */
   LLink = LLink
+  /** @see {@link LGraphNode} Legacy constructor reference on the global object. */
   LGraphNode = LGraphNode
+  /** @see {@link LGraphGroup} Legacy constructor reference on the global object. */
   LGraphGroup = LGraphGroup
+  /** @see {@link DragAndScale} Legacy constructor reference on the global object. */
   DragAndScale = DragAndScale
+  /** @see {@link LGraphCanvas} Legacy constructor reference on the global object. */
   LGraphCanvas = LGraphCanvas
+  /** @see {@link ContextMenu} Legacy constructor reference on the global object. */
   ContextMenu = ContextMenu
+  /** @see {@link CurveEditor} Legacy constructor reference on the global object. */
   CurveEditor = CurveEditor
+  /** @see {@link Reroute} Legacy constructor reference on the global object. */
   Reroute = Reroute
 
   constructor() {
     Object.defineProperty(this, "Classes", { writable: false })
   }
 
+  /**
+   * Lazily-resolved internal class references exposed for advanced extension.
+   *
+   * Accessors avoid circular import issues at module load time.
+   */
   Classes = {
     get SubgraphSlot() { return SubgraphSlot },
     get SubgraphIONodeBase() { return SubgraphIONodeBase },
@@ -350,7 +426,9 @@ export class LiteGraphGlobal {
     get InputIndicators() { return InputIndicators },
   }
 
+  /** Called after a new node type is registered via {@link registerNodeType}. */
   onNodeTypeRegistered?(type: string, base_class: typeof LGraphNode): void
+  /** Called when an existing registration is replaced by {@link registerNodeType}. */
   onNodeTypeReplaced?(type: string, base_class: typeof LGraphNode, prev: unknown): void
 
   /**
@@ -414,9 +492,10 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * Save a slot type and his node
-   * @param type name of the node or the node constructor itself
-   * @param slot_type name of the slot type (variable type), eg. string, number, array, boolean, ..
+   * Associates a slot type with a node instance for search/filter registries.
+   * @param type Node instance (or legacy string type path) whose slots are being registered.
+   * @param slot_type Slot type string, wildcard, or event/action sentinel.
+   * @param out When `true`, registers an output slot type; otherwise an input slot type.
    */
   registerNodeAndSlotType(
     type: LGraphNode,
@@ -541,9 +620,10 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * Returns a list of node types matching one category
-   * @param category category name
-   * @returns array with all the node classes
+   * Returns node classes whose registered path is in the given category.
+   * @param category Category prefix to match, or `""` for uncategorised nodes.
+   * @param filter Optional constructor filter property; nodes with a mismatched filter are excluded.
+   * @returns Array of matching node class constructors.
    */
   getNodeTypesInCategory(category: string, filter?: string) {
     const r = []
@@ -583,7 +663,10 @@ export class LiteGraphGlobal {
     return result
   }
 
-  // debug purposes: reloads all the js scripts that matches a wildcard
+  /**
+   * Reloads node script files matching a URL wildcard (debug/development utility).
+   * @param folder_wildcard URL prefix that script `src` attributes must start with.
+   */
   reloadNodes(folder_wildcard: string): void {
     const tmp = document.getElementsByTagName("script")
     // weird, this array changes by its own, so we use a copy
@@ -616,8 +699,12 @@ export class LiteGraphGlobal {
     if (this.debug) console.log("Nodes reloaded")
   }
 
-  // separated just to improve if it doesn't work
-  /** @deprecated Prefer {@link structuredClone} */
+  /**
+   * Deep-clones a plain object via JSON serialisation.
+   * @deprecated Prefer {@link structuredClone} for modern environments.
+   * @param obj Object to clone, or `null`/`undefined`.
+   * @param target Optional object to receive cloned properties in place.
+   */
   cloneObject<T extends object | undefined | null>(obj: T, target?: T): WhenNullish<T, null> {
     if (obj == null) return null as WhenNullish<T, null>
 
@@ -635,10 +722,10 @@ export class LiteGraphGlobal {
   uuidv4 = createUuidv4
 
   /**
-   * Returns if the types of two slots are compatible (taking into account wildcards, etc)
-   * @param type_a output
-   * @param type_b input
-   * @returns true if they can be connected
+   * Returns whether two slot types can be connected (wildcards, events, and comma-lists).
+   * @param type_a Output slot type.
+   * @param type_b Input slot type.
+   * @returns `true` when the types are compatible.
    */
   isValidConnection(type_a: ISlotType, type_b: ISlotType): boolean {
     if (type_a == "" || type_a === "*") type_a = 0
@@ -676,7 +763,13 @@ export class LiteGraphGlobal {
     return false
   }
 
-  // used to create nodes from wrapping functions
+  /**
+   * Extracts parameter names from a function's source string.
+   *
+   * Strips comments and default values; used when wrapping functions as graph nodes.
+   * @param func Function whose parameter list should be parsed.
+   * @returns Array of parameter name strings.
+   */
   getParameterNames(func: (...args: any) => any): string[] {
     return String(func)
       .replaceAll(/\/\/.*$/gm, "") // strip single-line comments
@@ -689,8 +782,16 @@ export class LiteGraphGlobal {
       .filter(Boolean) // split & filter [""]
   }
 
-  /* helper for interaction: pointer, touch, mouse Listeners
-    used by LGraphCanvas DragAndScale ContextMenu */
+  /**
+   * Registers a DOM event listener using {@link pointerevents_method} (`pointer` or `mouse`).
+   *
+   * Falls back to touch events when PointerEvent is unavailable. Used by
+   * {@link LGraphCanvas}, {@link DragAndScale}, and {@link ContextMenu}.
+   * @param oDOM Target DOM node.
+   * @param sEvIn Event suffix (`down`, `move`, `up`, etc.).
+   * @param fCall Event handler.
+   * @param capture Whether to listen in the capture phase.
+   */
   pointerListenerAdd(oDOM: Node, sEvIn: string, fCall: (e: Event) => boolean | void, capture = false): void {
     if (!oDOM || !oDOM.addEventListener || !sEvIn || typeof fCall !== "function") return
 
@@ -755,6 +856,13 @@ export class LiteGraphGlobal {
     }
   }
 
+  /**
+   * Removes a listener previously added by {@link pointerListenerAdd}.
+   * @param oDOM Target DOM node.
+   * @param sEvent Event suffix (`down`, `move`, `up`, etc.).
+   * @param fCall Handler to remove.
+   * @param capture Whether the listener was registered in the capture phase.
+   */
   pointerListenerRemove(oDOM: Node, sEvent: string, fCall: (e: Event) => boolean | void, capture = false): void {
     if (!oDOM || !oDOM.removeEventListener || !sEvent || typeof fCall !== "function") return
 
@@ -781,12 +889,18 @@ export class LiteGraphGlobal {
     }
   }
 
+  /** @returns High-resolution timestamp from {@link performance.now}. */
   getTime(): number {
     return performance.now()
   }
 
+  /** @see {@link distance} Re-exported geometry helper. */
   distance = distance
 
+  /**
+   * Converts normalised RGBA components `[0–1]` to a CSS `rgba(...)` string.
+   * @param c Colour as `[r, g, b]` or `[r, g, b, a]` with components in `0–1`.
+   */
   colorToString(c: [number, number, number, number]): string {
     return (
       `rgba(${
@@ -801,9 +915,15 @@ export class LiteGraphGlobal {
     )
   }
 
+  /** @see {@link isInsideRectangle} Re-exported hit-test helper (legacy edge semantics). */
   isInsideRectangle = isInsideRectangle
 
-  // [minx,miny,maxx,maxy]
+  /**
+   * Expands an axis-aligned bounding box `[minX, minY, maxX, maxY]` to include `(x, y)`.
+   * @param bounding Bounding box mutated in place.
+   * @param x X coordinate to include.
+   * @param y Y coordinate to include.
+   */
   growBounding(bounding: Rect, x: number, y: number): void {
     if (x < bounding[0]) {
       bounding[0] = x
@@ -818,9 +938,14 @@ export class LiteGraphGlobal {
     }
   }
 
+  /** @see {@link overlapBounding} Re-exported rectangle overlap test. */
   overlapBounding = overlapBounding
 
-  // point inside bounding box
+  /**
+   * Tests whether point `p` lies inside an axis-aligned bounding box pair `bb`.
+   * @param p Point as `[x, y]`.
+   * @param bb Bounding box as `[[minX, minY], [maxX, maxY]]`.
+   */
   isInsideBounding(p: number[], bb: number[][]): boolean {
     if (
       p[0] < bb[0][0] ||
@@ -833,9 +958,10 @@ export class LiteGraphGlobal {
     return true
   }
 
-  // Convert a hex value to its decimal value - the inputted hex must be in the
-  // format of a hex triplet - the kind we use for HTML colours. The function
-  // will return an array with three values.
+  /**
+   * Parses a CSS hex colour into `[r, g, b]` byte components.
+   * @param hex Hex string with or without leading `#`.
+   */
   hex2num(hex: string): number[] {
     if (hex.charAt(0) == "#") {
       hex = hex.slice(1)
@@ -855,8 +981,10 @@ export class LiteGraphGlobal {
     return value
   }
 
-  // Give a array with three values as the argument and the function will return
-  // the corresponding hex triplet.
+  /**
+   * Converts `[r, g, b]` byte components to a CSS `#RRGGBB` hex string.
+   * @param triplet RGB components in `0–255`.
+   */
   num2hex(triplet: number[]): string {
     const hex_alphabets = "0123456789ABCDEF"
     let hex = "#"
@@ -870,6 +998,10 @@ export class LiteGraphGlobal {
     return hex
   }
 
+  /**
+   * Closes all open `.litecontextmenu` elements in the given window.
+   * @param ref_window Window whose document should be searched. Default: global `window`.
+   */
   closeAllContextMenus(ref_window: Window = window): void {
     const elements = [...ref_window.document.querySelectorAll(".litecontextmenu")]
     if (!elements.length) return
@@ -883,6 +1015,13 @@ export class LiteGraphGlobal {
     }
   }
 
+  /**
+   * Copies enumerable properties and prototype members from {@link origin} onto {@link target}.
+   *
+   * Legacy helper used when extending litegraph classes at runtime.
+   * @param target Class or object to extend.
+   * @param origin Source class or object.
+   */
   extendClass(target: any, origin: any): void {
     for (const i in origin) {
       // copy class properties

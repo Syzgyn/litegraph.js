@@ -7,9 +7,28 @@ import { ToInputRenderLink } from "./ToInputRenderLink"
 import { ToOutputRenderLink } from "./ToOutputRenderLink"
 
 /**
- * @internal A workaround class to support connecting to reroutes to node outputs.
+ * Workaround subclass of {@link ToOutputRenderLink} for dragging from a reroute toward an output.
+ *
+ * When the user drops onto an output slot, this class does not connect directly. Instead it
+ * creates a {@link ToInputRenderLink} from that output and delegates to
+ * {@link LinkConnector._connectOutputToReroute}, which routes the connection through the reroute
+ * chain's input side.
+ * @remarks
+ * This indirection exists because output-to-reroute connections require special reroute-chain
+ * bookkeeping that is not yet unified with the standard {@link ToOutputRenderLink.connectToOutput}
+ * path. {@link canConnectToReroute} always returns `false` to prevent nested reroute drops.
+ * @internal
+ * @see {@link LinkConnector.dragFromRerouteToOutput}
+ * @see {@link LinkConnector._connectOutputToReroute}
  */
 export class ToOutputFromRerouteLink extends ToOutputRenderLink {
+  /**
+   * @param network The graph (or subgraph) that owns the reroute chain.
+   * @param node The node whose input slot the link chain terminates at.
+   * @param fromSlot The input slot at the reroute chain terminus.
+   * @param fromReroute The reroute the drag originates from.
+   * @param linkConnector The active {@link LinkConnector}, used to delegate reroute connection.
+   */
   constructor(
     network: LinkNetwork,
     node: LGraphNode,
@@ -20,10 +39,23 @@ export class ToOutputFromRerouteLink extends ToOutputRenderLink {
     super(network, node, fromSlot, fromReroute)
   }
 
+  /**
+   * Reroute-to-reroute drops are not supported for this workaround class.
+   * @returns Always `false`.
+   */
   override canConnectToReroute(): false {
     return false
   }
 
+  /**
+   * Redirects the drop to a reroute-chain connection via {@link ToInputRenderLink}.
+   *
+   * Instead of calling {@link ToOutputRenderLink.connectToOutput}, creates a
+   * {@link ToInputRenderLink} from the target output and delegates to
+   * {@link LinkConnector._connectOutputToReroute}.
+   * @param node The node that owns the target output slot.
+   * @param output The output slot being dropped on.
+   */
   override connectToOutput(node: LGraphNode, output: INodeOutputSlot) {
     const nuRenderLink = new ToInputRenderLink(this.network, node, output)
     this.linkConnector._connectOutputToReroute(this.fromReroute, nuRenderLink)

@@ -40,10 +40,19 @@ import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgra
 import { Alignment, LGraphEventMode } from "./types/globalEnums"
 import { getAllNestedItems } from "./utils/collections"
 
+/**
+ * Monotonic ID counters persisted with the graph during serialisation.
+ *
+ * Used when assigning new IDs to nodes, links, groups, and reroutes.
+ */
 export interface LGraphState {
+  /** Last assigned {@link LGraphGroup.id}. */
   lastGroupId: number
+  /** Last assigned {@link LGraphNode.id} (numeric mode only). */
   lastNodeId: number
+  /** Last assigned {@link LLink.id}. */
   lastLinkId: number
+  /** Last assigned {@link Reroute.id}. */
   lastRerouteId: number
 }
 
@@ -52,34 +61,59 @@ type ParamsArray<T extends Record<any, any>, K extends MethodNames<T>> =
    ? Parameters<T[K]> | Parameters<T[K]>[0]
    : Parameters<T[K]>
 
-/** Configuration used by {@link LGraph} `config`. */
+/** Configuration used by {@link LGraph.config}. */
 export interface LGraphConfig {
   /** @deprecated Legacy config - unused */
   align_to_grid?: any
+  /** @deprecated Legacy config - unused */
   links_ontop?: any
 }
 
+/**
+ * Extra serialisable metadata stored alongside the graph.
+ *
+ * Used for viewport state, legacy link extensions, and embedded reroute data in older schemas.
+ */
 export interface LGraphExtra extends Dictionary<unknown> {
+  /** Legacy 0.4 schema: reroute definitions embedded in `extra`. */
   reroutes?: SerialisableReroute[]
+  /** Legacy 0.4 schema: {@link LLink.parentId} values stored outside link arrays. */
   linkExtensions?: { id: number, parentId: number | undefined }[]
+  /** Canvas pan/zoom saved when {@link LiteGraph.saveViewportWithGraph} is enabled. */
   ds?: DragAndScaleState
 }
 
+/** Minimal interface shared by {@link LGraph} and {@link Subgraph} for root-graph resolution. */
 export interface BaseLGraph {
-  /** The root graph. */
+  /** The top-level graph that owns subgraph definitions and the primary canvas. */
   readonly rootGraph: LGraph
 }
 
 /**
- * LGraph is the class that contain a full graph. We instantiate one and add nodes to it, and then we can run the execution loop.
- * supported callbacks:
- * + onNodeAdded: when a new node is added to the graph
- * + onNodeRemoved: when a node inside this graph is removed
+ * Core container for a node graph: nodes, links, groups, reroutes, and execution state.
+ *
+ * An {@link LGraph} owns all {@link LGraphNode} instances, maintains link and reroute maps,
+ * computes execution order, and coordinates one or more attached {@link LGraphCanvas} views.
+ * It implements {@link LinkNetwork} for link/reroute resolution and {@link Serialisable} for
+ * persistence.
+ * @remarks
+ * Supported instance callbacks (optional):
+ * - {@link LGraph.onNodeAdded} — node added to the graph
+ * - {@link LGraph.onNodeRemoved} — node removed from the graph
+ * - {@link LGraph.onBeforeChange} / {@link LGraph.onAfterChange} — undo/redo hooks
+ * - {@link LGraph.onConnectionChange} — any node connection changed
+ * - {@link LGraph.onTrigger} — global trigger dispatch
+ * - {@link LGraph.onSerialize} / {@link LGraph.onConfigure} — serialisation hooks
+ * @see {@link LGraphCanvas.attachCanvas}
+ * @see {@link LGraph.runStep}
  */
 export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<SerialisableGraph> {
+  /** Schema version written by {@link asSerialisable}. */
   static serialisedSchemaVersion = 1 as const
 
+  /** {@link status} value when the execution loop is not running. */
   static STATUS_STOPPED = 1
+  /** {@link status} value when {@link start} has activated the execution loop. */
   static STATUS_RUNNING = 2
 
   /** List of LGraph properties that are manually handled by {@link LGraph.configure}. */
@@ -101,11 +135,14 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     "extra",
   ])
 
+  /** Stable UUID for this graph instance, persisted across save/load. */
   id: UUID = zeroUuid
+  /** Incremented when the graph structure changes; used for change detection. */
   revision: number = 0
 
+  /** Internal version counter bumped on structural edits. */
   _version: number = -1
-  /** The backing store for links.  Keys are wrapped in String() */
+  /** Backing store for {@link links}. Keys are stringified link IDs. */
   _links: Map<LinkId, LLink> = new Map()
   /**
    * Indexed property access is deprecated.
@@ -119,9 +156,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * ```
    */
   links: Map<LinkId, LLink> & Record<LinkId, LLink>
+  /** Canvases currently displaying this graph; `null` until the first {@link attachCanvas}. */
   list_of_graphcanvas: LGraphCanvas[] | null
+  /** Execution state; one of {@link STATUS_STOPPED} or {@link STATUS_RUNNING}. */
   status: number = LGraph.STATUS_STOPPED
 
+  /** ID counters and other serialisable graph state. */
   state: LGraphState = {
     lastGroupId: 0,
     lastNodeId: 0,
@@ -130,46 +170,68 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   readonly events = new CustomEventTarget<LGraphEventMap>()
+  /** Subgraph definitions keyed by subgraph UUID (root graph only). */
   readonly _subgraphs: Map<UUID, Subgraph> = new Map()
 
+  /** All nodes in this graph, in insertion order. */
   _nodes: (LGraphNode | SubgraphNode)[] = []
+  /** Fast lookup of nodes by {@link LGraphNode.id}. */
   _nodes_by_id: Record<NodeId, LGraphNode> = {}
+  /** Nodes sorted in computed execution order. */
   _nodes_in_order: LGraphNode[] = []
+  /** Subset of {@link _nodes_in_order} that define {@link LGraphNode.onExecute}. */
   _nodes_executable: LGraphNode[] | null = null
+  /** Visual groups on the canvas. */
   _groups: LGraphGroup[] = []
+  /** Number of {@link runStep} iterations completed since {@link start}. */
   iteration: number = 0
+  /** Elapsed wall-clock time since {@link starttime}, in seconds. */
   globaltime: number = 0
   /** @deprecated Unused */
   runningtime: number = 0
+  /** Fixed-timestep accumulator incremented each {@link runStep}. */
   fixedtime: number = 0
+  /** Seconds added to {@link fixedtime} per execution step. */
   fixedtime_lapse: number = 0.01
+  /** Wall-clock duration of the most recent step, in seconds. */
   elapsed_time: number = 0.01
+  /** Timestamp of the previous {@link runStep}, in milliseconds. */
   last_update_time: number = 0
+  /** Timestamp when {@link start} was called, in milliseconds. */
   starttime: number = 0
+  /** When `true`, {@link runStep} catches errors and calls {@link stop} on failure. */
   catch_errors: boolean = true
+  /** Timer handle for the execution loop (`-1` when using `requestAnimationFrame`). */
   execution_timer_id?: number | null
+  /** Set when the last {@link runStep} caught an execution error. */
   errors_in_execution?: boolean
   /** @deprecated Unused */
   execution_time!: number
   _last_trigger_time?: number
+  /** Optional filter string applied when searching nodes (application-specific). */
   filter?: string
-  /** Must contain serialisable values, e.g. primitive types */
+  /** User configuration; must contain only serialisable primitive values. */
   config: LGraphConfig = {}
+  /** Arbitrary runtime variables; not serialised by default. */
   vars: Dictionary<unknown> = {}
+  /** Per-step record of nodes currently executing (deprecated internal use). */
   nodes_executing: boolean[] = []
+  /** Per-step record of nodes currently firing actions (deprecated internal use). */
   nodes_actioning: (string | boolean)[] = []
+  /** Per-step record of last action call IDs (deprecated internal use). */
   nodes_executedAction: string[] = []
+  /** Extra metadata persisted with the graph; see {@link LGraphExtra}. */
   extra: LGraphExtra = {}
 
   /** @deprecated Deserialising a workflow sets this unused property. */
   version?: number
 
-  /** @returns Whether the graph has no items */
+  /** @returns Whether the graph has no nodes, groups, or reroutes. */
   get empty(): boolean {
     return this._nodes.length + this._groups.length + this.reroutes.size === 0
   }
 
-  /** @returns All items on the canvas that can be selected */
+  /** @returns All selectable items on the canvas: nodes, groups, and reroutes. */
   *positionableItems(): Generator<LGraphNode | LGraphGroup | Reroute> {
     for (const node of this._nodes) yield node
     for (const group of this._groups) yield group
@@ -181,20 +243,23 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   #lastFloatingLinkId: number = 0
 
   #floatingLinks: Map<LinkId, LLink> = new Map()
+  /** Links with one end disconnected, keyed by link ID. */
   get floatingLinks(): ReadonlyMap<LinkId, LLink> {
     return this.#floatingLinks
   }
 
   #reroutes = new Map<RerouteId, Reroute>()
-  /** All reroutes in this graph. */
+  /** All reroutes in this graph, keyed by {@link Reroute.id}. */
   public get reroutes(): Map<RerouteId, Reroute> {
     return this.#reroutes
   }
 
+  /** @inheritdoc BaseLGraph.rootGraph — for a root graph, returns `this`. */
   get rootGraph(): LGraph {
     return this
   }
 
+  /** `true` when this graph is the root (not a {@link Subgraph} inner graph). */
   get isRootGraph(): boolean {
     return this.rootGraph === this
   }
@@ -218,27 +283,42 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   onAfterStep?(): void
+  /** Called immediately before each {@link runStep} iteration. */
   onBeforeStep?(): void
+  /** Called when {@link start} begins the execution loop. */
   onPlayEvent?(): void
+  /** Called when {@link stop} halts the execution loop. */
   onStopEvent?(): void
+  /** Called after all nodes execute in a {@link runStep} cycle (when errors are caught). */
   onAfterExecute?(): void
+  /** Called after each inner iteration within {@link runStep}. */
   onExecuteStep?(): void
+  /** Invoked from {@link add} after a node is registered. */
   onNodeAdded?(node: LGraphNode): void
+  /** Invoked from {@link remove} after a node is unregistered. */
   onNodeRemoved?(node: LGraphNode): void
+  /** Invoked from {@link trigger} when a global action fires. */
   onTrigger?(action: string, param: unknown): void
+  /** Undo hook; called from {@link beforeChange}. */
   onBeforeChange?(graph: LGraph, info?: LGraphNode): void
+  /** Undo hook; called from {@link afterChange}. */
   onAfterChange?(graph: LGraph, info?: LGraphNode | null): void
+  /** Called when any node's connections change (application-specific). */
   onConnectionChange?(node: LGraphNode): void
+  /** @deprecated Legacy change notification; prefer {@link events} or canvas hooks. */
   on_change?(graph: LGraph): void
+  /** Hook invoked from {@link asSerialisable} before returning data. */
   onSerialize?(data: ISerialisedGraph | SerialisableGraph): void
+  /** Hook invoked from {@link configure} after the graph is rebuilt. */
   onConfigure?(data: ISerialisedGraph | SerialisableGraph): void
+  /** Allows extending the node context menu when a node is right-clicked. */
   onGetNodeMenuOptions?(options: (IContextMenuValue<unknown> | null)[], node: LGraphNode): void
 
   private _input_nodes?: LGraphNode[]
 
   /**
-   * See {@link LGraph}
-   * @param o data from previous serialization [optional]
+   * Creates a new graph, optionally configuring it from serialised data.
+   * @param o Deserialised graph object passed to {@link configure}, or `undefined` for an empty graph.
    */
   constructor(o?: ISerialisedGraph | SerialisableGraph) {
     if (LiteGraph.debug) console.log("Graph created")
@@ -256,7 +336,9 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /**
-   * Removes all nodes from this graph
+   * Removes all nodes, links, groups, reroutes, and runtime state from this graph.
+   *
+   * Calls {@link stop}, resets ID counters, and notifies attached canvases to clear.
    */
   clear(): void {
     this.stop()
@@ -330,20 +412,25 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.canvasAction(c => c.clear())
   }
 
+  /** Subgraph definitions owned by the {@link rootGraph}. */
   get subgraphs(): Map<UUID, Subgraph> {
     return this.rootGraph._subgraphs
   }
 
+  /** All nodes in this graph. Same array as internal `_nodes`. */
   get nodes() {
     return this._nodes
   }
 
+  /** All {@link LGraphGroup} instances in this graph. */
   get groups() {
     return this._groups
   }
 
   /**
-   * Attach Canvas to this graph
+   * Registers a canvas as a view of this graph and sets it as {@link primaryCanvas}.
+   * @param canvas The {@link LGraphCanvas} to attach.
+   * @throws {TypeError} If `canvas` is not an {@link LGraphCanvas} instance.
    */
   attachCanvas(canvas: LGraphCanvas): void {
     if (!(canvas instanceof LGraphCanvas)) {
@@ -365,7 +452,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /**
-   * Detach Canvas from this graph
+   * Unregisters a canvas from this graph.
+   * @param canvas The canvas to detach; its {@link LGraphCanvas.graph} is set to `null`.
    */
   detachCanvas(canvas: LGraphCanvas): void {
     canvas.graph = null
@@ -530,6 +618,15 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   // This is more internal, it computes the executable nodes in order and returns it
+  /**
+   * Computes a topological execution order for all nodes.
+   *
+   * Starting nodes have no connected inputs. Nodes in cycles are appended after the DAG portion.
+   * Optionally assigns {@link LGraphNode._level} and {@link LGraphNode.order}.
+   * @param only_onExecute When `true`, only nodes with {@link LGraphNode.onExecute} are considered.
+   * @param set_level When `true`, writes `_level` on each node based on graph depth.
+   * @returns Nodes sorted by priority and dependency order.
+   */
   computeExecutionOrder(
     only_onExecute: boolean,
     set_level?: boolean,
@@ -1136,11 +1233,16 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   // ********** GLOBALS *****************
+  /**
+   * Dispatches a named trigger to {@link onTrigger} listeners.
+   * @param action Trigger name.
+   * @param param Payload passed to the handler.
+   */
   trigger(action: string, param: unknown) {
     this.onTrigger?.(action, param)
   }
 
-  /** @todo Clean up - never implemented. */
+  /** @todo Clean up - never implemented. Fires `onTrigger` on nodes matched by title. */
   triggerInput(name: string, value: any): void {
     const nodes = this.findNodesByTitle(name)
     for (const node of nodes) {
@@ -1149,7 +1251,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
   }
 
-  /** @todo Clean up - never implemented. */
+  /** @todo Clean up - never implemented. Sets trigger callback on nodes matched by title. */
   setCallback(name: string, func: any): void {
     const nodes = this.findNodesByTitle(name)
     for (const node of nodes) {
@@ -1158,13 +1260,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
   }
 
-  // used for undo, called before any change is made to the graph
+  /** Undo/redo hook invoked before structural changes. @see {@link onBeforeChange} */
   beforeChange(info?: LGraphNode): void {
     this.onBeforeChange?.(this, info)
     this.canvasAction(c => c.onBeforeChange?.(this))
   }
 
-  // used to resend actions, called after any change is made to the graph
+  /** Undo/redo hook invoked after structural changes. @see {@link onAfterChange} */
   afterChange(info?: LGraphNode | null): void {
     this.onAfterChange?.(this, info)
     this.canvasAction(c => c.onAfterChange?.(this))
@@ -1181,7 +1283,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
   }
 
-  /* Called when something visually changed (not the graph!) */
+  /* Called when something visually changed (not the graph structure). */
+  /** Notifies canvases and {@link on_change} that a visual refresh is needed. */
   change(): void {
     if (LiteGraph.debug) {
       console.log("Graph changed")
@@ -1190,10 +1293,22 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.on_change?.(this)
   }
 
+  /**
+   * Marks attached canvases dirty for redraw.
+   * @param fg When `true`, the foreground (nodes) layer needs redraw.
+   * @param bg When `true`, the background (links/grid) layer needs redraw.
+   */
   setDirtyCanvas(fg: boolean, bg?: boolean): void {
     this.canvasAction(c => c.setDirty(fg, bg))
   }
 
+  /**
+   * Registers a partially connected link in {@link floatingLinks}.
+   *
+   * Assigns an ID if {@link LLink.id} is `-1` and associates the link with its slot and reroutes.
+   * @param link The floating link to track.
+   * @returns The same link, with ID assigned if needed.
+   */
   addFloatingLink(link: LLink): LLink {
     if (link.id === -1) {
       link.id = ++this.#lastFloatingLinkId
@@ -1217,6 +1332,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     return link
   }
 
+  /**
+   * Removes a link from {@link floatingLinks} and cleans up slot/reroute references.
+   * @param link The floating link to remove.
+   */
   removeFloatingLink(link: LLink): void {
     this.#floatingLinks.delete(link.id)
 
@@ -1397,6 +1516,14 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     return subgraph
   }
 
+  /**
+   * Wraps the selected canvas items in a new {@link Subgraph} definition and {@link SubgraphNode}.
+   *
+   * Computes boundary links, clones internal nodes, creates IO slots, and rewires the parent graph.
+   * @param items Nodes, reroutes, and groups to convert.
+   * @returns The new subgraph definition and its instance node on the parent graph.
+   * @throws If `items` is empty or bounding-box creation fails.
+   */
   convertToSubgraph(items: Set<Positionable>): { subgraph: Subgraph, node: SubgraphNode } {
     if (items.size === 0) throw new Error("Cannot convert to subgraph: nothing to convert")
     const { state, revision, config } = this
@@ -1891,6 +2018,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   #canvas?: LGraphCanvas
+  /** The main canvas used for viewport persistence and subgraph navigation. Stored on {@link rootGraph}. */
   get primaryCanvas(): LGraphCanvas | undefined {
     return this.rootGraph.#canvas
   }
@@ -1899,6 +2027,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.rootGraph.#canvas = canvas
   }
 
+  /**
+   * Loads graph JSON from a URL, {@link File}, or {@link Blob}.
+   * @param url URL string, or a file/blob to read as JSON.
+   * @param callback Called after {@link configure} completes successfully.
+   */
   load(url: string | Blob | URL | File, callback: () => void) {
     const that = this
 

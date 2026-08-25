@@ -25,25 +25,41 @@ import { NumberWidget } from "./NumberWidget"
 import { SliderWidget } from "./SliderWidget"
 import { TextWidget } from "./TextWidget"
 
+/**
+ * Maps each {@link TWidgetType} string to its concrete {@link BaseWidget} subclass.
+ *
+ * Used by {@link toConcreteWidget} for return-type inference. Unknown type keys fall back to
+ * {@link BaseWidget}.
+ */
 export type WidgetTypeMap = {
+  /** {@link ButtonWidget} */
   button: ButtonWidget
+  /** {@link BooleanWidget} */
   toggle: BooleanWidget
+  /** {@link SliderWidget} */
   slider: SliderWidget
+  /** {@link KnobWidget} */
   knob: KnobWidget
+  /** {@link ComboWidget} */
   combo: ComboWidget
+  /** {@link NumberWidget} */
   number: NumberWidget
+  /** {@link TextWidget} (`type: "string"`) */
   string: TextWidget
+  /** {@link TextWidget} (`type: "text"`) */
   text: TextWidget
+  /** {@link LegacyWidget} for unrecognized custom POJOs */
   custom: LegacyWidget
   [key: string]: BaseWidget
 }
 
 /**
- * Convert a widget POJO to a proper widget instance.
- * @param widget The POJO to convert.
- * @param node The node the widget belongs to.
- * @param wrapLegacyWidgets Whether to wrap legacy widgets in a `LegacyWidget` instance.
- * @returns A concrete widget instance.
+ * Converts a widget POJO (or passes through an existing {@link BaseWidget}) into a typed instance.
+ * @param widget Widget definition or existing instance.
+ * @param node Node that will own the widget.
+ * @param wrapLegacyWidgets When `true` (default), unknown types are wrapped in {@link LegacyWidget}.
+ * When `false`, unknown types yield `undefined`.
+ * @returns Concrete widget matching `widget.type`, or the original instance if already concrete.
  */
 export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
   widget: TWidget,
@@ -82,47 +98,74 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
 
 // #region Type Guards
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link IButtonWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IButtonWidget}.
+ * @param widget Widget to test.
+ */
 export function isButtonWidget(widget: IBaseWidget): widget is IButtonWidget {
   return widget.type === "button"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link IBooleanWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IBooleanWidget}.
+ * @param widget Widget to test.
+ */
 export function isBooleanWidget(widget: IBaseWidget): widget is IBooleanWidget {
   return widget.type === "toggle"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link ISliderWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link ISliderWidget}.
+ * @param widget Widget to test.
+ */
 export function isSliderWidget(widget: IBaseWidget): widget is ISliderWidget {
   return widget.type === "slider"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link IKnobWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IKnobWidget}.
+ * @param widget Widget to test.
+ */
 export function isKnobWidget(widget: IBaseWidget): widget is IKnobWidget {
   return widget.type === "knob"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link IComboWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IComboWidget}.
+ * @param widget Widget to test.
+ */
 export function isComboWidget(widget: IBaseWidget): widget is IComboWidget {
   return widget.type === "combo"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link INumericWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link INumericWidget}.
+ * @param widget Widget to test.
+ */
 export function isNumberWidget(widget: IBaseWidget): widget is INumericWidget {
   return widget.type === "number"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link IStringWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IStringWidget} (`type: "string"`).
+ * @param widget Widget to test.
+ */
 export function isStringWidget(widget: IBaseWidget): widget is IStringWidget {
   return widget.type === "string"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link ITextWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IStringWidget} (`type: "text"`).
+ * @param widget Widget to test.
+ */
 export function isTextWidget(widget: IBaseWidget): widget is IStringWidget {
   return widget.type === "text"
 }
 
-/** Type guard: Narrow **from {@link IBaseWidget}** to {@link ICustomWidget}. */
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link ICustomWidget}.
+ * @param widget Widget to test.
+ */
 export function isCustomWidget(widget: IBaseWidget): widget is ICustomWidget {
   return widget.type === "custom"
 }

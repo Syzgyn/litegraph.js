@@ -2,14 +2,26 @@ import type { CanvasColour, Point, RequiredProps, Size } from "../interfaces"
 import type { CanvasPointer, LGraphCanvas, LGraphNode } from "../litegraph"
 import type { CanvasPointerEvent } from "./events"
 
+/**
+ * Configuration options shared by all widget types.
+ * @template TValues The type of the {@link values} option (combo box entries, etc.).
+ */
 export interface IWidgetOptions<TValues = unknown[]> {
+  /** Label text shown when the widget value is `true` (toggle widgets). */
   on?: string
+  /** Label text shown when the widget value is `false` (toggle widgets). */
   off?: string
+  /** Maximum allowed value for numeric widgets. */
   max?: number
+  /** Minimum allowed value for numeric widgets. */
   min?: number
+  /** Fill colour for the slider track. */
   slider_color?: CanvasColour
+  /** Fill colour for the slider/knob marker indicator. */
   marker_color?: CanvasColour
+  /** Number of decimal places to display for numeric widgets. */
   precision?: number
+  /** When `true`, the widget cannot be edited by the user. */
   read_only?: boolean
   /**
    * @deprecated Use {@link IWidgetOptions.step2} instead.
@@ -19,17 +31,23 @@ export interface IWidgetOptions<TValues = unknown[]> {
   /** The step value for numeric widgets. */
   step2?: number
 
+  /** Legacy vertical offset for widget layout. */
   y?: number
+  /** When `true`, renders a multi-line text area instead of a single-line input. */
   multiline?: boolean
   // TODO: Confirm this
+  /** Name of the node property this widget is bound to. */
   property?: string
-  /** If `true`, an input socket will not be created for this widget. */
+  /** When `true`, an input socket will not be created for this widget. */
   socketless?: boolean
 
+  /** Selectable values for combo-box widgets. */
   values?: TValues
+  /** Callback invoked when the widget value changes. */
   callback?: IWidget["callback"]
 }
 
+/** Configuration options for slider widgets. Requires min, max, and step values. */
 export interface IWidgetSliderOptions extends IWidgetOptions<number[]> {
   min: number
   max: number
@@ -38,12 +56,14 @@ export interface IWidgetSliderOptions extends IWidgetOptions<number[]> {
   marker_color?: CanvasColour
 }
 
+/** Configuration options for knob widgets. Requires min, max, and step values. */
 export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
   min: number
   max: number
   step2: number
   slider_color?: CanvasColour // TODO: Replace with knob color
   marker_color?: CanvasColour
+  /** CSS gradient stops string for the knob's colour arc. */
   gradient_stops?: string
 }
 
@@ -66,38 +86,51 @@ export type IWidget =
   | IButtonWidget
   | IKnobWidget
 
+/** A boolean toggle widget with on/off states. */
 export interface IBooleanWidget extends IBaseWidget<boolean, "toggle"> {
   type: "toggle"
   value: boolean
 }
 
-/** Any widget that uses a numeric backing */
+/** A numeric input widget backed by a number value. */
 export interface INumericWidget extends IBaseWidget<number, "number"> {
   type: "number"
   value: number
 }
 
+/** A horizontal slider widget for selecting a numeric value within a range. */
 export interface ISliderWidget extends IBaseWidget<number, "slider", IWidgetSliderOptions> {
   type: "slider"
   value: number
+  /** Optional marker position on the slider track (e.g. a default or reference value). */
   marker?: number
 }
 
+/** A rotary knob widget for selecting a numeric value within a range. */
 export interface IKnobWidget extends IBaseWidget<number, "knob", IWidgetKnobOptions> {
   type: "knob"
   value: number
   options: IWidgetKnobOptions
 }
 
-/** Avoids the type issues with the legacy IComboWidget type */
+/**
+ * A combo-box widget restricted to string values.
+ *
+ * Avoids the type issues with the legacy {@link IComboWidget} union type.
+ */
 export interface IStringComboWidget extends IBaseWidget<string, "combo", RequiredProps<IWidgetOptions<string[]>, "values">> {
   type: "combo"
   value: string
 }
 
+/** Allowed value sources for combo-box widgets. */
 type ComboWidgetValues = string[] | Record<string, string> | ((widget?: IComboWidget, node?: LGraphNode) => string[])
 
-/** A combo-box widget (dropdown, select, etc) */
+/**
+ * A combo-box widget (dropdown / select) accepting string or numeric values.
+ *
+ * Values may be a static array, a key-value record, or a callback evaluated at render time.
+ */
 export interface IComboWidget extends IBaseWidget<
   string | number,
   "combo",
@@ -107,15 +140,17 @@ export interface IComboWidget extends IBaseWidget<
   value: string | number
 }
 
-/** A widget with a string value */
+/** A single-line or multi-line text input widget. */
 export interface IStringWidget extends IBaseWidget<string, "string" | "text", IWidgetOptions<string[]>> {
   type: "string" | "text"
   value: string
 }
 
+/** A clickable button widget that fires a callback on press. */
 export interface IButtonWidget extends IBaseWidget<string | undefined, "button"> {
   type: "button"
   value: string | undefined
+  /** Whether the button was clicked during the current event cycle. */
   clicked: boolean
 }
 
@@ -126,11 +161,13 @@ export interface ICustomWidget extends IBaseWidget<string | object, "custom"> {
 }
 
 /**
- * Valid widget types.  TS cannot provide easily extensible type safety for this at present.
- * Override linkedWidgets[]
- * Values not in this list will not result in litegraph errors, however they will be treated the same as "custom".
+ * Union of all recognised widget type name strings.
+ *
+ * Values not in this list are treated as `"custom"` at runtime without error.
  */
 export type TWidgetType = IWidget["type"]
+
+/** Union of all possible widget value types across the {@link IWidget} discriminated union. */
 export type TWidgetValue = IWidget["value"]
 
 /**
@@ -145,18 +182,22 @@ export interface IBaseWidget<
   TType extends string = string,
   TOptions extends IWidgetOptions<unknown> = IWidgetOptions<unknown>,
 > {
+  /** Widgets that are visually or logically linked to this one (e.g. a combo and its dependent fields). */
   linkedWidgets?: IBaseWidget[]
 
+  /** Internal widget identifier used for serialisation and input slot binding. */
   name: string
+  /** Widget-specific configuration options. */
   options: TOptions
 
+  /** User-facing label shown beside the widget. */
   label?: string
   /** Widget type (see {@link TWidgetType}) */
   type: TType
   value?: TValue
 
   /**
-   * Whether the widget value should be serialized on node serialization.
+   * Whether the widget value should be serialised on node serialisation.
    * @default true
    */
   serialize?: boolean
@@ -182,6 +223,7 @@ export interface IBaseWidget<
    */
   last_y?: number
 
+  /** Explicit width override for this widget. */
   width?: number
   /**
    * Whether the widget is disabled. Disabled widgets are rendered at half opacity.
@@ -196,9 +238,12 @@ export interface IBaseWidget<
    */
   computedDisabled?: boolean
 
+  /** When `true`, the widget is not rendered or interactive. */
   hidden?: boolean
+  /** When `true`, the widget is shown only when the node's advanced section is expanded. */
   advanced?: boolean
 
+  /** Tooltip text shown on hover. */
   tooltip?: string
 
   // TODO: Confirm this format

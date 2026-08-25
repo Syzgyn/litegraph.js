@@ -9,17 +9,41 @@ import { LiteGraph } from "@/litegraph"
 import { type IDrawOptions, NodeSlot } from "@/node/NodeSlot"
 import { isSubgraphOutput } from "@/subgraph/subgraphUtils"
 
+/**
+ * Concrete implementation of an {@link INodeOutputSlot} on an {@link LGraphNode}.
+ *
+ * Output slots send data to one or more input slots via {@link LLink} connections. Unlike inputs,
+ * a single output may fan out to multiple downstream links.
+ * @see {@link NodeInputSlot}
+ * @see {@link NodeSlot}
+ */
 export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   #node: LGraphNode
 
+  /**
+   * IDs of all {@link LLink} instances connected from this slot, or `null` when none are connected.
+   *
+   * An empty array is treated as disconnected by {@link isConnected}.
+   */
   links: LinkId[] | null
+
+  /** Arbitrary runtime data attached to this slot. Not serialised. */
   _data?: unknown
+
+  /** Legacy index used by some custom nodes to identify this slot. */
   slot_index?: number
 
+  /** Output slots are never widget-backed; always returns `false`. */
   get isWidgetInputSlot(): false {
     return false
   }
 
+  /**
+   * Canvas-space position of this slot's centre when the parent node is collapsed.
+   *
+   * Output slots are rendered on the right edge of the collapsed node title bar, offset by the
+   * node's collapsed width.
+   */
   get collapsedPos(): ReadOnlyPoint {
     return [
       this.#node._collapsed_width ?? LiteGraph.NODE_COLLAPSED_WIDTH,
@@ -27,6 +51,10 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
     ]
   }
 
+  /**
+   * @param slot Serialised or partial slot properties used to initialise this instance.
+   * @param node The parent node that owns this output slot.
+   */
   constructor(slot: OptionalProps<INodeOutputSlot, "boundingRect">, node: LGraphNode) {
     super(slot, node)
     this.links = slot.links
@@ -35,6 +63,15 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
     this.#node = node
   }
 
+  /**
+   * Determines whether a dragging link originating from {@link fromSlot} may connect to an input
+   * that would receive data from this output.
+   *
+   * Validates type compatibility via {@link LiteGraph.isValidConnection} for input slots and
+   * {@link SubgraphOutput} boundary nodes.
+   * @param fromSlot The slot at the free end of the link being dragged.
+   * @returns `true` if the connection types are compatible.
+   */
   override isValidTarget(fromSlot: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput): boolean {
     if ("link" in fromSlot) {
       return LiteGraph.isValidConnection(this.type, fromSlot.type)
@@ -47,10 +84,18 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
     return false
   }
 
+  /** Whether at least one link is currently connected from this slot. */
   override get isConnected(): boolean {
     return this.links != null && this.links.length > 0
   }
 
+  /**
+   * Renders this output slot on the canvas.
+   *
+   * Labels are drawn to the left of the slot shape with right-aligned text and a black stroke outline.
+   * @param ctx The 2D rendering context for the node canvas.
+   * @param options Drawing options excluding label position and stroke, which are fixed for outputs.
+   */
   override draw(ctx: CanvasRenderingContext2D, options: Omit<IDrawOptions, "doStroke" | "labelPosition">) {
     const { textAlign, strokeStyle } = ctx
     ctx.textAlign = "right"

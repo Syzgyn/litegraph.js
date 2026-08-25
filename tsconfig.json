@@ -31,7 +31,8 @@
     },
     "typeRoots": [],
     "outDir": "./dist",
-    "rootDir": "./"
+    "rootDir": "./",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*"]
 }

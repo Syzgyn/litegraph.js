@@ -1,35 +1,74 @@
 import { LGraphIcon, type LGraphIconOptions } from "./LGraphIcon"
 
+/**
+ * Corner placement for {@link LGraphBadge} overlays on node titles.
+ */
 export enum BadgePosition {
+  /** Badge anchored to the top-left of the node title bar. */
   TopLeft = "top-left",
+  /** Badge anchored to the top-right of the node title bar. */
   TopRight = "top-right",
 }
 
+/**
+ * Configuration for constructing an {@link LGraphBadge}.
+ */
 export interface LGraphBadgeOptions {
+  /** Text label rendered inside the badge. */
   text: string
+  /** Foreground (text) colour. Default: `"white"`. */
   fgColor?: string
+  /** Background fill colour. Default: `"#0F1F0F"`. */
   bgColor?: string
+  /** Font size in pixels for the label. Default: `12`. */
   fontSize?: number
+  /** Horizontal padding inside the badge. Default: `6`. */
   padding?: number
+  /** Total badge height in pixels. Default: `20`. */
   height?: number
+  /** Corner radius when {@link CanvasRenderingContext2D.roundRect} is available. Default: `5`. */
   cornerRadius?: number
+  /** Optional icon drawn to the left of the label text. */
   iconOptions?: LGraphIconOptions
+  /** Horizontal offset applied when drawing. Default: `0`. */
   xOffset?: number
+  /** Vertical offset applied when drawing. Default: `0`. */
   yOffset?: number
 }
 
+/**
+ * Small labelled overlay drawn on node title bars (e.g. status or category badges).
+ *
+ * Renders a rounded rectangle with optional {@link LGraphIcon} and text. Used by
+ * {@link LGraphNode} badge lists and {@link LGraphButton} for interactive controls.
+ * @see {@link BadgePosition}
+ * @see {@link LGraphButton}
+ */
 export class LGraphBadge {
+  /** Badge label text. */
   text: string
+  /** Foreground colour for label text. */
   fgColor: string
+  /** Background fill colour for the badge pill. */
   bgColor: string
+  /** Font size in pixels for the label. */
   fontSize: number
+  /** Internal horizontal padding. */
   padding: number
+  /** Total rendered height in pixels. */
   height: number
+  /** Corner radius for rounded badge background. */
   cornerRadius: number
+  /** Optional icon rendered before the label. */
   icon?: LGraphIcon
+  /** Horizontal draw offset from the anchor point. */
   xOffset: number
+  /** Vertical draw offset from the anchor point. */
   yOffset: number
 
+  /**
+   * @param options Badge appearance and optional icon configuration.
+   */
   constructor({
     text,
     fgColor = "white",
@@ -56,10 +95,20 @@ export class LGraphBadge {
     this.yOffset = yOffset
   }
 
+  /**
+   * Whether the badge has any visible content (non-empty text or an icon).
+   */
   get visible() {
     return (this.text?.length ?? 0) > 0 || !!this.icon
   }
 
+  /**
+   * Measures the total rendered width of the badge in canvas pixels.
+   *
+   * Temporarily adjusts `ctx.font` and restores it before returning.
+   * @param ctx Canvas context used for text measurement.
+   * @returns Width in pixels, or `0` when {@link visible} is `false`.
+   */
   getWidth(ctx: CanvasRenderingContext2D) {
     if (!this.visible) return 0
     const { font } = ctx
@@ -74,6 +123,12 @@ export class LGraphBadge {
     return iconWidth + textWidth + this.padding * 2
   }
 
+  /**
+   * Draws the badge background, optional icon, and label at `(x, y)`.
+   * @param ctx Canvas rendering context.
+   * @param x Left edge of the badge in canvas coordinates.
+   * @param y Top edge of the badge in canvas coordinates.
+   */
   draw(
     ctx: CanvasRenderingContext2D,
     x: number,

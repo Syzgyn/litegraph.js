@@ -3,17 +3,36 @@ import type { Point, Rect } from "./interfaces"
 import { clamp, LGraphCanvas } from "./litegraph"
 import { distance } from "./measure"
 
-// used by some widgets to render a curve editor
-
+/**
+ * Interactive 2D curve editor rendered inside node widgets.
+ *
+ * Manages a sorted list of normalised control points `[x, y]` where both axes are in
+ * `[0, 1]`. Used by curve widgets to edit easing or response curves via mouse interaction
+ * and to sample values along the piecewise-linear path.
+ * @remarks
+ * Points are stored in graph-normalised space; {@link draw} maps them into widget pixel
+ * coordinates. Edge points (first and last) are locked to `x = 0` and `x = 1` respectively.
+ * @see {@link CurveEditor.sampleCurve}
+ */
 export class CurveEditor {
+  /** Control points in normalised `[0, 1]` space, sorted by ascending `x`. */
   points: Point[]
+  /** Index of the point currently being dragged, or `-1` when none is selected. */
   selected: number
+  /** Index of the point nearest the pointer for hover highlighting, or `-1`. */
   nearest: number
+  /** Last widget size passed to {@link draw}, required for hit testing in mouse handlers. */
   size: Rect | null
+  /** When `true`, downstream code should recompute any cached curve samples. */
   must_update: boolean
+  /** Pixel inset applied on all sides when mapping normalised points to canvas space. */
   margin: number
+  /** @internal Cached nearest-point index used during {@link onMouseMove}. */
   _nearest?: number
 
+  /**
+   * @param points Initial control points. The array is mutated in place during editing.
+   */
   constructor(points: Point[]) {
     this.points = points
     this.selected = -1
@@ -24,6 +43,15 @@ export class CurveEditor {
     this.margin = 5
   }
 
+  /**
+   * Samples the piecewise-linear curve defined by {@link points} at normalised input `f`.
+   *
+   * Walks adjacent point pairs and linearly interpolates within the segment that contains
+   * `f`. Returns `0` when `f` lies beyond the final segment.
+   * @param f Normalised input along the horizontal axis (`0`–`1`).
+   * @param points Sorted control points to sample. When omitted or empty, returns `undefined`.
+   * @returns Interpolated output in normalised vertical space, or `undefined` when no points exist.
+   */
   static sampleCurve(f: number, points: Point[]): number | undefined {
     if (!points) return
 
@@ -41,6 +69,15 @@ export class CurveEditor {
     return 0
   }
 
+  /**
+   * Renders the curve, optional background grid, and control-point handles.
+   * @param ctx Canvas context to draw into.
+   * @param size Widget area as `[width, height]` in pixels.
+   * @param graphcanvas Optional canvas reference (unused by this method; retained for API compat).
+   * @param background_color When set, draws a dark grid background behind the curve.
+   * @param line_color Stroke colour for the curve path. Defaults to `"#666"`.
+   * @param inactive When `true`, draws at reduced opacity and omits interactive handles.
+   */
   draw(
     ctx: CanvasRenderingContext2D,
     size: Rect,
@@ -90,6 +127,12 @@ export class CurveEditor {
     ctx.restore()
   }
 
+  /**
+   * Handles pointer-down inside the editor: selects an existing point or inserts a new one.
+   * @param localpos Pointer position in widget-local pixels.
+   * @param graphcanvas Canvas used to scale hit-test tolerance with zoom level.
+   * @returns `true` when a point was selected or created (caller should capture input), otherwise `undefined`.
+   */
   // localpos is mouse in curve editor space
   onMouseDown(localpos: Point, graphcanvas: LGraphCanvas): boolean | undefined {
     const points = this.points
@@ -119,6 +162,12 @@ export class CurveEditor {
     if (this.selected != -1) return true
   }
 
+  /**
+   * Handles pointer-move while a point is selected: drags the point or removes it when dragged
+   * far outside the widget bounds.
+   * @param localpos Pointer position in widget-local pixels.
+   * @param graphcanvas Canvas used to scale hit-test tolerance with zoom level.
+   */
   onMouseMove(localpos: Point, graphcanvas: LGraphCanvas): void {
     const points = this.points
     if (!points) return
@@ -161,12 +210,22 @@ export class CurveEditor {
     }
   }
 
+  /**
+   * Handles pointer-up: clears the current selection.
+   * @returns Always `false` — curve editing does not consume the mouse-up event.
+   */
   // Former params: localpos, graphcanvas
   onMouseUp(): boolean {
     this.selected = -1
     return false
   }
 
+  /**
+   * Finds the index of the control point closest to {@link pos} within {@link max_dist}.
+   * @param pos Pointer position in editor-local pixel space (after subtracting {@link margin}).
+   * @param max_dist Maximum distance in pixels for a point to be considered. Defaults to `30`.
+   * @returns Index of the closest point, or `-1` when none are within range.
+   */
   getCloserPoint(pos: Point, max_dist: number): number {
     const points = this.points
     if (!points) return -1

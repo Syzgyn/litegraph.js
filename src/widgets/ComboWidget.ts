@@ -19,9 +19,22 @@ function toArray(values: Values): string[] {
   return Array.isArray(values) ? values : Object.keys(values)
 }
 
+/**
+ * Combo / dropdown widget (`type: "combo"`) backed by a fixed or dynamic list of choices.
+ *
+ * Supports stepped arrow buttons, centre-click context menu selection, and legacy `values` shapes
+ * (array, record map, or deprecated function). Numeric indices are used when `values` is a record.
+ * @see {@link IComboWidget}
+ * @see {@link IStringComboWidget}
+ */
 export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWidget> implements IComboWidget {
+  /** Widget type discriminator; always `"combo"`. */
   override type = "combo" as const
 
+  /**
+   * Display string for the current selection.
+   * @remarks Resolves record-map labels, function-backed values, and numeric index coercion.
+   */
   override get _displayValue() {
     if (this.computedDisabled) return ""
     const { values: rawValues } = this.options
@@ -66,21 +79,24 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   }
 
   /**
-   * Returns `true` if the current value is not the last value in the list.
-   * Handles edge case where the value is both the first and last item in the list.
+   * Returns `true` when the right arrow can advance to another list entry.
+   * @remarks Delegates to private edge-case handling for duplicate first/last values.
    */
   override canIncrement(): boolean {
     return this.#canUseButton(true)
   }
 
+  /** Returns `true` when the left arrow can move to a prior list entry. */
   override canDecrement(): boolean {
     return this.#canUseButton(false)
   }
 
+  /** Steps the selection forward one entry in `options.values`. */
   override incrementValue(options: WidgetEventOptions): void {
     this.#tryChangeValue(1, options)
   }
 
+  /** Steps the selection backward one entry in `options.values`. */
   override decrementValue(options: WidgetEventOptions): void {
     this.#tryChangeValue(-1, options)
   }
@@ -105,6 +121,10 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
     this.setValue(value, options)
   }
 
+  /**
+   * Left/right arrows step the value; centre click opens a {@link LiteGraph.ContextMenu} dropdown.
+   * @param options Pointer position is mapped to arrow zones or menu invocation.
+   */
   override onClick({ e, node, canvas }: WidgetEventOptions) {
     const x = e.canvasX - node.pos[0]
     const width = this.width || node.size[0]

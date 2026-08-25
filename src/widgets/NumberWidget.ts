@@ -5,9 +5,19 @@ import { getWidgetStep } from "@/utils/widget"
 
 import { BaseSteppedWidget } from "./BaseSteppedWidget"
 
+/**
+ * Numeric stepped widget (`type: "number"`) with min/max clamping, arrow buttons, prompt editor,
+ * and horizontal drag adjustment.
+ * @see {@link INumericWidget}
+ */
 export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements INumericWidget {
+  /** Widget type discriminator; always `"number"`. */
   override type = "number" as const
 
+  /**
+   * Fixed-precision display string for the current value.
+   * @remarks Uses `options.precision` when set, otherwise three decimal places.
+   */
   override get _displayValue() {
     if (this.computedDisabled) return ""
     return Number(this.value).toFixed(
@@ -17,24 +27,33 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
     )
   }
 
+  /** `true` when `value` is below `options.max` or no max is defined. */
   override canIncrement(): boolean {
     const { max } = this.options
     return max == null || this.value < max
   }
 
+  /** `true` when `value` is above `options.min` or no min is defined. */
   override canDecrement(): boolean {
     const { min } = this.options
     return min == null || this.value > min
   }
 
+  /** Adds one {@link getWidgetStep} increment. */
   override incrementValue(options: WidgetEventOptions): void {
     this.setValue(this.value + getWidgetStep(this.options), options)
   }
 
+  /** Subtracts one {@link getWidgetStep} increment. */
   override decrementValue(options: WidgetEventOptions): void {
     this.setValue(this.value - getWidgetStep(this.options), options)
   }
 
+  /**
+   * Clamps to `options.min` / `options.max` then delegates to {@link BaseWidget.setValue}.
+   * @param value Proposed numeric value.
+   * @param options Event context for callbacks.
+   */
   override setValue(value: number, options: WidgetEventOptions) {
     let newValue = value
     if (this.options.min != null && newValue < this.options.min) {
@@ -46,6 +65,10 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
     super.setValue(newValue, options)
   }
 
+  /**
+   * Arrow zones step by one step; centre opens a prompt supporting simple arithmetic expressions.
+   * @param options Click X position selects decrement, increment, or prompt zones.
+   */
   override onClick({ e, node, canvas }: WidgetEventOptions) {
     const x = e.canvasX - node.pos[0]
     const width = this.width || node.size[0]
@@ -80,8 +103,8 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
   }
 
   /**
-   * Handles drag events for the number widget
-   * @param options The options for handling the drag event
+   * Horizontal drag away from arrow zones adjusts value by `deltaX * step`.
+   * @param options Pointer delta and node width for zone detection.
    */
   override onDrag({ e, node, canvas }: WidgetEventOptions) {
     const width = this.width || node.width

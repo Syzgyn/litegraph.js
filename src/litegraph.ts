@@ -1,3 +1,14 @@
+/**
+ * Public entry point for the litegraph.js library.
+ *
+ * Re-exports the graph editor API — core classes ({@link LGraph}, {@link LGraphCanvas},
+ * {@link LGraphNode}), canvas utilities, widgets, subgraph support, and shared types.
+ * Import from this module (or the package root) rather than individual source files.
+ *
+ * The singleton {@link LiteGraph} global holds runtime configuration, registered node types,
+ * and legacy helpers. {@link loadPolyfills} is invoked automatically on import.
+ */
+
 import type { ContextMenu } from "./ContextMenu"
 import type { ConnectingLink, Point } from "./interfaces"
 import type {
@@ -15,6 +26,12 @@ export { Subgraph } from "./subgraph/Subgraph"
 import { LiteGraphGlobal } from "./LiteGraphGlobal"
 import { loadPolyfills } from "./polyfills"
 
+/**
+ * Singleton global configuration and node registry for the entire litegraph runtime.
+ *
+ * Holds default colours, layout constants, feature flags, and registered node types.
+ * Attach graphs and canvases to this instance indirectly via imports from this module.
+ */
 export const LiteGraph = new LiteGraphGlobal()
 
 // Load legacy polyfills
@@ -27,22 +44,46 @@ loadPolyfills()
 // Definitions by: NateScarlet <https://github.com/NateScarlet>
 /** @deprecated Use {@link Point} instead. */
 export type Vector2 = Point
-/** @deprecated Use {@link Rect} instead. */
+
+/**
+ * Legacy four-number tuple used in litegraph.js 0.7.0 type definitions.
+ * @deprecated Use {@link Rect} (`[x, y, width, height]`) instead.
+ */
 export type Vector4 = [number, number, number, number]
 
+/**
+ * Describes a single entry in a {@link ContextMenu} menu list.
+ * @remarks Backwards-compatibility interface retained from litegraph.js 0.7.0.
+ * Prefer {@link IContextMenuValue} for new code.
+ */
 export interface IContextMenuItem {
+  /** Primary label text shown for the menu entry. */
   content: string
+  /** Handler invoked when the item is selected. */
   callback?: ContextMenuEventListener
   /** Used as innerHTML for extra child element */
   title?: string
+  /** When `true`, the item is rendered disabled and ignores clicks. */
   disabled?: boolean
+  /** When `true`, indicates a submenu is available (legacy flag). */
   has_submenu?: boolean
+  /** Nested submenu definition opened when this item is selected. */
   submenu?: {
     options: IContextMenuItem[]
   } & IContextMenuOptions
+  /** Additional CSS class name applied to the entry element. */
   className?: string
 }
 
+/**
+ * Callback invoked when a legacy {@link IContextMenuItem} entry is selected.
+ * @param value The menu item that was clicked.
+ * @param options The options object passed when the menu was created.
+ * @param event The originating mouse event.
+ * @param parentMenu The parent menu, if this item opened a submenu.
+ * @param node The {@link LGraphNode} associated with the menu, when provided via options.
+ * @returns Return `true` to prevent the menu from closing automatically.
+ */
 export type ContextMenuEventListener = (
   value: IContextMenuItem,
   options: IContextMenuOptions,
@@ -51,38 +92,79 @@ export type ContextMenuEventListener = (
   node: LGraphNode,
 ) => boolean | void
 
+/**
+ * Context passed when the user releases a dragged link onto empty canvas or a search target.
+ * @remarks Backwards-compatibility interface for link-release menu handlers.
+ */
 export interface LinkReleaseContext {
+  /** Node that would receive the link on release, when dropping onto an input. */
   node_to?: LGraphNode
+  /** Node that originates the released link, when dragging from an output. */
   node_from?: LGraphNode
+  /** Slot on {@link node_from} from which the link was dragged. */
   slot_from: INodeSlot
+  /** When set, filters candidate input slot types during release handling. */
   type_filter_in?: string
+  /** When set, filters candidate output slot types during release handling. */
   type_filter_out?: string
 }
 
+/**
+ * Extended link-release context that includes all links being dragged as a batch.
+ * @see {@link LinkReleaseContext}
+ */
 export interface LinkReleaseContextExtended {
+  /** The links currently being moved or created by the user. */
   links: ConnectingLink[]
 }
 
+/**
+ * DOM custom event dispatched by {@link LGraphCanvas} for canvas-level interactions.
+ *
+ * The event `detail` payload is typed as {@link CanvasEventDetail}.
+ */
 export interface LiteGraphCanvasEvent extends CustomEvent<CanvasEventDetail> {}
 
+/**
+ * Constructor signature and static metadata for a registered {@link LGraphNode} subclass.
+ *
+ * Used by {@link LiteGraph.registerNodeType} and node search/create flows to describe
+ * default appearance and behaviour before an instance is constructed.
+ */
 export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {
   new (title: string, type?: string): T
 
+  /** Default title shown in the node palette and on new instances. */
   title: string
+  /** Registered node type path (e.g. `"math/add"`). */
   type: string
+  /** Default node size `[width, height]`. */
   size?: Size
+  /** Minimum node body height in pixels. */
   min_height?: number
+  /** Y offset where the first slot row is drawn. */
   slot_start_y?: number
+  /** Legacy widget metadata map keyed by widget name. */
   widgets_info?: any
+  /** Whether the node can be collapsed to a compact representation. */
   collapsable?: boolean
+  /** Default node accent colour. */
   color?: string
+  /** Default node background colour. */
   bgcolor?: string
+  /** Default node render shape. */
   shape?: RenderShape
+  /** How the node title bar is rendered. */
   title_mode?: TitleMode
+  /** Title bar background colour override. */
   title_color?: string
+  /** Title text colour override. */
   title_text_color?: string
+  /** When `true`, bypassing the node preserves all link connections. */
   keepAllLinksOnBypass: boolean
+  /** Width of the resize handle hit area in pixels. */
   resizeHandleSize?: number
+  /** Width of the resize edge hit area in pixels. */
   resizeEdgeSize?: number
 }
 

@@ -10,14 +10,45 @@ import type { NodeLike } from "@/types/NodeLike"
 
 import { LinkDirection } from "@/types/globalEnums"
 
-/** Connecting TO an input slot. */
-
+/**
+ * Represents a new link being dragged **from** an output slot **to** an input slot.
+ *
+ * Created by {@link LinkConnector.dragNewFromOutput}, {@link LinkConnector.dragFromReroute},
+ * and {@link LinkConnector.dragFromLinkSegment}. On drop, {@link connectToInput} creates the
+ * connection via {@link LGraphNode.connectSlots}.
+ * @remarks
+ * This is the "new link" counterpart to {@link MovingInputLink}, which repositions an existing
+ * link's input end instead of creating one from scratch.
+ * @see {@link ToOutputRenderLink}
+ * @see {@link LinkConnector.dragNewFromOutput}
+ */
 export class ToInputRenderLink implements RenderLink {
+  /** Always `"input"` — this link is being dragged toward an input slot. */
   readonly toType = "input"
+
+  /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
+
+  /** Index of {@link fromSlot} on {@link node}. */
   readonly fromSlotIndex: number
+
+  /**
+   * The direction the link segment faces as it leaves {@link fromPos}.
+   *
+   * Defaults to {@link LinkDirection.RIGHT} (output slots face right). May be overridden to
+   * {@link LinkDirection.NONE} when dragging from a reroute.
+   */
   fromDirection: LinkDirection = LinkDirection.RIGHT
 
+  /**
+   * @param network The graph (or subgraph) that will own the new link.
+   * @param node The node whose output slot the link is being dragged from.
+   * @param fromSlot The output slot at the origin of the drag.
+   * @param fromReroute When dragging from a reroute, the reroute at the chain origin. Its
+   * position becomes {@link fromPos} and its ID is passed as parentage when connecting.
+   * @param dragDirection Controls how the free end of the link follows the cursor.
+   * @throws When {@link fromSlot} is not found on {@link node}.
+   */
   constructor(
     readonly network: LinkNetwork,
     readonly node: LGraphNode,
@@ -34,14 +65,35 @@ export class ToInputRenderLink implements RenderLink {
       : this.node.getOutputPos(outputIndex)
   }
 
+  /**
+   * Determines whether dropping onto the given input slot would produce a valid connection.
+   *
+   * Delegates to {@link LGraphNode.canConnectTo}, passing this link's origin output slot as the
+   * upstream source.
+   * @param inputNode The node that owns the candidate input slot.
+   * @param input The input slot being hovered or dropped on.
+   */
   canConnectToInput(inputNode: NodeLike, input: INodeInputSlot): boolean {
     return this.node.canConnectTo(inputNode, input, this.fromSlot)
   }
 
+  /**
+   * Input-directed drags never terminate on an output slot.
+   * @returns Always `false`.
+   */
   canConnectToOutput(): false {
     return false
   }
 
+  /**
+   * Completes the drag by creating a new link to an input slot.
+   *
+   * No-op when the target node is the same as the origin node (loopback). Dispatches
+   * `"link-created"` with the new {@link LLink} on success.
+   * @param node The node that owns the target input slot.
+   * @param input The input slot to connect to.
+   * @param events Event target for dispatching `"link-created"`.
+   */
   connectToInput(node: LGraphNode, input: INodeInputSlot, events: CustomEventTarget<LinkConnectorEventMap>) {
     const { node: outputNode, fromSlot, fromReroute } = this
     if (node === outputNode) return
@@ -50,11 +102,27 @@ export class ToInputRenderLink implements RenderLink {
     events.dispatch("link-created", newLink)
   }
 
+  /**
+   * Completes the drag by creating a link through a subgraph output boundary node.
+   * @param output The subgraph output IO definition being dropped on.
+   * @param events Dispatches `"link-created"` with the new link.
+   */
   connectToSubgraphOutput(output: SubgraphOutput, events: CustomEventTarget<LinkConnectorEventMap>) {
     const newLink = output.connect(this.fromSlot, this.node, this.fromReroute?.id)
     events.dispatch("link-created", newLink)
   }
 
+  /**
+   * Completes the drag by connecting through a reroute's input side.
+   *
+   * Parents the drop-target reroute to {@link fromReroute}, creates the link via
+   * {@link LGraphNode.connectSlots}, cleans up orphaned reroutes in the original chain, and
+   * converts or removes floating links as needed.
+   * @param reroute The reroute being dropped on.
+   * @param param1 The target input node, slot, and existing link at the reroute terminus.
+   * @param events Dispatches `"link-created"` with the new link.
+   * @param originalReroutes Reroutes in the chain between the drop target and the drag origin.
+   */
   connectToRerouteInput(
     reroute: Reroute,
     {
@@ -98,14 +166,26 @@ export class ToInputRenderLink implements RenderLink {
     events.dispatch("link-created", newLink)
   }
 
+  /**
+   * Input-directed drags cannot terminate on an output slot.
+   * @throws Always throws — this operation is not supported for this link type.
+   */
   connectToOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")
   }
 
+  /**
+   * Input-directed drags cannot terminate on a subgraph input boundary.
+   * @throws Always throws — subgraph inputs are sources, not sinks, for this operation.
+   */
   connectToSubgraphInput(): void {
     throw new Error("ToInputRenderLink cannot connect to a subgraph input.")
   }
 
+  /**
+   * Input-directed drags cannot terminate on a reroute's output side.
+   * @throws Always throws — use {@link connectToRerouteInput} instead.
+   */
   connectToRerouteOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")
   }

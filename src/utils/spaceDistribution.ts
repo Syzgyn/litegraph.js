@@ -1,5 +1,8 @@
+/** Size constraints for a single item when distributing space via {@link distributeSpace}. */
 export interface SpaceRequest {
+  /** Minimum size this item must receive, even when total space is insufficient. */
   minSize: number
+  /** Maximum size this item may grow to. Defaults to unbounded when omitted. */
   maxSize?: number
 }
 

@@ -8,11 +8,22 @@ const ELLIPSIS = "\u2026"
 const TWO_DOT_LEADER = "\u2025"
 const ONE_DOT_LEADER = "\u2024"
 
+/**
+ * Semantic slot type constants used when drawing node inputs and outputs.
+ * @see {@link SlotShape} for visual slot geometry.
+ */
 export enum SlotType {
+  /** Slot accepts or emits array-typed data. */
   Array = "array",
+  /** Event/action slot type (legacy sentinel value `-1`). */
   Event = -1,
 }
 
+/**
+ * Visual shape used when rendering node slot connectors.
+ *
+ * Values mirror {@link RenderShape} so slot drawing can reuse node shape constants.
+ */
 /** @see RenderShape */
 export enum SlotShape {
   Box = RenderShape.BOX,
@@ -22,6 +33,11 @@ export enum SlotShape {
   HollowCircle = RenderShape.HollowCircle,
 }
 
+/**
+ * Cardinal direction used when orienting slot labels and connector offsets.
+ *
+ * Values mirror {@link LinkDirection}.
+ */
 /** @see LinkDirection */
 export enum SlotDirection {
   Up = LinkDirection.UP,
@@ -30,11 +46,17 @@ export enum SlotDirection {
   Left = LinkDirection.LEFT,
 }
 
+/** Horizontal placement of slot type labels relative to the connector. */
 export enum LabelPosition {
+  /** Label appears to the left of the slot. */
   Left = "left",
+  /** Label appears to the right of the slot. */
   Right = "right",
 }
 
+/**
+ * Options for {@link strokeShape} when drawing an outline around a rectangular area.
+ */
 export interface IDrawBoundingOptions {
   /** The shape to render */
   shape?: RenderShape
@@ -54,6 +76,9 @@ export interface IDrawBoundingOptions {
   lineWidth?: number
 }
 
+/**
+ * Options for {@link drawTextInArea} when rendering truncated label text.
+ */
 export interface IDrawTextInAreaOptions {
   /** The canvas to draw the text on. */
   ctx: CanvasRenderingContext2D
@@ -211,6 +236,10 @@ function truncateTextToWidth(ctx: CanvasRenderingContext2D, text: string, maxWid
 
 /**
  * Draws text within an area, truncating it and adding an ellipsis if necessary.
+ *
+ * Uses binary search to fit the string within {@link IDrawTextInAreaOptions.area} width.
+ * When truncated, the ellipsis is right-aligned within the area.
+ * @param options Canvas context, text, bounding area, and optional alignment.
  */
 export function drawTextInArea({ ctx, text, area, align = "left" }: IDrawTextInAreaOptions) {
   const { left, right, bottom, width, centreX } = area

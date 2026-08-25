@@ -11,14 +11,44 @@ import type { SubgraphIO } from "@/types/serialisation"
 
 import { LinkDirection } from "@/types/globalEnums"
 
-/** Connecting TO an output slot. */
-
+/**
+ * Represents a link being dragged **from** a subgraph output boundary **to** an output slot.
+ *
+ * Created by {@link LinkConnector.dragNewFromSubgraphOutput} and
+ * {@link LinkConnector.dragFromRerouteToOutput}. The origin is a {@link SubgraphOutput} exposed
+ * on the subgraph's {@link SubgraphOutputNode}.
+ * @remarks
+ * Subgraph outputs act as virtual inputs inside the subgraph — data flows from inside the
+ * subgraph out to the parent graph through these boundary slots.
+ * @see {@link ToInputFromIoNodeLink}
+ * @see {@link LinkConnector.dragNewFromSubgraphOutput}
+ */
 export class ToOutputFromIoNodeLink implements RenderLink {
+  /** Always `"output"` — this link is being dragged toward an output slot. */
   readonly toType = "output"
+
+  /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
+
+  /** Index of {@link fromSlot} on {@link node}. */
   readonly fromSlotIndex: number
+
+  /**
+   * The direction the link segment faces as it leaves {@link fromPos}.
+   *
+   * Defaults to {@link LinkDirection.LEFT}. May be overridden to {@link LinkDirection.NONE}
+   * when dragging from a reroute.
+   */
   fromDirection: LinkDirection = LinkDirection.LEFT
 
+  /**
+   * @param network The subgraph that owns the output boundary.
+   * @param node The {@link SubgraphOutputNode} displaying the subgraph outputs.
+   * @param fromSlot The {@link SubgraphOutput} at the origin of the drag.
+   * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
+   * @param dragDirection Controls how the free end of the link follows the cursor.
+   * @throws When {@link fromSlot} is not found on {@link node} (unless it is the empty slot).
+   */
   constructor(
     readonly network: LinkNetwork,
     readonly node: SubgraphOutputNode,
@@ -37,19 +67,45 @@ export class ToOutputFromIoNodeLink implements RenderLink {
       : fromSlot.pos
   }
 
+  /**
+   * Output-directed drags never terminate on an input slot.
+   * @returns Always `false`.
+   */
   canConnectToInput(): false {
     return false
   }
 
+  /**
+   * Determines whether dropping onto the given output slot would produce a valid connection.
+   *
+   * Delegates to {@link SubgraphOutputNode.canConnectTo}, passing this link's origin
+   * {@link SubgraphOutput} as the downstream target.
+   * @param outputNode The node that owns the candidate output slot.
+   * @param output The output slot (or subgraph IO definition) being hovered or dropped on.
+   */
   canConnectToOutput(outputNode: NodeLike, output: INodeOutputSlot | SubgraphIO): boolean {
     return this.node.canConnectTo(outputNode, this.fromSlot, output)
   }
 
+  /**
+   * Determines whether the dragged link may be dropped onto a reroute.
+   *
+   * Prevents connecting to a reroute that originates from the same subgraph output node.
+   * @param reroute The reroute under the pointer.
+   */
   canConnectToReroute(reroute: Reroute): boolean {
     if (reroute.origin_id === this.node.id) return false
     return true
   }
 
+  /**
+   * Completes the drag by connecting the subgraph output to an output slot inside the subgraph.
+   *
+   * Dispatches `"link-created"` with the new link on success.
+   * @param node The node that owns the target output slot.
+   * @param output The output slot to connect to.
+   * @param events Event target for dispatching `"link-created"`.
+   */
   connectToOutput(node: LGraphNode, output: INodeOutputSlot, events: CustomEventTarget<LinkConnectorEventMap>) {
     const { fromSlot, fromReroute } = this
 
@@ -57,10 +113,21 @@ export class ToOutputFromIoNodeLink implements RenderLink {
     events.dispatch("link-created", newLink)
   }
 
+  /**
+   * Subgraph-output drags cannot terminate on a subgraph input boundary.
+   * @throws Always throws — not implemented for this link type.
+   */
   connectToSubgraphInput(): void {
     throw new Error("Not implemented")
   }
 
+  /**
+   * Completes the drag by connecting through a reroute's output side.
+   * @param reroute The reroute being dropped on.
+   * @param outputNode The node that owns the output slot the link ultimately connects through.
+   * @param output The output slot on {@link outputNode}.
+   * @param events Dispatches `"link-created"` with the new link.
+   */
   connectToRerouteOutput(
     reroute: Reroute,
     outputNode: LGraphNode,
@@ -73,14 +140,26 @@ export class ToOutputFromIoNodeLink implements RenderLink {
     events.dispatch("link-created", newLink)
   }
 
+  /**
+   * Output-directed drags cannot terminate on an input slot.
+   * @throws Always throws — this operation is not supported for this link type.
+   */
   connectToInput() {
     throw new Error("ToOutputRenderLink cannot connect to an input.")
   }
 
+  /**
+   * Output-directed drags cannot terminate on a subgraph output boundary.
+   * @throws Always throws — subgraph outputs are sources, not sinks, for this operation.
+   */
   connectToSubgraphOutput(): void {
     throw new Error("ToOutputRenderLink cannot connect to a subgraph output.")
   }
 
+  /**
+   * Output-directed drags cannot terminate on a reroute's input side.
+   * @throws Always throws — use {@link connectToRerouteOutput} instead.
+   */
   connectToRerouteInput() {
     throw new Error("ToOutputRenderLink cannot connect to an input.")
   }

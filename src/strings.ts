@@ -18,6 +18,14 @@ export function stringOrEmpty(value: unknown): string {
   return value == null ? "" : String(value)
 }
 
+/**
+ * Parses a slot type string into normalised lowercase type tokens.
+ *
+ * Empty string and `"0"` are treated as the wildcard `"*"`. Comma-separated lists
+ * are split into individual types.
+ * @param type Raw slot type from a node slot definition.
+ * @returns Array of normalised type strings (never empty — defaults to `["*"]`).
+ */
 export function parseSlotTypes(type: ISlotType): string[] {
   return type == "" || type == "0" ? ["*"] : String(type).toLowerCase().split(",")
 }

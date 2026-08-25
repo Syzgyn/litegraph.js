@@ -3,11 +3,15 @@ import type { ReadOnlyRect, ReadOnlySize, Size } from "@/interfaces"
 import { clamp } from "@/litegraph"
 
 /**
- * Basic width and height, with min/max constraints.
+ * Mutable width/height pair with independent min/max constraints.
  *
- * - The {@link width} and {@link height} properties are readonly
- * - Size is set via {@link desiredWidth} and {@link desiredHeight} properties
- * - Width and height are then updated, clamped to min/max values
+ * Used by {@link SubgraphSlot} to measure slot label dimensions: callers set
+ * {@link desiredWidth} and {@link desiredHeight}, and the readonly {@link width} and
+ * {@link height} properties reflect the clamped result.
+ * @remarks
+ * Constraint bounds ({@link minWidth}, {@link maxWidth}, etc.) are writable and take effect
+ * on the next desired-size assignment.
+ * @see {@link SubgraphSlotBase.measurement}
  */
 export class ConstrainedSize {
   #width: number = 0
@@ -15,19 +19,29 @@ export class ConstrainedSize {
   #desiredWidth: number = 0
   #desiredHeight: number = 0
 
+  /** Minimum allowed {@link width} after clamping. Defaults to `0`. */
   minWidth: number = 0
+
+  /** Minimum allowed {@link height} after clamping. Defaults to `0`. */
   minHeight: number = 0
+
+  /** Maximum allowed {@link width} after clamping. Defaults to {@link Infinity}. */
   maxWidth: number = Infinity
+
+  /** Maximum allowed {@link height} after clamping. Defaults to {@link Infinity}. */
   maxHeight: number = Infinity
 
+  /** Current clamped width; updated whenever {@link desiredWidth} changes. */
   get width() {
     return this.#width
   }
 
+  /** Current clamped height; updated whenever {@link desiredHeight} changes. */
   get height() {
     return this.#height
   }
 
+  /** Unclamped width request; assigning triggers clamping into {@link width}. */
   get desiredWidth() {
     return this.#desiredWidth
   }
@@ -37,6 +51,7 @@ export class ConstrainedSize {
     this.#width = clamp(value, this.minWidth, this.maxWidth)
   }
 
+  /** Unclamped height request; assigning triggers clamping into {@link height}. */
   get desiredHeight() {
     return this.#desiredHeight
   }
@@ -46,29 +61,55 @@ export class ConstrainedSize {
     this.#height = clamp(value, this.minHeight, this.maxHeight)
   }
 
+  /**
+   * @param width Initial desired width; clamped immediately using current min/max bounds.
+   * @param height Initial desired height; clamped immediately using current min/max bounds.
+   */
   constructor(width: number, height: number) {
     this.desiredWidth = width
     this.desiredHeight = height
   }
 
+  /**
+   * Creates a {@link ConstrainedSize} from a {@link ReadOnlySize} tuple.
+   * @param size `[width, height]` pair to use as initial desired dimensions.
+   * @returns A new instance with clamped {@link width} and {@link height}.
+   */
   static fromSize(size: ReadOnlySize): ConstrainedSize {
     return new ConstrainedSize(size[0], size[1])
   }
 
+  /**
+   * Creates a {@link ConstrainedSize} from the width and height components of a rectangle.
+   * @param rect `[x, y, width, height]` tuple; only indices 2 and 3 are used.
+   * @returns A new instance sized to the rectangle's dimensions.
+   */
   static fromRect(rect: ReadOnlyRect): ConstrainedSize {
     return new ConstrainedSize(rect[2], rect[3])
   }
 
+  /**
+   * Sets both desired dimensions from a {@link ReadOnlySize} tuple.
+   * @param size `[width, height]` pair to assign to {@link desiredWidth} and {@link desiredHeight}.
+   */
   setSize(size: ReadOnlySize): void {
     this.desiredWidth = size[0]
     this.desiredHeight = size[1]
   }
 
+  /**
+   * Sets both desired dimensions from scalar values.
+   * @param width Desired width before clamping.
+   * @param height Desired height before clamping.
+   */
   setValues(width: number, height: number): void {
     this.desiredWidth = width
     this.desiredHeight = height
   }
 
+  /**
+   * @returns The current clamped dimensions as a {@link Size} tuple `[width, height]`.
+   */
   toSize(): Size {
     return [this.#width, this.#height]
   }

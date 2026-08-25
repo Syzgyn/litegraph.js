@@ -101,6 +101,12 @@ export function findFreeSlotOfType<T extends { type: ISlotType }>(
   return wildSlot ?? occupiedSlot ?? occupiedWildSlot
 }
 
+/**
+ * Removes the first occurrence of {@link value} from {@link array} in place.
+ * @param array The array to modify.
+ * @param value The element to remove.
+ * @returns `true` if the value was found and removed, `false` otherwise.
+ */
 export function removeFromArray<T>(array: T[], value: T): boolean {
   const index = array.indexOf(value)
   const found = index !== -1

@@ -3,21 +3,39 @@ import type { ContextMenuDivElement, IContextMenuOptions, IContextMenuValue } fr
 import { LiteGraph } from "./litegraph"
 
 // TODO: Replace this pattern with something more modern.
+/**
+ * Declares the constructor signature for {@link ContextMenu} instances.
+ *
+ * Used to type recursive submenu creation without circular import issues.
+ */
 export interface ContextMenu<TValue = unknown> {
   constructor: new (...args: ConstructorParameters<typeof ContextMenu<TValue>>) => ContextMenu<TValue>
 }
 
 /**
- * ContextMenu from LiteGUI
+ * DOM-based hierarchical context menu used throughout the graph editor.
+ *
+ * Built on LiteGUI-style markup (`.litecontextmenu`, `.litemenu-entry`). Supports nested
+ * submenus, global and per-item callbacks, separators, and automatic viewport clamping.
+ * @remarks
+ * Menus register pointer listeners via an internal {@link AbortController}; call
+ * {@link close} to remove the menu and release listeners.
+ * @template TValue Payload type stored on menu item values.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class ContextMenu<TValue = unknown> {
+  /** Options passed to the constructor; shared with submenus where applicable. */
   options: IContextMenuOptions<TValue>
+  /** Parent menu when this instance is a submenu, otherwise `undefined`. */
   parentMenu?: ContextMenu<TValue>
+  /** Root DOM element containing all menu entries. */
   root: ContextMenuDivElement<TValue>
+  /** Currently open child submenu, if any. */
   current_submenu?: ContextMenu<TValue>
+  /** When `true`, prevents the menu from auto-closing after item selection (submenu open). */
   lock?: boolean
 
+  /** Aborts pointer listeners when {@link close} is called. */
   controller: AbortController = new AbortController()
 
   /**
@@ -183,6 +201,13 @@ export class ContextMenu<TValue = unknown> {
     return this.current_submenu?.containsNode(node, visited) || this.root.contains(node)
   }
 
+  /**
+   * Appends a menu entry (or separator) to {@link root}.
+   * @param name Display label for the entry. Empty for separators when {@link value} is `null`.
+   * @param value Item payload: plain string, structured {@link IContextMenuValue}, `null` for a separator, or a callback function.
+   * @param options Menu options; reused for global callback and auto-open behaviour.
+   * @returns The created DOM element for the entry.
+   */
   addItem(
     name: string | null,
     value: string | IContextMenuValue<TValue> | null,
@@ -318,6 +343,14 @@ export class ContextMenu<TValue = unknown> {
     return element
   }
 
+  /**
+   * Removes this menu from the DOM and aborts its event listeners.
+   *
+   * When this menu is a submenu, unlocks the parent unless {@link ignore_parent_menu} is set.
+   * Recursively closes any open child submenu.
+   * @param e Optional mouse event used to synthesise a leave event on the parent menu.
+   * @param ignore_parent_menu When `true`, does not modify or close the parent menu.
+   */
   close(e?: MouseEvent, ignore_parent_menu?: boolean): void {
     this.controller.abort()
     this.root.remove()
@@ -338,6 +371,14 @@ export class ContextMenu<TValue = unknown> {
   }
 
   /** @deprecated Likely unused, however code search was inconclusive (too many results to check by hand). */
+  /**
+   * Dispatches a synthetic custom event on a menu element.
+   * @deprecated Legacy helper for mouse-leave handling; prefer standard DOM APIs.
+   * @param element Target menu element.
+   * @param event_name Custom event name to dispatch.
+   * @param params Event detail payload.
+   * @returns The created {@link CustomEvent}.
+   */
   // this code is used to trigger events easily (used in the context menu mouseleave
   static trigger(
     element: HTMLDivElement,
@@ -351,13 +392,22 @@ export class ContextMenu<TValue = unknown> {
     return evt
   }
 
-  // returns the top most menu
+  /**
+   * Returns the root menu at the top of the submenu chain.
+   * @returns This menu when it has no parent, otherwise the topmost ancestor.
+   */
   getTopMenu(): ContextMenu<TValue> {
     return this.options.parentMenu
       ? this.options.parentMenu.getTopMenu()
       : this
   }
 
+  /**
+   * Returns the originating mouse event from the root menu's options.
+   *
+   * Used to recover the pointer position that opened the menu hierarchy.
+   * @returns The first {@link IContextMenuOptions.event} in the parent chain, or `undefined`.
+   */
   getFirstEvent(): MouseEvent | undefined {
     return this.options.parentMenu
       ? this.options.parentMenu.getFirstEvent()
@@ -365,6 +415,10 @@ export class ContextMenu<TValue = unknown> {
   }
 
   /** @deprecated Unused. */
+  /**
+   * Tests whether the pointer in {@link event} lies inside {@link element}'s client rect.
+   * @deprecated Unused in current code paths.
+   */
   static isCursorOverElement(
     event: MouseEvent,
     element: HTMLDivElement,

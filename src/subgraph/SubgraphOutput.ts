@@ -13,19 +13,31 @@ import { SubgraphSlot } from "./SubgraphSlotBase"
 import { isNodeSlot, isSubgraphInput } from "./subgraphUtils"
 
 /**
- * An output "slot" from a subgraph to a parent graph.
+ * An output boundary slot that bridges a subgraph interior to a parent graph.
  *
- * IMPORTANT: A subgraph "output" is both an output AND an input.  It creates an extra link connection point between
- * a parent graph and a subgraph, so is conceptually similar to a reroute.
+ * IMPORTANT: A subgraph "output" is both an output AND an input. It creates an extra link
+ * connection point between a parent graph and a subgraph, so is conceptually similar to a reroute.
  *
- * This can be a little confusing, but is easier to visualise when imagining editing a subgraph.
- * You have "Subgraph Outputs", because they go from inside the subgraph and out, but links to them come from "node outputs".
- *
- * Functionally, however, when editing a subgraph, that "subgraph output" is the "target" or "input side" of a link.
+ * When editing inside the subgraph, this slot is the **target** (input side) of links coming from
+ * internal node outputs. On the parent {@link SubgraphNode}, the corresponding slot is a normal
+ * output.
+ * @see {@link SubgraphInput}
+ * @see {@link SubgraphOutputNode}
  */
 export class SubgraphOutput extends SubgraphSlot {
+  /** The IO boundary node that owns and lays out this slot. */
   declare parent: SubgraphOutputNode
 
+  /**
+   * Connects an internal node output to this subgraph output boundary.
+   *
+   * Replaces any existing link on this output slot. Creates a link whose origin is the internal
+   * node output and whose target is this slot on the {@link SubgraphOutputNode}.
+   * @param slot The internal node output to connect from.
+   * @param node The node that owns {@link slot}.
+   * @param afterRerouteId Optional reroute ID when the link chain continues through reroutes.
+   * @returns The created {@link LLink}, or `undefined` if the connection was rejected.
+   */
   override connect(slot: INodeOutputSlot, node: LGraphNode, afterRerouteId?: RerouteId): LLink | undefined {
     const { subgraph } = this.parent
 
@@ -100,11 +112,22 @@ export class SubgraphOutput extends SubgraphSlot {
     return link
   }
 
+  /**
+   * Canvas-space position for rendering this slot's label.
+   *
+   * Offset to the right of the connection circle, vertically centred on the slot.
+   */
   get labelPos(): Point {
     const [x, y, , height] = this.boundingRect
     return [x + height, y + height * 0.5]
   }
 
+  /**
+   * Positions this slot within the output boundary node's layout.
+   *
+   * For outputs, the connection circle sits on the left edge of the IO node panel.
+   * @param rect `[left, top, width, height]` in canvas space.
+   */
   override arrange(rect: ReadOnlyRect): void {
     const [left, top, width, height] = rect
     const { boundingRect: b, pos } = this
@@ -122,6 +145,8 @@ export class SubgraphOutput extends SubgraphSlot {
    * Checks if this slot is a valid target for a connection from the given slot.
    * For SubgraphOutput (which acts as an input inside the subgraph),
    * the fromSlot should be an output slot.
+   * @param fromSlot The slot being dragged toward this output boundary slot.
+   * @returns `true` when types are compatible and the source is an output or subgraph input.
    */
   override isValidTarget(fromSlot: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput): boolean {
     if (isNodeSlot(fromSlot)) {

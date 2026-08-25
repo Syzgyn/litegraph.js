@@ -2,6 +2,11 @@ import type { Point, ReadOnlyRect, Rect } from "./interfaces"
 
 import { EaseFunction, Rectangle } from "./litegraph"
 
+/**
+ * Pan-and-zoom viewport state for {@link DragAndScale}.
+ *
+ * Implemented as a plain object so it can be proxied or copied without side effects.
+ */
 export interface DragAndScaleState {
   /**
    * The offset from the top-left of the current canvas viewport to `[0, 0]` in graph space.
@@ -12,6 +17,9 @@ export interface DragAndScaleState {
   scale: number
 }
 
+/**
+ * Options for {@link DragAndScale.animateToBounds} viewport animations.
+ */
 export type AnimationOptions = {
   /** Duration of the animation in milliseconds. */
   duration?: number
@@ -21,6 +29,13 @@ export type AnimationOptions = {
   easing?: EaseFunction
 }
 
+/**
+ * Manages canvas panning, zooming, and coordinate conversion for {@link LGraphCanvas}.
+ *
+ * Tracks graph-space offset and scale, converts between canvas and graph coordinates,
+ * and supports animated or immediate fit-to-bounds operations.
+ * @see {@link LGraphCanvas.ds}
+ */
 export class DragAndScale {
   /**
    * The state of this DragAndScale instance.
@@ -28,25 +43,35 @@ export class DragAndScale {
    * Implemented as a POCO that can be proxied without side-effects.
    */
   state: DragAndScaleState
+  /** Snapshot of {@link state} from the previous frame; used to detect changes. */
   lastState: DragAndScaleState = {
     offset: [0, 0],
     scale: 0,
   }
 
-  /** Maximum scale (zoom in) */
+  /** Maximum allowed zoom level. Default: `10`. */
   max_scale: number
-  /** Minimum scale (zoom out) */
+  /** Minimum allowed zoom level. Default: `0.1`. */
   min_scale: number
+  /** When `false`, pan/zoom handlers should ignore input. */
   enabled: boolean
+  /** Last known pointer position in canvas pixels. */
   last_mouse: Point
+  /** Canvas element whose size drives visible-area calculations. */
   element: HTMLCanvasElement
+  /** Graph-space rectangle currently visible in the viewport. Updated by {@link computeVisibleArea}. */
   visible_area: Rectangle
+  /** Whether a pan drag is currently in progress. */
   dragging?: boolean
+  /** Optional sub-rectangle of the canvas used as the viewport (in canvas pixels). */
   viewport?: Rect
 
+  /** Called when pan or zoom changes and the canvas should redraw. */
   onredraw?(das: DragAndScale): void
+  /** Called when {@link state} changes after {@link computeVisibleArea}. */
   onChanged?(scale: number, offset: Point): void
 
+  /** Graph-space pan offset (alias for {@link DragAndScaleState.offset}). */
   get offset(): [number, number] {
     return this.state.offset
   }
@@ -56,6 +81,7 @@ export class DragAndScale {
     this.state.offset[1] = value[1]
   }
 
+  /** Current zoom scale (alias for {@link DragAndScaleState.scale}). */
   get scale(): number {
     return this.state.scale
   }
@@ -64,6 +90,9 @@ export class DragAndScale {
     this.state.scale = value
   }
 
+  /**
+   * @param element Canvas element whose dimensions define the viewport.
+   */
   constructor(element: HTMLCanvasElement) {
     this.state = {
       offset: [0, 0],
@@ -91,6 +120,12 @@ export class DragAndScale {
       current.offset[1] !== previous.offset[1]
   }
 
+  /**
+   * Recomputes {@link visible_area} from current offset, scale, and optional {@link viewport}.
+   *
+   * Invokes {@link onChanged} when {@link state} differs from {@link lastState}.
+   * @param viewport Optional canvas sub-rectangle in pixels; when omitted, uses the full canvas.
+   */
   computeVisibleArea(viewport: Rect | undefined): void {
     const { scale, offset, visible_area } = this
 
@@ -119,11 +154,20 @@ export class DragAndScale {
     visible_area.resizeBottomRight(endx, endy)
   }
 
+  /**
+   * Applies current scale and offset to a canvas 2D context for graph-space drawing.
+   * @param ctx Context whose transform matrix will be modified.
+   */
   toCanvasContext(ctx: CanvasRenderingContext2D): void {
     ctx.scale(this.scale, this.scale)
     ctx.translate(this.offset[0], this.offset[1])
   }
 
+  /**
+   * Converts a graph-space point to canvas pixel coordinates.
+   * @param pos Point in graph space.
+   * @returns Point in canvas pixels.
+   */
   convertOffsetToCanvas(pos: Point): Point {
     return [
       (pos[0] + this.offset[0]) * this.scale,
@@ -131,6 +175,12 @@ export class DragAndScale {
     ]
   }
 
+  /**
+   * Converts canvas pixel coordinates to graph-space.
+   * @param pos Point in canvas pixels.
+   * @param out Optional reusable output point. When omitted, a new array is allocated.
+   * @returns Graph-space point written to {@link out} or a new `[x, y]` array.
+   */
   convertCanvasToOffset(pos: Point, out?: Point): Point {
     out = out || [0, 0]
     out[0] = pos[0] / this.scale - this.offset[0]
@@ -138,7 +188,12 @@ export class DragAndScale {
     return out
   }
 
-  /** @deprecated Has not been kept up to date */
+  /**
+   * Pans the viewport by canvas-pixel delta `(x, y)`.
+   * @deprecated Has not been kept up to date with current canvas input handling.
+   * @param x Horizontal drag delta in canvas pixels.
+   * @param y Vertical drag delta in canvas pixels.
+   */
   mouseDrag(x: number, y: number): void {
     this.offset[0] += x / this.scale
     this.offset[1] += y / this.scale
@@ -146,6 +201,13 @@ export class DragAndScale {
     this.onredraw?.(this)
   }
 
+  /**
+   * Sets zoom {@link scale}, clamped to {@link min_scale}–{@link max_scale}, keeping
+   * {@link zooming_center} fixed on screen when provided.
+   * @param value Target scale factor.
+   * @param zooming_center Canvas pixel point that should remain stationary during zoom.
+   * @param roundToScaleOne When `true`, snaps scale to exactly `1` when within `0.01`.
+   */
   changeScale(value: number, zooming_center?: Point, roundToScaleOne = true): void {
     if (value < this.min_scale) {
       value = this.min_scale
@@ -178,6 +240,11 @@ export class DragAndScale {
     this.onredraw?.(this)
   }
 
+  /**
+   * Multiplies current scale by {@link value} (relative zoom in/out).
+   * @param value Scale multiplier applied to {@link scale}.
+   * @param zooming_center Canvas pixel point that should remain stationary during zoom.
+   */
   changeDeltaScale(value: number, zooming_center?: Point): void {
     this.changeScale(this.scale * value, zooming_center)
   }
@@ -216,6 +283,8 @@ export class DragAndScale {
   /**
    * Starts an animation to fit the view around the specified selection of nodes.
    * @param bounds The bounds to animate the view to, defined by a rectangle.
+   * @param setDirty Callback invoked each animation frame to request a canvas redraw.
+   * @param options Animation duration, target zoom padding, and easing curve.
    */
   animateToBounds(
     bounds: ReadOnlyRect,
@@ -292,6 +361,7 @@ export class DragAndScale {
     let animationId = requestAnimationFrame(animate)
   }
 
+  /** Resets pan to origin and scale to `1`. */
   reset(): void {
     this.scale = 1
     this.offset[0] = 0

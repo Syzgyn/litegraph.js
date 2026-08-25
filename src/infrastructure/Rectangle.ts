@@ -17,6 +17,12 @@ export class Rectangle extends Float64Array {
   #pos: Point | undefined
   #size: Size | undefined
 
+  /**
+   * @param x X co-ordinate of the top-left corner. Defaults to `0`.
+   * @param y Y co-ordinate of the top-left corner. Defaults to `0`.
+   * @param width Rectangle width. Defaults to `0`.
+   * @param height Rectangle height. Defaults to `0`.
+   */
   constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
     super(4)
 
@@ -26,6 +32,11 @@ export class Rectangle extends Float64Array {
     this[3] = height
   }
 
+  /**
+   * Creates a {@link Rectangle} from a {@link ReadOnlyRect} tuple.
+   * @param rect `[x, y, width, height]` values to copy into the new instance.
+   * @returns A new rectangle with the same bounds as {@link rect}.
+   */
   static override from([x, y, width, height]: ReadOnlyRect): Rectangle {
     return new Rectangle(x, y, width, height)
   }
@@ -43,12 +54,26 @@ export class Rectangle extends Float64Array {
     return new Rectangle(left, top, width, height)
   }
 
+  /**
+   * Returns {@link rect} when it is already a {@link Rectangle}; otherwise wraps the tuple.
+   * @param rect Any {@link ReadOnlyRect} value.
+   * @returns A {@link Rectangle} sharing or copying the same `[x, y, width, height]` data.
+   */
   static ensureRect(rect: ReadOnlyRect): Rectangle {
     return rect instanceof Rectangle
       ? rect
       : new Rectangle(rect[0], rect[1], rect[2], rect[3])
   }
 
+  /**
+   * Returns a typed sub-view of this rectangle's backing buffer.
+   *
+   * Used internally by {@link pos} and {@link size} to expose mutable `[x, y]` and
+   * `[width, height]` slices without allocating.
+   * @param begin Start index (inclusive). Defaults to `0`.
+   * @param end End index (exclusive). When omitted, extends to the buffer end.
+   * @returns A {@link Float64Array} view sharing this rectangle's {@link ArrayBuffer}.
+   */
   override subarray(begin: number = 0, end?: number): Float64Array<ArrayBuffer> {
     const byteOffset = begin << 3
     const length = end === undefined ? end : end - begin
@@ -336,7 +361,11 @@ export class Rectangle extends Float64Array {
     return [this[0] - x, this[1] - y]
   }
 
-  /** Resizes the rectangle without moving it, setting its top-left corner to [{@link x}, {@link y}]. */
+  /**
+   * Resizes by moving the top-left corner to `(x1, y1)` while keeping the bottom-right fixed.
+   * @param x1 New x co-ordinate for the top-left corner.
+   * @param y1 New y co-ordinate for the top-left corner.
+   */
   resizeTopLeft(x1: number, y1: number) {
     this[2] += this[0] - x1
     this[3] += this[1] - y1
@@ -345,7 +374,11 @@ export class Rectangle extends Float64Array {
     this[1] = y1
   }
 
-  /** Resizes the rectangle without moving it, setting its bottom-left corner to [{@link x}, {@link y}]. */
+  /**
+   * Resizes by moving the bottom-left corner to `(x1, y2)` while keeping the top-right fixed.
+   * @param x1 New x co-ordinate for the bottom-left corner.
+   * @param y2 New y co-ordinate for the bottom-left corner.
+   */
   resizeBottomLeft(x1: number, y2: number) {
     this[2] += this[0] - x1
     this[3] = y2 - this[1]
@@ -353,7 +386,11 @@ export class Rectangle extends Float64Array {
     this[0] = x1
   }
 
-  /** Resizes the rectangle without moving it, setting its top-right corner to [{@link x}, {@link y}]. */
+  /**
+   * Resizes by moving the top-right corner to `(x2, y1)` while keeping the bottom-left fixed.
+   * @param x2 New x co-ordinate for the top-right corner.
+   * @param y1 New y co-ordinate for the top-right corner.
+   */
   resizeTopRight(x2: number, y1: number) {
     this[2] = x2 - this[0]
     this[3] += this[1] - y1
@@ -361,26 +398,39 @@ export class Rectangle extends Float64Array {
     this[1] = y1
   }
 
-  /** Resizes the rectangle without moving it, setting its bottom-right corner to [{@link x}, {@link y}]. */
+  /**
+   * Resizes by moving the bottom-right corner to `(x2, y2)` while keeping the top-left fixed.
+   * @param x2 New x co-ordinate for the bottom-right corner.
+   * @param y2 New y co-ordinate for the bottom-right corner.
+   */
   resizeBottomRight(x2: number, y2: number) {
     this[2] = x2 - this[0]
     this[3] = y2 - this[1]
   }
 
-  /** Sets the width without moving the right edge (changes position) */
+  /**
+   * Sets {@link width} while keeping the right edge stationary (adjusts {@link x}).
+   * @param width New width value.
+   */
   setWidthRightAnchored(width: number) {
     const currentWidth = this[2]
     this[2] = width
     this[0] += currentWidth - width
   }
 
-  /** Sets the height without moving the bottom edge (changes position) */
+  /**
+   * Sets {@link height} while keeping the bottom edge stationary (adjusts {@link y}).
+   * @param height New height value.
+   */
   setHeightBottomAnchored(height: number) {
     const currentHeight = this[3]
     this[3] = height
     this[1] += currentHeight - height
   }
 
+  /**
+   * @returns A new {@link Rectangle} with the same `[x, y, width, height]` values.
+   */
   clone(): Rectangle {
     return new Rectangle(this[0], this[1], this[2], this[3])
   }
@@ -411,6 +461,12 @@ export class Rectangle extends Float64Array {
   }
 }
 
+/**
+ * Read-only view of a {@link Rectangle} for APIs that must not mutate bounds in place.
+ *
+ * Omits in-place mutation helpers ({@link Rectangle.updateTo}, resize methods, and edge-anchored
+ * setters) while retaining measurement and containment queries.
+ */
 export type ReadOnlyRectangle = Omit<
   ReadOnlyTypedArray<Rectangle>,
   | "setHeightBottomAnchored"

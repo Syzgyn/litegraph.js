@@ -11,16 +11,30 @@ import { LinkDirection, RenderShape } from "@/types/globalEnums"
 import { NodeInputSlot } from "./NodeInputSlot"
 import { SlotBase } from "./SlotBase"
 
+/** Options passed to {@link NodeSlot.draw} and its subclasses when rendering a slot on the canvas. */
 export interface IDrawOptions {
+  /** Theme colours used to resolve slot fill colours when custom colours are not set. */
   colorContext: DefaultConnectionColors
+  /** Which side of the slot shape the label text is drawn on. */
   labelPosition?: LabelPosition
+  /** When `true`, renders a simplified slot shape for performance during zoomed-out views. */
   lowQuality?: boolean
+  /** When `true`, strokes the slot shape outline after filling. */
   doStroke?: boolean
+  /** When `true`, uses the highlight colour for the slot label. */
   highlight?: boolean
 }
 
-/** Shared base class for {@link LGraphNode} input and output slots. */
+/**
+ * Shared abstract base class for {@link LGraphNode} input and output slots.
+ *
+ * Extends {@link SlotBase} with node ownership, layout helpers, connection validation,
+ * and full canvas rendering (expanded and collapsed states).
+ * @see {@link NodeInputSlot}
+ * @see {@link NodeOutputSlot}
+ */
 export abstract class NodeSlot extends SlotBase implements INodeSlot {
+  /** Canvas-space centre point of this slot, set during node layout. */
   pos?: Point
 
   /** The offset from the parent node to the centre point of this slot. */
@@ -39,20 +53,36 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
     ])
   }
 
-  /** The center point of this slot when the node is collapsed. */
+  /**
+   * Canvas-space centre point of this slot when the parent node is in collapsed mode.
+   *
+   * Subclasses position inputs on the left and outputs on the right of the title bar.
+   */
   abstract get collapsedPos(): ReadOnlyPoint
 
   #node: LGraphNode
+
+  /** The {@link LGraphNode} that owns this slot. */
   get node(): LGraphNode {
     return this.#node
   }
 
+  /** Colour used for the slot label when {@link IDrawOptions.highlight} is `true`. */
   get highlightColor(): CanvasColour {
     return LiteGraph.NODE_TEXT_HIGHLIGHT_COLOR ?? LiteGraph.NODE_SELECTED_TITLE_COLOR ?? LiteGraph.NODE_TEXT_COLOR
   }
 
+  /**
+   * Whether this slot is backed by a widget rather than a traditional socket.
+   *
+   * Widget input slots suppress label rendering and use the widget's layout bounds.
+   */
   abstract get isWidgetInputSlot(): boolean
 
+  /**
+   * @param slot Serialised or partial slot properties used to initialise this instance.
+   * @param node The parent node that owns this slot.
+   */
   constructor(slot: OptionalProps<INodeSlot, "boundingRect">, node: LGraphNode) {
     // Workaround: Ensure internal properties are not copied to the slot (_listenerController
     // https://github.com/Comfy-Org/litegraph.js/issues/1138
@@ -67,18 +97,29 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
   }
 
   /**
-   * Whether this slot is a valid target for a dragging link.
-   * @param fromSlot The slot that the link is being connected from.
+   * Determines whether a dragging link originating from {@link fromSlot} may connect here.
+   * @param fromSlot The slot at the free end of the link being dragged.
+   * @returns `true` if the connection is type-compatible and otherwise valid.
    */
   abstract isValidTarget(fromSlot: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput): boolean
 
   /**
-   * The label to display in the UI.
+   * The label text rendered beside this slot on the canvas.
+   *
+   * Resolves in order: {@link label}, {@link localized_name}, then {@link name}.
    */
   get renderingLabel(): string {
     return this.label || this.localized_name || this.name || ""
   }
 
+  /**
+   * Renders this slot's shape, label, and error indicator on the canvas.
+   *
+   * Draws the slot at its layout centre offset from the parent node, using the shape and colour
+   * determined by {@link type}, {@link shape}, and {@link renderingColor}.
+   * @param ctx The 2D rendering context for the node canvas.
+   * @param options Drawing options controlling colours, label placement, and quality.
+   */
   draw(
     ctx: CanvasRenderingContext2D,
     {
@@ -194,6 +235,13 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
     ctx.lineWidth = originalLineWidth
   }
 
+  /**
+   * Renders a simplified slot indicator when the parent node is collapsed.
+   *
+   * Uses {@link collapsedPos} and a fixed grey fill. Arrow slots adjust direction based on
+   * whether this is an input or output slot.
+   * @param ctx The 2D rendering context for the node canvas.
+   */
   drawCollapsed(ctx: CanvasRenderingContext2D) {
     const [x, y] = this.collapsedPos
 

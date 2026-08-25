@@ -3,19 +3,35 @@ import type { IButtonWidget } from "@/types/widgets"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
+/**
+ * Clickable button widget (`type: "button"`) that invokes {@link callback} instead of storing a
+ * persistent value.
+ *
+ * Briefly highlights on click via {@link clicked}. The callback receives the widget instance as its
+ * first argument rather than a value.
+ * @see {@link IButtonWidget}
+ */
 export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWidget {
+  /** Widget type discriminator; always `"button"`. */
   override type = "button" as const
+  /**
+   * When `true` on the next draw pass, the button renders a pressed highlight then resets to `false`.
+   */
   clicked: boolean
 
+  /**
+   * @param widget Button definition POJO.
+   * @param node Owning node.
+   */
   constructor(widget: IButtonWidget, node: LGraphNode) {
     super(widget, node)
     this.clicked ??= false
   }
 
   /**
-   * Draws the widget
-   * @param ctx The canvas context
-   * @param options The options for drawing the widget
+   * Draws a rectangular button with centred {@link displayName} text.
+   * @param ctx Canvas 2D context.
+   * @param options Node width and quality flags.
    */
   override drawWidget(ctx: CanvasRenderingContext2D, {
     width,
@@ -48,12 +64,21 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
     Object.assign(ctx, { textAlign, strokeStyle, fillStyle })
   }
 
+  /**
+   * Draws centred button label text.
+   * @param ctx Canvas context.
+   * @param x Horizontal centre X for the text.
+   */
   drawLabel(ctx: CanvasRenderingContext2D, x: number): void {
     ctx.textAlign = "center"
     ctx.fillStyle = this.text_color
     ctx.fillText(this.displayName, x, this.y + this.height * 0.7)
   }
 
+  /**
+   * Marks the button as clicked, redraws, and invokes {@link callback} with the widget instance.
+   * @param options Pointer event, node, and canvas for the callback.
+   */
   override onClick({ e, node, canvas }: WidgetEventOptions) {
     const pos = canvas.graph_mouse
 

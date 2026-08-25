@@ -19,31 +19,53 @@ import { toConcreteWidget } from "@/widgets/widgetMap"
 import { type ExecutableLGraphNode, ExecutableNodeDTO, type ExecutionId } from "./ExecutableNodeDTO"
 
 /**
- * An instance of a {@link Subgraph}, displayed as a node on the containing (parent) graph.
+ * A live instance of a {@link Subgraph} definition, rendered as a single node on a parent graph.
+ *
+ * Mirrors the subgraph's input/output slots on its own node surface, promotes connected internal
+ * widgets to the parent canvas, and provides link-resolution helpers used during execution
+ * flattening and link dragging across subgraph boundaries.
+ * @remarks
+ * Subscribes to subgraph events so IO slot and widget changes on the definition stay in sync with
+ * every placed instance. Virtual ({@link isVirtualNode}) for execution purposes — inner nodes are
+ * expanded via {@link getInnerNodes}.
+ * @see {@link Subgraph}
+ * @see {@link ExecutableNodeDTO}
  */
 export class SubgraphNode extends LGraphNode implements BaseLGraph {
+  /** Input slots mirroring {@link Subgraph.inputs}, with optional subgraph-specific metadata. */
   declare inputs: (INodeInputSlot & Partial<ISubgraphInput>)[]
 
+  /** The subgraph definition ID; matches {@link Subgraph.id}. */
   override readonly type: UUID
+  /** Subgraph instances are virtual nodes whose behaviour is expanded at execution time. */
   override readonly isVirtualNode = true as const
 
+  /** The root graph that ultimately owns this instance's subgraph definition. */
   get rootGraph(): LGraph {
     return this.graph.rootGraph
   }
 
+  /** User-facing type label shown in the node UI. */
   override get displayType(): string {
     return "Subgraph node"
   }
 
+  /** Narrows this node to {@link SubgraphNode} for type guards. */
   override isSubgraphNode(): this is SubgraphNode {
     return true
   }
 
+  /** Widgets promoted from internal subgraph inputs and displayed on this node. */
   override widgets: IBaseWidget[] = []
 
   /** Manages lifecycle of all subgraph event listeners */
   #eventAbortController = new AbortController()
 
+  /**
+   * @param graph The parent graph (root or nested subgraph) containing this instance.
+   * @param subgraph The subgraph definition this node instantiates.
+   * @param instanceData Per-instance serialised state (position, properties, etc.).
+   */
   constructor(
     /** The (sub)graph that contains this subgraph instance. */
     override readonly graph: GraphOrSubgraph,
@@ -113,6 +135,11 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     })
   }
 
+  /**
+   * Opens the subgraph editor when the "enter subgraph" title button is clicked.
+   * @param button The title button that was clicked.
+   * @param canvas The active graph canvas.
+   */
   override onTitleButtonClick(button: LGraphButton, canvas: LGraphCanvas): void {
     if (button.name === "enter_subgraph") {
       canvas.openSubgraph(this.subgraph)
@@ -156,6 +183,10 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     )
   }
 
+  /**
+   * Rebuilds input/output slots from the subgraph definition and applies instance data.
+   * @param info Serialised per-instance node state.
+   */
   override configure(info: ExportedSubgraphInstance): void {
     for (const input of this.inputs) {
       input._listenerController?.abort()
@@ -267,6 +298,14 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     return super.addInput(name, type, inputProperties)
   }
 
+  /**
+   * Returns a synthetic link representing the internal connection for an output slot.
+   *
+   * Used when resolving links that appear to originate from this virtual node's outputs.
+   * The returned link's `origin_id` is prefixed with this instance's ID.
+   * @param slot The output slot index on this subgraph node.
+   * @returns A cloned inner link with adjusted origin metadata, or `null` when unconnected.
+   */
   override getInputLink(slot: number): LLink | null {
     // Output side: the link from inside the subgraph
     const innerLink = this.subgraph.outputNode.slots[slot].getLinks().at(0)
@@ -311,7 +350,17 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     console.debug(`[SubgraphNode.resolveSubgraphOutputLink] No inner link found for output slot [${slot}] ${outputSlot.name}`, this)
   }
 
-  /** @internal Used to flatten the subgraph before execution. */
+  /**
+   * Flattens this subgraph instance into executable node DTOs.
+   *
+   * Registers a DTO for this instance, then recursively expands nested subgraph nodes.
+   * Throws {@link RecursionError} when a circular subgraph hierarchy is detected.
+   * @param executableNodes Map populated with all DTOs keyed by {@link ExecutionId}.
+   * @param subgraphNodePath Ordered instance IDs from the root graph to this instance.
+   * @param nodes Accumulator for leaf DTOs (internal recursion parameter).
+   * @param visited Set of instances already being expanded (internal recursion parameter).
+   * @returns All leaf {@link ExecutableLGraphNode} DTOs inside this subgraph.
+   */
   getInnerNodes(
     /** The set of computed node DTOs for this execution. */
     executableNodes: Map<ExecutionId, ExecutableLGraphNode>,
@@ -353,6 +402,10 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     return nodes
   }
 
+  /**
+   * Removes a promoted widget by name and dispatches `"widget-demoted"`.
+   * @param name The widget name to remove.
+   */
   override removeWidgetByName(name: string): void {
     const widget = this.widgets.find(w => w.name === name)
     if (widget) {
@@ -361,6 +414,10 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     super.removeWidgetByName(name)
   }
 
+  /**
+   * Ensures a widget is removed and dispatches `"widget-demoted"` when it was promoted.
+   * @param widget The widget instance to remove.
+   */
   override ensureWidgetRemoved(widget: IBaseWidget): void {
     if (this.widgets.includes(widget)) {
       this.subgraph.events.dispatch("widget-demoted", { widget, subgraphNode: this })
@@ -368,6 +425,9 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     super.ensureWidgetRemoved(widget)
   }
 
+  /**
+   * Cleans up event listeners and demotes all widgets when this instance is removed from the graph.
+   */
   override onRemoved(): void {
     // Clean up all subgraph event listeners
     this.#eventAbortController.abort()

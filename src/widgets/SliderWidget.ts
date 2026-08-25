@@ -4,15 +4,28 @@ import { clamp } from "@/litegraph"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
+/**
+ * Horizontal slider widget (`type: "slider"`) for numeric values between `options.min` and
+ * `options.max`.
+ *
+ * Click and drag map pointer X position to a value along the bar. An optional {@link marker}
+ * displays a secondary position (e.g. default or reference value).
+ * @see {@link ISliderWidget}
+ */
 export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWidget {
+  /** Widget type discriminator; always `"slider"`. */
   override type = "slider" as const
 
+  /**
+   * Optional secondary position drawn as a vertical marker on the slider track.
+   * @remarks Normalised against the same min/max range as {@link value}.
+   */
   marker?: number
 
   /**
-   * Draws the widget
-   * @param ctx The canvas context
-   * @param options The options for drawing the widget
+   * Draws the slider track, filled value bar, optional marker, outline, and centred label/value text.
+   * @param ctx Canvas 2D context.
+   * @param options Node width and quality flags.
    */
   override drawWidget(ctx: CanvasRenderingContext2D, {
     width,
@@ -73,7 +86,8 @@ export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWi
   }
 
   /**
-   * Handles click events for the slider widget
+   * Sets the value from click X position along the slider track.
+   * @param options No-op when `options.read_only` is set.
    */
   override onClick(options: WidgetEventOptions) {
     if (this.options.read_only) return
@@ -92,7 +106,9 @@ export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWi
   }
 
   /**
-   * Handles drag events for the slider widget
+   * Continuously updates the value while dragging along the slider track.
+   * @param options No-op when `options.read_only` is set.
+   * @returns `false` when read-only (legacy drag-handler contract).
    */
   override onDrag(options: WidgetEventOptions) {
     if (this.options.read_only) return false

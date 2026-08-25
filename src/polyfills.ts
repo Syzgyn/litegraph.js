@@ -3,8 +3,14 @@ Symbol.dispose ??= Symbol("Symbol.dispose")
 // @ts-expect-error Polyfill
 Symbol.asyncDispose ??= Symbol("Symbol.asyncDispose")
 
-// API *************************************************
-// like rect but rounded corners
+/**
+ * Installs runtime polyfills required by litegraph on older browsers.
+ *
+ * - Adds {@link CanvasRenderingContext2D.roundRect} when missing.
+ * - Adds {@link window.requestAnimationFrame} fallback when missing.
+ *
+ * Called automatically when importing {@link litegraph}.
+ */
 export function loadPolyfills() {
   if (
     typeof window != "undefined" &&

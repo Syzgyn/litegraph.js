@@ -31,56 +31,110 @@ export interface Serialisable<SerialisableObject> {
 }
 
 export interface BaseExportedGraph {
-  /** Unique graph ID.  Automatically generated if not provided. */
+  /** Unique graph ID. Automatically generated if not provided. */
   id: UUID
-  /** The revision number of this graph. Not automatically incremented; intended for use by a downstream save function. */
+  /**
+   * The revision number of this graph.
+   *
+   * Not automatically incremented; intended for use by a downstream save function to detect changes.
+   */
   revision: number
+  /** Optional graph-level configuration overrides. */
   config?: LGraphConfig
-  /** Details of the appearance and location of subgraphs shown in this graph. Similar to */
+  /**
+   * Details of the appearance and location of subgraph instances shown in this graph.
+   *
+   * Each entry references a subgraph definition in {@link definitions}.
+   */
   subgraphs?: ExportedSubgraphInstance[]
-  /** Definitions of re-usable objects that are referenced elsewhere in this exported graph. */
+  /** Definitions of re-usable objects referenced elsewhere in this exported graph. */
   definitions?: {
-    /** The base definition of subgraphs used in this workflow. That is, what you see when you open / edit a subgraph. */
+    /**
+     * Base definitions of subgraphs used in this workflow.
+     *
+     * These are the full subgraph contents visible when opening or editing a subgraph.
+     */
     subgraphs?: ExportedSubgraph[]
   }
 }
 
+/** Top-level serialisable representation of a graph, used for save/load and clipboard operations. */
 export interface SerialisableGraph extends BaseExportedGraph {
-  /** Schema version.  @remarks Version bump should add to const union, which is used to narrow type during deserialise. */
+  /**
+   * Schema version for forward-compatible deserialisation.
+   * @remarks Version bump should add to the const union, which is used to narrow types during deserialise.
+   */
   version: 0 | 1
+  /** Runtime state persisted with the graph (e.g. execution mode, last IDs). */
   state: LGraphState
+  /** Serialised group annotations on the canvas. */
   groups?: ISerialisedGroup[]
+  /** Serialised nodes contained in this graph. */
   nodes?: ISerialisedNode[]
+  /** Serialised links connecting nodes in this graph. */
   links?: SerialisableLLink[]
+  /** Links that originate from a slot but are not yet connected to a target. */
   floatingLinks?: SerialisableLLink[]
+  /** Serialised reroute points on link paths. */
   reroutes?: SerialisableReroute[]
+  /** Arbitrary extra data attached to the graph by downstream consumers. */
   extra?: LGraphExtra
 }
 
+/**
+ * Serialisable representation of a node input slot.
+ *
+ * Omits runtime-only properties ({@link INodeInputSlot.boundingRect}, live widget reference).
+ * Widget-backed slots serialise a `{ widget: { name } }` reference instead of a position.
+ */
 export type ISerialisableNodeInput = Omit<INodeInputSlot, "boundingRect" | "widget"> & {
-  widget?: { name: string }
-}
-export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "_data"> & {
+  /** Reference to the widget this input slot is bound to, if any. */
   widget?: { name: string }
 }
 
-/** Serialised LGraphNode */
+/**
+ * Serialisable representation of a node output slot.
+ *
+ * Omits runtime-only properties ({@link INodeOutputSlot.boundingRect}, {@link INodeOutputSlot._data}).
+ */
+export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "_data"> & {
+  /** Reference to an associated widget, used by some downstream workarounds. */
+  widget?: { name: string }
+}
+
+/** Serialised representation of an {@link LGraphNode}. */
 export interface ISerialisedNode {
+  /** Display title shown on the node. Falls back to the node type when omitted. */
   title?: string
+  /** Unique node identifier within the graph. */
   id: NodeId
+  /** Registered node type name (e.g. `"basic/constant"`). */
   type: string
+  /** Canvas position of the node's top-left corner. */
   pos: Point
+  /** Width and height of the node on the canvas. */
   size: Size
+  /** Node behaviour flags (collapsed, pinned, etc.). */
   flags: INodeFlags
+  /** Execution order index within the graph. */
   order: number
+  /** Execution mode ({@link LGraphEventMode} value). */
   mode: number
+  /** Serialised output slots on this node. */
   outputs?: ISerialisableNodeOutput[]
+  /** Serialised input slots on this node. */
   inputs?: ISerialisableNodeInput[]
+  /** Custom node properties persisted across save/load. */
   properties?: Dictionary<NodeProperty | undefined>
+  /** Visual render shape for this node's body. */
   shape?: RenderShape
+  /** Border colour override. */
   boxcolor?: string
+  /** Title bar text colour override. */
   color?: string
+  /** Node body background colour override. */
   bgcolor?: string
+  /** Whether advanced widgets are expanded in the UI. */
   showAdvanced?: boolean
   /**
    * Note: Some custom nodes overrides the `widgets_values` property to an
@@ -91,10 +145,15 @@ export interface ISerialisedNode {
   widgets_values?: TWidgetValue[]
 }
 
-/** Properties of nodes that are used by subgraph instances. */
+/** Properties shared between a serialised node and a subgraph instance on the parent graph. */
 type NodeSubgraphSharedProps = Omit<ISerialisedNode, "properties" | "showAdvanced">
 
-/** A single instance of a subgraph; where it is used on a graph, any customisation to shape / colour etc. */
+/**
+ * A single placed instance of a subgraph on a parent graph.
+ *
+ * Stores the instance's position, size, and visual customisations. The actual subgraph
+ * definition is referenced by {@link type} and stored in {@link BaseExportedGraph.definitions}.
+ */
 export interface ExportedSubgraphInstance extends NodeSubgraphSharedProps {
   /**
    * The ID of the actual subgraph definition.
@@ -104,17 +163,27 @@ export interface ExportedSubgraphInstance extends NodeSubgraphSharedProps {
 }
 
 /**
- * Original implementation from static litegraph.d.ts
- * Maintained for backwards compat
+ * Legacy serialised graph format.
+ *
+ * Maintained for backwards compatibility with the original `litegraph.d.ts` schema.
+ * @deprecated Prefer {@link SerialisableGraph} for new save/load implementations.
  */
 export interface ISerialisedGraph extends BaseExportedGraph {
+  /** Highest node ID assigned in this graph. Used to allocate new IDs on deserialise. */
   last_node_id: NodeId
+  /** Highest link ID assigned in this graph. Used to allocate new IDs on deserialise. */
   last_link_id: number
+  /** All nodes in this graph. */
   nodes: ISerialisedNode[]
+  /** All links in this graph, stored as compact arrays. */
   links: SerialisedLLinkArray[]
+  /** Links not yet connected to a target slot. */
   floatingLinks?: SerialisableLLink[]
+  /** All groups in this graph. */
   groups: ISerialisedGroup[]
+  /** Schema version, matching {@link LiteGraph.VERSION}. */
   version: typeof LiteGraph.VERSION
+  /** Arbitrary extra data attached by downstream consumers. */
   extra?: LGraphExtra
 }
 
@@ -125,7 +194,9 @@ export interface ISerialisedGraph extends BaseExportedGraph {
 export interface ExportedSubgraph extends SerialisableGraph {
   /** The display name of the subgraph. */
   name: string
+  /** Layout and identity of the subgraph's input boundary node. */
   inputNode: ExportedSubgraphIONode
+  /** Layout and identity of the subgraph's output boundary node. */
   outputNode: ExportedSubgraphIONode
   /** Ordered list of inputs to the subgraph itself. Similar to a reroute, with the input side in the graph, and the output side in the subgraph. */
   inputs?: SubgraphIO[]
@@ -135,10 +206,15 @@ export interface ExportedSubgraph extends SerialisableGraph {
   widgets?: ExposedWidget[]
 }
 
-/** Properties shared by subgraph and node I/O slots. */
+/** Properties shared by subgraph boundary I/O slots and regular node slots. */
 type SubgraphIOShared = Omit<INodeSlot, "boundingRect" | "nameLocked" | "locked" | "removable" | "_floatingLinks">
 
-/** Subgraph I/O slots */
+/**
+ * A subgraph input or output boundary slot.
+ *
+ * Similar to a reroute: inputs have their socket on the parent graph and their target inside
+ * the subgraph; outputs are reversed.
+ */
 export interface SubgraphIO extends SubgraphIOShared {
   /** Slot ID (internal; never changes once instantiated). */
   id: UUID
@@ -156,16 +232,27 @@ export interface ExposedWidget {
   name: string
 }
 
-/** Serialised LGraphGroup */
+/** Serialised representation of an {@link LGraphGroup}. */
 export interface ISerialisedGroup {
+  /** Unique group identifier. */
   id: number
+  /** Display title shown on the group header. */
   title: string
+  /** Bounding rectangle as `[x, y, width, height]`. */
   bounding: number[]
+  /** Background colour override. */
   color?: string
+  /** Font size for the group title. */
   font_size?: number
+  /** Group behaviour flags. */
   flags?: IGraphGroupFlags
 }
 
+/**
+ * Compact tuple representation of a clipboard link.
+ *
+ * Indices reference nodes relative to the clipboard's node array rather than absolute IDs.
+ */
 export type TClipboardLink = [
   targetRelativeIndex: number,
   originSlot: number,
@@ -174,29 +261,44 @@ export type TClipboardLink = [
   targetNodeId: NodeId,
 ]
 
-/** Items copied from the canvas */
+/** Items copied from the canvas to the clipboard. */
 export interface ClipboardItems {
+  /** Serialised nodes included in the clipboard selection. */
   nodes?: ISerialisedNode[]
+  /** Serialised groups included in the clipboard selection. */
   groups?: ISerialisedGroup[]
+  /** Serialised reroutes included in the clipboard selection. */
   reroutes?: SerialisableReroute[]
+  /** Serialised links connecting clipboard nodes. */
   links?: SerialisableLLink[]
+  /** Full subgraph definitions referenced by clipboard subgraph instances. */
   subgraphs?: ExportedSubgraph[]
 }
 
-/** @deprecated */
+/**
+ * Legacy clipboard contents format.
+ * @deprecated Prefer {@link ClipboardItems} which uses {@link SerialisableLLink} instead of tuple links.
+ */
 export interface IClipboardContents {
   nodes?: ISerialisedNode[]
   links?: TClipboardLink[]
 }
 
+/** Serialisable representation of a {@link Reroute} point on a link path. */
 export interface SerialisableReroute {
+  /** Unique reroute identifier. */
   id: RerouteId
+  /** ID of the parent reroute in the chain, if this reroute is nested. */
   parentId?: RerouteId
+  /** Canvas position of the reroute point. */
   pos: Point
+  /** IDs of all links that pass through this reroute. */
   linkIds: LinkId[]
+  /** Floating link state when this reroute terminates an unconnected chain. */
   floating?: FloatingRerouteSlot
 }
 
+/** Serialisable representation of an {@link LLink} between two node slots. */
 export interface SerialisableLLink {
   /** Link ID */
   id: LinkId
@@ -214,8 +316,12 @@ export interface SerialisableLLink {
   parentId?: RerouteId
 }
 
+/** Layout and identity of a subgraph's input or output boundary node. */
 export interface ExportedSubgraphIONode {
+  /** Node identifier of the boundary node within the subgraph. */
   id: NodeId
+  /** Bounding rectangle as `[x, y, width, height]`. */
   bounding: [number, number, number, number]
+  /** When `true`, the boundary node cannot be moved by the user. */
   pinned?: boolean
 }

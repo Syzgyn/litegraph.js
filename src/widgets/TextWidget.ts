@@ -3,7 +3,17 @@ import type { IStringWidget } from "@/types/widgets"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
+/**
+ * Single-line (or multiline prompt) text widget (`type: "string"` or `"text"`).
+ *
+ * Displays {@link value} with truncating layout; click opens {@link LGraphCanvas.prompt} for editing.
+ * @see {@link IStringWidget}
+ */
 export class TextWidget extends BaseWidget<IStringWidget> implements IStringWidget {
+  /**
+   * @param widget String widget definition; `value` is coerced to string.
+   * @param node Owning node.
+   */
   constructor(widget: IStringWidget, node: LGraphNode) {
     super(widget, node)
     this.type ??= "string"
@@ -11,9 +21,9 @@ export class TextWidget extends BaseWidget<IStringWidget> implements IStringWidg
   }
 
   /**
-   * Draws the widget
-   * @param ctx The canvas context
-   * @param options The options for drawing the widget
+   * Draws the standard capsule with truncating label and string value.
+   * @param ctx Canvas 2D context.
+   * @param options Node width and quality flags.
    */
   override drawWidget(ctx: CanvasRenderingContext2D, {
     width,
@@ -32,6 +42,10 @@ export class TextWidget extends BaseWidget<IStringWidget> implements IStringWidg
     Object.assign(ctx, { textAlign, strokeStyle, fillStyle })
   }
 
+  /**
+   * Opens a text prompt (optionally multiline) to edit {@link value}.
+   * @param options Canvas prompt uses current value and `options.multiline` from widget options.
+   */
   override onClick({ e, node, canvas }: WidgetEventOptions) {
     // Show prompt dialog for text input
     canvas.prompt(
