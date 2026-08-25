@@ -33,7 +33,7 @@ import type {
   CanvasPointerEvent,
   CanvasPointerExtensions,
 } from "./types/events"
-import type { ClipboardItems, SubgraphIO } from "./types/serialisation"
+import type { ClipboardItems, ISerialisedNode, SubgraphIO } from "./types/serialisation"
 import type { NeverNever } from "./types/utility"
 import type { PickNevers } from "./types/utility"
 import type { IBaseWidget } from "./types/widgets"
@@ -1804,41 +1804,21 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     menu: ContextMenu,
     node: LGraphNode,
   ): void {
-    const { graph } = node
-    if (!graph) throw new NullGraphError()
-    graph.beforeChange()
-
-    const newSelected = new Set<LGraphNode>()
-
-    const fApplyMultiNode = function (node: LGraphNode, newNodes: Set<LGraphNode>): void {
-      if (node.clonable === false) return
-
-      const newnode = node.clone()
-      if (!newnode) return
-
-      newnode.pos = [node.pos[0] + 5, node.pos[1] + 5]
-      if (!node.graph) throw new NullGraphError()
-
-      node.graph.add(newnode)
-      newNodes.add(newnode)
-    }
-
     const canvas = LGraphCanvas.active_canvas
-    if (!canvas.selected_nodes || Object.keys(canvas.selected_nodes).length <= 1) {
-      fApplyMultiNode(node, newSelected)
-    } else {
-      for (const i in canvas.selected_nodes) {
-        fApplyMultiNode(canvas.selected_nodes[i], newSelected)
-      }
+    const nodes = canvas.selectedItems.size ? canvas.selectedItems : [node]
+
+    let offsetX = Infinity
+    let offsetY = Infinity
+    for (const item of nodes) {
+      if (item.pos == null)
+        throw new TypeError("Invalid node encountered on clone. `pos` was null.")
+      if (item.pos[0] < offsetX) offsetX = item.pos[0]
+      if (item.pos[1] < offsetY) offsetY = item.pos[1]
     }
 
-    if (newSelected.size) {
-      canvas.selectNodes([...newSelected])
-    }
-
-    graph.afterChange()
-
-    canvas.setDirty(true, true)
+    canvas._deserializeItems(canvas._serializeItems(nodes), {
+      position: [offsetX + 5, offsetY + 5],
+    })
   }
 
   /**
@@ -2402,44 +2382,22 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     // clone node ALT dragging
     if (LiteGraph.alt_drag_do_clone_nodes && e.altKey && !e.ctrlKey && node && this.allow_interaction) {
-      let newType = node.type
+      const items = this._deserializeItems(this._serializeItems([node]), {
+        position: node.pos,
+      })
+      const cloned = items?.created[0] as LGraphNode | undefined
+      if (!cloned) return
 
-      if (node instanceof SubgraphNode) {
-        const cloned = node.subgraph
-          .clone()
-          .asSerialisable()
+      cloned.pos[0] += 5
+      cloned.pos[1] += 5
 
-        const subgraph = graph.createSubgraph(cloned)
-        subgraph.configure(cloned)
-        newType = subgraph.id
-      }
-
-      const node_data = node.clone()?.serialize()
-      if (node_data?.type != null) {
-        // Ensure the cloned node is configured against the correct type (especially for SubgraphNodes)
-        node_data.type = newType
-        const cloned = LiteGraph.createNode(newType)
-        if (cloned) {
-          cloned.configure(node_data)
-          cloned.pos[0] += 5
-          cloned.pos[1] += 5
-
-          if (this.allow_dragnodes) {
-            pointer.onDragStart = (pointer) => {
-              graph.add(cloned, false)
-              this.#startDraggingItems(cloned, pointer)
-            }
-            pointer.onDragEnd = e => this.#processDraggedItems(e)
-          } else {
-          // TODO: Check if before/after change are necessary here.
-            graph.beforeChange()
-            graph.add(cloned, false)
-            graph.afterChange()
-          }
-
-          return
+      if (this.allow_dragnodes) {
+        pointer.onDragStart = (pointer) => {
+          this.#startDraggingItems(cloned, pointer)
         }
+        pointer.onDragEnd = e => this.#processDraggedItems(e)
       }
+      return
     }
 
     // Node clicked
@@ -3835,7 +3793,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * When called without parameters, it copies {@link selectedItems}.
    * @param items The items to copy.  If nullish, all selected items are copied.
    */
-  copyToClipboard(items?: Iterable<Positionable>): void {
+  _serializeItems(items?: Iterable<Positionable>): ClipboardItems {
     const serialisable: Required<ClipboardItems> = {
       nodes: [],
       groups: [],
@@ -3896,9 +3854,18 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       serialisable.subgraphs.push(cloned)
     }
 
+    return serialisable
+  }
+
+  /**
+   * Copies canvas items to an internal, app-specific clipboard backed by local storage.
+   * When called without parameters, it copies {@link selectedItems}.
+   * @param items The items to copy.  If nullish, all selected items are copied.
+   */
+  copyToClipboard(items?: Iterable<Positionable>): void {
     localStorage.setItem(
       "litegrapheditor_clipboard",
-      JSON.stringify(serialisable),
+      JSON.stringify(this._serializeItems(items)),
     )
   }
 
@@ -3929,6 +3896,15 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Pastes the items from the canvas "clipbaord" - a local storage variable.
    */
   _pasteFromClipboard(options: IPasteFromClipboardOptions = {}): ClipboardPasteResult | undefined {
+    const data = localStorage.getItem("litegrapheditor_clipboard")
+    if (!data) return
+    return this._deserializeItems(JSON.parse(data), options)
+  }
+
+  _deserializeItems(
+    parsed: ClipboardItems,
+    options: IPasteFromClipboardOptions = {},
+  ): ClipboardPasteResult | undefined {
     const {
       connectInputs = false,
       position = this.graph_mouse,
@@ -3937,15 +3913,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // if ctrl + shift + v is off, return when isConnectUnselected is true (shift is pressed) to maintain old behavior
     if (!LiteGraph.ctrl_shift_v_paste_connect_unselected_outputs && connectInputs) return
 
-    const data = localStorage.getItem("litegrapheditor_clipboard")
-    if (!data) return
-
     const { graph } = this
     if (!graph) throw new NullGraphError()
     graph.beforeChange()
 
-    // Parse & initialise
-    const parsed: ClipboardItems = JSON.parse(data)
     parsed.nodes ??= []
     parsed.groups ??= []
     parsed.reroutes ??= []
@@ -3980,17 +3951,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const { created, nodes, links, reroutes } = results
 
     // const failedNodes: ISerialisedNode[] = []
+    const subgraphIdMap: Record<string, string> = {}
+    for (const subgraphInfo of parsed.subgraphs)
+      subgraphInfo.id = subgraphIdMap[subgraphInfo.id] = createUuidv4()
+    const allNodeInfo: ISerialisedNode[] = [
+      parsed.nodes,
+      ...parsed.subgraphs.map(s => s.nodes ?? []),
+    ].flat()
+    for (const nodeInfo of allNodeInfo) {
+      if (nodeInfo.type in subgraphIdMap)
+        nodeInfo.type = subgraphIdMap[nodeInfo.type]
+    }
 
     // Subgraphs
     for (const info of parsed.subgraphs) {
-      // SubgraphV2: Remove always-clone behaviour
-      const originalId = info.id
-      info.id = createUuidv4()
-
       const subgraph = graph.createSubgraph(info)
-      subgraph.configure(info)
-      results.subgraphs.set(originalId, subgraph)
+      results.subgraphs.set(info.id, subgraph)
     }
+    for (const info of parsed.subgraphs)
+      results.subgraphs.get(info.id)?.configure(info)
 
     // Groups
     for (const info of parsed.groups) {
@@ -4001,17 +3980,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       graph.add(group)
       created.push(group)
     }
-
-    // Update subgraph ids with nesting
-    function updateSubgraphIds(nodes: { type: string }[]) {
-      for (const info of nodes) {
-        const subgraph = results.subgraphs.get(info.type)
-        if (!subgraph) continue
-        info.type = subgraph.id
-        updateSubgraphIds(subgraph.nodes)
-      }
-    }
-    updateSubgraphIds(parsed.nodes)
 
     // Nodes
     for (const info of parsed.nodes) {

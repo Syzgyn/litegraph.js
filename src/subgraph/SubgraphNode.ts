@@ -595,6 +595,14 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     return super.serialize()
   }
 
+  override clone() {
+    const clone = super.clone()
+    // force reassign so domWidgets reset ownership
+    // eslint-disable-next-line no-self-assign
+    this.properties.proxyWidgets = this.properties.proxyWidgets
+    return clone
+  }
+
   /**
    * Cleans up event listeners and demotes all widgets when this instance is removed from the graph.
    */
