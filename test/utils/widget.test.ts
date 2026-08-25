@@ -2,7 +2,7 @@ import type { IWidgetOptions } from "@/types/widgets"
 
 import { describe, expect, test } from "vitest"
 
-import { getWidgetStep } from "@/utils/widget"
+import { evaluateInput, getWidgetStep } from "@/utils/widget"
 
 describe("getWidgetStep", () => {
   test("should return step2 when available", () => {
@@ -42,4 +42,58 @@ describe("getWidgetStep", () => {
 
     expect(getWidgetStep(optionsWithZeroStep)).toBe(1)
   })
+})
+
+describe("evaluateInput", () => {
+  test.each([
+    ["42", 42],
+    ["3.14", 3.14],
+    ["-7", -7],
+    ["0", 0],
+  ])("plain number: \"%s\" = %d", (input, expected) => {
+    expect(evaluateInput(input)).toBe(expected)
+  })
+
+  test.each([
+    ["2+3", 5],
+    ["(4+2)*3", 18],
+    ["3.14*2", 6.28],
+    ["10/2+3", 8],
+  ])("expression: \"%s\" = %d", (input, expected) => {
+    expect(evaluateInput(input)).toBe(expected)
+  })
+
+  test("empty string returns 0 (Number(\"\") === 0)", () => {
+    expect(evaluateInput("")).toBe(0)
+  })
+
+  test.each(["abc", "hello world"])(
+    "invalid input returns undefined: \"%s\"",
+    (input) => {
+      expect(evaluateInput(input)).toBeUndefined()
+    },
+  )
+
+  test("division by zero returns undefined", () => {
+    expect(evaluateInput("1/0")).toBeUndefined()
+  })
+
+  test("0/0 returns undefined (NaN is filtered)", () => {
+    expect(evaluateInput("0/0")).toBeUndefined()
+  })
+
+  test("scientific notation via Number() fallback", () => {
+    expect(evaluateInput("1e5")).toBe(100_000)
+  })
+
+  test("hex notation via Number() fallback", () => {
+    expect(evaluateInput("0xff")).toBe(255)
+  })
+
+  test.each(["Infinity", "-Infinity"])(
+    "\"%s\" returns undefined (non-finite rejected)",
+    (input) => {
+      expect(evaluateInput(input)).toBeUndefined()
+    },
+  )
 })

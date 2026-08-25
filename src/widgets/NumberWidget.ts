@@ -1,7 +1,7 @@
 import type { WidgetEventOptions } from "./BaseWidget"
 import type { INumericWidget } from "@/types/widgets"
 
-import { getWidgetStep } from "@/utils/widget"
+import { evaluateInput, getWidgetStep } from "@/utils/widget"
 
 import { BaseSteppedWidget } from "./BaseSteppedWidget"
 
@@ -88,17 +88,8 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
 
     // Handle center click - show prompt
     canvas.prompt("Value", this.value, (v: string) => {
-      // Check if v is a valid equation or a number
-      if (/^[\d\s()*+/-]+|\d+\.\d+$/.test(v)) {
-        // Solve the equation if possible
-        try {
-          v = eval(v)
-        } catch {}
-      }
-      const newValue = Number(v)
-      if (!isNaN(newValue)) {
-        this.setValue(newValue, { e, node, canvas })
-      }
+      const parsed = evaluateInput(v)
+      if (parsed !== undefined) this.setValue(parsed, { e, node, canvas })
     }, e)
   }
 

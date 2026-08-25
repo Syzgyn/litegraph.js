@@ -1,5 +1,7 @@
 import type { IWidgetOptions } from "@/types/widgets"
 
+import { evaluateMathExpression } from "@/utils/mathParser"
+
 /**
  * The step value for numeric widgets.
  * Use {@link IWidgetOptions.step2} if available, otherwise fallback to
@@ -7,4 +9,15 @@ import type { IWidgetOptions } from "@/types/widgets"
  */
 export function getWidgetStep(options: IWidgetOptions<unknown>): number {
   return options.step2 || ((options.step || 10) * 0.1)
+}
+
+export function evaluateInput(input: string): number | undefined {
+  const result = evaluateMathExpression(input)
+  if (result !== undefined) {
+    if (!isFinite(result)) return undefined
+    return result
+  }
+  const newValue = Number(input)
+  if (!isFinite(newValue)) return undefined
+  return newValue
 }
