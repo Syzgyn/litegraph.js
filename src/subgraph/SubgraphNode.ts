@@ -233,14 +233,66 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     super.configure(info)
   }
 
+  #rebindInputSubgraphSlots(): void {
+    const subgraphSlots = [...this.subgraph.inputNode.slots]
+    const slotsBySignature = new Map<string, SubgraphInput[]>()
+    const slotsByName = new Map<string, SubgraphInput[]>()
+
+    for (const slot of subgraphSlots) {
+      const signature = `${slot.name}:${String(slot.type)}`
+      const signatureSlots = slotsBySignature.get(signature)
+      if (signatureSlots) signatureSlots.push(slot)
+      else slotsBySignature.set(signature, [slot])
+
+      const nameSlots = slotsByName.get(slot.name)
+      if (nameSlots) nameSlots.push(slot)
+      else slotsByName.set(slot.name, [slot])
+    }
+
+    const assignedSlotIds = new Set<string>()
+    const takeUnassignedSlot = (slots: SubgraphInput[] | undefined): SubgraphInput | undefined => {
+      if (!slots) return undefined
+      return slots.find(slot => !assignedSlotIds.has(String(slot.id)))
+    }
+
+    for (const input of this.inputs) {
+      const existingSlot = input._subgraphSlot
+      if (existingSlot && this.subgraph.inputNode.slots.includes(existingSlot)) {
+        assignedSlotIds.add(String(existingSlot.id))
+        continue
+      }
+
+      const signature = `${input.name}:${String(input.type)}`
+      const matchedSlot =
+        takeUnassignedSlot(slotsBySignature.get(signature)) ??
+        takeUnassignedSlot(slotsByName.get(input.name))
+
+      if (matchedSlot) {
+        input._subgraphSlot = matchedSlot
+        assignedSlotIds.add(String(matchedSlot.id))
+      } else {
+        delete input._subgraphSlot
+      }
+    }
+  }
+
   override _internalConfigureAfterSlots() {
+    this.#rebindInputSubgraphSlots()
+
+    // Prune inputs that don't map to any subgraph slot definition.
+    // This prevents stale/duplicate serialized inputs from persisting (#9977).
+    this.inputs = this.inputs.filter(input => input._subgraphSlot)
+
     // Reset widgets
     this.widgets.length = 0
 
     // Check all inputs for connected widgets
     for (const input of this.inputs) {
-      const subgraphInput = this.subgraph.inputNode.slots.find(slot => slot.name === input.name)
-      if (!subgraphInput) throw new Error(`[SubgraphNode.configure] No subgraph input found for input ${input.name}`)
+      const subgraphInput = input._subgraphSlot
+      if (!subgraphInput) {
+        console.warn(`[SubgraphNode.configure] No subgraph input found for input ${input.name}, skipping`)
+        continue
+      }
 
       this.#addSubgraphInputListeners(subgraphInput, input)
 
