@@ -4072,7 +4072,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // Adjust positions
     for (const item of created) {
       if (item instanceof LGraphNode) {
-        item.setPos(item.pos[0] + dx, item.pos[1] + dy)
+        item.move(dx, dy)
       } else if (item instanceof Reroute) {
         item.move(dx, dy)
       } else if (item instanceof LGraphGroup) {
