@@ -1682,209 +1682,218 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    */
   convertToSubgraph(items: Set<Positionable>): { subgraph: Subgraph, node: SubgraphNode } {
     if (items.size === 0) throw new Error("Cannot convert to subgraph: nothing to convert")
-    const { state, revision, config } = this
 
-    const { boundaryLinks, boundaryFloatingLinks, internalLinks, boundaryInputLinks, boundaryOutputLinks } = getBoundaryLinks(this, items)
-    const { nodes, reroutes, groups } = splitPositionables(items)
+    this.beforeChange()
+    this.canvasAction(c => c.emitBeforeChange())
 
-    const boundingRect = createBounds(items)
-    if (!boundingRect) throw new Error("Failed to create bounding rect for subgraph")
+    try {
+      const { state, revision, config } = this
 
-    const hostWidgetValues = !this.isRootGraph
-      ? this.#snapshotHostSubgraphWidgetValues()
-      : undefined
+      const { boundaryLinks, boundaryFloatingLinks, internalLinks, boundaryInputLinks, boundaryOutputLinks } = getBoundaryLinks(this, items)
+      const { nodes, reroutes, groups } = splitPositionables(items)
 
-    const resolvedInputLinks = boundaryInputLinks.map(x => x.resolve(this))
-    const resolvedOutputLinks = boundaryOutputLinks.map(x => x.resolve(this))
+      const boundingRect = createBounds(items)
+      if (!boundingRect) throw new Error("Failed to create bounding rect for subgraph")
 
-    const widgetBackup = new Map<NodeId, readonly IBaseWidget[]>()
-    for (const node of nodes) {
-      if (node.widgets?.length) widgetBackup.set(node.id, node.widgets)
-    }
+      const hostWidgetValues = !this.isRootGraph
+        ? this.#snapshotHostSubgraphWidgetValues()
+        : undefined
 
-    const clonedNodes = multiClone(nodes)
+      const resolvedInputLinks = boundaryInputLinks.map(x => x.resolve(this))
+      const resolvedOutputLinks = boundaryOutputLinks.map(x => x.resolve(this))
 
-    // Inputs, outputs, and links
-    const links = internalLinks.map(x => x.asSerialisable())
-    const inputs = mapSubgraphInputsAndLinks(resolvedInputLinks, links)
-    const outputs = mapSubgraphOutputsAndLinks(resolvedOutputLinks, links)
+      const widgetBackup = new Map<NodeId, readonly IBaseWidget[]>()
+      for (const node of nodes) {
+        if (node.widgets?.length) widgetBackup.set(node.id, node.widgets)
+      }
 
-    // Prepare subgraph data
-    const data = {
-      id: createUuidv4(),
-      name: "New Subgraph",
-      inputNode: {
-        id: SUBGRAPH_INPUT_ID,
-        bounding: [0, 0, 75, 100],
-      },
-      outputNode: {
-        id: SUBGRAPH_OUTPUT_ID,
-        bounding: [0, 0, 75, 100],
-      },
-      inputs,
-      outputs,
-      widgets: [],
-      version: LGraph.serialisedSchemaVersion,
-      state,
-      revision,
-      config,
-      links,
-      nodes: clonedNodes,
-      reroutes: structuredClone([...reroutes].map(reroute => reroute.asSerialisable())),
-      groups: structuredClone([...groups].map(group => group.serialize())),
-    } satisfies ExportedSubgraph
+      const clonedNodes = multiClone(nodes)
 
-    const subgraph = this.createSubgraph(data)
-    subgraph.configure(data)
+      // Inputs, outputs, and links
+      const links = internalLinks.map(x => x.asSerialisable())
+      const inputs = mapSubgraphInputsAndLinks(resolvedInputLinks, links)
+      const outputs = mapSubgraphOutputsAndLinks(resolvedOutputLinks, links)
 
-    for (const subgraphNode of subgraph.nodes) {
-      const sourceWidgets = widgetBackup.get(subgraphNode.id)
-      if (!sourceWidgets) continue
+      // Prepare subgraph data
+      const data = {
+        id: createUuidv4(),
+        name: "New Subgraph",
+        inputNode: {
+          id: SUBGRAPH_INPUT_ID,
+          bounding: [0, 0, 75, 100],
+        },
+        outputNode: {
+          id: SUBGRAPH_OUTPUT_ID,
+          bounding: [0, 0, 75, 100],
+        },
+        inputs,
+        outputs,
+        widgets: [],
+        version: LGraph.serialisedSchemaVersion,
+        state,
+        revision,
+        config,
+        links,
+        nodes: clonedNodes,
+        reroutes: structuredClone([...reroutes].map(reroute => reroute.asSerialisable())),
+        groups: structuredClone([...groups].map(group => group.serialize())),
+      } satisfies ExportedSubgraph
 
-      subgraphNode.widgets = sourceWidgets.map((widget) => {
-        const copy = toConcreteWidget(widget, subgraphNode).createCopyForNode(subgraphNode)
-        copy.value = widget.value
-        return copy
+      const subgraph = this.createSubgraph(data)
+      subgraph.configure(data)
+
+      for (const subgraphNode of subgraph.nodes) {
+        const sourceWidgets = widgetBackup.get(subgraphNode.id)
+        if (!sourceWidgets) continue
+
+        subgraphNode.widgets = sourceWidgets.map((widget) => {
+          const copy = toConcreteWidget(widget, subgraphNode).createCopyForNode(subgraphNode)
+          copy.value = widget.value
+          return copy
+        })
+
+        for (const input of subgraphNode.inputs) {
+          if (!isWidgetInputSlot(input)) continue
+          const widget = subgraphNode.widgets.find(w => w.name === input.widget.name)
+          if (widget) input.widget = { name: widget.name }
+        }
+      }
+
+      // Position the subgraph input nodes
+      subgraph.inputNode.arrange()
+      subgraph.outputNode.arrange()
+      const { boundingRect: inputRect } = subgraph.inputNode
+      const { boundingRect: outputRect } = subgraph.outputNode
+      alignOutsideContainer(inputRect, Alignment.MidLeft, boundingRect, [50, 0])
+      alignOutsideContainer(outputRect, Alignment.MidRight, boundingRect, [50, 0])
+
+      // Remove items converted to subgraph
+      for (const resolved of resolvedInputLinks) resolved.inputNode?.disconnectInput(resolved.inputNode.inputs.indexOf(resolved.input!), true)
+      for (const resolved of resolvedOutputLinks) resolved.outputNode?.disconnectOutput(resolved.outputNode.outputs.indexOf(resolved.output!), resolved.inputNode)
+
+      for (const node of nodes) this.remove(node)
+      for (const reroute of reroutes) this.removeReroute(reroute.id)
+      for (const group of groups) this.remove(group)
+
+      this.rootGraph.events.dispatch("convert-to-subgraph", {
+        subgraph,
+        bounds: boundingRect,
+        exportedSubgraph: data,
+        boundaryLinks,
+        resolvedInputLinks,
+        resolvedOutputLinks,
+        boundaryFloatingLinks,
+        internalLinks,
       })
 
-      for (const input of subgraphNode.inputs) {
-        if (!isWidgetInputSlot(input)) continue
-        const widget = subgraphNode.widgets.find(w => w.name === input.widget.name)
-        if (widget) input.widget = { name: widget.name }
-      }
-    }
+      // Create subgraph node object
+      const subgraphNode = LiteGraph.createNode(subgraph.id, subgraph.name, {
+        outputs: structuredClone(outputs),
+      })
+      if (!subgraphNode) throw new Error("Failed to create subgraph node")
 
-    // Position the subgraph input nodes
-    subgraph.inputNode.arrange()
-    subgraph.outputNode.arrange()
-    const { boundingRect: inputRect } = subgraph.inputNode
-    const { boundingRect: outputRect } = subgraph.outputNode
-    alignOutsideContainer(inputRect, Alignment.MidLeft, boundingRect, [50, 0])
-    alignOutsideContainer(outputRect, Alignment.MidRight, boundingRect, [50, 0])
+      subgraphNode._setConcreteSlots()
+      subgraphNode.arrange()
 
-    // Remove items converted to subgraph
-    for (const resolved of resolvedInputLinks) resolved.inputNode?.disconnectInput(resolved.inputNode.inputs.indexOf(resolved.input!), true)
-    for (const resolved of resolvedOutputLinks) resolved.outputNode?.disconnectOutput(resolved.outputNode.outputs.indexOf(resolved.output!), resolved.inputNode)
+      // Resize to inputs/outputs
+      subgraphNode.setSize(subgraphNode.computeSize())
 
-    for (const node of nodes) this.remove(node)
-    for (const reroute of reroutes) this.removeReroute(reroute.id)
-    for (const group of groups) this.remove(group)
+      // Center the subgraph node
+      alignToContainer(subgraphNode._posSize, Alignment.Centre | Alignment.Middle, boundingRect)
 
-    this.rootGraph.events.dispatch("convert-to-subgraph", {
-      subgraph,
-      bounds: boundingRect,
-      exportedSubgraph: data,
-      boundaryLinks,
-      resolvedInputLinks,
-      resolvedOutputLinks,
-      boundaryFloatingLinks,
-      internalLinks,
-    })
+      // Add the subgraph node to the graph
+      this.add(subgraphNode)
 
-    // Create subgraph node object
-    const subgraphNode = LiteGraph.createNode(subgraph.id, subgraph.name, {
-      outputs: structuredClone(outputs),
-    })
-    if (!subgraphNode) throw new Error("Failed to create subgraph node")
+      // Group matching input links
+      const groupedByOutput = groupResolvedByOutput(resolvedInputLinks)
 
-    subgraphNode._setConcreteSlots()
-    subgraphNode.arrange()
+      // Reconnect input links in parent graph
+      let i = 0
+      for (const [, connections] of groupedByOutput.entries()) {
+        const [firstResolved, ...others] = connections
+        const { output, outputNode, link, subgraphInput } = firstResolved
 
-    // Resize to inputs/outputs
-    subgraphNode.setSize(subgraphNode.computeSize())
-
-    // Center the subgraph node
-    alignToContainer(subgraphNode._posSize, Alignment.Centre | Alignment.Middle, boundingRect)
-
-    // Add the subgraph node to the graph
-    this.add(subgraphNode)
-
-    // Group matching input links
-    const groupedByOutput = groupResolvedByOutput(resolvedInputLinks)
-
-    // Reconnect input links in parent graph
-    let i = 0
-    for (const [, connections] of groupedByOutput.entries()) {
-      const [firstResolved, ...others] = connections
-      const { output, outputNode, link, subgraphInput } = firstResolved
-
-      // Special handling: Subgraph input node
-      i++
-      if (link.origin_id === SUBGRAPH_INPUT_ID) {
-        link.target_id = subgraphNode.id
-        link.target_slot = i - 1
-        if (subgraphInput instanceof SubgraphInput) {
-          subgraphInput.connect(subgraphNode.findInputSlotByType(link.type, true, true), subgraphNode, link.parentId)
-        } else {
-          throw new TypeError("Subgraph input node is not a SubgraphInput")
-        }
-        console.debug("Reconnect input links in parent graph", { ...link }, this.links.get(link.id), this.links.get(link.id) === link)
-
-        for (const resolved of others) {
-          resolved.link.disconnect(this)
-        }
-        continue
-      }
-
-      if (!output || !outputNode) {
-        console.warn("Convert to Subgraph reconnect: Failed to resolve input link", connections[0])
-        continue
-      }
-
-      const input = subgraphNode.findInputSlotByType(link.type, true, true)
-      outputNode.connectSlots(
-        output,
-        subgraphNode,
-        input,
-        link.parentId,
-      )
-    }
-
-    // Group matching links
-    const outputsGroupedByOutput = groupResolvedByOutput(resolvedOutputLinks)
-
-    // Reconnect output links in parent graph
-    i = 0
-    for (const [, connections] of outputsGroupedByOutput.entries()) {
-      // Special handling: Subgraph output node
-      i++
-      for (const connection of connections) {
-        const { input, inputNode, link, subgraphOutput } = connection
-        if (link.target_id === SUBGRAPH_OUTPUT_ID) {
-          link.origin_id = subgraphNode.id
-          link.origin_slot = i - 1
-          this.links.set(link.id, link)
-          if (subgraphOutput instanceof SubgraphOutput) {
-            subgraphOutput.connect(subgraphNode.findOutputSlotByType(link.type, true, true), subgraphNode, link.parentId)
+        // Special handling: Subgraph input node
+        i++
+        if (link.origin_id === SUBGRAPH_INPUT_ID) {
+          link.target_id = subgraphNode.id
+          link.target_slot = i - 1
+          if (subgraphInput instanceof SubgraphInput) {
+            subgraphInput.connect(subgraphNode.findInputSlotByType(link.type, true, true), subgraphNode, link.parentId)
           } else {
             throw new TypeError("Subgraph input node is not a SubgraphInput")
+          }
+          console.debug("Reconnect input links in parent graph", { ...link }, this.links.get(link.id), this.links.get(link.id) === link)
+
+          for (const resolved of others) {
+            resolved.link.disconnect(this)
           }
           continue
         }
 
-        if (!input || !inputNode) {
-          console.warn("Convert to Subgraph reconnect: Failed to resolve output link", connection)
+        if (!output || !outputNode) {
+          console.warn("Convert to Subgraph reconnect: Failed to resolve input link", connections[0])
           continue
         }
 
-        const output = subgraphNode.outputs[i - 1]
-        subgraphNode.connectSlots(
+        const input = subgraphNode.findInputSlotByType(link.type, true, true)
+        outputNode.connectSlots(
           output,
-          inputNode,
+          subgraphNode,
           input,
           link.parentId,
         )
       }
-    }
 
-    // When nodes are packed into a nested subgraph, host SubgraphNode instances
-    // may hold stale promoted widget bindings that must be re-resolved.
-    if (!this.isRootGraph) {
-      if (subgraphNode.isSubgraphNode()) subgraphNode.rebuildInputWidgetBindings()
-      this.#refreshHostSubgraphWidgetBindings(hostWidgetValues)
-    }
+      // Group matching links
+      const outputsGroupedByOutput = groupResolvedByOutput(resolvedOutputLinks)
 
-    return { subgraph, node: subgraphNode as SubgraphNode }
+      // Reconnect output links in parent graph
+      i = 0
+      for (const [, connections] of outputsGroupedByOutput.entries()) {
+      // Special handling: Subgraph output node
+        i++
+        for (const connection of connections) {
+          const { input, inputNode, link, subgraphOutput } = connection
+          if (link.target_id === SUBGRAPH_OUTPUT_ID) {
+            link.origin_id = subgraphNode.id
+            link.origin_slot = i - 1
+            this.links.set(link.id, link)
+            if (subgraphOutput instanceof SubgraphOutput) {
+              subgraphOutput.connect(subgraphNode.findOutputSlotByType(link.type, true, true), subgraphNode, link.parentId)
+            } else {
+              throw new TypeError("Subgraph input node is not a SubgraphInput")
+            }
+            continue
+          }
+
+          if (!input || !inputNode) {
+            console.warn("Convert to Subgraph reconnect: Failed to resolve output link", connection)
+            continue
+          }
+
+          const output = subgraphNode.outputs[i - 1]
+          subgraphNode.connectSlots(
+            output,
+            inputNode,
+            input,
+            link.parentId,
+          )
+        }
+      }
+
+      // When nodes are packed into a nested subgraph, host SubgraphNode instances
+      // may hold stale promoted widget bindings that must be re-resolved.
+      if (!this.isRootGraph) {
+        if (subgraphNode.isSubgraphNode()) subgraphNode.rebuildInputWidgetBindings()
+        this.#refreshHostSubgraphWidgetBindings(hostWidgetValues)
+      }
+
+      return { subgraph, node: subgraphNode as SubgraphNode }
+    } finally {
+      this.afterChange()
+      this.canvasAction(c => c.emitAfterChange())
+    }
   }
 
   /**
