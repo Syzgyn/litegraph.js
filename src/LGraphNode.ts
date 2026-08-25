@@ -3352,6 +3352,16 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return [nodeX + width + 1 - offsetX, nodeY + slotY + nodeOffsetY]
   }
 
+  /**
+   * Get slot position using layout tree if available, fallback to node's position.
+   * @param slotIndex The slot index
+   * @param isInput Whether this is an input slot
+   * @returns Position of the slot center in graph coordinates
+   */
+  getSlotPosition(slotIndex: number, isInput: boolean): Point {
+    return isInput ? this.getInputPos(slotIndex) : this.getOutputPos(slotIndex)
+  }
+
   /** @inheritdoc */
   snapToGrid(snapTo: number): boolean {
     return this.pinned ? false : snapPoint(this.pos, snapTo)
