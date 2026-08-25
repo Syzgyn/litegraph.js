@@ -269,6 +269,25 @@ export function groupResolvedByOutput(
   return groupedByOutput
 }
 
+function mapReroutes(
+  link: SerialisableLLink,
+  reroutes: Map<RerouteId, Reroute>,
+) {
+  let child: SerialisableLLink | Reroute = link
+  let nextReroute =
+    child.parentId === undefined ? undefined : reroutes.get(child.parentId)
+
+  while (child.parentId !== undefined && nextReroute) {
+    child = nextReroute
+    nextReroute =
+      child.parentId === undefined ? undefined : reroutes.get(child.parentId)
+  }
+
+  const lastId = child.parentId
+  child.parentId = undefined
+  return lastId
+}
+
 /**
  * Creates subgraph input slot definitions from boundary input links when wrapping a selection.
  *
@@ -278,7 +297,11 @@ export function groupResolvedByOutput(
  * @param links Mutable array that receives rewritten serialised links for the new subgraph.
  * @returns definitions for each grouped external input.
  */
-export function mapSubgraphInputsAndLinks(resolvedInputLinks: ResolvedConnection[], links: SerialisableLLink[]): SubgraphIO[] {
+export function mapSubgraphInputsAndLinks(
+  resolvedInputLinks: ResolvedConnection[],
+  links: SerialisableLLink[],
+  reroutes: Map<RerouteId, Reroute>,
+): SubgraphIO[] {
   // Group matching links
   const groupedByOutput = groupResolvedByOutput(resolvedInputLinks)
 
@@ -294,6 +317,7 @@ export function mapSubgraphInputsAndLinks(resolvedInputLinks: ResolvedConnection
       if (!input) continue
 
       const linkData = link.asSerialisable()
+      link.parentId = mapReroutes(link, reroutes)
       linkData.origin_id = SUBGRAPH_INPUT_ID
       linkData.origin_slot = inputs.length
       links.push(linkData)
@@ -335,7 +359,11 @@ export function mapSubgraphInputsAndLinks(resolvedInputLinks: ResolvedConnection
  * @param links The links to add to the subgraph.
  * @returns The subgraph output slots.
  */
-export function mapSubgraphOutputsAndLinks(resolvedOutputLinks: ResolvedConnection[], links: SerialisableLLink[]): SubgraphIO[] {
+export function mapSubgraphOutputsAndLinks(
+  resolvedOutputLinks: ResolvedConnection[],
+  links: SerialisableLLink[],
+  reroutes: Map<RerouteId, Reroute>,
+): SubgraphIO[] {
   // Group matching links
   const groupedByOutput = groupResolvedByOutput(resolvedOutputLinks)
 
@@ -349,8 +377,8 @@ export function mapSubgraphOutputsAndLinks(resolvedOutputLinks: ResolvedConnecti
       const { link, output } = resolved
       if (!output) continue
 
-      // Link
       const linkData = link.asSerialisable()
+      linkData.parentId = mapReroutes(link, reroutes)
       linkData.target_id = SUBGRAPH_OUTPUT_ID
       linkData.target_slot = outputs.length
       links.push(linkData)

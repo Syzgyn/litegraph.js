@@ -1732,8 +1732,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       // Inputs, outputs, and links
       const links = internalLinks.map(x => x.asSerialisable())
-      const inputs = mapSubgraphInputsAndLinks(resolvedInputLinks, links)
-      const outputs = mapSubgraphOutputsAndLinks(resolvedOutputLinks, links)
+
+      const internalReroutes = new Map([...reroutes].map(r => [r.id, r]))
+      const externalReroutes = new Map(
+        [...this.reroutes].filter(([id]) => !internalReroutes.has(id)),
+      )
+      const inputs = mapSubgraphInputsAndLinks(resolvedInputLinks, links, internalReroutes)
+      const outputs = mapSubgraphOutputsAndLinks(resolvedOutputLinks, links, externalReroutes)
 
       // Prepare subgraph data
       const data = {
