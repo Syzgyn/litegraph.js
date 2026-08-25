@@ -13,6 +13,7 @@ import type { LGraphNode, NodeId } from "./LGraphNode"
 import type { Serialisable, SerialisableReroute } from "./types/serialisation"
 
 import { LGraphBadge } from "./LGraphBadge"
+import { LiteGraph } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import { distance, isPointInRect } from "./measure"
 
@@ -434,9 +435,10 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   snapToGrid(snapTo: number): boolean {
     if (!snapTo) return false
 
+    const offsetY = LiteGraph.NODE_SLOT_HEIGHT * 0.7
     const { pos } = this
     pos[0] = snapTo * Math.round(pos[0] / snapTo)
-    pos[1] = snapTo * Math.round(pos[1] / snapTo)
+    pos[1] = snapTo * Math.round((pos[1] - offsetY) / snapTo) + offsetY
     return true
   }
 

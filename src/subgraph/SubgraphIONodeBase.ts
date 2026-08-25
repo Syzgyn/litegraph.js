@@ -29,7 +29,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   /** Minimum width of the IO panel before slot labels are measured. */
   static minWidth = 100
   /** Corner radius for the rounded side of the IO panel. */
-  static roundedRadius = 10
+  static roundedRadius = 14 // Matches NODE_SLOT_HEIGHT * 0.7 for slot alignment
 
   readonly #boundingRect: Rectangle = new Rectangle()
 
