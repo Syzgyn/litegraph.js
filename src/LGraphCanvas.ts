@@ -4681,6 +4681,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
         // Gradient half-border over target node
         this.#renderSnapHighlight(ctx, highlightPos)
+
+        for (const link of renderLinks) {
+          if (!link.disconnectOnDrop || !link.disconnectOrigin) continue
+
+          const [originX, originY] = link.disconnectOrigin
+          const radius = 35
+          const distSquared = (originX - highlightPos[0]) ** 2 + (originY - highlightPos[1]) ** 2
+
+          ctx.save()
+          ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(originX + radius, originY)
+          ctx.arc(originX, originY, radius, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.restore()
+
+          link.disconnectOnDrop = distSquared < radius ** 2
+        }
       }
 
       // Area-selection rectangle

@@ -50,6 +50,14 @@ export class ToInputFromIoNodeLink implements RenderLink {
    */
   readonly existingLink?: LLink
 
+  /** When true, dropping near {@link disconnectOrigin} disconnects the link instead of reconnecting. */
+  disconnectOnDrop: boolean
+
+  /** Canvas position of the input slot for fast-disconnect circle hit testing. */
+  readonly disconnectOrigin?: Point
+
+  readonly isIoNodeLink = true
+
   /**
    * @param network The subgraph that owns the input boundary.
    * @param node The {@link SubgraphInputNode} displaying the subgraph inputs.
@@ -77,6 +85,11 @@ export class ToInputFromIoNodeLink implements RenderLink {
       ? fromReroute.pos
       : fromSlot.pos
     this.existingLink = existingLink
+    this.disconnectOnDrop = true
+
+    if (!existingLink) return
+    const toNode = network.getNodeById(existingLink.target_id)
+    this.disconnectOrigin = toNode?.getInputPos(existingLink.target_slot)
   }
 
   /**

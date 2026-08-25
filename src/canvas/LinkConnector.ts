@@ -1,6 +1,6 @@
 import type { RenderLink } from "./RenderLink"
 import type { LinkConnectorEventMap } from "@/infrastructure/LinkConnectorEventMap"
-import type { ConnectingLink, ItemLocator, LinkNetwork, LinkSegment } from "@/interfaces"
+import type { ConnectingLink, ItemLocator, LinkNetwork, LinkSegment, Point } from "@/interfaces"
 import type { INodeInputSlot, INodeOutputSlot } from "@/interfaces"
 import type { LGraphNode } from "@/LGraphNode"
 import type { Reroute } from "@/Reroute"
@@ -202,7 +202,7 @@ export class LinkConnector {
    * @param input The input slot whose connected link is being repositioned.
    * @throws When a drag is already in progress ({@link isConnecting}).
    */
-  moveInputLink(network: LinkNetwork, input: INodeInputSlot): void {
+  moveInputLink(network: LinkNetwork, input: INodeInputSlot, opts?: { startPoint?: Point }): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
 
     const { state, inputLinks, renderLinks } = this
@@ -265,7 +265,7 @@ export class LinkConnector {
         // Regular node links
         try {
           const reroute = network.getReroute(link.parentId)
-          const renderLink = new MovingInputLink(network, link, reroute)
+          const renderLink = new MovingInputLink(network, link, reroute, LinkDirection.CENTER, opts?.startPoint)
 
           const mayContinue = this.events.dispatch("before-move-input", renderLink)
           if (mayContinue === false) return
@@ -812,6 +812,15 @@ export class LinkConnector {
    * @param event The pointer event; forwarded to `"dropped-on-canvas"` listeners.
    */
   dropOnNothing(event: CanvasPointerEvent): void {
+    for (let i = this.renderLinks.length - 1; i >= 0; i--) {
+      const link = this.renderLinks[i]
+      if ("disconnectOnDrop" in link && link.disconnectOnDrop) {
+        (link as { disconnect(): void }).disconnect()
+        this.renderLinks.splice(i, 1)
+      }
+    }
+    if (this.renderLinks.length === 0) return
+
     // For external event only.
     const mayContinue = this.events.dispatch("dropped-on-canvas", event)
     if (mayContinue === false) return

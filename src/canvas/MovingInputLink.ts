@@ -65,6 +65,12 @@ export class MovingInputLink extends MovingLinkBase {
   /** Index of {@link fromSlot} on {@link node}. Equivalent to {@link MovingLinkBase.outputIndex}. */
   readonly fromSlotIndex: number
 
+  /** When true, dropping near {@link disconnectOrigin} disconnects the link instead of reconnecting. */
+  disconnectOnDrop: boolean
+
+  /** Canvas position of the input slot for fast-disconnect circle hit testing. */
+  readonly disconnectOrigin?: Point
+
   /**
    * @param network The graph (or subgraph) that owns the link and its nodes.
    * @param link The existing {@link LLink} whose input end is being repositioned.
@@ -74,7 +80,7 @@ export class MovingInputLink extends MovingLinkBase {
    * @param dragDirection Controls how the free end of the link follows the cursor. Defaults to
    * {@link LinkDirection.CENTER}.
    */
-  constructor(network: LinkNetwork, link: LLink, fromReroute?: Reroute, dragDirection: LinkDirection = LinkDirection.CENTER) {
+  constructor(network: LinkNetwork, link: LLink, fromReroute?: Reroute, dragDirection: LinkDirection = LinkDirection.CENTER, startPoint?: Point) {
     super(network, link, "input", fromReroute, dragDirection)
 
     this.node = this.outputNode
@@ -82,6 +88,8 @@ export class MovingInputLink extends MovingLinkBase {
     this.fromPos = fromReroute?.pos ?? this.outputPos
     this.fromDirection = LinkDirection.NONE
     this.fromSlotIndex = this.outputIndex
+    this.disconnectOnDrop = true
+    this.disconnectOrigin = startPoint ?? this.inputPos
   }
 
   /**

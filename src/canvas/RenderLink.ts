@@ -47,6 +47,12 @@ export interface RenderLink {
    */
   dragDirection: LinkDirection
 
+  /** When true, dropping near {@link disconnectOrigin} disconnects the link instead of reconnecting. */
+  disconnectOnDrop?: boolean
+
+  /** Canvas position of the input slot for fast-disconnect circle hit testing. */
+  readonly disconnectOrigin?: Point
+
   /** The graph (or subgraph) that owns the nodes and links involved in this drag operation. */
   readonly network: LinkNetwork
 
