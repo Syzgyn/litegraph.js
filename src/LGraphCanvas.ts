@@ -181,6 +181,9 @@ export interface LGraphCanvasState {
    * Downstream consumers may reset to false once actioned.
    */
   selectionChanged: boolean
+
+  /** ID of node currently in ghost placement mode (semi-transparent, following cursor). */
+  ghostNodeId: NodeId | null
 }
 
 /**
@@ -301,6 +304,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     hoveringOver: CanvasItem.Nothing,
     shouldSetCursor: true,
     selectionChanged: false,
+    ghostNodeId: null,
   }
 
   #subgraph?: Subgraph
@@ -2121,6 +2125,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Primary pointer-down handler. Routes clicks to selection, dragging, linking, and widget interaction. */
   processMouseDown(e: PointerEvent): void {
+    if (this.state.ghostNodeId != null) {
+      if (e.button === 0) this.finalizeGhostPlacement(false)
+      if (e.button === 2) this.finalizeGhostPlacement(true)
+      e.stopPropagation()
+      e.preventDefault()
+      return
+    }
+
     if (this.dragZoomEnabled && e.ctrlKey && e.shiftKey && !e.altKey && e.buttons) {
       this.#dragZoomStart = { pos: [e.x, e.y], scale: this.ds.scale }
       return
@@ -3281,6 +3293,60 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
+   * Starts ghost placement mode for a node.
+   * The node will be semi-transparent and follow the cursor until the user
+   * clicks to place it, or presses Escape/right-clicks to cancel.
+   * @param node The node to place
+   * @param dragEvent Optional mouse event for positioning under cursor
+   */
+  startGhostPlacement(node: LGraphNode, dragEvent?: MouseEvent): void {
+    if (dragEvent) {
+      this.adjustMouseEvent(dragEvent)
+      const e = dragEvent as CanvasPointerEvent
+      node.pos[0] = e.canvasX - node.size[0] / 2
+      node.pos[1] = e.canvasY + 10
+      this.last_mouse = [e.clientX, e.clientY]
+    } else {
+      node.pos[0] = this.graph_mouse[0] - node.size[0] / 2
+      node.pos[1] = this.graph_mouse[1] + 10
+    }
+
+    this.state.ghostNodeId = node.id
+
+    this.deselectAll()
+    this.select(node)
+    this.isDragging = true
+  }
+
+  /**
+   * Finalizes ghost placement mode.
+   * @param cancelled If true, the node is removed; otherwise it's placed
+   */
+  finalizeGhostPlacement(cancelled: boolean): void {
+    const nodeId = this.state.ghostNodeId
+    if (nodeId == null) return
+
+    this.state.ghostNodeId = null
+    this.isDragging = false
+
+    const node = this.graph?.getNodeById(nodeId)
+    if (!node) return
+
+    if (cancelled) {
+      this.deselect(node)
+      this.graph?.remove(node)
+    } else {
+      delete node.flags.ghost
+    }
+
+    this.dirty_canvas = true
+    this.dirty_bgcanvas = true
+
+    this.graph?.afterChange()
+    this.emitAfterChange()
+  }
+
+  /**
    * Called when a mouse up event has to be processed
    */
   processMouseUp(e: PointerEvent): void {
@@ -3439,6 +3505,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     const { graph } = this
     if (!graph) return
+
+    if (
+      (e.key === "Escape" || e.key === "Delete" || e.key === "Backspace") &&
+      this.state.ghostNodeId != null
+    ) {
+      this.finalizeGhostPlacement(true)
+      e.stopPropagation()
+      e.preventDefault()
+      return
+    }
 
     let block_default = false
     // @ts-expect-error
@@ -4812,13 +4888,23 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /**
    * draws the given node inside the canvas
    */
+  #getNodeModeAlpha(node: LGraphNode): number {
+    if (node.flags.ghost) return 0.3
+    return node.mode === LGraphEventMode.BYPASS
+      ? 0.2
+      : (node.mode === LGraphEventMode.NEVER
+        ? 0.4
+        : this.editor_alpha)
+  }
+
   drawNode(node: LGraphNode, ctx: CanvasRenderingContext2D): void {
     this.current_node = node
 
     const color = node.renderingColor
     const bgcolor = node.renderingBgColor
 
-    const { low_quality, editor_alpha } = this
+    const { low_quality } = this
+    const editor_alpha = this.#getNodeModeAlpha(node)
     ctx.globalAlpha = editor_alpha
 
     if (this.render_shadows && !low_quality) {
@@ -4911,7 +4997,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       node.drawSlots(ctx, {
         fromSlot: this.linkConnector.renderLinks[0]?.fromSlot as INodeOutputSlot | INodeInputSlot,
         colorContext: this.colourGetter,
-        editorAlpha: this.editor_alpha,
+        editorAlpha: editor_alpha,
         lowQuality: this.low_quality,
       })
 
