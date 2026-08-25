@@ -224,7 +224,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
 
     const subgraphInputIndex = link.origin_slot
     link.disconnect(subgraph, "output")
-    subgraph._version++
+    subgraph.incrementVersion()
 
     const subgraphInput = this.slots.at(subgraphInputIndex)
     if (!subgraphInput) {

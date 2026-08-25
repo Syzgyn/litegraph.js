@@ -858,7 +858,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   configure(info: ISerialisedNode): void {
     if (this.graph) {
-      this.graph._version++
+      this.graph.incrementVersion()
     }
     for (const j in info) {
       if (j == "properties") {
@@ -2923,7 +2923,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         }
       }
     }
-    graph._version++
+    graph.incrementVersion()
 
     // link has been created now, so its updated
     this.onConnectionsChange?.(
@@ -3061,7 +3061,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
         // remove the link from the links pool
         link_info.disconnect(graph, "input")
-        graph._version++
+        graph.incrementVersion()
 
         // link_info hasn't been modified so its ok
         target.onConnectionsChange?.(
@@ -3099,7 +3099,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         }
 
         const target = graph.getNodeById(link_info.target_id)
-        graph._version++
+        graph.incrementVersion()
 
         if (target) {
           const input = target.inputs[link_info.target_slot]
@@ -3205,7 +3205,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         }
 
         link_info.disconnect(graph, keepReroutes ? "output" : undefined)
-        if (graph) graph._version++
+        if (graph) graph.incrementVersion()
 
         this.onConnectionsChange?.(
           NodeSlotType.INPUT,
@@ -3456,7 +3456,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   collapse(force?: boolean): void {
     if (!this.collapsible && !force) return
     if (!this.graph) throw new NullGraphError()
-    this.graph._version++
+    this.graph.incrementVersion()
     this.flags.collapsed = !this.flags.collapsed
     this.setDirtyCanvas(true, true)
   }
@@ -3467,7 +3467,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   toggleAdvanced() {
     if (!this.widgets?.some(w => w.advanced)) return
     if (!this.graph) throw new NullGraphError()
-    this.graph._version++
+    this.graph.incrementVersion()
     this.showAdvanced = !this.showAdvanced
     this.expandToFitContent()
     this.setDirtyCanvas(true, true)
@@ -3485,7 +3485,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   pin(v?: boolean): void {
     if (!this.graph) throw new NullGraphError()
 
-    this.graph._version++
+    this.graph.incrementVersion()
     this.flags.pinned = v ?? !this.flags.pinned
     this.resizable = !this.pinned
     // Delete the flag if unpinned, so that we don't get unnecessary
