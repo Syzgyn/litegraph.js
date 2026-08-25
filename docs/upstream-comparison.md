@@ -77,6 +77,16 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 - ~~Optional-input indicator on `SubgraphNode` inputs ([#8772](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8772))~~
 - ~~Double-click to rename subgraph slot labels ([#4833](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4833))~~
 - ~~Undo tracking on subgraph conversion ([#12575](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12575))~~
+- ~~When moving subgraphInput link, properly disconnect old link ([#7229](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7229))~~
+- ~~Fix move subgraph input link to same target ([#8777](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8777))~~
+- ~~Prevent incompatible connections to occupied SubgraphInput slots ([#4984](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4984))~~
+- ~~Fix edge cases in subgraph removal logic ([#8758](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8758))~~
+- ~~Fix subgraph conversion of primitives ([#6606](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6606))~~
+- ~~Migrate parentIds when converting to subgraph ([#5708](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5708))~~
+- ~~Multiple fixes related to copying subgraphs ([#6383](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6383))~~
+- ~~Fix cyclic prototype errors with subgraphNodes ([#5637](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5637))~~ — local copy-based promotion; no upstream hunks required
+- ~~Preserve host widget values on nested subgraph conversion ([#13809](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13809))~~
+- ~~Custom nodes adding widgets on subgraph nodes ([#14707](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14707))~~
 
 **Promoted-widget stability** (many iterations; some reverted/re-done)
 
@@ -105,6 +115,9 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 - ~~Select group children on group click ([#9149](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9149))~~
 - ~~Adaptive LOD threshold ([#5249](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5249))~~
 - ~~Drop-on-canvas image handling and link-connector consolidation ([#5898](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5898))~~
+- ~~Fix copypasted primitives inside subgraphs ([#8094](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8094))~~
+- ~~Add Paste option to canvas context menu ([#7103](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7103))~~
+- ~~Respect always snap to grid on layout scale ([#9332](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9332))~~
 
 ### Links & connections
 
@@ -122,13 +135,14 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 > **Note:** Many upstream fixes in this area assume `widgetValueStore` / `previewExposureStore` (Pinia). The underlying *bugs* are real for standalone litegraph too; the upstream *implementation* is not directly portable.
 
 - ~~**Clear widget/preview store state for incoming graph id on `configure`** ([#15613](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15613)) — stale widget labels survive reload~~
-- Centralized **WidgetValueStore** (Comfy Pinia store; widget `.value` delegates to store) ([#8594](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8594))
+- **[Won't do] Centralized WidgetValueStore** (Comfy Pinia store; widget `.value` delegates to store) ([#8594](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8594))
 - ~~`widgets_values_named` serialization format ([#10392](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10392))~~
-- Tolerate un-keyable widget ids in value store ([#13773](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13773))
+- **[Won't do] Tolerate un-keyable widget ids in value store** ([#13773](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13773)) — requires #8594 WidgetValueStore
 - ~~Assign valid id when root graph has zero UUID ([#10825](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10825))~~
 - ~~`onNodeRemoved` not called when loading a new graph ([#5407](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5407))~~
-- Do not delay fit-to-view on graph restore ([#7645](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7645))
+- **[Won't do] Do not delay fit-to-view on graph restore** ([#7645](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7645)) — embedder controls fit-to-view timing
 - ~~Restore `onMouseDown` override in node subclasses ([#5079](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5079))~~
+- ~~Prevent configuring a node to placeholder nodeId ([#8342](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8342))~~
 
 ### Nodes & widgets (canvas mode)
 
@@ -170,7 +184,8 @@ These improve upstream but are **not standalone-compatible as-is**:
 - Branded IDs (`NodeId`, `LinkId`, `WidgetId`) relocated to `@/types/*`
 - `litegraphInstance` singleton pattern vs exported `LiteGraph` global
 - **[Won't do] ECS migration** (in progress, [#14246](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14246))
-- `incrementVersion()` centralization ([#11698](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11698))
+- ~~`incrementVersion()` centralization ([#11698](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11698))~~
+- ~~Context menu compat content-based duplicate detection ([#8602](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8602))~~
 - ES private fields → TS `private` for Vue Proxy compatibility
 
 ### New standalone-friendly utilities (upstream only)

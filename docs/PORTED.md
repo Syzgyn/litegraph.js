@@ -80,3 +80,19 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#5079](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5079) | 2026-08-25 | `0daacfd914` | `src/LGraphCanvas.ts`, `src/LGraphNode.ts` | `test/LGraphNode.onMouseDownOverride.test.ts`, `test/LGraphNode.titleButtons.test.ts`, `test/subgraph/SubgraphNode.titleButton.test.ts` |
 | [#10825](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10825) | 2026-08-25 | `0b83926c3e` | `src/LGraph.ts` | `test/LGraph.zeroUuid.test.ts` |
 | [#10392](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10392) | 2026-08-25 | `b1e7d57308` | `src/LGraphNode.ts`, `src/LiteGraphGlobal.ts`, `src/types/serialisation.ts` (no Pinia/shadow-diff telemetry) | `test/LGraphNode.widgetsValuesNamed.test.ts` |
+| [#11698](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11698) | 2026-08-25 | `a441364a` | `src/LGraph.ts`, `src/LGraphNode.ts`, `src/LGraphCanvas.ts`, `src/widgets/BaseWidget.ts`, `src/subgraph/SubgraphInput.ts`, `src/subgraph/SubgraphInputNode.ts`, `src/subgraph/SubgraphOutput.ts` | — |
+| [#7229](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7229) | 2026-08-25 | `248929c6` | `src/canvas/ToInputFromIoNodeLink.ts` | — |
+| [#8777](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8777) | 2026-08-25 | `581452d3` | `src/canvas/ToInputFromIoNodeLink.ts` | `test/canvas/LinkConnectorSubgraphInputValidation.test.ts` |
+| [#8342](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8342) | 2026-08-25 | `89571c7a` | `src/LGraphNode.ts` | `test/LGraphNode.test.ts` |
+| [#4984](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4984) | 2026-08-25 | `5224c63b` | `src/canvas/FloatingRenderLink.ts`, `src/canvas/LinkConnector.ts`, `src/canvas/MovingOutputLink.ts`, `src/canvas/ToOutputRenderLink.ts` | `test/canvas/LinkConnectorSubgraphInputValidation.test.ts` |
+| [#8758](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8758) | 2026-08-25 | `a6620a4d` | `src/LGraph.ts`, `src/utils/graphTraversal.ts` | — |
+| [#6606](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6606) | 2026-08-25 | `cfbd5361` | `src/LGraph.ts`, `src/LGraphNode.ts` | — |
+| [#5708](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5708) | 2026-08-25 | `c9d74777` | `src/LGraph.ts`, `src/subgraph/subgraphUtils.ts` | — |
+| [#6383](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6383) | 2026-08-25 | `6f068c87` | `src/LGraphCanvas.ts`, `src/subgraph/SubgraphNode.ts` | — |
+| [#8094](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8094) | 2026-08-25 | `a6b6857e` | `src/LGraphCanvas.ts`, `src/utils/graphTraversal.ts` | — |
+| [#7103](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7103) | 2026-08-25 | `379af286` | `src/LGraphCanvas.ts` | — |
+| [#8602](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8602) | 2026-08-25 | `3adecc4d` | `src/contextMenuCompat.ts` | `test/contextMenuCompat.test.ts` |
+| [#9332](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9332) | 2026-08-25 | `82556f02` | `src/measure.ts`, `src/LGraph.ts`, `src/LGraphCanvas.ts` | `test/measure.test.ts` |
+| [#14707](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14707) | 2026-08-25 | `b1861ab4` | `src/subgraph/SubgraphNode.ts` | — |
+| [#5637](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5637) | 2026-08-25 | `eb664f47` | Already addressed by copy-based promoted widgets (empty commit) | — |
+| [#13809](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13809) | 2026-08-25 | `f21a7583` | `src/LGraph.ts` (host widget snapshot already present) | `test/subgraph/SubgraphNestedPackPromotedValues.test.ts` |
