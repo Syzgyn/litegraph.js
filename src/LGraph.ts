@@ -1750,6 +1750,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       const subgraph = this.createSubgraph(data)
       subgraph.configure(data)
+      for (const node of subgraph.nodes) node.onGraphConfigured?.()
+      for (const node of subgraph.nodes) node.onAfterGraphConfigured?.()
 
       for (const subgraphNode of subgraph.nodes) {
         const sourceWidgets = widgetBackup.get(subgraphNode.id)
