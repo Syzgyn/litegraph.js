@@ -32,13 +32,15 @@ import type { NodeLike } from "./types/NodeLike"
 import type { ISerialisedNode, SubgraphIO } from "./types/serialisation"
 import type { IBaseWidget, IWidgetOptions, TWidgetType, TWidgetValue } from "./types/widgets"
 
+import { SUBGRAPH_OUTPUT_ID } from "@/constants"
+
 import { getNodeInputOnPos, getNodeOutputOnPos } from "./canvas/measureSlots"
 import { NullGraphError } from "./infrastructure/NullGraphError"
 import { Rectangle } from "./infrastructure/Rectangle"
 import { BadgePosition, LGraphBadge } from "./LGraphBadge"
 import { LGraphButton, type LGraphButtonOptions } from "./LGraphButton"
 import { LGraphCanvas } from "./LGraphCanvas"
-import { type LGraphNodeConstructor, LiteGraph, type Subgraph, type SubgraphNode } from "./litegraph"
+import { type LGraphNodeConstructor, LiteGraph, Subgraph, type SubgraphNode } from "./litegraph"
 import { LLink } from "./LLink"
 import { createBounds, isInRect, isInRectangle, isPointInRect, snapPoint } from "./measure"
 import { NodeInputSlot } from "./node/NodeInputSlot"
@@ -3049,6 +3051,17 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       for (const link_id of links) {
         const link_info = graph._links.get(link_id)
         if (!link_info) continue
+        if (
+          link_info.target_id === SUBGRAPH_OUTPUT_ID &&
+          graph instanceof Subgraph
+        ) {
+          const targetSlot = graph.outputNode.slots[link_info.target_slot]
+          if (targetSlot) {
+            targetSlot.linkIds.length = 0
+          } else {
+            console.error("Missing subgraphOutput slot when disconnecting link")
+          }
+        }
 
         const target = graph.getNodeById(link_info.target_id)
         graph._version++
