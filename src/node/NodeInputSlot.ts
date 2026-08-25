@@ -21,6 +21,7 @@ import { isSubgraphInput } from "@/subgraph/subgraphUtils"
 export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
   /** The ID of the {@link LLink} connected to this slot, or `null` if disconnected. */
   link: LinkId | null
+  alwaysVisible?: boolean
 
   /**
    * Whether this input slot is backed by a widget rather than a traditional socket.

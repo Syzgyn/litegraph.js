@@ -1754,20 +1754,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     this.setDirtyCanvas(true, true)
   }
 
-  spliceInputs(
-    startIndex: number,
-    deleteCount = -1,
-    ...toAdd: INodeInputSlot[]
-  ): INodeInputSlot[] {
-    if (deleteCount < 0) return this.inputs.splice(startIndex)
-    const ret = this.inputs.splice(startIndex, deleteCount, ...toAdd)
-    for (const [index, input] of this.inputs.slice(startIndex).entries()) {
-      const link = input.link && this.graph?.links?.get(input.link)
-      if (link) link.target_slot = startIndex + index
-    }
-    return ret
-  }
-
   /**
    * computes the minimum size of a node according to its inputs and output slots
    * @returns the total size
@@ -3984,7 +3970,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         isValidTarget ||
         !slot.isWidgetInputSlot ||
         this.#isMouseOverWidget(this.getWidgetFromSlot(slot)) ||
-        slot.isConnected
+        slot.isConnected ||
+        slot.alwaysVisible
       ) {
         ctx.globalAlpha = isValid ? editorAlpha : 0.4 * editorAlpha
         slot.draw(ctx, {
