@@ -945,12 +945,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
       if (info.widgets_values) {
         const widgetsWithValue = this.widgets
-          .values()
           .filter(w => w.serialize !== false)
           .filter((_w, idx) => idx < info.widgets_values!.length)
-        widgetsWithValue.forEach(
-          (widget, i) => (widget.value = info.widgets_values![i]),
-        )
+        for (const [i, widget] of widgetsWithValue.entries()) (widget.value = info.widgets_values![i])
       }
     }
 
@@ -1684,7 +1681,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * remove an existing output slot
    */
   removeOutput(slot: number): void {
-    this.disconnectOutput(slot)
+    // Only disconnect if node is part of a graph
+    if (this.graph) {
+      this.disconnectOutput(slot)
+    }
     const { outputs } = this
     outputs.splice(slot, 1)
 
@@ -1692,11 +1692,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       const output = outputs[i]
       if (!output || !output.links) continue
 
-      for (const linkId of output.links) {
-        if (!this.graph) throw new NullGraphError()
-
-        const link = this.graph._links.get(linkId)
-        if (link) link.origin_slot--
+      // Only update link indices if node is part of a graph
+      if (this.graph) {
+        for (const linkId of output.links) {
+          const link = this.graph._links.get(linkId)
+          if (link) link.origin_slot--
+        }
       }
     }
 
@@ -1732,7 +1733,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * remove an existing input slot
    */
   removeInput(slot: number): void {
-    this.disconnectInput(slot, true)
+    // Only disconnect if node is part of a graph
+    if (this.graph) {
+      this.disconnectInput(slot, true)
+    }
     const { inputs } = this
     const slot_info = inputs.splice(slot, 1)
 
@@ -1740,12 +1744,28 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       const input = inputs[i]
       if (!input?.link) continue
 
-      if (!this.graph) throw new NullGraphError()
-      const link = this.graph._links.get(input.link)
-      if (link) link.target_slot--
+      // Only update link indices if node is part of a graph
+      if (this.graph) {
+        const link = this.graph._links.get(input.link)
+        if (link) link.target_slot--
+      }
     }
     this.onInputRemoved?.(slot, slot_info[0])
     this.setDirtyCanvas(true, true)
+  }
+
+  spliceInputs(
+    startIndex: number,
+    deleteCount = -1,
+    ...toAdd: INodeInputSlot[]
+  ): INodeInputSlot[] {
+    if (deleteCount < 0) return this.inputs.splice(startIndex)
+    const ret = this.inputs.splice(startIndex, deleteCount, ...toAdd)
+    for (const [index, input] of this.inputs.slice(startIndex).entries()) {
+      const link = input.link && this.graph?.links?.get(input.link)
+      if (link) link.target_slot = startIndex + index
+    }
+    return ret
   }
 
   /**
@@ -2065,6 +2085,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
     this._widgetSlotsDirty = true
 
+    widget.onRemove?.()
     this.widgets.splice(widgetIndex, 1)
   }
 
