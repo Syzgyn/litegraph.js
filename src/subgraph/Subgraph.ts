@@ -374,6 +374,9 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
       nodes: this.nodes.map(node => node.serialize()),
       groups: this.groups.map(group => group.serialize()),
       links: [...this.links.values()].map(x => x.asSerialisable()),
+      reroutes: this.reroutes.size
+        ? [...this.reroutes.values()].map(x => x.asSerialisable())
+        : undefined,
       extra: this.extra,
     }
   }
