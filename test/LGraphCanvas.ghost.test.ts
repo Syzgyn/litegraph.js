@@ -321,4 +321,43 @@ describe("LGraphCanvas ghost placement cancellation via document keydown", () =>
       window.removeEventListener("keydown", windowSpy)
     }
   })
+
+  test("removes listeners and resets transient drag state when ghostNodeId was already cleared", () => {
+    const processMoveSpy = vi.spyOn(canvas, "processMouseMove")
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    expect(canvas.isDragging).toBe(true)
+    expect(canvas["_autoPan"]).not.toBeNull()
+
+    canvas.state.ghostNodeId = null
+
+    canvas.finalizeGhostPlacement(true)
+
+    expect(canvas.isDragging).toBe(false)
+    expect(canvas["_autoPan"]).toBeNull()
+
+    document.dispatchEvent(new MouseEvent("pointermove"))
+    expect(processMoveSpy).not.toHaveBeenCalled()
+
+    const windowSpy = vi.fn()
+    window.addEventListener("keydown", windowSpy)
+    try {
+      dispatchKey(document, "Escape")
+      expect(windowSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      window.removeEventListener("keydown", windowSpy)
+    }
+  })
+
+  test("does not clobber unrelated drag state when called with no ghost in flight", () => {
+    const fakeAutoPan = { stop: vi.fn() }
+    canvas.isDragging = true
+    canvas["_autoPan"] = fakeAutoPan as unknown as (typeof canvas)["_autoPan"]
+
+    canvas.finalizeGhostPlacement(true)
+
+    expect(canvas.isDragging).toBe(true)
+    expect(canvas["_autoPan"]).toBe(fakeAutoPan)
+    expect(fakeAutoPan.stop).not.toHaveBeenCalled()
+  })
 })

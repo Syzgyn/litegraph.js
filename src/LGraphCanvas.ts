@@ -3411,13 +3411,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param cancelled If true, the node is removed; otherwise it's placed
    */
   finalizeGhostPlacement(cancelled: boolean): void {
-    const nodeId = this.state.ghostNodeId
-    if (nodeId == null) return
-
-    this.state.ghostNodeId = null
-    this.isDragging = false
-    this._autoPan?.stop()
-    this._autoPan = null
+    const ownedGhostState =
+      this._ghostPointerHandler != null || this._ghostKeyHandler != null
 
     if (this._ghostPointerHandler) {
       document.removeEventListener("pointermove", this._ghostPointerHandler)
@@ -3433,6 +3428,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       this._ghostKeyHandler = null
     }
 
+    if (ownedGhostState) {
+      this.isDragging = false
+      this._autoPan?.stop()
+      this._autoPan = null
+    }
+
+    const nodeId = this.state.ghostNodeId
+    if (nodeId == null) return
+
+    this.state.ghostNodeId = null
+
     const node = this.graph?.getNodeById(nodeId)
     if (!node) return
 
@@ -3441,6 +3447,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       this.graph?.remove(node)
     } else {
       delete node.flags.ghost
+      this.state.selectionChanged = true
+      this.onSelectionChange?.(this.selected_nodes)
     }
 
     this.dirty_canvas = true

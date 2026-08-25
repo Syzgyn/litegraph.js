@@ -12,3 +12,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#8694](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8694) | 2026-08-25 | `0e3314bb` | `src/LGraph.ts`, `src/LGraphCanvas.ts`, `src/interfaces.ts` | `test/LGraphCanvas.ghost.test.ts` |
 | [#10308](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10308) | 2026-08-25 | `be6c64c7` | `src/canvas/AutoPanController.ts`, `src/LGraphCanvas.ts` | `test/LGraphCanvas.ghost.test.ts` |
 | [#11779](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11779) | 2026-08-25 | `b8dfbfc0` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.ghost.test.ts` |
+| [#12031](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12031) | 2026-08-25 | `90fd05f4` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.ghost.test.ts` |
