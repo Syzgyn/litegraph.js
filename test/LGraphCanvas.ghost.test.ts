@@ -80,6 +80,33 @@ describe("LGraphCanvas ghost placement", () => {
     canvasElement.remove()
   })
 
+  test("startGhostPlacement dispatches litegraph:ghost-placement with active true", () => {
+    const events: Array<{ active: boolean, nodeId: number | string }> = []
+    canvasElement.addEventListener("litegraph:ghost-placement", (e) => {
+      events.push((e as CustomEvent).detail)
+    })
+
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+
+    expect(events).toEqual([{ active: true, nodeId: node.id }])
+  })
+
+  test("finalizeGhostPlacement dispatches litegraph:ghost-placement with active false", () => {
+    const events: Array<{ active: boolean, nodeId: number | string }> = []
+    canvasElement.addEventListener("litegraph:ghost-placement", (e) => {
+      events.push((e as CustomEvent).detail)
+    })
+
+    canvas.startGhostPlacement(node)
+    canvas.finalizeGhostPlacement(false)
+
+    expect(events).toEqual([
+      { active: true, nodeId: node.id },
+      { active: false, nodeId: node.id },
+    ])
+  })
+
   test("startGhostPlacement selects node and sets ghost state", () => {
     node.flags.ghost = true
     canvas.startGhostPlacement(node)

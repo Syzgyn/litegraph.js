@@ -2,7 +2,7 @@ import type { ConnectingLink } from "@/interfaces"
 import type { LGraph } from "@/LGraph"
 import type { LGraphButton } from "@/LGraphButton"
 import type { LGraphGroup } from "@/LGraphGroup"
-import type { LGraphNode } from "@/LGraphNode"
+import type { LGraphNode, NodeId } from "@/LGraphNode"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { CanvasPointerEvent } from "@/types/events"
 
@@ -72,5 +72,28 @@ export interface LGraphCanvasEventMap {
     node: LGraphNode
     /** The button definition that was activated. */
     button: LGraphButton
+  }
+
+  /**
+   * Ghost placement mode has started or ended.
+   *
+   * Dispatched from {@link LGraphCanvas.startGhostPlacement} and
+   * {@link LGraphCanvas.finalizeGhostPlacement}. While `active` is `true`, the node follows the
+   * cursor at reduced opacity until the user clicks to place it or cancels (Escape, Delete,
+   * Backspace, or right-click).
+   *
+   * Listen on the canvas element:
+   *
+   * ```ts
+   * canvas.canvas.addEventListener("litegraph:ghost-placement", (e) => {
+   *   const { active, nodeId } = e.detail
+   * })
+   * ```
+   */
+  "litegraph:ghost-placement": {
+    /** `true` when placement starts; `false` when it ends (placed or cancelled). */
+    active: boolean
+    /** The node being placed. */
+    nodeId: NodeId
   }
 }

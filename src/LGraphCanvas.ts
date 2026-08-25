@@ -3358,6 +3358,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Starts ghost placement mode for a node.
    * The node will be semi-transparent and follow the cursor until the user
    * clicks to place it, or presses Escape/right-clicks to cancel.
+   *
+   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:ghost-placement"` with `active: true`.
    * @param node The node to place
    * @param dragEvent Optional mouse event for positioning under cursor
    */
@@ -3379,6 +3381,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
 
     this.state.ghostNodeId = node.id
+    this.dispatchEvent("litegraph:ghost-placement", {
+      active: true,
+      nodeId: node.id,
+    })
 
     this.deselectAll()
     this.select(node)
@@ -3408,6 +3414,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Finalizes ghost placement mode.
+   *
+   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:ghost-placement"` with `active: false`
+   * before removing or committing the node.
    * @param cancelled If true, the node is removed; otherwise it's placed
    */
   finalizeGhostPlacement(cancelled: boolean): void {
@@ -3438,6 +3447,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     if (nodeId == null) return
 
     this.state.ghostNodeId = null
+    this.dispatchEvent("litegraph:ghost-placement", {
+      active: false,
+      nodeId,
+    })
 
     const node = this.graph?.getNodeById(nodeId)
     if (!node) return
