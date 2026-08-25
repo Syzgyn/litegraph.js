@@ -55,6 +55,7 @@ import { warnDeprecated } from "./utils/feedback"
 import { distributeSpace } from "./utils/spaceDistribution"
 import { truncateText } from "./utils/textUtils"
 import { toClass } from "./utils/type"
+import { syncWidgetLabelsFromInputs } from "./utils/widget"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
 
@@ -943,6 +944,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         }
       }
     }
+
+    syncWidgetLabelsFromInputs(this)
 
     // Sync the state of this.resizable.
     if (this.pinned) this.resizable = false

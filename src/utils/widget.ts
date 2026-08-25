@@ -1,4 +1,5 @@
-import type { IWidgetOptions } from "@/types/widgets"
+import type { LGraphNode } from "@/LGraphNode"
+import type { IBaseWidget, IWidgetOptions } from "@/types/widgets"
 
 import { evaluateMathExpression } from "@/utils/mathParser"
 
@@ -20,4 +21,42 @@ export function evaluateInput(input: string): number | undefined {
   const newValue = Number(input)
   if (!isFinite(newValue)) return undefined
   return newValue
+}
+
+/**
+ * Sets the display label on a widget and its linked input slot, if any.
+ * @returns `true` when the label was applied.
+ */
+export function renameWidget(
+  widget: IBaseWidget,
+  node: LGraphNode,
+  newLabel: string,
+): boolean {
+  const label = newLabel || undefined
+  const input = node.inputs?.find(inp => inp.widget?.name === widget.name)
+
+  widget.label = label
+  if (input) input.label = label
+
+  return true
+}
+
+/**
+ * Copies widget input slot labels onto their linked widgets after configure.
+ *
+ * Serialised labels are stored on input slots; widgets must be updated explicitly
+ * so a reload never inherits a stale {@link IBaseWidget.label}.
+ */
+export function syncWidgetLabelsFromInputs(node: LGraphNode): void {
+  const { widgets, inputs } = node
+  if (!widgets || !inputs) return
+
+  for (const input of inputs) {
+    if (!input.widget) continue
+
+    const widget = widgets.find(w => w.name === input.widget!.name)
+    if (!widget) continue
+
+    widget.label = input.label || undefined
+  }
 }

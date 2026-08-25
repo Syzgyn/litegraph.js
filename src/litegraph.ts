@@ -241,7 +241,7 @@ export type {
 export type { IWidget } from "./types/widgets"
 export { isColorable } from "./utils/type"
 export { createUuidv4 } from "./utils/uuid"
-export { evaluateInput, getWidgetStep } from "./utils/widget"
+export { evaluateInput, getWidgetStep, renameWidget, syncWidgetLabelsFromInputs } from "./utils/widget"
 export { BaseSteppedWidget } from "./widgets/BaseSteppedWidget"
 export { BaseWidget } from "./widgets/BaseWidget"
 export { BooleanWidget } from "./widgets/BooleanWidget"
