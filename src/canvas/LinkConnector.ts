@@ -701,6 +701,19 @@ export class LinkConnector {
       let targetSlot = input
 
       for (const link of renderLinks) {
+        if (
+          "canConnectToSubgraphInput" in link &&
+          !link.canConnectToSubgraphInput(targetSlot)
+        ) {
+          console.warn(
+            "Invalid connection type",
+            link.fromSlot.type,
+            "->",
+            targetSlot.type,
+          )
+          continue
+        }
+
         link.connectToSubgraphInput(targetSlot, this.events)
 
         if (input instanceof EmptySubgraphInput && ioNode.slots.length > 0) {
@@ -952,6 +965,14 @@ export class LinkConnector {
    */
   isInputValidDrop(node: LGraphNode, input: INodeInputSlot): boolean {
     return this.renderLinks.some(link => link.canConnectToInput(node, input))
+  }
+
+  isSubgraphInputValidDrop(input: SubgraphInput): boolean {
+    return this.renderLinks.some(
+      link =>
+        "canConnectToSubgraphInput" in link &&
+        link.canConnectToSubgraphInput(input),
+    )
   }
 
   /**

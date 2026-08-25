@@ -118,6 +118,10 @@ export class MovingOutputLink extends MovingLinkBase {
     return reroute.origin_id !== this.outputNode.id
   }
 
+  canConnectToSubgraphInput(input: SubgraphInput): boolean {
+    return input.isValidTarget(this.fromSlot)
+  }
+
   /**
    * Output-side moves cannot terminate on an input slot.
    * @throws Always throws — this operation is not supported for this link type.

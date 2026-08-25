@@ -185,6 +185,10 @@ export class FloatingRenderLink implements RenderLink {
     return true
   }
 
+  canConnectToSubgraphInput(input: SubgraphInput): boolean {
+    return this.toType === "output" && input.isValidTarget(this.fromSlot)
+  }
+
   /**
    * Resolves the floating end by attaching it to an input slot.
    *

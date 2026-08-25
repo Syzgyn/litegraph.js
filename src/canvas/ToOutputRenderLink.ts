@@ -97,6 +97,10 @@ export class ToOutputRenderLink implements RenderLink {
     return true
   }
 
+  canConnectToSubgraphInput(input: SubgraphInput): boolean {
+    return input.isValidTarget(this.fromSlot)
+  }
+
   /**
    * Completes the drag by creating a new link to an output slot.
    *
