@@ -688,10 +688,14 @@ export interface DefaultConnectionColors {
   getDisconnectedColor(type: ISlotType): CanvasColour
 }
 
+import type { SubgraphInput } from "@/subgraph/SubgraphInput"
+
 /**
  * A subgraph input slot with optional event-listener lifecycle management.
  */
 export interface ISubgraphInput extends INodeInputSlot {
+  /** The subgraph boundary slot this node input mirrors. */
+  _subgraphSlot?: SubgraphInput
   /** Abort controller for cleaning up slot event listeners. */
   _listenerController?: AbortController
 }

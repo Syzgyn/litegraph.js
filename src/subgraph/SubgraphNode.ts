@@ -82,10 +82,31 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     subgraphEvents.addEventListener("input-added", (e) => {
       const subgraphInput = e.detail.input
       const { name, type } = subgraphInput
-      if (this.inputs.some(i => i.name == name))
-        return
-      const input = this.addInput(name, type)
+      const existingInput = this.inputs.find(
+        input =>
+          input._subgraphSlot === subgraphInput ||
+          (input._subgraphSlot && input._subgraphSlot.id === subgraphInput.id),
+      )
+      if (existingInput) {
+        // Rebind to the new SubgraphInput object and re-register listeners
+        // (configure recreates SubgraphInput objects with the same id)
+        this.#addSubgraphInputListeners(subgraphInput, existingInput)
 
+        const linkId = subgraphInput.linkIds[0]
+        if (linkId === undefined) return
+
+        const link = this.subgraph.getLink(linkId)
+        if (!link) return
+
+        const resolved = link.resolve(this.subgraph)
+        if (!resolved.input || !resolved.inputNode) return
+
+        const widget = resolved.inputNode.getWidgetFromSlot(resolved.input)
+        if (widget) this.#setWidget(subgraphInput, existingInput, widget)
+        return
+      }
+
+      const input = this.addInput(name, type, { _subgraphSlot: subgraphInput })
       this.#addSubgraphInputListeners(subgraphInput, input)
     }, { signal })
 
@@ -149,6 +170,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
   }
 
   #addSubgraphInputListeners(subgraphInput: SubgraphInput, input: INodeInputSlot & Partial<ISubgraphInput>) {
+    input._subgraphSlot = subgraphInput
     input._listenerController?.abort()
     input._listenerController = new AbortController()
     const { signal } = input._listenerController
@@ -194,9 +216,11 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
     this.inputs.length = 0
     this.inputs.push(
-      ...this.subgraph.inputNode.slots.map(
-        slot => new NodeInputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, type: slot.type, link: null }, this),
-      ),
+      ...this.subgraph.inputNode.slots.map((slot) => {
+        const input = new NodeInputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, type: slot.type, link: null }, this) as INodeInputSlot & Partial<ISubgraphInput>
+        input._subgraphSlot = slot
+        return input
+      }),
     )
 
     this.outputs.length = 0

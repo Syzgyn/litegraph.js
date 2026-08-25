@@ -15,3 +15,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#12031](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12031) | 2026-08-25 | `90fd05f4` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.ghost.test.ts` |
 | [#15613](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15613) | 2026-08-25 | `75c6d4bd` | `src/LGraphNode.ts`, `src/utils/widget.ts` (sync labels on configure; no Pinia) | `test/LGraph.configureStoreScope.test.ts`, `test/utils/widget.rename.test.ts` |
 | [#10314](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10314) | 2026-08-25 | `28a91fa8` | `src/LGraph.ts`, `src/subgraph/Subgraph.ts`, `src/subgraph/subgraphDeduplication.ts` | `test/subgraph/subgraphDeduplication.test.ts` |
+| [#10187](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10187) | 2026-08-25 | `15442e7f` | `src/subgraph/SubgraphNode.ts`, `src/interfaces.ts` | `test/subgraph/SubgraphNode.reconfigure.test.ts` |
