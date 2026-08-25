@@ -21,3 +21,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#12473](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12473) | 2026-08-25 | `b7990f76` | `src/subgraph/SubgraphIONodeBase.ts` | `test/subgraph/SubgraphIOSlotContextMenu.test.ts` |
 | [#11804](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11804) | 2026-08-25 | `395b0a1c` | `src/LGraph.ts`, `src/infrastructure/LGraphEventMap.ts`, `src/subgraph/SubgraphNode.ts` | `test/LGraph.nodeBeforeRemoved.test.ts`, `test/subgraph/SubgraphNode.test.ts` |
 | [#8259](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8259) | 2026-08-25 | `4337b8d6` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.auxclick.test.ts` |
+| [#4831](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4831) | 2026-08-25 | `16d74368` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.linkHitDetection.test.ts` |
