@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
+import { ToInputFromIoNodeLink } from "@/canvas/ToInputFromIoNodeLink"
 import { LGraphNode } from "@/litegraph"
+import { LinkDirection } from "@/types/globalEnums"
 
 import { subgraphTest } from "./fixtures/subgraphFixtures"
 import {
@@ -60,6 +62,31 @@ describe("SubgraphIO - Input Slot Dual-Nature Behavior", () => {
     // Connection should be cleaned up
     expect(subgraphNode.inputs.length).toBe(0)
     expect(externalNode.outputs[0].links).toHaveLength(0)
+  })
+
+  subgraphTest("handles link disconnection", ({ subgraphWithNode }) => {
+    const { subgraph } = subgraphWithNode
+    const internalNode = new LGraphNode("External Source")
+    internalNode.addInput("in", "*")
+    internalNode.onConnectionsChange = vi.fn()
+    subgraph.add(internalNode)
+
+    const link = subgraph.inputNode.slots[0].connect(
+      internalNode.inputs[0],
+      internalNode,
+    )
+    new ToInputFromIoNodeLink(
+      subgraph,
+      subgraph.inputNode,
+      subgraph.inputNode.slots[0],
+      undefined,
+      LinkDirection.CENTER,
+      link,
+    ).disconnect()
+
+    expect(internalNode.inputs[0].link).toBeNull()
+    expect(subgraph.inputNode.slots[0].linkIds.length).toBe(0)
+    expect(internalNode.onConnectionsChange).toHaveBeenCalled()
   })
 
   subgraphTest("handles slot renaming with active connections", ({ subgraphWithNode }) => {

@@ -220,7 +220,9 @@ export class ToInputFromIoNodeLink implements RenderLink {
    */
   disconnect(): boolean {
     if (!this.existingLink) return false
-    this.existingLink.disconnect(this.network, "input")
+    const { input, inputNode } = this.existingLink.resolve(this.network)
+    if (!inputNode || !input) return false
+    this.node._disconnectNodeInput(inputNode, input, this.existingLink)
     return true
   }
 }
