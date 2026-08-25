@@ -38,6 +38,8 @@ import type { PickNevers } from "./types/utility"
 import type { IBaseWidget } from "./types/widgets"
 import type { UUID } from "./utils/uuid"
 
+import DOMPurify from "dompurify"
+
 import { LinkConnector } from "@/canvas/LinkConnector"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
@@ -1323,7 +1325,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         value = LGraphCanvas.getPropertyPrintableValue(value, info.values)
 
       // value could contain invalid html characters, clean that
-      value = LGraphCanvas.decodeHTML(stringOrEmpty(value))
+      value = DOMPurify.sanitize(stringOrEmpty(value))
       entries.push({
         content:
          `<span class='property_name'>${info.label || i}</span>` +
@@ -1362,9 +1364,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** @deprecated */
   static decodeHTML(str: string): string {
-    const e = document.createElement("div")
-    e.textContent = str
-    return e.innerHTML
+    return DOMPurify.sanitize(str)
   }
 
   /** Context-menu callback that resets a node's size to its computed default. */
@@ -7069,8 +7069,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       return
     }
 
+    const displayName = DOMPurify.sanitize(info.label || property)
     const dialog = this.createDialog(
-      `<span class='name'>${info.label || property}</span>${input_html}<button>OK</button>`,
+      `<span class='name'>${displayName}</span>${input_html}<button>OK</button>`,
       options,
     )
 
@@ -7487,8 +7488,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const inner_refresh = () => {
       // clear
       panel.content.innerHTML = ""
+      const nodeType = DOMPurify.sanitize(node.type)
       // @ts-expect-error ctor props
-      panel.addHTML(`<span class='node_type'>${node.type}</span><span class='node_desc'>${node.constructor.desc || ""}</span><span class='separator'></span>`)
+      const nodeDescription = DOMPurify.sanitize(node.constructor.desc || "")
+      panel.addHTML(`<span class='node_type'>${nodeType}</span><span class='node_desc'>${nodeDescription}</span><span class='separator'></span>`)
 
       panel.addHTML("<h3>Properties</h3>")
 
