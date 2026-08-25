@@ -684,6 +684,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   getMenuOptions?(this: LGraphNode, canvas: LGraphCanvas): IContextMenuValue[]
   /** Called from {@link LGraph.add} after the node is registered (before {@link onConfigure} when loading). */
   onAdded?(this: LGraphNode, graph: LGraph): void
+
+  /** Called after the node is configured on a graph; used by primitive/custom nodes. */
+  onGraphConfigured?(): void
+
+  /** Called after {@link onGraphConfigured} for all nodes on the graph. */
+  onAfterGraphConfigured?(): void
   /**
    * Custom collapsed-node rendering.
    * @returns `true` if default collapsed rendering should be skipped.

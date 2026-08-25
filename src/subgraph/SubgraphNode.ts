@@ -5,6 +5,7 @@ import type { GraphOrSubgraph, Subgraph } from "@/subgraph/Subgraph"
 import type { ExportedSubgraphInstance, ISerialisedNode } from "@/types/serialisation"
 import type { IBaseWidget, TWidgetValue } from "@/types/widgets"
 import type { UUID } from "@/utils/uuid"
+import type { WidgetTypeMap } from "@/widgets/widgetMap"
 
 import { RecursionError } from "@/infrastructure/RecursionError"
 import { LGraphButton } from "@/LGraphButton"
@@ -557,7 +558,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
   override addCustomWidget<TPlainWidget extends IBaseWidget>(
     customWidget: TPlainWidget,
-  ): TPlainWidget {
+  ): TPlainWidget | WidgetTypeMap[TPlainWidget["type"]] {
     const widget = toConcreteWidget(customWidget, this, false) ?? customWidget
     this.#extraWidgets.push(widget)
     this.widgets.push(widget)
@@ -625,7 +626,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     const clone = super.clone()
     // force reassign so domWidgets reset ownership
     // eslint-disable-next-line no-self-assign
-    this.properties.proxyWidgets = this.properties.proxyWidgets
+    this.properties["proxyWidgets"] = this.properties["proxyWidgets"]
     return clone
   }
 

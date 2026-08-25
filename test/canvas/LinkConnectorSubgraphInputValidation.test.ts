@@ -4,8 +4,9 @@ import { LinkConnector } from "@/canvas/LinkConnector"
 import { MovingOutputLink } from "@/canvas/MovingOutputLink"
 import { ToInputFromIoNodeLink } from "@/canvas/ToInputFromIoNodeLink"
 import { ToOutputRenderLink } from "@/canvas/ToOutputRenderLink"
-import { LGraphNode, LLink, LinkDirection } from "@/litegraph"
+import { LGraphNode, LLink } from "@/litegraph"
 import { NodeInputSlot } from "@/node/NodeInputSlot"
+import { LinkDirection } from "@/types/globalEnums"
 
 import { createTestSubgraph } from "../subgraph/fixtures/subgraphHelpers"
 
