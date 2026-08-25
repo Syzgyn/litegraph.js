@@ -11,6 +11,7 @@ import type { NodeLike } from "@/types/NodeLike"
 import { SUBGRAPH_INPUT_ID } from "@/constants"
 import { Rectangle } from "@/infrastructure/Rectangle"
 import { LLink } from "@/LLink"
+import { nextUniqueName } from "@/strings"
 import { NodeSlotType } from "@/types/globalEnums"
 import { findFreeSlotOfType } from "@/utils/collections"
 
@@ -162,7 +163,9 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
     if (slot === -1) {
       // This indicates a connection is being made from the "Empty" slot.
       // We need to create a new, concrete input on the subgraph that matches the target.
-      const newSubgraphInput = this.subgraph.addInput(inputSlot.slot.name, String(inputSlot.slot.type ?? ""))
+      const existingNames = this.subgraph.inputs.map(input => input.name)
+      const uniqueName = nextUniqueName(inputSlot.slot.name, existingNames)
+      const newSubgraphInput = this.subgraph.addInput(uniqueName, String(inputSlot.slot.type ?? ""))
       const newSlotIndex = this.slots.indexOf(newSubgraphInput)
       if (newSlotIndex === -1) {
         console.error("Could not find newly created subgraph input slot.")

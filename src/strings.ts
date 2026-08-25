@@ -36,6 +36,10 @@ export function parseSlotTypes(type: ISlotType): string[] {
  * @param name The name to make unique
  * @param existingNames The names that already exist. Default: an empty array
  * @returns The name, or a unique name if it already exists.
+ *
+ * Used by SubgraphInputNode to deduplicate input names when promoting
+ * the same widget name from multiple node instances (e.g. `seed` → `seed_1`).
+ * Extensions matching by slot name should account for the `_N` suffix.
  */
 export function nextUniqueName(name: string, existingNames: string[] = []): string {
   let i = 1

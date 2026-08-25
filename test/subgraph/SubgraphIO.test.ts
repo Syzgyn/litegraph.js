@@ -410,4 +410,30 @@ describe("SubgraphIO - Empty Slot Connection", () => {
     expect(link.origin_id).toBe(subgraph.inputNode.id)
     expect(link.origin_slot).toBe(1) // Should be the second slot
   })
+
+  subgraphTest("creates distinct named inputs when promoting same widget name from multiple node instances", ({ subgraphWithNode, expect }) => {
+    const { subgraph, subgraphNode } = subgraphWithNode
+
+    const firstNode = new LGraphNode("First Seed Node")
+    firstNode.addInput("seed", "number")
+    subgraph.add(firstNode)
+
+    const secondNode = new LGraphNode("Second Seed Node")
+    secondNode.addInput("seed", "number")
+    subgraph.add(secondNode)
+
+    subgraph.inputNode.connectByType(-1, firstNode, "number")
+    subgraph.inputNode.connectByType(-1, secondNode, "number")
+
+    expect(subgraph.inputs.map(input => input.name)).toStrictEqual([
+      "input",
+      "seed",
+      "seed_1",
+    ])
+    expect(subgraphNode.inputs.map(input => input.name)).toStrictEqual([
+      "input",
+      "seed",
+      "seed_1",
+    ])
+  })
 })
