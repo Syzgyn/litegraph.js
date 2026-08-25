@@ -524,6 +524,8 @@ export interface INodeInputSlot extends INodeSlot {
   link: LinkId | null
   /** Reference to a widget that provides this input's value. */
   widget?: IWidgetLocator
+  /** When true, widget input slots remain visible even when disconnected. */
+  alwaysVisible?: boolean
 
   /**
    * Internal use only; API is not finalised and may change at any time.
