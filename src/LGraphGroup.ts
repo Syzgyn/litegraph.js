@@ -21,6 +21,7 @@ import {
   containsCentre,
   containsRect,
   createBounds,
+  expandRectToGrid,
   isInRectangle,
   isPointInRect,
   snapPoint,
@@ -157,9 +158,9 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     return this._nodes
   }
 
-  /** Height of the title bar area in graph units, derived from {@link font_size}. */
+  /** Height of the title bar area in graph units. */
   get titleHeight() {
-    return this.font_size * 1.4
+    return LiteGraph.NODE_TITLE_HEIGHT
   }
 
   /** All positionable items tracked as children of this group. */
@@ -199,7 +200,6 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     this._bounding.set(o.bounding)
     this.color = o.color
     this.flags = o.flags || this.flags
-    if (o.font_size) this.font_size = o.font_size
   }
 
   /**
@@ -213,7 +213,6 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
       title: this.title,
       bounding: [...b],
       color: this.color,
-      font_size: this.font_size,
       flags: this.flags,
     }
   }
@@ -247,7 +246,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     ctx.fillStyle = color
     ctx.strokeStyle = color
     ctx.beginPath()
-    ctx.rect(x + 0.5, y + 0.5, width, font_size * 1.4)
+    ctx.rect(x + 0.5, y + 0.5, width, LiteGraph.NODE_TITLE_HEIGHT)
     ctx.fill()
 
     // Group background, border
@@ -269,9 +268,15 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     // Title
     ctx.font = `${font_size}px ${LiteGraph.GROUP_FONT}`
     ctx.textAlign = "left"
+    ctx.textBaseline = "middle"
     if (ctx.fillStyle !== this._titleTextColor)
       ctx.fillStyle = this._titleTextColor
-    ctx.fillText(this.title + (this.pinned ? "📌" : ""), x + padding, y + font_size)
+    ctx.fillText(
+      this.title + (this.pinned ? "📌" : ""),
+      x + font_size / 2,
+      y + LiteGraph.NODE_TITLE_HEIGHT / 2 + 1,
+    )
+    ctx.textBaseline = "alphabetic"
 
     if (LiteGraph.highlight_selected_group && this.selected) {
       strokeShape(ctx, this._bounding, {
@@ -326,8 +331,15 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
    * contained. Also reorders the graph's group list so parent groups render above children.
    * @throws {@link NullGraphError} if {@link graph} is unset.
    */
-  recomputeInsideNodes(): void {
+  recomputeInsideNodes(
+    maxDepth: number = 100,
+    visited: Set<number> = new Set(),
+  ): void {
     if (!this.graph) throw new NullGraphError()
+    if (maxDepth <= 0 || visited.has(this.id)) return
+
+    visited.add(this.id)
+
     const { nodes, reroutes, groups } = this.graph
     const children = this._children
     this._nodes.length = 0
@@ -348,10 +360,15 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     }
 
     // Move groups we wholly contain
+    const containedGroups: LGraphGroup[] = []
     for (const group of groups) {
-      if (containsRect(this._bounding, group._bounding))
+      if (group !== this && containsRect(this._bounding, group._bounding)) {
         children.add(group)
+        containedGroups.push(group)
+      }
     }
+    for (const group of containedGroups)
+      group.recomputeInsideNodes(maxDepth - 1, visited)
 
     groups.sort((a, b) => {
       if (a === this) {
@@ -377,6 +394,11 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     this.pos[1] = boundingBox[1] - this.titleHeight
     this.size[0] = boundingBox[2]
     this.size[1] = boundingBox[3] + this.titleHeight
+
+    const snapTo = LiteGraph.alwaysSnapToGrid
+      ? this.graph?.getSnapToGridSize()
+      : undefined
+    if (snapTo) expandRectToGrid(this._bounding, snapTo)
   }
 
   /**

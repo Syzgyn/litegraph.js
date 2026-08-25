@@ -4066,10 +4066,18 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
     }
 
+    const dx = position[0] - offsetX
+    const dy = position[1] - offsetY
+
     // Adjust positions
     for (const item of created) {
-      item.pos[0] += position[0] - offsetX
-      item.pos[1] += position[1] - offsetY
+      if (item instanceof LGraphNode) {
+        item.setPos(item.pos[0] + dx, item.pos[1] + dy)
+      } else if (item instanceof Reroute) {
+        item.move(dx, dy)
+      } else if (item instanceof LGraphGroup) {
+        item.move(dx, dy, true)
+      }
     }
 
     // TODO: Report failures, i.e. `failedNodes`
