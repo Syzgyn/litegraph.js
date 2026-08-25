@@ -55,7 +55,7 @@ export function outputAsSerialisable(slot: INodeOutputSlot & { widget?: IWidget 
     ...outputWidget,
     pos,
     slot_index,
-    links,
+    links: links ? [...links] : links,
   }
 }
 
