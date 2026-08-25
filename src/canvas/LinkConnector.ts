@@ -13,6 +13,8 @@ import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 import { CustomEventTarget } from "@/infrastructure/CustomEventTarget"
 import { LLink } from "@/LLink"
 import { Subgraph } from "@/subgraph/Subgraph"
+import { EmptySubgraphInput } from "@/subgraph/EmptySubgraphInput"
+import { EmptySubgraphOutput } from "@/subgraph/EmptySubgraphOutput"
 import { SubgraphInputNode } from "@/subgraph/SubgraphInputNode"
 import { SubgraphOutputNode } from "@/subgraph/SubgraphOutputNode"
 import { LinkDirection } from "@/types/globalEnums"
@@ -677,15 +679,39 @@ export class LinkConnector {
       const output = ioNode.getSlotInPosition(canvasX, canvasY)
       if (!output) throw new Error("No output slot found for link.")
 
+      let targetSlot = output
+
       for (const link of renderLinks) {
-        link.connectToSubgraphOutput(output, this.events)
+        link.connectToSubgraphOutput(targetSlot, this.events)
+
+        if (output instanceof EmptySubgraphOutput && ioNode.slots.length > 0) {
+          const createdSlot = ioNode.slots[ioNode.slots.length - 1]
+          const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
+          if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
+            targetSlot = createdSlot
+          } else {
+            targetSlot = output
+          }
+        }
       }
     } else if (connectingTo === "output" && ioNode instanceof SubgraphInputNode) {
       const input = ioNode.getSlotInPosition(canvasX, canvasY)
       if (!input) throw new Error("No input slot found for link.")
 
+      let targetSlot = input
+
       for (const link of renderLinks) {
-        link.connectToSubgraphInput(input, this.events)
+        link.connectToSubgraphInput(targetSlot, this.events)
+
+        if (input instanceof EmptySubgraphInput && ioNode.slots.length > 0) {
+          const createdSlot = ioNode.slots[ioNode.slots.length - 1]
+          const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
+          if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
+            targetSlot = createdSlot
+          } else {
+            targetSlot = input
+          }
+        }
       }
     } else {
       console.error("Invalid connectingTo state &/ ioNode", connectingTo, ioNode)
