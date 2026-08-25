@@ -239,7 +239,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     network: Pick<ReadonlyLinkNetwork, "reroutes">,
     linkSegment: LinkSegment,
   ): Reroute[] {
-    if (!linkSegment.parentId) return []
+    if (linkSegment.parentId === undefined) return []
     return network.reroutes
       .get(linkSegment.parentId)
       ?.getReroutes() ?? []
@@ -271,7 +271,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     linkSegment: LinkSegment,
     rerouteId: RerouteId,
   ): Reroute | null | undefined {
-    if (!linkSegment.parentId) return
+    if (linkSegment.parentId === undefined) return
     return network.reroutes
       .get(linkSegment.parentId)
       ?.findNextReroute(rerouteId)
@@ -502,7 +502,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
       target_slot: this.target_slot,
       type: this.type,
     }
-    if (this.parentId) copy.parentId = this.parentId
+    if (this.parentId !== undefined) copy.parentId = this.parentId
     return copy
   }
 }
