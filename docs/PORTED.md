@@ -9,3 +9,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#9263](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9263) | 2026-08-25 | `df712953` | `src/utils/mathParser.ts`, `src/utils/widget.ts`, `src/widgets/NumberWidget.ts`, `src/litegraph.ts` | `test/utils/mathParser.test.ts`, `test/utils/widget.test.ts` |
 | [#9120](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9120) | 2026-08-25 | `87171511` | `src/LGraph.ts`, `src/node/slotUtils.ts` | `test/LGraph.duplicateLinks.test.ts`, `test/node/slotUtils.test.ts` |
 | [#10289](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10289) | 2026-08-25 | `35915791` | `src/LGraph.ts` | `test/LGraph.duplicateLinks.test.ts` |
+| [#8694](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8694) | 2026-08-25 | `0e3314bb` | `src/LGraph.ts`, `src/LGraphCanvas.ts`, `src/interfaces.ts` | `test/LGraphCanvas.ghost.test.ts` |

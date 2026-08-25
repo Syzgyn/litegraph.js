@@ -40,6 +40,7 @@ import type { UUID } from "./utils/uuid"
 
 import DOMPurify from "dompurify"
 
+import { AutoPanController } from "@/canvas/AutoPanController"
 import { LinkConnector } from "@/canvas/LinkConnector"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
@@ -491,6 +492,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   zoom_modify_alpha: boolean
   /** Multiplier applied per mouse-wheel zoom step. Values below 1 invert zoom direction. */
   zoom_speed: number
+  auto_pan_speed: number
   /** Default CSS colour for node title bars. */
   node_title_color: string
   /** Fallback colour for links when no type-specific colour is defined. */
@@ -668,6 +670,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   highlighted_links: Dictionary<boolean> = {}
 
   #visibleReroutes: Set<Reroute> = new Set()
+  private _autoPan: AutoPanController | null = null
+  private _ghostPointerHandler: ((e: PointerEvent) => void) | null = null
 
   /** When `true`, the foreground canvas needs to be redrawn on the next frame. */
   dirty_canvas: boolean = true
@@ -850,6 +854,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     // @deprecated Workaround: Keep until connecting_links is removed.
     this.linkConnector.events.addEventListener("reset", () => {
+      if (this.state.ghostNodeId == null) {
+        this._autoPan?.stop()
+        this._autoPan = null
+      }
       this.connecting_links = null
       this.dirty_bgcanvas = true
     })
@@ -900,6 +908,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.zoom_modify_alpha = true
     // in range (1.01, 2.5). Less than 1 will invert the zoom direction
     this.zoom_speed = 1.1
+    this.auto_pan_speed = 15
 
     this.node_title_color = LiteGraph.NODE_TITLE_COLOR
     this.default_link_color = LiteGraph.LINK_COLOR
@@ -2007,7 +2016,28 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     if (!graph) throw new NullGraphError()
 
     pointer.onDragEnd = upEvent => linkConnector.dropLinks(graph, upEvent)
-    pointer.finally = () => this.linkConnector.reset(true)
+    pointer.finally = () => {
+      this._autoPan?.stop()
+      this._autoPan = null
+      this.linkConnector.reset(true)
+    }
+
+    this._autoPan = new AutoPanController({
+      canvas: this.canvas,
+      ds: this.ds,
+      maxPanSpeed: this.auto_pan_speed,
+      onPan: () => {
+        const rect = this.canvas.getBoundingClientRect()
+        const { scale } = this.ds
+        this.graph_mouse[0] =
+          (this.mouse[0] - rect.left) / scale - this.ds.offset[0]
+        this.graph_mouse[1] =
+          (this.mouse[1] - rect.top) / scale - this.ds.offset[1]
+        this.#dirty()
+      },
+    })
+    this._autoPan.updatePointer(this.mouse[0], this.mouse[1])
+    this._autoPan.start()
   }
 
   /**
@@ -3030,7 +3060,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       (this.allow_interaction || node?.flags.allow_interaction) &&
       !this.read_only
     ) {
-      if (linkConnector.isConnecting) this.dirty_canvas = true
+      if (linkConnector.isConnecting) {
+        this._autoPan?.updatePointer(e.clientX, e.clientY)
+        this.dirty_canvas = true
+      }
 
       // remove mouseover flag
       this.updateMouseOverNodes(node, e)
@@ -3199,6 +3232,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
       // Items being dragged
       if (this.isDragging) {
+        this._autoPan?.updatePointer(e.clientX, e.clientY)
+
         const selected = this.selectedItems
         const allItems = e.ctrlKey ? selected : getAllNestedItems(selected)
 
@@ -3268,12 +3303,36 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // Ensure that dragging is properly cleaned up, on success or failure.
     pointer.finally = () => {
       this.isDragging = false
+      this._autoPan?.stop()
+      this._autoPan = null
       this.graph?.afterChange()
       this.emitAfterChange()
     }
 
     this.processSelect(item, pointer.eDown, sticky)
     this.isDragging = true
+
+    this.#startNodeAutoPan()
+  }
+
+  #startNodeAutoPan(): void {
+    this._autoPan = new AutoPanController({
+      canvas: this.canvas,
+      ds: this.ds,
+      maxPanSpeed: this.auto_pan_speed,
+      onPan: (panX, panY) => {
+        const selected = this.selectedItems
+        const allItems = getAllNestedItems(selected)
+
+        for (const item of allItems) {
+          item.move(panX, panY, true)
+        }
+
+        this.#dirty()
+      },
+    })
+    this._autoPan.updatePointer(this.mouse[0], this.mouse[1])
+    this._autoPan.start()
   }
 
   /**
@@ -3316,6 +3375,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.deselectAll()
     this.select(node)
     this.isDragging = true
+
+    this.#startNodeAutoPan()
+
+    this._ghostPointerHandler = (e: PointerEvent) => {
+      this.processMouseMove(e)
+    }
+    document.addEventListener("pointermove", this._ghostPointerHandler)
+    document.documentElement.addEventListener(
+      "pointerleave",
+      this._ghostPointerHandler,
+    )
   }
 
   /**
@@ -3328,6 +3398,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     this.state.ghostNodeId = null
     this.isDragging = false
+    this._autoPan?.stop()
+    this._autoPan = null
+
+    if (this._ghostPointerHandler) {
+      document.removeEventListener("pointermove", this._ghostPointerHandler)
+      document.documentElement.removeEventListener(
+        "pointerleave",
+        this._ghostPointerHandler,
+      )
+      this._ghostPointerHandler = null
+    }
 
     const node = this.graph?.getNodeById(nodeId)
     if (!node) return

@@ -117,3 +117,73 @@ describe("LGraphCanvas ghost placement", () => {
     expect(ghostNode.flags.ghost).toBe(true)
   })
 })
+
+describe("LGraphCanvas ghost placement auto-pan", () => {
+  let canvas: LGraphCanvas
+  let canvasElement: HTMLCanvasElement
+  let node: LGraphNode
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    ;({ canvas, canvasElement, node } = createGhostTestHarness())
+    canvas.mouse[0] = 5
+    canvas.mouse[1] = 300
+  })
+
+  afterEach(() => {
+    if (canvas.state.ghostNodeId != null) canvas.finalizeGhostPlacement(false)
+    canvasElement.remove()
+    vi.useRealTimers()
+  })
+
+  test("moves the ghost node when pointer is near edge", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+
+    const posXBefore = node.pos[0]
+    vi.advanceTimersByTime(16)
+
+    expect(node.pos[0]).not.toBe(posXBefore)
+  })
+
+  test("does not pan when pointer is in the center", () => {
+    canvas.mouse[0] = 400
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+
+    const offsetBefore = [...canvas.ds.offset]
+    vi.advanceTimersByTime(16)
+
+    expect(canvas.ds.offset[0]).toBe(offsetBefore[0])
+    expect(canvas.ds.offset[1]).toBe(offsetBefore[1])
+  })
+
+  test("cleans up autopan and stops responding to document pointermove on finalize", () => {
+    const processMoveSpy = vi.spyOn(canvas, "processMouseMove")
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+    expect(canvas["_autoPan"]).not.toBeNull()
+
+    document.dispatchEvent(new MouseEvent("pointermove"))
+    expect(processMoveSpy).toHaveBeenCalled()
+
+    processMoveSpy.mockClear()
+    canvas.finalizeGhostPlacement(false)
+
+    expect(canvas["_autoPan"]).toBeNull()
+
+    document.dispatchEvent(new MouseEvent("pointermove"))
+    expect(processMoveSpy).not.toHaveBeenCalled()
+  })
+
+  test("survives linkConnector reset during ghost placement", () => {
+    node.flags.ghost = true
+    canvas.startGhostPlacement(node)
+
+    canvas.linkConnector.reset()
+
+    expect(canvas["_autoPan"]).not.toBeNull()
+    vi.advanceTimersByTime(16)
+    expect(canvas.ds.offset[0]).not.toBe(0)
+  })
+})
