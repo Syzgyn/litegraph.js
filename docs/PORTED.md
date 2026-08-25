@@ -49,3 +49,31 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#10195](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10195) | 2026-08-25 | `657ae6a6` | `src/LGraphNode.ts`, `src/LGraphCanvas.ts`, `src/subgraph/SubgraphNode.ts` (no Pinia/PromotedWidgetViewManager) | `test/LGraphCanvas.drawConnections.test.ts` |
 | [#6661](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6661) | 2026-08-25 | `bc553f12` | `src/LGraphNode.ts` (`spliceInputs`, configure `widgets_values` by index) | — |
 | [#6752](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6752) | 2026-08-25 | `a832141a` | Already present via #15613 (`syncWidgetLabelsFromInputs` in configure) | `test/LGraph.configureStoreScope.test.ts`, `test/utils/widget.rename.test.ts` |
+| [#13989](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13989) | 2026-08-25 | `19b1d8ce` | `src/utils/collections.ts`, `src/LGraphCanvas.ts` | `test/utils/collections.getDraggedItems.test.ts` |
+| [#12867](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12867) | 2026-08-25 | `cb52a382` | Covered by #13989 (`getDraggedItems`); Vue-only group drag hunks skipped | `test/utils/collections.getDraggedItems.test.ts` |
+| [#4928](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4928) | 2026-08-25 | `7972550f` | `src/LGraphCanvas.ts` | — |
+| [#10229](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10229) | 2026-08-25 | `860d0494` | `src/Reroute.ts`, `src/LGraphCanvas.ts`, `src/subgraph/SubgraphIONodeBase.ts` | — |
+| [#4913](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4913) | 2026-08-25 | `9c31d708` | `src/CanvasPointer.ts`, `src/LGraphCanvas.ts`, `src/LiteGraphGlobal.ts` | — |
+| [#5092](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5092) | 2026-08-25 | `e7892274` | `src/CanvasPointer.ts` | `test/CanvasPointer.deviceDetection.test.ts` |
+| [#5143](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5143) | 2026-08-25 | `ea9cb3cb` | `src/LGraphCanvas.ts` | — |
+| [#9149](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9149) | 2026-08-25 | `e1193830` | `src/LGraphCanvas.ts` (`groupSelectChildren` default false) | `test/LGraphCanvas.groupSelection.test.ts` |
+| [#5249](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5249) | 2026-08-25 | `c74c1c01` | `src/LGraphCanvas.ts` | — |
+| [#5898](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5898) | 2026-08-25 | `4404c046` | `src/LGraphNode.ts` (vueNodesMode hunks skipped; drop-on-canvas already present) | — |
+| [#7211](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7211) | 2026-08-25 | `795733b3` | `src/utils/type.ts`, `src/LGraphNode.ts` | — |
+| [#4915](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4915) | 2026-08-25 | `90f54414` | `src/canvas/LinkConnector.ts` | — |
+| [#13865](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13865) | 2026-08-25 | `0688d160` | Already via #15613; regression test added | `test/utils/widget.rename.test.ts` |
+| [#5106](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5106) | 2026-08-25 | `1e9d4c7c` | `src/litegraph.ts` (export `TWidgetValue`) | — |
+| [#5102](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5102) | 2026-08-25 | `28d74be3` | `src/LGraphNode.ts` | — |
+| [#5053](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5053) | 2026-08-25 | `f0adb4c9` | `src/LGraphNode.ts` | `test/LGraphNode.removeSlot.test.ts` |
+| [#9302](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9302) | 2026-08-25 | `f5363e40` | `src/subgraph/ExecutableNodeDTO.ts` | `test/subgraph/ExecutableNodeDTO.test.ts` |
+| [#4864](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4864) | 2026-08-25 | `5f5f44b3` | `src/subgraph/ExecutableNodeDTO.ts` | — |
+| [#6830](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6830) | 2026-08-25 | `49824824` | `src/node/NodeInputSlot.ts`, `src/interfaces.ts` | — |
+| [#7042](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7042) | 2026-08-25 | `b50b34ac` | `src/LGraphNode.ts` | — |
+| [#9808](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9808) | 2026-08-25 | `dc09eb60` | `src/utils/feedback.ts` | — |
+| [#14474](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14474) | 2026-08-25 | `67da59c7` | `src/utils/colorUtil.ts`, `src/LGraphGroup.ts` | — |
+| [#9839](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9839) | 2026-08-25 | `5f142761` | `src/LGraphGroup.ts` | — |
+| [#9962](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9962) | 2026-08-25 | `a96c61d2` | `src/LGraphCanvas.ts` | — |
+| [#15070](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15070) | 2026-08-25 | `a8483a8a` | `src/measure.ts`, `src/LGraphGroup.ts` | `test/LGraphGroup.test.ts` |
+| [#8275](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8275) | 2026-08-25 | `01362d5f` | `src/LGraphGroup.ts` | `test/LGraphGroup.test.ts` |
+| [#11250](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11250) | 2026-08-25 | `e28c1e7e` | `src/node/NodeSlot.ts` | — |
+| [#7220](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7220) | 2026-08-25 | `5139e056` | `public/css/litegraph.css`, `src/LiteGraphGlobal.ts`, `src/canvas/InputIndicators.ts`, `src/subgraph/SubgraphIONodeBase.ts` | — |

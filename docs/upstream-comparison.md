@@ -93,17 +93,17 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 - ~~Autopan when dragging nodes/links to canvas edges ([#8773](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8773))~~
 - ~~**More robust drag cleanup** ([#13084](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13084))~~
 - ~~Consolidated middle-button pan handling ([#12491](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12491))~~
-- Move group without dragging inner nodes (Mac drag-navigation) ([#13989](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13989))
-- Groups no longer drag children when Control held ([#12867](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12867))
+- ~~Move group without dragging inner nodes (Mac drag-navigation) ([#13989](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13989))~~
+- ~~Groups no longer drag children when Control held ([#12867](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12867))~~
 - ~~Prevent middle-click paste duplicating workflow on Linux ([#8259](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8259))~~
 - ~~Reroute creation on high-DPI ([#4831](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4831), [#4863](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4863))~~
-- Middle-button link deletion from reroute nodes ([#4928](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4928))
-- Snap offset for reroutes and subgraph IO ([#10229](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10229))
-- High-resolution wheel / trackpad support ([#5092](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5092), [#4913](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4913))
-- Cmd+wheel zoom on Mac ([#5143](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5143))
-- Select group children on group click ([#9149](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9149))
-- Adaptive LOD threshold ([#5249](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5249))
-- Drop-on-canvas image handling and link-connector consolidation ([#5898](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5898))
+- ~~Middle-button link deletion from reroute nodes ([#4928](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4928))~~
+- ~~Snap offset for reroutes and subgraph IO ([#10229](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10229))~~
+- ~~High-resolution wheel / trackpad support ([#5092](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5092), [#4913](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4913))~~
+- ~~Cmd+wheel zoom on Mac ([#5143](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5143))~~
+- ~~Select group children on group click ([#9149](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9149))~~
+- ~~Adaptive LOD threshold ([#5249](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5249))~~
+- ~~Drop-on-canvas image handling and link-connector consolidation ([#5898](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5898))~~
 
 ### Links & connections
 
@@ -113,8 +113,8 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 - ~~Fix broken links on bypass before reroute ([#5237](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5237))~~
 - ~~Quick disconnect for moved input links ([#7459](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7459))~~
 - ~~Fix reroute ID `0` treated as invalid ([#5723](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5723))~~
-- Color links by common type ([#7211](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7211))
-- Multiple links from reroute creating single `SubgraphOutputNode` slot ([#4915](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4915))
+- ~~Color links by common type ([#7211](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7211))~~
+- ~~Multiple links from reroute creating single `SubgraphOutputNode` slot ([#4915](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4915))~~
 
 ### Serialization & graph lifecycle
 
@@ -131,33 +131,33 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 
 ### Nodes & widgets (canvas mode)
 
-- Persist renamed widget labels via name-based input lookup ([#13865](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13865))
-- Widget ordering consistency ([#5106](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5106))
-- `removeWidget` invokes `onRemove` callback ([#5102](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5102))
-- `removeInput` / `removeOutput` on nodes without graph reference ([#5053](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5053))
-- Support dynamic widgets ([#6661](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6661))
-- Support renaming widgets ([#6752](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6752))
-- Return `undefined` for muted node output resolution ([#9302](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9302))
-- Execution breaks on multi/any-type slots ([#4864](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4864))
-- Growable inputs ([#6830](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6830))
-- Expose `LGraphNode.getSlotPosition` ([#7042](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7042))
-- Deprecation warning for `widget.inputEl` on STRING multiline widgets ([#9808](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9808))
+- ~~Persist renamed widget labels via name-based input lookup ([#13865](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13865))~~
+- ~~Widget ordering consistency ([#5106](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5106))~~
+- ~~`removeWidget` invokes `onRemove` callback ([#5102](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5102))~~
+- ~~`removeInput` / `removeOutput` on nodes without graph reference ([#5053](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5053))~~
+- ~~Support dynamic widgets ([#6661](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6661))~~
+- ~~Support renaming widgets ([#6752](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6752))~~
+- ~~Return `undefined` for muted node output resolution ([#9302](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9302))~~
+- ~~Execution breaks on multi/any-type slots ([#4864](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4864))~~
+- ~~Growable inputs ([#6830](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6830))~~
+- ~~Expose `LGraphNode.getSlotPosition` ([#7042](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7042))~~
+- ~~Deprecation warning for `widget.inputEl` on STRING multiline widgets ([#9808](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9808))~~
 - Many new widget implementations upstream (Color, Curve, Range, Markdown, MultiSelect, FileUpload, etc.) — mostly Comfy-driven
 
 ### Groups
 
-- **Contrasting group title text** on colored group backgrounds ([#14474](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14474))
-- Improved group title layout ([#9839](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9839))
-- Fix `LGraphGroup` paste position ([#9962](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9962))
-- Snap group borders to grid when fitting to nodes ([#15070](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15070))
-- `recomputeInsideNodes` nested group processing ([#8275](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8275))
+- ~~**Contrasting group title text** on colored group backgrounds ([#14474](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14474))~~
+- ~~Improved group title layout ([#9839](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9839))~~
+- ~~Fix `LGraphGroup` paste position ([#9962](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9962))~~
+- ~~Snap group borders to grid when fitting to nodes ([#15070](https://github.com/Comfy-Org/ComfyUI_frontend/pull/15070))~~
+- ~~`recomputeInsideNodes` nested group processing ([#8275](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8275))~~
 
 ### Drawing & performance
 
 - ~~**`cachedMeasureText`** — cache `ctx.measureText` in draw loop ([#9404](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9404))~~
 - ~~**`createCursorCache`** — avoid redundant DOM cursor writes ([#9171](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9171))~~
-- Multitype slot color slices on shared-color links ([#11250](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11250))
-- Font consistency pass ([#7220](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7220))
+- ~~Multitype slot color slices on shared-color links ([#11250](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11250))~~
+- ~~Font consistency pass ([#7220](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7220))~~
 - ~~Avoid forced layout in `renderInfo` via `canvas.height` ([#9304](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9304))~~
 
 ### API & infrastructure (upstream-only patterns)
