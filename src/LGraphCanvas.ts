@@ -84,7 +84,7 @@ import {
   TitleMode,
 } from "./types/globalEnums"
 import { alignNodes, distributeNodes, getBoundaryNodes } from "./utils/arrange"
-import { findFirstNode, getAllNestedItems, getDraggedItems } from "./utils/collections"
+import { findFirstNode, getDraggedItems } from "./utils/collections"
 import { cachedMeasureText, clearTextMeasureCache } from "./utils/textMeasureCache"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget } from "./widgets/widgetMap"
@@ -471,11 +471,38 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     LiteGraph.ROUND_RADIUS = value
   }
 
+  // Cached LOD threshold values for performance
+  private _lowQualityZoomThreshold: number = 0
+  private _isLowQuality: boolean = false
+
   /**
-   * Render low quality when zoomed out.
+   * Updates the low quality zoom threshold based on current settings.
+   * Called when min_font_size_for_lod or DPR changes.
+   */
+  private updateLowQualityThreshold(): void {
+    if (this._min_font_size_for_lod === 0) {
+      // LOD disabled
+      this._lowQualityZoomThreshold = 0
+      this._isLowQuality = false
+      return
+    }
+
+    const baseFontSize = LiteGraph.NODE_TEXT_SIZE // 14px
+    const dprAdjustment = Math.sqrt(window.devicePixelRatio || 1)
+
+    // Calculate the zoom level where text becomes unreadable
+    this._lowQualityZoomThreshold =
+      this._min_font_size_for_lod / (baseFontSize * dprAdjustment)
+
+    // Update current state based on current zoom
+    this._isLowQuality = this.ds.scale < this._lowQualityZoomThreshold
+  }
+
+  /**
+   * Render low quality when zoomed out based on minimum readable font size.
    */
   get low_quality(): boolean {
-    return this.ds.scale < this.low_quality_zoom_threshold
+    return this._isLowQuality
   }
 
   /**
@@ -593,8 +620,20 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
   /** Controls link rendering style. See {@link LinkRenderType} constants. */
   links_render_mode: number
-  /** Zoom threshold for low quality rendering. Zoom below this threshold will render low quality. */
-  low_quality_zoom_threshold: number = 0.6
+  /** Minimum font size in pixels before switching to low quality rendering. */
+  private _min_font_size_for_lod: number = 8
+
+  get min_font_size_for_lod(): number {
+    return this._min_font_size_for_lod
+  }
+
+  set min_font_size_for_lod(value: number) {
+    if (this._min_font_size_for_lod !== value) {
+      this._min_font_size_for_lod = value
+      this.updateLowQualityThreshold()
+    }
+  }
+
   /** Pointer position in canvas pixel coordinates, where `(0, 0)` is the top-left of the canvas element. */
   readonly mouse: Point
   /** Pointer position in graph coordinates, where `(0, 0)` is the top-left of the visible graph area. */
@@ -690,6 +729,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     ctrlKey: false,
     metaKey: false,
   }
+
   private _ghostPointerHandler: ((e: PointerEvent) => void) | null = null
   private _ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
 
@@ -870,6 +910,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.ds = new DragAndScale(canvas)
     this.pointer = new CanvasPointer(canvas)
 
+    // Set up zoom change handler for efficient LOD updates
+    this.ds.onChanged = (scale: number, _offset: Point) => {
+      // Only check LOD threshold if it's enabled
+      if (this._lowQualityZoomThreshold > 0) {
+        this._isLowQuality = scale < this._lowQualityZoomThreshold
+      }
+    }
+
     this.linkConnector.events.addEventListener("link-created", () => this.#dirty())
 
     // @deprecated Workaround: Keep until connecting_links is removed.
@@ -1039,6 +1087,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
 
     this.autoresize = options.autoresize
+
+    this.updateLowQualityThreshold()
   }
 
   /** Context-menu callback that creates a new {@link LGraphGroup} at the pointer position. */
@@ -4186,7 +4236,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
               this.state.selectionChanged = true
             }
           },
-          (child) => this.select(child),
+          child => this.select(child),
         )
       }
       return
@@ -4237,7 +4287,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
               this.state.selectionChanged = true
             }
           },
-          (child) => this.deselect(child),
+          child => this.deselect(child),
         )
       }
       return
