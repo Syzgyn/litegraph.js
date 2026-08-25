@@ -45,6 +45,7 @@ import { AutoPanController } from "@/canvas/AutoPanController"
 import { LinkConnector } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { isMiddleButtonEvent } from "@/utils/pointerUtils"
+import { forEachNode } from "@/utils/graphTraversal"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
 import { CanvasPointer } from "./CanvasPointer"
@@ -4068,6 +4069,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // TODO: Report failures, i.e. `failedNodes`
 
     this.selectItems(created)
+    forEachNode(graph, n => n.onGraphConfigured?.())
+    forEachNode(graph, n => n.onAfterGraphConfigured?.())
 
     graph.afterChange()
 
