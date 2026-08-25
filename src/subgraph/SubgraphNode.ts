@@ -63,6 +63,9 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
   /** Widgets promoted from internal subgraph inputs and displayed on this node. */
   override widgets: IBaseWidget[] = []
 
+  /** Widgets added programmatically outside the promotion system. */
+  readonly #extraWidgets: IBaseWidget[] = []
+
   /** Manages lifecycle of all subgraph event listeners */
   #eventAbortController = new AbortController()
 
@@ -307,6 +310,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     this.inputs = this.inputs.filter(input => input._subgraphSlot)
 
     // Reset widgets
+    const extraWidgets = [...this.#extraWidgets]
     this.widgets.length = 0
 
     // Check all inputs for connected widgets
@@ -320,6 +324,8 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       this.#addSubgraphInputListeners(subgraphInput, input)
       this.#resolveInputWidget(subgraphInput, input)
     }
+
+    this.widgets.push(...extraWidgets)
   }
 
   /**
@@ -328,6 +334,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
    * host nodes need refreshing during nested subgraph packing.
    */
   rebuildInputWidgetBindings(): void {
+    const extraWidgets = [...this.#extraWidgets]
     this.widgets.length = 0
 
     for (const input of this.inputs) {
@@ -338,6 +345,8 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       if (!subgraphInput) continue
       this.#resolveInputWidget(subgraphInput, input)
     }
+
+    this.widgets.push(...extraWidgets)
   }
 
   /**
@@ -546,6 +555,16 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     return nodes
   }
 
+  override addCustomWidget<TPlainWidget extends IBaseWidget>(
+    customWidget: TPlainWidget,
+  ): TPlainWidget {
+    const widget = toConcreteWidget(customWidget, this, false) ?? customWidget
+    this.#extraWidgets.push(widget)
+    this.widgets.push(widget)
+    this._widgetSlotsDirty = true
+    return widget
+  }
+
   /**
    * Removes a promoted widget by name and dispatches `"widget-demoted"`.
    * @param name The widget name to remove.
@@ -563,6 +582,13 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
    * @param widget The widget instance to remove.
    */
   override ensureWidgetRemoved(widget: IBaseWidget): void {
+    const index = this.#extraWidgets.indexOf(widget)
+    if (index !== -1) {
+      this.#extraWidgets.splice(index, 1)
+      super.ensureWidgetRemoved(widget)
+      return
+    }
+
     if (this.widgets.includes(widget)) {
       this.subgraph.events.dispatch("widget-demoted", { widget, subgraphNode: this })
     }
@@ -614,6 +640,9 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     for (const widget of this.widgets) {
       this.subgraph.events.dispatch("widget-demoted", { widget, subgraphNode: this })
     }
+
+    for (const widget of this.#extraWidgets) widget.onRemove?.()
+    this.#extraWidgets.length = 0
 
     for (const input of this.inputs) {
       input._listenerController?.abort()
