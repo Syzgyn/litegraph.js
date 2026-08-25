@@ -1,7 +1,8 @@
-import { describe, expect, vi } from "vitest"
+import { afterEach, describe, expect, vi } from "vitest"
 
 import type { LGraphCanvas } from "@/litegraph"
-import { LGraphGroup } from "@/litegraph"
+import { LGraph, LGraphGroup, LiteGraph } from "@/litegraph"
+import { containsRect } from "@/measure"
 import * as colorUtil from "@/utils/colorUtil"
 
 import { test } from "./testExtensions"
@@ -32,6 +33,110 @@ describe("LGraphGroup", () => {
     expect(link.serialize()).toMatchSnapshot("Basic")
   })
 
+  describe("recomputeInsideNodes", () => {
+    test("uses visited set to avoid redundant computation", () => {
+      const graph = new LGraph()
+
+      const outer = new LGraphGroup("outer")
+      outer.pos = [0, 0]
+      outer.size = [400, 400]
+      graph.add(outer)
+
+      const mid1 = new LGraphGroup("mid1")
+      mid1.pos = [10, 10]
+      mid1.size = [300, 300]
+      graph.add(mid1)
+
+      const mid2 = new LGraphGroup("mid2")
+      mid2.pos = [20, 20]
+      mid2.size = [200, 200]
+      graph.add(mid2)
+
+      const inner = new LGraphGroup("inner")
+      inner.pos = [30, 30]
+      inner.size = [100, 100]
+      graph.add(inner)
+
+      const visited = new Set<number>()
+      outer.recomputeInsideNodes(100, visited)
+
+      expect(visited.has(outer.id)).toBe(true)
+      expect(visited.has(mid1.id)).toBe(true)
+      expect(visited.has(mid2.id)).toBe(true)
+      expect(visited.has(inner.id)).toBe(true)
+      expect(visited.size).toBe(4)
+
+      expect(outer.children.has(mid1)).toBe(true)
+      expect(outer.children.has(mid2)).toBe(true)
+      expect(outer.children.has(inner)).toBe(true)
+      expect(mid1.children.has(mid2)).toBe(true)
+      expect(mid1.children.has(inner)).toBe(true)
+      expect(mid2.children.has(inner)).toBe(true)
+    })
+
+    test("respects maxDepth limit", () => {
+      const graph = new LGraph()
+
+      const outer = new LGraphGroup("outer")
+      outer.pos = [0, 0]
+      outer.size = [300, 300]
+      graph.add(outer)
+
+      const inner = new LGraphGroup("inner")
+      inner.pos = [10, 10]
+      inner.size = [100, 100]
+      graph.add(inner)
+
+      outer.recomputeInsideNodes(1)
+
+      expect(outer.children.has(inner)).toBe(true)
+      expect(inner.children.size).toBe(0)
+    })
+  })
+
+  describe("resizeTo", () => {
+    const alwaysSnapToGrid = LiteGraph.alwaysSnapToGrid
+    const gridSize = LiteGraph.CANVAS_GRID_SIZE
+
+    afterEach(() => {
+      LiteGraph.alwaysSnapToGrid = alwaysSnapToGrid
+      LiteGraph.CANVAS_GRID_SIZE = gridSize
+    })
+
+    function createGroupFittedToContent() {
+      const graph = new LGraph()
+      const group = new LGraphGroup("group")
+      graph.add(group)
+
+      const content = new LGraphGroup("content")
+      content.pos = [103, 207]
+      content.size = [140, 80]
+
+      group.resizeTo([content], 10)
+      return { group, content }
+    }
+
+    test("fits the group around its contents with padding", () => {
+      LiteGraph.alwaysSnapToGrid = false
+      const { group } = createGroupFittedToContent()
+
+      expect([...group.pos]).toEqual([93, 197 - group.titleHeight])
+      expect([...group.size]).toEqual([160, 100 + group.titleHeight])
+    })
+
+    test("expands every border to the grid when always snapping", () => {
+      LiteGraph.alwaysSnapToGrid = true
+      LiteGraph.CANVAS_GRID_SIZE = 10
+      const { group, content } = createGroupFittedToContent()
+
+      const [x, y, width, height] = group.boundingRect
+      expect([x, y, x + width, y + height].map(edge => edge % 10)).toEqual([
+        0, 0, 0, 0,
+      ])
+      expect(containsRect(group.boundingRect, content.boundingRect)).toBe(true)
+    })
+  })
+
   describe("draw", () => {
     test("lightens the title text for a very dark background", () => {
       const group = new LGraphGroup("Group")
@@ -57,7 +162,6 @@ describe("LGraphGroup", () => {
 
     test("leaves the title text unchanged for a moderately dark, non-black background", () => {
       const group = new LGraphGroup("Group")
-      // "purple" preset groupcolor - dark but well above the black-ish threshold
       group.color = "#a1309b"
       const ctx = createMockContext()
 
