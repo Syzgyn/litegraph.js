@@ -41,3 +41,9 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#9896](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9896) | 2026-08-25 | `74a48ab2` | `src/strings.ts`, `src/subgraph/SubgraphInputNode.ts` (litegraph-only; no Pinia/Vue) | `test/subgraph/SubgraphIO.test.ts` |
 | [#9304](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9304) | 2026-08-25 | `a9f9afd0` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.renderInfo.test.ts` |
 | [#12491](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12491) | 2026-08-25 | `d86483a6` | `src/utils/pointerUtils.ts`, `src/LGraphCanvas.ts`, `src/canvas/InputIndicators.ts` | — |
+| [#5115](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5115) | 2026-08-25 | `4db9e3d7` | `src/LGraphCanvas.ts`, `src/canvas/LinkConnector.ts` | — |
+| [#4879](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4879) | 2026-08-25 | `8f289c8e` | `src/LGraphCanvas.ts` | — |
+| [#8772](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8772) | 2026-08-25 | `157f0598` | `src/canvas/ToInputFromIoNodeLink.ts`, `src/infrastructure/SubgraphInputEventMap.ts`, `src/subgraph/SubgraphInput.ts`, `src/subgraph/SubgraphNode.ts` | — |
+| [#4833](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4833) | 2026-08-25 | `7bbbf597` | `src/subgraph/SubgraphIONodeBase.ts`, `src/subgraph/SubgraphInputNode.ts`, `src/subgraph/SubgraphOutputNode.ts` | — |
+| [#12575](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12575) | 2026-08-25 | `1938ba80` | `src/LGraph.ts` | — |
+| [#10195](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10195) | 2026-08-25 | `657ae6a6` | `src/LGraphNode.ts`, `src/LGraphCanvas.ts`, `src/subgraph/SubgraphNode.ts` (no Pinia/PromotedWidgetViewManager) | `test/LGraphCanvas.drawConnections.test.ts` |

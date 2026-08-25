@@ -71,18 +71,18 @@ Upstream subgraph work is the largest area of change since v0.17.2.
 - ~~**NullGraphError on subgraph node removal** ([#11804](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11804))~~
 - ~~Garbage-collect subgraph definitions when `SubgraphNode` removed; nullable `SubgraphNode.graph` ([#8187](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8187), [#8180](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8180))~~ — already via #11804
 - ~~Fix disconnection of `subgraphInput` links ([#6258](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6258), [#4800](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4800))~~
-- Shift+click+drag from subgraph outputs ([#5115](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5115))
-- Alt+click-drag-copy of subgraph nodes ([#4879](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4879))
+- ~~Shift+click+drag from subgraph outputs ([#5115](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5115))~~
+- ~~Alt+click-drag-copy of subgraph nodes ([#4879](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4879))~~
 - ~~**Fast disconnect on subgraph IO** ([#12619](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12619))~~
-- Optional-input indicator on `SubgraphNode` inputs ([#8772](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8772))
-- Double-click to rename subgraph slot labels ([#4833](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4833))
-- Undo tracking on subgraph conversion ([#12575](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12575))
+- ~~Optional-input indicator on `SubgraphNode` inputs ([#8772](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8772))~~
+- ~~Double-click to rename subgraph slot labels ([#4833](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4833))~~
+- ~~Undo tracking on subgraph conversion ([#12575](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12575))~~
 
 **Promoted-widget stability** (many iterations; some reverted/re-done)
 
 - Per-instance promoted widget values ([#10849](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10849), later rolled back [#11790](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11790))
 - ~~Stabilize promoted widget identity/rendering ([#9896](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9896))~~ — litegraph-only: unique empty-slot input names
-- Promoted widget input label rename ([#10195](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10195))
+- ~~Promoted widget input label rename ([#10195](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10195))~~
 - ~~Fix pruning of uninitialized promoted primitives ([#11987](https://github.com/Comfy-Org/ComfyUI_frontend/pull/11987))~~ — **[Won't do]** (upstream `proxyWidgets` model; local uses copy-based promotion)
 
 ### Canvas & input
