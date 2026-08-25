@@ -951,6 +951,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       }
     }
 
+    // #6752 / #15613: restore widget labels from serialised input slot labels
     syncWidgetLabelsFromInputs(this)
 
     // Sync the state of this.resizable.
