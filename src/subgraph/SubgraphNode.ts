@@ -2,7 +2,7 @@ import type { SubgraphInput } from "./SubgraphInput"
 import type { ISubgraphInput } from "@/interfaces"
 import type { BaseLGraph, LGraph } from "@/LGraph"
 import type { GraphOrSubgraph, Subgraph } from "@/subgraph/Subgraph"
-import type { ExportedSubgraphInstance } from "@/types/serialisation"
+import type { ExportedSubgraphInstance, ISerialisedNode } from "@/types/serialisation"
 import type { IBaseWidget, TWidgetValue } from "@/types/widgets"
 import type { UUID } from "@/utils/uuid"
 
@@ -562,6 +562,32 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       this.subgraph.events.dispatch("widget-demoted", { widget, subgraphNode: this })
     }
     super.ensureWidgetRemoved(widget)
+  }
+
+  /**
+   * Synchronizes widget values from this SubgraphNode instance to the
+   * corresponding widgets in the subgraph definition before serialization.
+   * This ensures nested subgraph widget values are preserved when saving.
+   */
+  override serialize(): ISerialisedNode {
+    for (let i = 0; i < this.widgets.length; i++) {
+      const widget = this.widgets[i]
+      const input = this.inputs.find(inp => inp.name === widget.name)
+
+      if (input) {
+        const subgraphInput = this.subgraph.inputNode.slots.find(
+          slot => slot.name === input.name,
+        )
+
+        if (subgraphInput) {
+          for (const connectedWidget of subgraphInput.getConnectedWidgets()) {
+            connectedWidget.value = widget.value
+          }
+        }
+      }
+    }
+
+    return super.serialize()
   }
 
   /**
