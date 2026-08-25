@@ -69,7 +69,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /** @deprecated Unused; title rendering uses {@link LiteGraph.GROUP_FONT}. */
   font?: string
   /** Font size in pixels for the title bar text. */
-  font_size: number = LiteGraph.DEFAULT_GROUP_FONT || 24
+  font_size: number = LiteGraph.GROUP_TEXT_SIZE
   _bounding: Float32Array = new Float32Array([
     10,
     10,
@@ -228,7 +228,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   draw(graphCanvas: LGraphCanvas, ctx: CanvasRenderingContext2D): void {
     const { padding, resizeLength, defaultColour, darkBgLuminanceThreshold } =
       LGraphGroup
-    const font_size = this.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE
+    const font_size = LiteGraph.GROUP_TEXT_SIZE
 
     const [x, y] = this._pos
     const [width, height] = this._size

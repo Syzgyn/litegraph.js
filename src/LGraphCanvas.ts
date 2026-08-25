@@ -4215,23 +4215,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
   }
 
-  #traverseGroupChildren(
-    group: LGraphGroup,
-    groupAction: (child: LGraphGroup) => void,
-    leafAction: (child: Positionable) => void,
-  ): void {
-    const stack: Positionable[] = [...group._children]
-    while (stack.length > 0) {
-      const child = stack.pop()!
-      if (child instanceof LGraphGroup) {
-        groupAction(child)
-        for (const nested of child._children) stack.push(nested)
-      } else {
-        leafAction(child)
-      }
-    }
-  }
-
   /**
    * Deselects a {@link Positionable} item.
    * @param item The canvas item to remove from the selection.
