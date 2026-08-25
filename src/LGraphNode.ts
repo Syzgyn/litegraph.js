@@ -860,6 +860,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     if (this.graph) {
       this.graph.incrementVersion()
     }
+    if (info.id === -1) info.id = this.id
     for (const j in info) {
       if (j == "properties") {
         // i don't want to clone properties, I want to reuse the old container

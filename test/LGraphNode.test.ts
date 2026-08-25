@@ -92,6 +92,14 @@ describe("LGraphNode", () => {
     expect(node.inputs.length).toEqual(1)
   })
 
+  test("should not allow configuring id to -1", () => {
+    const graph = new LGraph()
+    const node = new LGraphNode("TestNode")
+    graph.add(node)
+    node.configure(getMockISerialisedNode({ id: -1 }))
+    expect(node.id).not.toBe(-1)
+  })
+
   test("should configure outputs correctly", () => {
     const node = new LGraphNode("TestNode")
     node.configure(getMockISerialisedNode({
