@@ -25,6 +25,7 @@ import type { UUID } from "@/utils/uuid"
 
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID, UNASSIGNED_NODE_ID } from "@/constants"
 import { createUuidv4, zeroUuid } from "@/utils/uuid"
+import { forEachNode } from "@/utils/graphTraversal"
 
 import { CustomEventTarget } from "./infrastructure/CustomEventTarget"
 import { LGraphCanvas } from "./LGraphCanvas"
@@ -1031,6 +1032,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       this.canvasAction(c => c.startGhostPlacement(node, opts.dragEvent))
     }
 
+    if (node.isSubgraphNode?.()) {
+      forEachNode(node.subgraph, (innerNode) => {
+        if (innerNode.isSubgraphNode())
+          this.subgraphs.set(innerNode.subgraph.id, innerNode.subgraph)
+      })
+    }
+
     // to chain actions
     return node
   }
@@ -1105,7 +1113,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         ))
 
       if (!hasRemainingReferences) {
-        forEachSubgraphNode(node.subgraph, fireNodeRemovalLifecycle)
+        forEachNode(node.subgraph, (innerNode) => {
+          fireNodeRemovalLifecycle(innerNode)
+          if (innerNode.isSubgraphNode())
+            this.rootGraph.subgraphs.delete(innerNode.subgraph.id)
+        })
         this.rootGraph.subgraphs.delete(node.subgraph.id)
       }
     }
