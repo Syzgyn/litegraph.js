@@ -3327,10 +3327,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * Gets the position of an output slot, in graph co-ordinates.
    *
    * This method is preferred over the legacy {@link getConnectionPos} method.
-   * @param slot Output slot index
+   * @param outputSlotIndex Output slot index
    * @returns Position of the output slot
    */
-  getOutputPos(slot: number): Point {
+  getOutputPos(outputSlotIndex: number): Point {
     const { pos: [nodeX, nodeY], outputs, size: [width] } = this
 
     if (this.flags.collapsed) {
@@ -3339,13 +3339,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       return [nodeX + width, nodeY - halfTitle]
     }
 
-    const outputPos = outputs?.[slot]?.pos
+    const outputPos = outputs?.[outputSlotIndex]?.pos
     if (outputPos) return [nodeX + outputPos[0], nodeY + outputPos[1]]
 
     // default vertical slots
     const offsetX = LiteGraph.NODE_SLOT_HEIGHT * 0.5
     const nodeOffsetY = this.constructor.slot_start_y || 0
-    const slotIndex = this.#defaultVerticalOutputs.indexOf(this.outputs[slot])
+    const slotIndex = this.#defaultVerticalOutputs.indexOf(this.outputs[outputSlotIndex])
     const slotY = (slotIndex + 0.7) * LiteGraph.NODE_SLOT_HEIGHT
 
     // TODO: Why +1?
