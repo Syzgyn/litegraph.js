@@ -3735,6 +3735,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       subgraphs: [],
     }
 
+    // NOTE: logic for traversing nested subgraphs depends on this being a set.
     const subgraphs = new Set<Subgraph>()
 
     // Create serialisable objects
@@ -3773,8 +3774,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
 
     // Add unique subgraph entries
-    // TODO: Must find all nested subgraphs
+    // NOTE: subgraphs is appended to mid iteration.
     for (const subgraph of subgraphs) {
+      for (const node of subgraph.nodes) {
+        if (node instanceof SubgraphNode) {
+          subgraphs.add(node.subgraph)
+        }
+      }
       const cloned = subgraph
         .clone(true)
         .asSerialisable()
@@ -3887,12 +3893,19 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       created.push(group)
     }
 
+    // Update subgraph ids with nesting
+    function updateSubgraphIds(nodes: { type: string }[]) {
+      for (const info of nodes) {
+        const subgraph = results.subgraphs.get(info.type)
+        if (!subgraph) continue
+        info.type = subgraph.id
+        updateSubgraphIds(subgraph.nodes)
+      }
+    }
+    updateSubgraphIds(parsed.nodes)
+
     // Nodes
     for (const info of parsed.nodes) {
-      // If the subgraph was cloned, update references to use the new subgraph ID.
-      const subgraph = results.subgraphs.get(info.type)
-      if (subgraph) info.type = subgraph.id
-
       const node = info.type == null ? null : LiteGraph.createNode(info.type)
       if (!node) {
         // failedNodes.push(info)
