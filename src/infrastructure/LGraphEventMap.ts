@@ -1,5 +1,6 @@
 import type { ReadOnlyRect } from "@/interfaces"
 import type { LGraph } from "@/LGraph"
+import type { LGraphNode } from "@/LGraphNode"
 import type { LLink, ResolvedConnection } from "@/LLink"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { ExportedSubgraph, ISerialisedGraph, SerialisableGraph } from "@/types/serialisation"
@@ -79,5 +80,12 @@ export interface LGraphEventMap {
     subgraph: Subgraph
     /** The graph that is being closed or backgrounded. */
     closingGraph: LGraph | Subgraph
+  }
+
+  /**
+   * Fires on the owning graph before per-node teardown begins.
+   */
+  "node:before-removed": {
+    node: LGraphNode
   }
 }

@@ -42,7 +42,12 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
   /** The root graph that ultimately owns this instance's subgraph definition. */
   get rootGraph(): LGraph {
-    return this.graph.rootGraph
+    return this.graph!.rootGraph
+  }
+
+  /** `true` when this instance has been removed from its parent graph. */
+  get isDetached(): boolean {
+    return !this.graph
   }
 
   /** User-facing type label shown in the node UI. */
@@ -61,19 +66,22 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
   /** Manages lifecycle of all subgraph event listeners */
   #eventAbortController = new AbortController()
 
+  /** The parent graph (root or nested subgraph) containing this instance, or `null` when detached. */
+  override graph: GraphOrSubgraph | null
+
   /**
    * @param graph The parent graph (root or nested subgraph) containing this instance.
    * @param subgraph The subgraph definition this node instantiates.
    * @param instanceData Per-instance serialised state (position, properties, etc.).
    */
   constructor(
-    /** The (sub)graph that contains this subgraph instance. */
-    override readonly graph: GraphOrSubgraph,
+    graph: GraphOrSubgraph,
     /** The definition of this subgraph; how its nodes are configured, etc. */
     readonly subgraph: Subgraph,
     instanceData: ExportedSubgraphInstance,
   ) {
     super(subgraph.name, subgraph.id)
+    this.graph = graph
 
     // Update this node when the subgraph input / output slots are changed
     const subgraphEvents = this.subgraph.events
@@ -516,7 +524,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     const subgraphInstanceIdPath = [...subgraphNodePath, this.id]
 
     // Store the subgraph node DTO
-    const parentSubgraphNode = this.graph.rootGraph.resolveSubgraphIdPath(subgraphNodePath).at(-1)
+    const parentSubgraphNode = this.graph!.rootGraph.resolveSubgraphIdPath(subgraphNodePath).at(-1)
     const subgraphNodeDto = new ExecutableNodeDTO(this, subgraphNodePath, executableNodes, parentSubgraphNode)
     executableNodes.set(subgraphNodeDto.id, subgraphNodeDto)
 
@@ -571,5 +579,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     for (const input of this.inputs) {
       input._listenerController?.abort()
     }
+
+    this.widgets.length = 0
   }
 }

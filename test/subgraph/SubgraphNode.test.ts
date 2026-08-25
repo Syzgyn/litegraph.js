@@ -466,6 +466,19 @@ describe("SubgraphNode Integration", () => {
     parentGraph.remove(subgraphNode)
     expect(parentGraph.nodes).not.toContain(subgraphNode)
   })
+
+  it("should return empty widgets array (not throw) after removal", () => {
+    const subgraph = createTestSubgraph()
+    const subgraphNode = createTestSubgraphNode(subgraph)
+    const parentGraph = subgraphNode.graph!
+    parentGraph.add(subgraphNode)
+
+    parentGraph.remove(subgraphNode)
+
+    expect(subgraphNode.graph).toBeNull()
+    expect(() => subgraphNode.widgets).not.toThrow()
+    expect(subgraphNode.widgets).toEqual([])
+  })
 })
 
 describe("Foundation Test Utilities", () => {

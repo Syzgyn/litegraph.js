@@ -103,6 +103,22 @@ export interface BaseLGraph {
   readonly rootGraph: LGraph
 }
 
+function forEachSubgraphNode(subgraph: Subgraph, fn: (node: LGraphNode) => void): void {
+  for (const innerNode of subgraph.nodes) {
+    if (innerNode.isSubgraphNode()) forEachSubgraphNode(innerNode.subgraph, fn)
+    fn(innerNode)
+  }
+}
+
+function fireNodeRemovalLifecycle(node: LGraphNode): void {
+  const graph = node.graph
+  if (graph) {
+    (graph.events as CustomEventTarget<LGraphEventMap>).dispatch("node:before-removed", { node })
+  }
+  node.onRemoved?.()
+  graph?.onNodeRemoved?.(node)
+}
+
 /**
  * Core container for a node graph: nodes, links, groups, reroutes, and execution state.
  *
@@ -380,7 +396,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     // safe clear
     if (this._nodes) {
       for (const _node of this._nodes) {
-        _node.onRemoved?.()
+        fireNodeRemovalLifecycle(_node)
       }
     }
 
@@ -1041,6 +1057,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     // sure? - almost sure is wrong
     this.beforeChange()
 
+    this.events.dispatch("node:before-removed", { node })
+
     const { inputs, outputs } = node
 
     // disconnect inputs
@@ -1061,6 +1079,22 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     for (const link of this.floatingLinks.values()) {
       if (link.origin_id === node.id || link.target_id === node.id) {
         this.removeFloatingLink(link)
+      }
+    }
+
+    if (node.isSubgraphNode()) {
+      const allGraphs = [this.rootGraph, ...this.rootGraph._subgraphs.values()]
+      const hasRemainingReferences = allGraphs.some(graph =>
+        graph.nodes.some(
+          candidate =>
+            candidate !== node &&
+            candidate.isSubgraphNode() &&
+            candidate.type === node.subgraph.id,
+        ))
+
+      if (!hasRemainingReferences) {
+        forEachSubgraphNode(node.subgraph, fireNodeRemovalLifecycle)
+        this.rootGraph.subgraphs.delete(node.subgraph.id)
       }
     }
 

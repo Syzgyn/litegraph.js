@@ -224,7 +224,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
         }
       }
 
-      const outerLink = subgraphNode.graph.getLink(linkId)
+      const outerLink = subgraphNode.graph!.getLink(linkId)
       if (!outerLink) throw new InvalidLinkError(`No outer link found for slot [${link.origin_slot}] ${input.name}`)
 
       const subgraphNodeExecutionId = this.subgraphNodePath.join(":")
