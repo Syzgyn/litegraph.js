@@ -34,7 +34,7 @@ import { LGraphNode, type NodeId } from "./LGraphNode"
 import { LiteGraph, SubgraphNode } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import { MapProxyHandler } from "./MapProxyHandler"
-import { alignOutsideContainer, alignToContainer, createBounds } from "./measure"
+import { alignOutsideContainer, alignToContainer, createBounds, snapPoint } from "./measure"
 import { inputLink, outputLinks } from "./node/slotLinks"
 import { isWidgetInputSlot } from "./node/slotUtils"
 import { Reroute, type RerouteId } from "./Reroute"
@@ -2534,7 +2534,14 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
         // configure nodes afterwards so they can reach each other
         for (const [id, nodeData] of nodeDataMap) {
-          this.getNodeById(id)?.configure(nodeData)
+          const node = this.getNodeById(id)
+          node?.configure(nodeData)
+
+          if (LiteGraph.alwaysSnapToGrid && node) {
+            const snapTo = this.getSnapToGridSize()
+            if (node.snapToGrid(snapTo)) node.pos = [node.pos[0], node.pos[1]]
+            snapPoint(node.size, snapTo, "ceil")
+          }
         }
       }
 
