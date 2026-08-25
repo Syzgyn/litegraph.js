@@ -34,6 +34,9 @@ export function getAllNestedItems(items: ReadonlySet<Positionable>): Set<Positio
  * Holding Ctrl (Windows/Linux) or Meta/Cmd (macOS) moves the selected items
  * on their own, leaving nodes nested inside a dragged group in place.
  * Without the modifier, a dragged group carries its contents with it.
+ *
+ * Standalone canvas mode uses this for all drags; upstream also relies on it
+ * after removing the Vue-only group-child drag reimplementation (#12867).
  * @param selected The currently selected items being dragged
  * @param event The pointer event driving the drag
  * @returns The items to move for this drag frame
