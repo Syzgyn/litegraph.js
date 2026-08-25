@@ -825,7 +825,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Creates a node with default title, type, size, and title-button mouse handling.
+   * Creates a node with default title, type, and size.
    * @param title Display title; defaults internally to `"Unnamed"` if empty.
    * @param type Registered node type string.
    */
@@ -835,29 +835,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     this.type = type ?? ""
     this.size = [LiteGraph.NODE_WIDTH, 60]
     this.pos = [10, 10]
+    // Assign stroke style getters
     this.strokeStyles = {
       error: this.#getErrorStrokeStyle,
       selected: this.#getSelectedStrokeStyle,
-    }
-
-    // Assign onMouseDown implementation
-    this.onMouseDown = (e: CanvasPointerEvent, pos: Point, canvas: LGraphCanvas): boolean => {
-      // Check for title button clicks (only if not collapsed)
-      if (this.title_buttons?.length && !this.flags.collapsed) {
-        // pos contains the offset from the node's position, so we need to use node-relative coordinates
-        const nodeRelativeX = pos[0]
-        const nodeRelativeY = pos[1]
-
-        for (let i = 0; i < this.title_buttons.length; i++) {
-          const button = this.title_buttons[i]
-          if (button.visible && button.isPointInside(nodeRelativeX, nodeRelativeY)) {
-            this.onTitleButtonClick(button, canvas)
-            return true // Prevent default behavior
-          }
-        }
-      }
-
-      return false // Allow default behavior
     }
   }
 

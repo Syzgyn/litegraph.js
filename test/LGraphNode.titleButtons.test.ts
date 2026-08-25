@@ -4,6 +4,8 @@ import { LGraphButton } from "@/LGraphButton"
 import { LGraphCanvas } from "@/LGraphCanvas"
 import { LGraphNode } from "@/LGraphNode"
 
+import { handleTitleButtonClick } from "./utils/canvasTitleButton"
+
 describe("LGraphNode Title Buttons", () => {
   describe("addTitleButton", () => {
     it("should add a title button to the node", () => {
@@ -47,7 +49,7 @@ describe("LGraphNode Title Buttons", () => {
     })
   })
 
-  describe("onMouseDown with title buttons", () => {
+  describe("title button clicks via canvas", () => {
     it("should handle click on title button", () => {
       const node = new LGraphNode("Test Node")
       node.pos = [100, 200]
@@ -77,19 +79,13 @@ describe("LGraphNode Title Buttons", () => {
         dispatch: vi.fn(),
       } as unknown as LGraphCanvas
 
-      const event = {
-        canvasX: 265, // node.pos[0] + node.size[0] - 5 - button_width = 100 + 180 - 5 - 20 = 255, click in middle = 265
-        canvasY: 178, // node.pos[1] - LiteGraph.NODE_TITLE_HEIGHT + 8 = 200 - 30 + 8 = 178
-      } as any
-
       // Calculate node-relative position for the click
       const clickPosRelativeToNode: [number, number] = [
         265 - node.pos[0], // 265 - 100 = 165
         178 - node.pos[1], // 178 - 200 = -22
       ]
 
-      // Simulate the click - onMouseDown should detect button click
-      const handled = node.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(node, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(true)
       expect(canvas.dispatch).toHaveBeenCalledWith("litegraph:node-title-button-clicked", {
@@ -123,18 +119,12 @@ describe("LGraphNode Title Buttons", () => {
         dispatch: vi.fn(),
       } as unknown as LGraphCanvas
 
-      const event = {
-        canvasX: 150, // Click in the middle of the node, not on button
-        canvasY: 180,
-      } as any
-
-      // Calculate node-relative position
       const clickPosRelativeToNode: [number, number] = [
         150 - node.pos[0], // 150 - 100 = 50
         180 - node.pos[1], // 180 - 200 = -20
       ]
 
-      const handled = node.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(node, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(false)
       expect(canvas.dispatch).not.toHaveBeenCalled()
@@ -182,18 +172,12 @@ describe("LGraphNode Title Buttons", () => {
 
       // Click on second button (leftmost, since they're right-aligned)
       const titleY = 170 + 8 // node.pos[1] - NODE_TITLE_HEIGHT + 8 = 200 - 30 + 8 = 178
-      const event = {
-        canvasX: 255, // First button at: 100 + 200 - 5 - 20 = 275, Second button at: 275 - 5 - 20 = 250, click in middle = 255
-        canvasY: titleY,
-      } as any
-
-      // Calculate node-relative position
       const clickPosRelativeToNode: [number, number] = [
         255 - node.pos[0], // 255 - 100 = 155
         titleY - node.pos[1], // 178 - 200 = -22
       ]
 
-      const handled = node.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(node, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(true)
       expect(canvas.dispatch).toHaveBeenCalledWith("litegraph:node-title-button-clicked", {
@@ -235,18 +219,12 @@ describe("LGraphNode Title Buttons", () => {
 
       // Click where the visible button is (invisible button is skipped)
       const titleY = 178 // node.pos[1] - NODE_TITLE_HEIGHT + 8 = 200 - 30 + 8 = 178
-      const event = {
-        canvasX: 265, // Visible button at: 100 + 180 - 5 - 20 = 255, click in middle = 265
-        canvasY: titleY,
-      } as any
-
-      // Calculate node-relative position
       const clickPosRelativeToNode: [number, number] = [
         265 - node.pos[0], // 265 - 100 = 165
         titleY - node.pos[1], // 178 - 200 = -22
       ]
 
-      const handled = node.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(node, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(true)
       expect(canvas.dispatch).toHaveBeenCalledWith("litegraph:node-title-button-clicked", {

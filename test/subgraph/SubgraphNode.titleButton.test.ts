@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import { LGraphButton } from "@/LGraphButton"
 import { LGraphCanvas } from "@/LGraphCanvas"
 
+import { handleTitleButtonClick } from "../utils/canvasTitleButton"
 import { createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphHelpers"
 
 describe("SubgraphNode Title Button", () => {
@@ -118,18 +119,12 @@ describe("SubgraphNode Title Button", () => {
       } as unknown as LGraphCanvas
 
       // Simulate click on the enter button
-      const event = {
-        canvasX: 275, // Near right edge where button should be
-        canvasY: 80, // In title area
-      } as any
-
-      // Calculate node-relative position
       const clickPosRelativeToNode: [number, number] = [
         275 - subgraphNode.pos[0], // 275 - 100 = 175
         80 - subgraphNode.pos[1], // 80 - 100 = -20
       ]
 
-      const handled = subgraphNode.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(subgraphNode, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(true)
       expect(canvas.openSubgraph).toHaveBeenCalledWith(subgraph)
@@ -150,18 +145,12 @@ describe("SubgraphNode Title Button", () => {
       } as unknown as LGraphCanvas
 
       // Click in the body of the node, not on button
-      const event = {
-        canvasX: 200, // Middle of node
-        canvasY: 150, // Body area
-      } as any
-
-      // Calculate node-relative position
       const clickPosRelativeToNode: [number, number] = [
         200 - subgraphNode.pos[0], // 200 - 100 = 100
         150 - subgraphNode.pos[1], // 150 - 100 = 50
       ]
 
-      const handled = subgraphNode.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(subgraphNode, clickPosRelativeToNode, canvas)
 
       expect(handled).toBe(false)
       expect(canvas.openSubgraph).not.toHaveBeenCalled()
@@ -193,17 +182,12 @@ describe("SubgraphNode Title Button", () => {
       } as unknown as LGraphCanvas
 
       // Try to click on where the button would be
-      const event = {
-        canvasX: 275,
-        canvasY: 80,
-      } as any
-
       const clickPosRelativeToNode: [number, number] = [
         275 - subgraphNode.pos[0], // 175
         80 - subgraphNode.pos[1], // -20
       ]
 
-      const handled = subgraphNode.onMouseDown(event, clickPosRelativeToNode, canvas)
+      const handled = handleTitleButtonClick(subgraphNode, clickPosRelativeToNode, canvas)
 
       // Should not handle the click when collapsed
       expect(handled).toBe(false)
