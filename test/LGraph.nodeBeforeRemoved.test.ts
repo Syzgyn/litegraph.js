@@ -118,6 +118,40 @@ describe("node:before-removed event", () => {
   })
 })
 
+describe("Graph clearing and callbacks", () => {
+  test("clear() calls both node.onRemoved() and graph.onNodeRemoved()", () => {
+    const graph = new LGraph()
+
+    const node1 = new LGraphNode("TestNode1")
+    const node2 = new LGraphNode("TestNode2")
+    graph.add(node1)
+    graph.add(node2)
+
+    const nodeRemovedCallbacks = new Set<string>()
+    const graphRemovedCallbacks = new Set<string>()
+
+    node1.onRemoved = () => {
+      nodeRemovedCallbacks.add(String(node1.id))
+    }
+    node2.onRemoved = () => {
+      nodeRemovedCallbacks.add(String(node2.id))
+    }
+    graph.onNodeRemoved = (node) => {
+      graphRemovedCallbacks.add(String(node.id))
+    }
+
+    expect(graph.nodes.length).toBe(2)
+
+    graph.clear()
+
+    expect(nodeRemovedCallbacks).toContain(String(node1.id))
+    expect(nodeRemovedCallbacks).toContain(String(node2.id))
+    expect(graphRemovedCallbacks).toContain(String(node1.id))
+    expect(graphRemovedCallbacks).toContain(String(node2.id))
+    expect(graph.nodes.length).toBe(0)
+  })
+})
+
 describe("Subgraph definition garbage collection", () => {
   test("subgraph-definition GC dispatches node:before-removed on the inner subgraph for each inner node", () => {
     const rootGraph = new LGraph()

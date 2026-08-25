@@ -23,3 +23,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#8259](https://github.com/Comfy-Org/ComfyUI_frontend/pull/8259) | 2026-08-25 | `4337b8d6` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.auxclick.test.ts` |
 | [#4831](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4831) | 2026-08-25 | `16d74368` | `src/LGraphCanvas.ts` | `test/LGraphCanvas.linkHitDetection.test.ts` |
 | [#7153](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7153) | 2026-08-25 | `f800c409` | `src/LGraphNode.ts`, `src/subgraph/SubgraphOutput.ts` | `test/subgraph/SubgraphOutputZombieLinkIds.test.ts` |
+| [#5407](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5407) | 2026-08-25 | `c2eb4f03` | (already via #11804 `fireNodeRemovalLifecycle` in `clear()`) | `test/LGraph.nodeBeforeRemoved.test.ts` |
