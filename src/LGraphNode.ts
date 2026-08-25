@@ -57,7 +57,7 @@ import { warnDeprecated } from "./utils/feedback"
 import { distributeSpace } from "./utils/spaceDistribution"
 import { cachedMeasureText } from "./utils/textMeasureCache"
 import { truncateText } from "./utils/textUtils"
-import { toClass } from "./utils/type"
+import { commonType, toClass } from "./utils/type"
 import { syncWidgetLabelsFromInputs } from "./utils/widget"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
@@ -944,13 +944,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       }
 
       if (info.widgets_values) {
-        const widgetsWithValue = this.widgets.filter(w => w.serialize !== false)
-        for (let i = 0; i < info.widgets_values.length; ++i) {
-          const widget = widgetsWithValue[i]
-          if (widget) {
-            widget.value = info.widgets_values[i]
-          }
-        }
+        const widgetsWithValue = this.widgets
+          .values()
+          .filter(w => w.serialize !== false)
+          .filter((_w, idx) => idx < info.widgets_values!.length)
+        widgetsWithValue.forEach(
+          (widget, i) => (widget.value = info.widgets_values![i]),
+        )
       }
     }
 
@@ -2862,9 +2862,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       inputNode.disconnectInput(inputIndex, true)
     }
 
+    const maybeCommonType =
+      input.type && output.type && commonType(input.type, output.type)
+
     const link = new LLink(
       ++graph.state.lastLinkId,
-      input.type || output.type,
+      maybeCommonType || input.type || output.type,
       this.id,
       outputIndex,
       inputNode.id,

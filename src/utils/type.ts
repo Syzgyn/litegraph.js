@@ -1,4 +1,4 @@
-import type { IColorable } from "@/interfaces"
+import type { IColorable, ISlotType } from "@/interfaces"
 
 /**
  * Converts a plain object to a class instance if it is not already an instance of the class.
@@ -20,4 +20,32 @@ export function toClass<P, C extends P, Args extends unknown[]>(
  */
 export function isColorable(obj: unknown): obj is IColorable {
   return typeof obj === "object" && obj !== null && "setColorOption" in obj && "getColorOption" in obj
+}
+
+export function commonType(...types: ISlotType[]): ISlotType | undefined {
+  if (!isStrings(types)) return undefined
+
+  const withoutWildcards = types.filter(type => type !== "*")
+  if (withoutWildcards.length === 0) return "*"
+
+  const typeLists: string[][] = withoutWildcards.map(type => type.split(","))
+
+  const combinedTypes = intersection(...typeLists)
+  if (combinedTypes.length === 0) return undefined
+
+  return combinedTypes.join(",")
+}
+
+function intersection(...sets: string[][]): string[] {
+  const itemCounts: Record<string, number> = {}
+  for (const set of sets)
+    for (const item of new Set(set))
+      itemCounts[item] = (itemCounts[item] ?? 0) + 1
+  return Object.entries(itemCounts)
+    .filter(([, count]) => count === sets.length)
+    .map(([key]) => key)
+}
+
+function isStrings(types: unknown[]): types is string[] {
+  return types.every(t => typeof t === "string")
 }
