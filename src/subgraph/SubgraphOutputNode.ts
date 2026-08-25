@@ -11,7 +11,6 @@ import type { NodeLike } from "@/types/NodeLike"
 import type { SubgraphIO } from "@/types/serialisation"
 
 import { SUBGRAPH_OUTPUT_ID } from "@/constants"
-import { Rectangle } from "@/infrastructure/Rectangle"
 import { findFreeSlotOfType } from "@/utils/collections"
 
 import { EmptySubgraphOutput } from "./EmptySubgraphOutput"
@@ -69,14 +68,16 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
     // Left-click handling for dragging connections
     if (e.button === 0) {
       for (const slot of this.allSlots) {
-        const slotBounds = Rectangle.fromCentre(slot.pos, slot.boundingRect.height)
-
-        if (slotBounds.containsXy(e.canvasX, e.canvasY)) {
+        // Check if click is within the full slot area (including label)
+        if (slot.boundingRect.containsXy(e.canvasX, e.canvasY)) {
           pointer.onDragStart = () => {
             linkConnector.dragNewFromSubgraphOutput(this.subgraph, this, slot)
           }
           pointer.onDragEnd = (eUp) => {
             linkConnector.dropLinks(this.subgraph, eUp)
+          }
+          pointer.onDoubleClick = () => {
+            this.handleSlotDoubleClick(slot, e)
           }
           pointer.finally = () => {
             linkConnector.reset(true)
