@@ -18,3 +18,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#10187](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10187) | 2026-08-25 | `15442e7f` | `src/subgraph/SubgraphNode.ts`, `src/interfaces.ts` | `test/subgraph/SubgraphNode.reconfigure.test.ts` |
 | [#10020](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10020) | 2026-08-25 | `918095f1` | `src/subgraph/SubgraphNode.ts` | `test/subgraph/SubgraphNode.duplicateInputPruning.test.ts` |
 | [#10532](https://github.com/Comfy-Org/ComfyUI_frontend/pull/10532) | 2026-08-25 | `d940ea76` | `src/LGraph.ts`, `src/subgraph/SubgraphNode.ts`, `src/subgraph/SubgraphInputNode.ts` (no Pinia promotion store; snapshot + rebind) | `test/subgraph/SubgraphNestedPackPromotedValues.test.ts` |
+| [#12473](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12473) | 2026-08-25 | `b7990f76` | `src/subgraph/SubgraphIONodeBase.ts` | `test/subgraph/SubgraphIOSlotContextMenu.test.ts` |

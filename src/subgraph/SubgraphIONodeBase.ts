@@ -285,7 +285,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
       break
     }
 
-    this.subgraph.setDirtyCanvas(true)
+    this.subgraph.setDirtyCanvas(true, true)
   }
 
   /** Lays out all slots vertically and resizes the IO panel to fit. */
