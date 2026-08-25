@@ -181,7 +181,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
    * @returns The resolved upstream node, origin ID, and output slot index; `undefined` when the
    * input is disconnected.
    */
-  resolveInput(slot: number, visited = new Set<string>()): ResolvedInput | undefined {
+  resolveInput(slot: number, visited = new Set<string>(), type?: ISlotType): ResolvedInput | undefined {
     const uniqueId = `${this.subgraphNode?.subgraph.id}:${this.node.id}[I]${slot}`
     if (visited.has(uniqueId)) {
       const nodeInfo = `${this.node.id}${this.node.title ? ` (${this.node.title})` : ""}`
@@ -242,7 +242,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
     const outputNodeDto = this.nodesByExecutionId.get(outputNodeExecutionId)
     if (!outputNodeDto) throw new Error(`No output node DTO found for id [${outputNodeExecutionId}]`)
 
-    return outputNodeDto.resolveOutput(link.origin_slot, input.type, visited)
+    return outputNodeDto.resolveOutput(link.origin_slot, type ?? input.type, visited)
   }
 
   /**
@@ -293,7 +293,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
 
     // Upstreamed: Other virtual nodes are bypassed using the same input/output index (slots must match)
     if (node.isVirtualNode) {
-      if (this.inputs.at(slot)) return this.resolveInput(slot, visited)
+      if (this.inputs.at(slot)) return this.resolveInput(slot, visited, type)
 
       // Fallback check for nodes performing link redirection
       const virtualLink = this.node.getInputLink(slot)
