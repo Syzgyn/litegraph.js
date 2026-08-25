@@ -97,10 +97,7 @@ export class LiteGraphGlobal {
   /** Default drop-shadow colour for canvas text. */
   DEFAULT_SHADOW_COLOR = "rgba(0,0,0,0.5)"
 
-  /** Default font size for group titles. */
-  DEFAULT_GROUP_FONT = 24
-  /** @deprecated Legacy group font size override. */
-  DEFAULT_GROUP_FONT_SIZE?: any
+  GROUP_TEXT_SIZE = 20
   /** Font family for group titles. */
   GROUP_FONT = "Arial"
 

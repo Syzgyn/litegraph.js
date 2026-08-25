@@ -552,6 +552,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   allow_interaction: boolean
   /** When `true`, clicking items toggles selection without requiring modifier keys. */
   multi_select: boolean
+  /** When `true`, selecting a group also selects its child nodes, reroutes, and nested groups. */
+  groupSelectChildren: boolean
   /** When `true`, enables the node search box for adding nodes. */
   allow_searchbox: boolean
   /** When `true`, allows dragging existing links to new slots without recreating them. */
@@ -964,6 +966,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.allow_interaction = true
     // allow selecting multi nodes without pressing extra keys
     this.multi_select = false
+    this.groupSelectChildren = false
     this.allow_searchbox = true
     // allows to change a connection with having to redo it again
     this.allow_reconnect_links = true
@@ -2513,8 +2516,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           }
           pointer.finally = () => this.resizingGroup = null
         } else {
-          const f = group.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE
-          const headerHeight = f * 1.4
+          const headerHeight = LiteGraph.NODE_TITLE_HEIGHT
           if (
             isInRectangle(
               x,
@@ -4141,7 +4143,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (!modifySelection) this.deselectAll(item)
       this.select(item)
     } else if (modifySelection && !sticky) {
-      this.deselect(item)
+      // Modifier-click toggles only the clicked item, not its children.
+      // Cascade on select is a convenience; cascade on deselect would
+      // remove the user's ability to keep children selected (e.g. for
+      // deletion) after toggling the group off.
+      if (item instanceof LGraphGroup && this.groupSelectChildren) {
+        item.selected = false
+        this.selectedItems.delete(item)
+        this.state.selectionChanged = true
+      } else {
+        this.deselect(item)
+      }
     } else if (!sticky) {
       this.deselectAll(item)
     } else {
@@ -4161,6 +4173,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     item.selected = true
     this.selectedItems.add(item)
     this.state.selectionChanged = true
+
+    if (item instanceof LGraphGroup) {
+      item.recomputeInsideNodes()
+      if (this.groupSelectChildren) {
+        this.#traverseGroupChildren(
+          item,
+          (child) => {
+            if (!child.selected || !this.selectedItems.has(child)) {
+              child.selected = true
+              this.selectedItems.add(child)
+              this.state.selectionChanged = true
+            }
+          },
+          (child) => this.select(child),
+        )
+      }
+      return
+    }
+
     if (!(item instanceof LGraphNode)) return
 
     // Node-specific handling
