@@ -11,6 +11,9 @@ import { LinkDirection, RenderShape } from "@/types/globalEnums"
 import { NodeInputSlot } from "./NodeInputSlot"
 import { SlotBase } from "./SlotBase"
 
+const MAX_MULTITYPE_SLICES = 3
+const ROTATION_OFFSET = -Math.PI
+
 /** Options passed to {@link NodeSlot.draw} and its subclasses when rendering a slot on the canvas. */
 export interface IDrawOptions {
   /** Theme colours used to resolve slot fill colours when custom colours are not set. */
@@ -186,8 +189,45 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
           ctx.strokeStyle = ctx.fillStyle
           radius = highlight ? 4 : 3
         } else {
-          // Normal circle
           radius = highlight ? 5 : 4
+        }
+
+        const colorMapper = this.isConnected
+          ? colorContext.getConnectedColor
+          : colorContext.getDisconnectedColor
+        const types = `${this.type}`
+          .split(",")
+          .map(t => colorMapper(t))
+          .slice(0, MAX_MULTITYPE_SLICES)
+
+        if (types.length > 1) {
+          doFill = false
+          const arcLen = (Math.PI * 2) / types.length
+          for (const [idx, type] of types.entries()) {
+            ctx.moveTo(pos[0], pos[1])
+            ctx.fillStyle = type
+            ctx.arc(
+              pos[0],
+              pos[1],
+              radius,
+              arcLen * idx + ROTATION_OFFSET,
+              Math.PI * 2 + ROTATION_OFFSET,
+            )
+            ctx.fill()
+            ctx.beginPath()
+          }
+          ctx.save()
+          ctx.strokeStyle = "black"
+          ctx.lineWidth = 0.5
+          for (const [idx] of types.entries()) {
+            ctx.moveTo(pos[0], pos[1])
+            const xOffset = Math.cos(arcLen * idx + ROTATION_OFFSET) * radius
+            const yOffset = Math.sin(arcLen * idx + ROTATION_OFFSET) * radius
+            ctx.lineTo(pos[0] + xOffset, pos[1] + yOffset)
+          }
+          ctx.stroke()
+          ctx.restore()
+          ctx.beginPath()
         }
         ctx.arc(pos[0], pos[1], radius, 0, Math.PI * 2)
       }

@@ -1,6 +1,7 @@
+import type { LGraphCanvas } from "@/litegraph"
+
 import { afterEach, describe, expect, vi } from "vitest"
 
-import type { LGraphCanvas } from "@/litegraph"
 import { LGraph, LGraphGroup, LiteGraph } from "@/litegraph"
 import { containsRect } from "@/measure"
 import * as colorUtil from "@/utils/colorUtil"
@@ -130,9 +131,7 @@ describe("LGraphGroup", () => {
       const { group, content } = createGroupFittedToContent()
 
       const [x, y, width, height] = group.boundingRect
-      expect([x, y, x + width, y + height].map(edge => edge % 10)).toEqual([
-        0, 0, 0, 0,
-      ])
+      expect([x, y, x + width, y + height].map(edge => edge % 10)).toEqual([0, 0, 0, 0])
       expect(containsRect(group.boundingRect, content.boundingRect)).toBe(true)
     })
   })
