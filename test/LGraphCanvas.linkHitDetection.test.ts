@@ -78,7 +78,7 @@ describe("LGraphCanvas link hit detection", () => {
 
     canvas.processMouseDown(event)
 
-    expect(ctx.isPointInStroke).toHaveBeenCalledWith(path, 120, 130)
+    expect(ctx.isPointInStroke).toHaveBeenCalledWith(path, 240, 260)
     expect(graph.createReroute).toHaveBeenCalled()
   })
 })
