@@ -89,7 +89,7 @@ function remapNodeIds(
 function findNextAvailableId(
   usedNodeIds: Set<number>,
   state: LGraphState,
-): NodeId {
+): number {
   while (true) {
     const nextId = state.lastNodeId + 1
     if (nextId > MAX_NODE_ID) throw new Error("Node ID space exhausted")
@@ -131,7 +131,7 @@ function patchProxyWidgets(
     const remappedIds = remapBySubgraph.get(node.type)
     if (!remappedIds) continue
 
-    const proxyWidgets = node.properties?.proxyWidgets
+    const proxyWidgets = node.properties?.["proxyWidgets"]
     if (!Array.isArray(proxyWidgets)) continue
 
     for (const entry of proxyWidgets) {
