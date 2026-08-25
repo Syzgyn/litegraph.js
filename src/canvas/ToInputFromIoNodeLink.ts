@@ -213,4 +213,14 @@ export class ToInputFromIoNodeLink implements RenderLink {
   connectToRerouteOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")
   }
+
+  /**
+   * Disconnects the subgraph-input link at its target input slot.
+   * @returns Whether a link was disconnected.
+   */
+  disconnect(): boolean {
+    if (!this.existingLink) return false
+    this.existingLink.disconnect(this.network, "input")
+    return true
+  }
 }

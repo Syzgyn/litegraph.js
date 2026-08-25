@@ -826,7 +826,7 @@ export class LinkConnector {
    */
   disconnectLinks(): void {
     for (const link of this.renderLinks) {
-      if (link instanceof MovingLinkBase) {
+      if (link instanceof MovingLinkBase || link instanceof ToInputFromIoNodeLink) {
         link.disconnect()
       }
     }
