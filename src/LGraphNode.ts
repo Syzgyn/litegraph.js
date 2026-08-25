@@ -55,6 +55,7 @@ import {
 import { findFreeSlotOfType } from "./utils/collections"
 import { warnDeprecated } from "./utils/feedback"
 import { distributeSpace } from "./utils/spaceDistribution"
+import { cachedMeasureText } from "./utils/textMeasureCache"
 import { truncateText } from "./utils/textUtils"
 import { toClass } from "./utils/type"
 import { syncWidgetLabelsFromInputs } from "./utils/widget"
@@ -2102,7 +2103,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       ctx.font = this.innerFontStyle
       this._collapsed_width = Math.min(
         this.size[0],
-        ctx.measureText(this.getTitle() ?? "").width + LiteGraph.NODE_TITLE_HEIGHT * 2,
+        ctx ? cachedMeasureText(ctx, this.getTitle() ?? "") + LiteGraph.NODE_TITLE_HEIGHT * 2 : 0,
       )
       out[2] = (this._collapsed_width || LiteGraph.NODE_COLLAPSED_WIDTH)
       out[3] = LiteGraph.NODE_TITLE_HEIGHT

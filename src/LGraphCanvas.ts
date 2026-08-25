@@ -81,6 +81,7 @@ import {
 } from "./types/globalEnums"
 import { alignNodes, distributeNodes, getBoundaryNodes } from "./utils/arrange"
 import { findFirstNode, getAllNestedItems } from "./utils/collections"
+import { cachedMeasureText, clearTextMeasureCache } from "./utils/textMeasureCache"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget } from "./widgets/widgetMap"
 
@@ -4517,6 +4518,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * draws the front canvas (the one containing all the nodes)
    */
   drawFrontCanvas(): void {
+    clearTextMeasureCache()
     this.dirty_canvas = false
 
     const { ctx, canvas, graph, linkConnector } = this
@@ -5193,8 +5195,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     text = text.substring(0, 30)
 
     ctx.font = "14px Courier New"
-    const info = ctx.measureText(text)
-    const w = info.width + 20
+    const w = cachedMeasureText(ctx, text) + 20
     const h = 24
     ctx.shadowColor = "black"
     ctx.shadowOffsetX = 2

@@ -6,6 +6,7 @@ import type { IBaseWidget } from "@/types/widgets"
 import { drawTextInArea } from "@/draw"
 import { Rectangle } from "@/infrastructure/Rectangle"
 import { LiteGraph } from "@/litegraph"
+import { cachedMeasureText } from "@/utils/textMeasureCache"
 
 /**
  * Options passed to {@link BaseWidget.drawWidget} and related drawing helpers.
@@ -288,8 +289,8 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
 
     // Measure label and value
     const { displayName, _displayValue } = this
-    const labelWidth = ctx.measureText(displayName).width
-    const valueWidth = ctx.measureText(_displayValue).width
+    const labelWidth = cachedMeasureText(ctx, displayName)
+    const valueWidth = cachedMeasureText(ctx, _displayValue)
 
     const gap = BaseWidget.labelValueGap
     const x = margin * 2 + leftPadding

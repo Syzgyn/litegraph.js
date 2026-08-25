@@ -3,6 +3,7 @@ import type { CanvasColour, Rect } from "./interfaces"
 
 import { LiteGraph } from "./litegraph"
 import { LinkDirection, RenderShape, TitleMode } from "./types/globalEnums"
+import { cachedMeasureText } from "./utils/textMeasureCache"
 
 const ELLIPSIS = "\u2026"
 const TWO_DOT_LEADER = "\u2025"
@@ -188,17 +189,17 @@ function truncateTextToWidth(ctx: CanvasRenderingContext2D, text: string, maxWid
   if (!(maxWidth > 0)) return ""
 
   // Text fits
-  const fullWidth = ctx.measureText(text).width
+  const fullWidth = cachedMeasureText(ctx, text)
   if (fullWidth <= maxWidth) return text
 
-  const ellipsisWidth = ctx.measureText(ELLIPSIS).width * 0.75
+  const ellipsisWidth = cachedMeasureText(ctx, ELLIPSIS) * 0.75
 
   // Can't even fit ellipsis
   if (ellipsisWidth > maxWidth) {
-    const twoDotsWidth = ctx.measureText(TWO_DOT_LEADER).width * 0.75
+    const twoDotsWidth = cachedMeasureText(ctx, TWO_DOT_LEADER) * 0.75
     if (twoDotsWidth < maxWidth) return TWO_DOT_LEADER
 
-    const oneDotWidth = ctx.measureText(ONE_DOT_LEADER).width * 0.75
+    const oneDotWidth = cachedMeasureText(ctx, ONE_DOT_LEADER) * 0.75
     return oneDotWidth < maxWidth ? ONE_DOT_LEADER : ""
   }
 
@@ -217,7 +218,7 @@ function truncateTextToWidth(ctx: CanvasRenderingContext2D, text: string, maxWid
     }
 
     const sub = text.substring(0, mid)
-    const currentWidth = ctx.measureText(sub).width + ellipsisWidth
+    const currentWidth = cachedMeasureText(ctx, sub) + ellipsisWidth
 
     if (currentWidth <= maxWidth) {
       // This length fits, try potentially longer
@@ -245,7 +246,7 @@ export function drawTextInArea({ ctx, text, area, align = "left" }: IDrawTextInA
   const { left, right, bottom, width, centreX } = area
 
   // Text already fits
-  const fullWidth = ctx.measureText(text).width
+  const fullWidth = cachedMeasureText(ctx, text)
   if (fullWidth <= width) {
     ctx.textAlign = align
     const x = align === "left" ? left : (align === "right" ? right : centreX)
@@ -265,5 +266,5 @@ export function drawTextInArea({ ctx, text, area, align = "left" }: IDrawTextInA
   // Draw the ellipsis, right-aligned to the button
   ctx.textAlign = "right"
   const ellipsis = truncated.at(-1)!
-  ctx.fillText(ellipsis, right, bottom, ctx.measureText(ellipsis).width * 0.75)
+  ctx.fillText(ellipsis, right, bottom, cachedMeasureText(ctx, ellipsis) * 0.75)
 }
