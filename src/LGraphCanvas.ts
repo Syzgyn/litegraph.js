@@ -4683,7 +4683,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.#renderSnapHighlight(ctx, highlightPos)
 
         for (const link of renderLinks) {
-          if (!link.disconnectOnDrop || !link.disconnectOrigin) continue
+          if (!("disconnectOnDrop" in link) || !link.disconnectOnDrop) continue
+          if (!("disconnectOrigin" in link) || !link.disconnectOrigin) continue
 
           const [originX, originY] = link.disconnectOrigin
           const radius = 35

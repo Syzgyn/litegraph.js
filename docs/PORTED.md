@@ -29,3 +29,10 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#4863](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4863) | 2026-08-25 | `5cc269ef` | `src/LGraphCanvas.ts` (follow-up to #4831: scale `isPointInStroke` by DPR) | `test/LGraphCanvas.linkHitDetection.test.ts` |
 | [#4840](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4840) | 2026-08-25 | `db713657` | `src/LGraph.ts`, `src/node/slotLinks.ts`, `src/subgraph/subgraphUtils.ts`, `src/constants.ts`, `src/LGraphCanvas.ts` (current upstream unpack + menu; includes #4964/#7791/#9046/#9120 unpack fixes) | `test/subgraph/SubgraphConversion.test.ts` |
 | [#9510](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9510) | 2026-08-25 | `0b73285c` | `src/LGraph.ts`, `src/subgraph/subgraphDeduplication.ts` | `test/subgraph/subgraphNodeIdDeduplication.test.ts` |
+| [#5023](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5023) | 2026-08-25 | `e9ddf295` | `src/subgraph/SubgraphNode.ts` | — |
+| [#5003](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5003) | 2026-08-25 | `fdd8564c` | `src/LGraphCanvas.ts` | — |
+| [#4911](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4911) | 2026-08-25 | `2c215a62` | `src/subgraph/Subgraph.ts` | — |
+| [#4800](https://github.com/Comfy-Org/ComfyUI_frontend/pull/4800) | 2026-08-25 | `db452c1e` | `src/canvas/ToInputFromIoNodeLink.ts`, `src/canvas/LinkConnector.ts` | — |
+| [#6258](https://github.com/Comfy-Org/ComfyUI_frontend/pull/6258) | 2026-08-25 | `5897e007` | `src/canvas/ToInputFromIoNodeLink.ts` | `test/subgraph/SubgraphIO.test.ts` |
+| [#12619](https://github.com/Comfy-Org/ComfyUI_frontend/pull/12619) | 2026-08-25 | `d7f0d75e` | `src/canvas/RenderLink.ts`, `src/canvas/MovingInputLink.ts`, `src/canvas/ToInputFromIoNodeLink.ts`, `src/canvas/LinkConnector.ts`, `src/LGraphCanvas.ts` | — |
+| [#5237](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5237) | 2026-08-25 | `b515ef0a` | `src/subgraph/ExecutableNodeDTO.ts` | — |
