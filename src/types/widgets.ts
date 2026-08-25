@@ -255,6 +255,9 @@ export interface IBaseWidget<
     e?: CanvasPointerEvent,
   ): void
 
+  /** Callback invoked when the widget is removed from its node. */
+  onRemove?(): void
+
   /**
    * Simple callback for pointer events, allowing custom widgets to events relevant to them.
    * @param event The pointer event that triggered this callback
