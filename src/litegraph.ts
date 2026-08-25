@@ -238,7 +238,7 @@ export type {
   SerialisableLLink,
   SubgraphIO,
 } from "./types/serialisation"
-export type { IWidget } from "./types/widgets"
+export type { IWidget, TWidgetValue } from "./types/widgets"
 export { isColorable } from "./utils/type"
 export { createUuidv4 } from "./utils/uuid"
 export { evaluateInput, getWidgetStep, renameWidget, syncWidgetLabelsFromInputs } from "./utils/widget"
