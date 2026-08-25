@@ -127,6 +127,9 @@ export class ToInputFromIoNodeLink implements RenderLink {
 
     if (existingLink) {
       // Moving an existing link
+      const { input: previousInput, inputNode } = existingLink.resolve(this.network)
+      if (inputNode && previousInput)
+        this.node._disconnectNodeInput(inputNode, previousInput, existingLink)
       events.dispatch("input-moved", this)
       fromSlot.events.dispatch("input-disconnected", { input: fromSlot })
     } else {
