@@ -4892,7 +4892,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    */
   renderInfo(ctx: CanvasRenderingContext2D, x: number, y: number): void {
     x = x || 10
-    y = y || this.canvas.offsetHeight - 80
+    y = y ||
+      this.canvas.height /
+        ((this.canvas.ownerDocument.defaultView ?? window).devicePixelRatio ||
+          1) -
+        80
 
     ctx.save()
     ctx.translate(x, y)
