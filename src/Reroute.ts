@@ -735,10 +735,12 @@ class RerouteSlot {
   }
 
   set hovering(value) {
-    if (!Object.is(this.#hovering, value)) {
-      this.#hovering = value
-      this.dirty = true
+    if (Object.is(this.#hovering, value)) {
+      return
     }
+
+    this.#hovering = value
+    this.dirty = true
   }
 
   #showOutline = false
@@ -748,10 +750,12 @@ class RerouteSlot {
   }
 
   set showOutline(value) {
-    if (!Object.is(this.#showOutline, value)) {
-      this.#showOutline = value
-      this.dirty = true
+    if (Object.is(this.#showOutline, value)) {
+      return
     }
+
+    this.#showOutline = value
+    this.dirty = true
   }
 
   constructor(reroute: Reroute, isInput: boolean) {

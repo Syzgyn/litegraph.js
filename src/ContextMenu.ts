@@ -20,19 +20,19 @@ function ensureDomPurifyStyleHook(): void {
   domPurifyStyleHookRegistered = true
 
   DOMPurify.addHook("uponSanitizeAttribute", (_node, data) => {
-    if (data.attrName === "style") {
-      const sanitizedStyle = data.attrValue
-        .split(";")
-        .map(s => s.trim())
-        .filter((s) => {
-          const colonIdx = s.indexOf(":")
-          if (colonIdx === -1) return false
-          const prop = s.slice(0, colonIdx).trim().toLowerCase()
-          return ALLOWED_STYLE_PROPS.has(prop)
-        })
-        .join("; ")
-      data.attrValue = sanitizedStyle
-    }
+    if (data.attrName != "style") return
+
+    const sanitizedStyle = data.attrValue
+      .split(";")
+      .map(s => s.trim())
+      .filter((s) => {
+        const colonIdx = s.indexOf(":")
+        if (colonIdx === -1) return false
+        const prop = s.slice(0, colonIdx).trim().toLowerCase()
+        return ALLOWED_STYLE_PROPS.has(prop)
+      })
+      .join("; ")
+    data.attrValue = sanitizedStyle
   })
 }
 
@@ -158,10 +158,12 @@ export class ContextMenu<TValue = unknown> {
     root.addEventListener(
       "pointerdown",
       (e) => {
-        if (e.button == 2) {
-          this.close()
-          e.preventDefault()
+        if (e.button != 2) {
+          return
         }
+
+        this.close()
+        e.preventDefault()
       },
       eventOptions,
     )

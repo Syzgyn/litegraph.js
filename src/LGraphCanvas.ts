@@ -325,10 +325,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Dispatches {@link LGraphCanvasEventMap} `"litegraph:set-graph"` when the value changes.
    */
   set subgraph(value: Subgraph | undefined) {
-    if (value !== this.#subgraph) {
-      this.#subgraph = value
-      if (value) this.dispatch("litegraph:set-graph", { oldGraph: this.#subgraph, newGraph: value })
+    if (value === this.#subgraph) {
+      return
     }
+
+    this.#subgraph = value
+    if (value) this.dispatch("litegraph:set-graph", { oldGraph: this.#subgraph, newGraph: value })
   }
 
   /** Dispatches a custom event on the canvas element with a detail payload. */
@@ -629,10 +631,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   set min_font_size_for_lod(value: number) {
-    if (this._min_font_size_for_lod !== value) {
-      this._min_font_size_for_lod = value
-      this.updateLowQualityThreshold()
+    if (this._min_font_size_for_lod === value) {
+      return
     }
+
+    this._min_font_size_for_lod = value
+    this.updateLowQualityThreshold()
   }
 
   /** Pointer position in canvas pixel coordinates, where `(0, 0)` is the top-left of the canvas element. */
@@ -2307,14 +2311,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           if (reroute) {
             if (e.altKey) {
               pointer.onClick = (upEvent) => {
-                if (upEvent.altKey) {
-                // Ensure deselected
-                  if (reroute.selected) {
-                    this.deselect(reroute)
-                    this.onSelectionChange?.(this.selected_nodes)
-                  }
-                  reroute.remove()
+                if (!upEvent.altKey) {
+                  return
                 }
+
+                // Ensure deselected
+                if (reroute.selected) {
+                  this.deselect(reroute)
+                  this.onSelectionChange?.(this.selected_nodes)
+                }
+                reroute.remove()
               }
             } else {
               this.processSelect(reroute, e, true)
@@ -4240,11 +4246,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.#traverseGroupChildren(
           item,
           (child) => {
-            if (!child.selected || !this.selectedItems.has(child)) {
-              child.selected = true
-              this.selectedItems.add(child)
-              this.state.selectionChanged = true
+            if (!(!child.selected || !this.selectedItems.has(child))) {
+              return
             }
+
+            child.selected = true
+            this.selectedItems.add(child)
+            this.state.selectionChanged = true
           },
           child => this.select(child),
         )
@@ -4291,11 +4299,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.#traverseGroupChildren(
           item,
           (child) => {
-            if (child.selected || this.selectedItems.has(child)) {
-              child.selected = false
-              this.selectedItems.delete(child)
-              this.state.selectionChanged = true
+            if (!(child.selected || this.selectedItems.has(child))) {
+              return
             }
+
+            child.selected = false
+            this.selectedItems.delete(child)
+            this.state.selectionChanged = true
           },
           child => this.deselect(child),
         )
@@ -6964,11 +6974,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       input.focus()
       const clickTime = Date.now()
       function handleOutsideClick(e: Event) {
-        if (e.target === canvas && Date.now() - clickTime > 256) {
-          dialog.close()
-          canvas.parentElement?.removeEventListener("click", handleOutsideClick)
-          canvas.parentElement?.removeEventListener("touchend", handleOutsideClick)
+        if (!(e.target === canvas && Date.now() - clickTime > 256)) {
+          return
         }
+
+        dialog.close()
+        canvas.parentElement?.removeEventListener("click", handleOutsideClick)
+        canvas.parentElement?.removeEventListener("touchend", handleOutsideClick)
       }
       canvas.parentElement?.addEventListener("click", handleOutsideClick)
       canvas.parentElement?.addEventListener("touchend", handleOutsideClick)
@@ -7057,10 +7069,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       let prevent_timeout: any = false
       let timeout_close: ReturnType<typeof setTimeout> | null = null
       LiteGraph.pointerListenerAdd(dialog, "enter", function () {
-        if (timeout_close) {
-          clearTimeout(timeout_close)
-          timeout_close = null
+        if (!timeout_close) {
+          return
         }
+
+        clearTimeout(timeout_close)
+        timeout_close = null
       })
       dialog.addEventListener("pointerleave", function () {
         if (prevent_timeout) return
@@ -7868,10 +7882,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         value_element.setAttribute("contenteditable", "true")
         value_element.addEventListener("keydown", function (e) {
           // allow for multiline
-          if (e.code == "Enter" && (type != "string" || !e.shiftKey)) {
-            e.preventDefault()
-            this.blur()
+          if (!(e.code == "Enter" && (type != "string" || !e.shiftKey))) {
+            return
           }
+
+          e.preventDefault()
+          this.blur()
         })
         value_element.addEventListener("blur", function () {
           let v: string | number | null = this.textContent
@@ -8050,10 +8066,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
       textarea.value = String(node.properties[propname])
       textarea.addEventListener("keydown", function (e: KeyboardEvent) {
-        if (e.code == "Enter" && e.ctrlKey) {
-          node.setProperty(propname, textarea.value)
-          fDoneWith()
+        if (!(e.code == "Enter" && e.ctrlKey)) {
+          return
         }
+
+        node.setProperty(propname, textarea.value)
+        fDoneWith()
       })
       panel.toggleAltContent(true)
       panel.toggleFooterVisibility(false)
