@@ -24,9 +24,10 @@ export function calculateEdgePanSpeed(
   if (maxPanSpeed <= 0) return 0
 
   const distFromMin = pointerPos - minBound
-  const distFromMax = maxBound - pointerPos
 
   if (distFromMin < 0) return -maxPanSpeed / scale
+
+  const distFromMax = maxBound - pointerPos
 
   if (distFromMax < 0) return maxPanSpeed / scale
 

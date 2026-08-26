@@ -360,8 +360,8 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * @param options Event context for callbacks and property sync.
    */
   setValue(value: TWidget["value"], { e, node, canvas }: WidgetEventOptions): void {
-    const oldValue = this.value
     if (value === this.value) return
+    const oldValue = this.value
 
     const v = this.type === "number" ? Number(value) : value
     this.value = v

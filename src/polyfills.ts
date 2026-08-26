@@ -26,15 +26,15 @@ export function loadPolyfills() {
       radius: number | number[],
       radius_low: number | number[],
     ) {
-      let top_left_radius
-      let top_right_radius
-      let bottom_left_radius
-      let bottom_right_radius
-
       if (radius === 0) {
         this.rect(x, y, w, h)
         return
       }
+
+      let top_left_radius
+      let top_right_radius
+      let bottom_left_radius
+      let bottom_right_radius
 
       if (radius_low === undefined) radius_low = radius
 

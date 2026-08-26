@@ -1001,6 +1001,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @returns Shallow copy of serialisable node fields; widgets included when {@link serialize_widgets} is set.
    */
   serialize(): ISerialisedNode {
+    // special case for when there were errors
+    if (this.constructor === LGraphNode && this.last_serialization)
+      return this.last_serialization
+
     // create serialization object
     const o: ISerialisedNode = {
       id: this.id,
@@ -1012,10 +1016,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       mode: this.mode,
       showAdvanced: this.showAdvanced,
     }
-
-    // special case for when there were errors
-    if (this.constructor === LGraphNode && this.last_serialization)
-      return this.last_serialization
 
     if (this.inputs) o.inputs = this.inputs.map(input => inputAsSerialisable(input))
     if (this.outputs) o.outputs = this.outputs.map(output => outputAsSerialisable(output))
@@ -2618,20 +2618,21 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     slotType: ISlotType,
     options?: ConnectByTypeOptions,
   ): number | undefined {
+    if (!this.graph) throw new NullGraphError()
+
     // LEGACY: Old options names
     if (options && typeof options === "object") {
       if ("firstFreeIfInputGeneralInCase" in options) options.wildcardToTyped = !!options.firstFreeIfInputGeneralInCase
       if ("firstFreeIfOutputGeneralInCase" in options) options.wildcardToTyped = !!options.firstFreeIfOutputGeneralInCase
       if ("generalTypeInCase" in options) options.typedToWildcard = !!options.generalTypeInCase
     }
+
     const optsDef: ConnectByTypeOptions = {
       createEventInCase: true,
       wildcardToTyped: true,
       typedToWildcard: true,
     }
     const opts = Object.assign(optsDef, options)
-
-    if (!this.graph) throw new NullGraphError()
 
     if (node && typeof node === "number") {
       const nodeById = this.graph.getNodeById(node)
@@ -2780,9 +2781,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     target_slot: ISlotType,
     afterRerouteId?: RerouteId,
   ): LLink | null {
-    // Allow legacy API support for searching target_slot by string, without mutating the input variables
-    let targetIndex: number | null
-
     const { graph, outputs } = this
     if (!graph) {
       // could be connected before adding it to a graph
@@ -2813,6 +2811,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
     // avoid loopback
     if (target_node == this) return null
+
+    // Allow legacy API support for searching target_slot by string, without mutating the input variables
+    let targetIndex: number | null
 
     // you can specify the slot by name
     if (typeof target_slot === "string") {

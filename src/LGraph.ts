@@ -2127,9 +2127,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           console.error("Ignoring link to subgraph outside subgraph")
           continue
         }
+        if (newLink.tid === UNASSIGNED_NODE_ID) continue
+
         const subgraph = this
 
-        if (newLink.tid === UNASSIGNED_NODE_ID) continue
         const tnode = subgraph.getNodeById(newLink.tid)
         if (!tnode) continue
         created = subgraph.inputNode.slots[newLink.oslot].connect(
@@ -2141,9 +2142,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           console.error("Ignoring link to subgraph outside subgraph")
           continue
         }
+        if (newLink.oid === UNASSIGNED_NODE_ID) continue
+
         const subgraph = this
 
-        if (newLink.oid === UNASSIGNED_NODE_ID) continue
         const tnode = subgraph.getNodeById(newLink.oid)
         if (!tnode) continue
         created = subgraph.outputNode.slots[newLink.tslot].connect(

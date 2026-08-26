@@ -329,13 +329,14 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
    */
   #getBypassSlotIndex(slot: number, type: ISlotType) {
     const { inputs } = this
-    const oppositeInput = inputs[slot]
-    const outputType = this.node.outputs[slot].type
 
     // Any type short circuit - match slot ID, fallback to first slot
     if (type === "*" || type === "") {
       return inputs.length > slot ? slot : 0
     }
+
+    const oppositeInput = inputs[slot]
+    const outputType = this.node.outputs[slot].type
 
     // Prefer input with the same slot ID
     if (

@@ -78,8 +78,8 @@ export default tseslint.config(
       "unicorn/no-this-outside-of-class": "off",
       "unicorn/no-break-in-nested-loop": "off",
       "unicorn/prefer-minimal-ternary": "off",
-      "unicorn/no-declarations-before-early-exit": "off",
 
+      "unicorn/no-declarations-before-early-exit": "off",
       "unicorn/no-array-sort": "off",
       "unicorn/numeric-separators-style": "off",
       "unicorn/prefer-type-literal-last": "off",

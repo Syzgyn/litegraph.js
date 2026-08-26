@@ -3733,9 +3733,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const { graph } = this
     if (!graph) return
 
-    let block_default = false
     // @ts-expect-error
     if (e.target.localName == "input") return
+
+    let block_default = false
 
     if (e.type == "keydown") {
       // TODO: Switch
@@ -7114,12 +7115,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     that.search_box?.close()
     that.search_box = dialog
 
+    const maybeInput = dialog.querySelector(":scope input") as HTMLInputElement | null
+    if (!maybeInput) throw new TypeError("Could not create search input box.")
+
     let first: string | null = null
     let timeout: ReturnType<typeof setTimeout> | null = null
     let selected: ChildNode | null = null
-
-    const maybeInput = dialog.querySelector(":scope input") as HTMLInputElement | null
-    if (!maybeInput) throw new TypeError("Could not create search input box.")
 
     const input = maybeInput
 
@@ -7358,9 +7359,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           }
         }
       } else {
+        if (!graphcanvas.graph) throw new NullGraphError()
+
         let c = 0
         str = str.toLowerCase()
-        if (!graphcanvas.graph) throw new NullGraphError()
 
         const filter = graphcanvas.filter || graphcanvas.graph.filter
 
@@ -7899,8 +7901,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           innerChange(propname, v)
         })
       } else if (type == "enum" || type == "combo") {
-        const str_value = LGraphCanvas.getPropertyPrintableValue(value, options.values)
         if (!value_element) throw new TypeError("Property name element was null.")
+
+        const str_value = LGraphCanvas.getPropertyPrintableValue(value, options.values)
         value_element.textContent = str_value ?? ""
 
         value_element.addEventListener("click", function (event) {
