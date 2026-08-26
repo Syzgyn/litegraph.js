@@ -283,7 +283,9 @@ describe("LinkConnector Integration", () => {
 
       // All four nodes should have no links
       for (const nodeId of [1, 2, 3, 9]) {
-        const { inputs: [input], outputs: [output] } = graph.getNodeById(nodeId)!
+        const node = graph.getNodeById(nodeId)!
+        const [input] = node.inputs
+        const [output] = node.outputs
 
         expect(input.link).toBeNull()
         expect(output.links?.length).toBeOneOf([0, undefined])
@@ -449,7 +451,9 @@ describe("LinkConnector Integration", () => {
 
       // All four nodes should have no links
       for (const nodeId of [1, 2, 3, 9]) {
-        const { inputs: [input], outputs: [output] } = graph.getNodeById(nodeId)!
+        const node = graph.getNodeById(nodeId)!
+        const [input] = node.inputs
+        const [output] = node.outputs
 
         expect(input.link).toBeNull()
         expect(output.links?.length).toBeOneOf([0, undefined])
@@ -695,7 +699,9 @@ describe("LinkConnector Integration", () => {
 
     // Original nodes should have no links
     for (const nodeId of [1, 4]) {
-      const { inputs: [input], outputs: [output] } = graph.getNodeById(nodeId)!
+      const node = graph.getNodeById(nodeId)!
+      const [input] = node.inputs
+      const [output] = node.outputs
 
       expect(input.link).toBeNull()
       expect(output.links?.length).toBeOneOf([0, undefined])

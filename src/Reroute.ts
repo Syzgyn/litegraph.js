@@ -787,7 +787,8 @@ class RerouteSlot {
    */
   draw(ctx: CanvasRenderingContext2D): void {
     const { fillStyle, strokeStyle, lineWidth } = ctx
-    const { showOutline, hovering, pos: [x, y] } = this
+    const { showOutline, hovering, pos } = this
+    const [x, y] = pos
     if (!showOutline) return
 
     try {

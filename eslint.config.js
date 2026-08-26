@@ -83,7 +83,6 @@ export default tseslint.config(
       "unicorn/no-computed-property-existence-check": "off",
       "unicorn/prefer-early-return": "off",
       "unicorn/prefer-scoped-selector": "off",
-      "unicorn/no-unreadable-object-destructuring": "off",
 
       "unicorn/no-array-sort": "off",
       "unicorn/numeric-separators-style": "off",

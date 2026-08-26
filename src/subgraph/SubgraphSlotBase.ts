@@ -217,7 +217,8 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   draw({ ctx, colorContext, lowQuality, fromSlot, editorAlpha = 1 }: SubgraphSlotDrawOptions): void {
     // Assertion: SlotShape is a subset of RenderShape
     const shape = this.shape as unknown as SlotShape
-    const { isPointerOver, pos: [x, y] } = this
+    const { isPointerOver, pos } = this
+    const [x, y] = pos
 
     // Check if this slot is a valid target for the current dragging connection
     const isValidTarget = fromSlot ? this.isValidTarget(fromSlot) : true

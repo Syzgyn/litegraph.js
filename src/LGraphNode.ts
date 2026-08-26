@@ -486,7 +486,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /** The offset from {@link pos} to the top-left of {@link boundingRect}. */
   get boundingOffset(): ReadOnlyPoint {
-    const { pos: [posX, posY], boundingRect: [bX, bY] } = this
+    const { pos, boundingRect } = this
+    const [posX, posY] = pos
+    const [bX, bY] = boundingRect
     return [posX - bX, posY - bY]
   }
 
@@ -3268,7 +3270,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   getConnectionPos(is_input: boolean, slot_number: number, out?: Point): Point {
     out ||= new Float32Array(2)
 
-    const { pos: [nodeX, nodeY], inputs, outputs } = this
+    const { pos, inputs, outputs } = this
+    const [nodeX, nodeY] = pos
 
     if (this.flags.collapsed) {
       const w = this._collapsed_width || LiteGraph.NODE_COLLAPSED_WIDTH
@@ -3348,7 +3351,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @returns Position of the centre of the input slot in graph co-ordinates.
    */
   getInputSlotPos(input: INodeInputSlot): Point {
-    const { pos: [nodeX, nodeY] } = this
+    const { pos: thisPos } = this
+    const [nodeX, nodeY] = thisPos
 
     if (this.flags.collapsed) {
       const halfTitle = LiteGraph.NODE_TITLE_HEIGHT * 0.5
@@ -3375,7 +3379,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @returns Position of the output slot
    */
   getOutputPos(outputSlotIndex: number): Point {
-    const { pos: [nodeX, nodeY], outputs, size: [width] } = this
+    const { pos, outputs, size } = this
+    const [nodeX, nodeY] = pos
+    const [width] = size
 
     if (this.flags.collapsed) {
       const width = this._collapsed_width || LiteGraph.NODE_COLLAPSED_WIDTH

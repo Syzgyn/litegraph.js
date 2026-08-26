@@ -5027,7 +5027,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const { computedHeight } = overWidget
 
       ctx.beginPath()
-      const { pos: [nodeX, nodeY] } = node
+      const { pos } = node
+      const [nodeX, nodeY] = pos
       const height = LiteGraph.NODE_WIDGET_HEIGHT
       if (
         overWidget.type.startsWith("custom") &&
