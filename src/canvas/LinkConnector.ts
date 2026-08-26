@@ -687,7 +687,7 @@ export class LinkConnector {
         if (output instanceof EmptySubgraphOutput && ioNode.slots.length > 0) {
           const createdSlot = ioNode.slots.at(-1)
           const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
-          if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
+          if (createdSlot && nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
             targetSlot = createdSlot
           } else {
             targetSlot = output
@@ -719,7 +719,7 @@ export class LinkConnector {
         if (input instanceof EmptySubgraphInput && ioNode.slots.length > 0) {
           const createdSlot = ioNode.slots.at(-1)
           const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
-          if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
+          if (createdSlot && nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
             targetSlot = createdSlot
           } else {
             targetSlot = input

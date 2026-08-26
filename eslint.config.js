@@ -9,7 +9,7 @@ import globals from "globals"
 import tseslint from "typescript-eslint"
 
 const rules = Object.fromEntries(
-  Object.entries(eslintPluginAntfu.rules).map(([id]) => [`antfu/${id}`, "off"]),
+  Object.keys(eslintPluginAntfu.rules).map(id => [`antfu/${id}`, "off"]),
 )
 const antfuLint = {
   name: "antfu/without-if-newline-or-imports",
@@ -86,6 +86,8 @@ export default tseslint.config(
       "unicorn/prevent-abbreviations": "off",
       "unicorn/require-number-to-fixed-digits-argument": "off",
       "unicorn/switch-case-braces": "off",
+      "unicorn/max-nested-calls": "off",
+      "unicorn/prefer-iterator-to-array": "off",
 
       // Node rules: dev dependency config, etc.
       "unicorn/prefer-module": "error",
@@ -108,7 +110,7 @@ export default tseslint.config(
           checkDestructured: false,
         },
       ],
-      "jsdoc/check-tag-names": ["error", { definedTags: ["remarks"] }],
+      "jsdoc/check-tag-names": ["error", { definedTags: ["remarks", "vitest-environment"] }],
       "jsdoc/multiline-blocks": "error",
       // Disabling
       "jsdoc/empty-tags": "off",
