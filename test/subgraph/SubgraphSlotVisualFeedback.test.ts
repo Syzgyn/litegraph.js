@@ -17,10 +17,10 @@ describe("SubgraphSlot visual feedback", () => {
     const mockContext = {
       _globalAlpha: 1,
       get globalAlpha() {
-        return this._globalAlpha
+        return mockContext._globalAlpha
       },
       set globalAlpha(value: number) {
-        this._globalAlpha = value
+        mockContext._globalAlpha = value
         globalAlphaValues.push(value)
       },
       fillStyle: "",

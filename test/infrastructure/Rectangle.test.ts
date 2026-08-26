@@ -247,13 +247,17 @@ describe("Rectangle", () => {
     })
 
     test("should return the area", () => {
-      expect(new Rectangle(0, 0, 5, 10).getArea()).toBe(50)
-      expect(new Rectangle(1, 1, 0, 10).getArea()).toBe(0)
+      const rect1 = new Rectangle(0, 0, 5, 10)
+      const rect2 = new Rectangle(1, 1, 0, 10)
+      expect(rect1.getArea()).toBe(50)
+      expect(rect2.getArea()).toBe(0)
     })
 
     test("should return the perimeter", () => {
-      expect(new Rectangle(0, 0, 5, 10).getPerimeter()).toBe(30) // 2 * (5+10)
-      expect(new Rectangle(0, 0, 0, 0).getPerimeter()).toBe(0)
+      const rect1 = new Rectangle(0, 0, 5, 10)
+      const rect2 = new Rectangle(0, 0, 0, 0)
+      expect(rect1.getPerimeter()).toBe(30) // 2 * (5+10)
+      expect(rect2.getPerimeter()).toBe(0)
     })
 
     test("should return the top-left point", () => {

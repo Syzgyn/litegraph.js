@@ -93,12 +93,11 @@ export function createExtendedEventCapture<T = unknown>(
         }, timeoutMs)
 
         const checkSequence = () => {
-          if (capturedEvents.length >= expectedSequence.length) {
-            const actualSequence = capturedEvents.slice(0, expectedSequence.length).map(e => e.type)
-            if (JSON.stringify(actualSequence) === JSON.stringify(expectedSequence)) {
-              cleanup()
-              resolve(capturedEvents.slice(0, expectedSequence.length))
-            }
+          if (capturedEvents.length < expectedSequence.length) return
+          const actualSequence = capturedEvents.slice(0, expectedSequence.length).map(e => e.type)
+          if (JSON.stringify(actualSequence) === JSON.stringify(expectedSequence)) {
+            cleanup()
+            resolve(capturedEvents.slice(0, expectedSequence.length))
           }
         }
 
@@ -137,7 +136,7 @@ export interface MemoryLeakTestOptions {
  * Creates a memory leak test factory
  * Useful for testing that event listeners and references are properly cleaned up
  */
-export function createMemoryLeakTest<T>(
+export function createMemoryLeakTest<T extends WeakKey>(
   setupFn: () => { ref: WeakRef<T>, cleanup: () => void },
   options: MemoryLeakTestOptions = {},
 ) {
@@ -150,7 +149,7 @@ export function createMemoryLeakTest<T>(
 
   return async () => {
     const refs: WeakRef<T>[] = []
-    const initialMemory = process.memoryUsage?.()?.heapUsed || 0
+    const initialMemory = process.memoryUsage()?.heapUsed || 0
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       const cycleRefs: WeakRef<T>[] = []
@@ -233,7 +232,6 @@ export function createEventPerformanceMonitor() {
     clear: () => { measurements.length = 0 },
 
     assertPerformance: (operation: string, maxDuration: number) => {
-      const measurements = this.getMeasurements()
       const relevantMeasurements = measurements.filter(m => m.operation === operation)
       if (relevantMeasurements.length === 0) return
 

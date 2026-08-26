@@ -75,14 +75,15 @@ describe("SubgraphIO - Input Slot Dual-Nature Behavior", () => {
       internalNode.inputs[0],
       internalNode,
     )
-    new ToInputFromIoNodeLink(
+    const toInputFromIoNodeLink = new ToInputFromIoNodeLink(
       subgraph,
       subgraph.inputNode,
       subgraph.inputNode.slots[0],
       undefined,
       LinkDirection.CENTER,
       link,
-    ).disconnect()
+    )
+    toInputFromIoNodeLink.disconnect()
 
     expect(internalNode.inputs[0].link).toBeNull()
     expect(subgraph.inputNode.slots[0].linkIds.length).toBe(0)

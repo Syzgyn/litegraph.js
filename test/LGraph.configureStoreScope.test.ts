@@ -3,6 +3,7 @@ import type { ISerialisedGraph } from "@/litegraph"
 import { describe, expect, test } from "vitest"
 
 import { LGraph, LGraphNode, LiteGraph, renameWidget } from "@/litegraph"
+import { createUuidv4 } from "@/utils/uuid"
 
 class LabelledWidgetNode extends LGraphNode {
   static override title = "LabelledWidget"
@@ -19,9 +20,9 @@ class LabelledWidgetNode extends LGraphNode {
 LiteGraph.registerNodeType("test/LabelledWidget", LabelledWidgetNode)
 
 /**
- * `configure` adopts the payload's graph id (`_configureBase`). Widget display labels are
- * serialised on input slots; without syncing them back onto widgets after configure, a reload
- * can leave stale `IBaseWidget.label` values on in-memory widget instances.
+ * `configure` adopts the payload's graph id when it is not {@link zeroUuid} on a root graph.
+ * Widget display labels are serialised on input slots; without syncing them back onto widgets
+ * after configure, a reload can leave stale `IBaseWidget.label` values on in-memory widget instances.
  */
 describe("LGraph.configure restores widget labels from the payload", () => {
   function addLabelledNode(graph: LGraph, label: string) {
@@ -36,7 +37,9 @@ describe("LGraph.configure restores widget labels from the payload", () => {
   }
 
   test("a reloaded widget label is read from the payload, never inherited from a stale widget", () => {
+    const graphId = createUuidv4()
     const graph = new LGraph()
+    graph.id = graphId
     const dropped = addLabelledNode(graph, "Dropped Label")
     const kept = addLabelledNode(graph, "Kept Label")
 
@@ -49,7 +52,7 @@ describe("LGraph.configure restores widget labels from the payload", () => {
     const restored = new LGraph()
     restored.configure(payload)
 
-    expect(restored.id).toBe(graph.id)
+    expect(restored.id).toBe(graphId)
     expect(restored.getNodeById(dropped.id)!.widgets![0].label).toBeUndefined()
     expect(restored.getNodeById(kept.id)!.widgets![0].label).toBe("Kept Label")
   })

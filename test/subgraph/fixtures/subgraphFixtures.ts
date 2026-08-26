@@ -264,7 +264,7 @@ export function verifyFixtureIntegrity<T extends Record<string, unknown>>(
   expectedProperties: (keyof T)[],
 ): void {
   for (const prop of expectedProperties) {
-    if (!(prop in fixture)) {
+    if (!Object.hasOwn(fixture, prop)) {
       throw new Error(`Fixture missing required property: ${String(prop)}`)
     }
     if (fixture[prop] === undefined || fixture[prop] === null) {

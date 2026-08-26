@@ -21,7 +21,7 @@ describe("SubgraphNode Title Button", () => {
       const button = subgraphNode.title_buttons[0]
       expect(button).toBeInstanceOf(LGraphButton)
       expect(button.name).toBe("enter_subgraph")
-      expect(button.text).toBe("\uE93B") // pi-window-maximize
+      expect(button.text).toBe("\u{E93B}") // pi-window-maximize
       expect(button.xOffset).toBe(-10)
       expect(button.yOffset).toBe(0)
       expect(button.fontSize).toBe(16)
@@ -203,7 +203,7 @@ describe("SubgraphNode Title Button", () => {
       const enterButton = subgraphNode.title_buttons[0]
 
       // Check visual properties
-      expect(enterButton.text).toBe("\uE93B") // pi-window-maximize
+      expect(enterButton.text).toBe("\u{E93B}") // pi-window-maximize
       expect(enterButton.fontSize).toBe(16) // Icon size
       expect(enterButton.xOffset).toBe(-10) // Positioned from right edge
       expect(enterButton.yOffset).toBe(0) // Centered vertically

@@ -219,9 +219,15 @@ describe("SubgraphEvents - Event Handler Isolation", () => {
   subgraphTest("maintains handler execution order", ({ emptySubgraph }) => {
     const executionOrder: number[] = []
 
-    const handler1 = vi.fn(() => executionOrder.push(1))
-    const handler2 = vi.fn(() => executionOrder.push(2))
-    const handler3 = vi.fn(() => executionOrder.push(3))
+    const handler1 = vi.fn(() => {
+      executionOrder.push(1)
+    })
+    const handler2 = vi.fn(() => {
+      executionOrder.push(2)
+    })
+    const handler3 = vi.fn(() => {
+      executionOrder.push(3)
+    })
 
     emptySubgraph.events.addEventListener("input-added", handler1)
     emptySubgraph.events.addEventListener("input-added", handler2)
