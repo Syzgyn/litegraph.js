@@ -5,8 +5,8 @@ import { evaluateMathExpression } from "@/utils/mathParser"
 
 /**
  * The step value for numeric widgets.
- * Use {@link IWidgetOptions.step2} if available, otherwise fallback to
- * {@link IWidgetOptions.step} which is scaled up by 10x in the legacy frontend logic.
+ * Use `IWidgetOptions.step2` if available, otherwise fallback to
+ * `IWidgetOptions.step` which is scaled up by 10x in the legacy frontend logic.
  */
 export function getWidgetStep(options: IWidgetOptions<unknown>): number {
   return options.step2 || ((options.step || 10) * 0.1)
@@ -45,7 +45,7 @@ export function renameWidget(
  * Copies widget input slot labels onto their linked widgets after configure.
  *
  * Serialised labels are stored on input slots; widgets must be updated explicitly
- * so a reload never inherits a stale {@link IBaseWidget.label}.
+ * so a reload never inherits a stale `IBaseWidget.label`.
  */
 export function syncWidgetLabelsFromInputs(node: LGraphNode): void {
   const { widgets, inputs } = node

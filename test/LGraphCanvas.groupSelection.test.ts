@@ -1,16 +1,16 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { CanvasPointerEvent } from "@/types/events"
 
-import type { CanvasPointerEvent } from '@/types/events'
+import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import {
   LGraph,
   LGraphCanvas,
   LGraphGroup,
-  LGraphNode
-} from '@/litegraph'
+  LGraphNode,
+} from "@/litegraph"
 
 function createCanvas(graph: LGraph): LGraphCanvas {
-  const el = document.createElement('canvas')
+  const el = document.createElement("canvas")
   el.width = 800
   el.height = 600
 
@@ -38,13 +38,13 @@ function createCanvas(graph: LGraph): LGraphCanvas {
     getTransform: vi
       .fn()
       .mockReturnValue({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
-    font: '',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    fillStyle: "",
+    strokeStyle: "",
     lineWidth: 1,
     globalAlpha: 1,
-    textAlign: 'left' as CanvasTextAlign,
-    textBaseline: 'alphabetic' as CanvasTextBaseline
+    textAlign: "left" as CanvasTextAlign,
+    textBaseline: "alphabetic" as CanvasTextBaseline,
   } satisfies Partial<CanvasRenderingContext2D>
 
   el.getContext = vi
@@ -54,7 +54,7 @@ function createCanvas(graph: LGraph): LGraphCanvas {
     left: 0,
     top: 0,
     width: 800,
-    height: 600
+    height: 600,
   })
 
   return new LGraphCanvas(el, graph, { skip_render: true })
@@ -62,11 +62,11 @@ function createCanvas(graph: LGraph): LGraphCanvas {
 
 class TestNode extends LGraphNode {
   constructor() {
-    super('test')
+    super("test")
   }
 }
 
-describe('LGraphCanvas group selection', () => {
+describe("LGraphCanvas group selection", () => {
   let graph: LGraph
   let canvas: LGraphCanvas
   let group: LGraphGroup
@@ -79,7 +79,7 @@ describe('LGraphCanvas group selection', () => {
     graph = new LGraph()
     canvas = createCanvas(graph)
 
-    group = new LGraphGroup('TestGroup')
+    group = new LGraphGroup("TestGroup")
     group._bounding.set([0, 0, 500, 500])
     graph.add(group)
 
@@ -94,12 +94,12 @@ describe('LGraphCanvas group selection', () => {
     group.recomputeInsideNodes()
   })
 
-  describe('select with groupSelectChildren enabled', () => {
+  describe("select with groupSelectChildren enabled", () => {
     beforeEach(() => {
       canvas.groupSelectChildren = true
     })
 
-    test('selects all children when selecting a group', () => {
+    test("selects all children when selecting a group", () => {
       canvas.select(group)
 
       expect(group.selected).toBe(true)
@@ -110,8 +110,8 @@ describe('LGraphCanvas group selection', () => {
       expect(canvas.selectedItems.has(nodeB)).toBe(true)
     })
 
-    test('recursively selects nested group children', () => {
-      const innerGroup = new LGraphGroup('InnerGroup')
+    test("recursively selects nested group children", () => {
+      const innerGroup = new LGraphGroup("InnerGroup")
       innerGroup._bounding.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
@@ -130,8 +130,8 @@ describe('LGraphCanvas group selection', () => {
       expect(canvas.selectedItems.has(innerNode)).toBe(true)
     })
 
-    test('selects descendants of already-selected nested groups', () => {
-      const innerGroup = new LGraphGroup('InnerGroup')
+    test("selects descendants of already-selected nested groups", () => {
+      const innerGroup = new LGraphGroup("InnerGroup")
       innerGroup._bounding.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
@@ -153,7 +153,7 @@ describe('LGraphCanvas group selection', () => {
       expect(canvas.selectedItems.has(innerNode)).toBe(true)
     })
 
-    test('handles deeply nested groups (depth 5)', () => {
+    test("handles deeply nested groups (depth 5)", () => {
       const groups: LGraphGroup[] = [group]
       const nodes: TestNode[] = [nodeA, nodeB]
 
@@ -190,12 +190,12 @@ describe('LGraphCanvas group selection', () => {
     })
   })
 
-  describe('select with groupSelectChildren disabled', () => {
+  describe("select with groupSelectChildren disabled", () => {
     beforeEach(() => {
       canvas.groupSelectChildren = false
     })
 
-    test('does not select children when selecting a group', () => {
+    test("does not select children when selecting a group", () => {
       canvas.select(group)
 
       expect(group.selected).toBe(true)
@@ -206,12 +206,12 @@ describe('LGraphCanvas group selection', () => {
     })
   })
 
-  describe('deselect with groupSelectChildren enabled', () => {
+  describe("deselect with groupSelectChildren enabled", () => {
     beforeEach(() => {
       canvas.groupSelectChildren = true
     })
 
-    test('deselects all children when deselecting a group', () => {
+    test("deselects all children when deselecting a group", () => {
       canvas.select(group)
       expect(nodeA.selected).toBe(true)
 
@@ -224,8 +224,8 @@ describe('LGraphCanvas group selection', () => {
       expect(canvas.selectedItems.has(nodeA)).toBe(false)
     })
 
-    test('recursively deselects nested group children', () => {
-      const innerGroup = new LGraphGroup('InnerGroup')
+    test("recursively deselects nested group children", () => {
+      const innerGroup = new LGraphGroup("InnerGroup")
       innerGroup._bounding.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
@@ -245,7 +245,7 @@ describe('LGraphCanvas group selection', () => {
       expect(innerNode.selected).toBe(false)
     })
 
-    test('handles deeply nested deselection (depth 5)', () => {
+    test("handles deeply nested deselection (depth 5)", () => {
       const groups: LGraphGroup[] = [group]
       const nodes: TestNode[] = [nodeA, nodeB]
 
@@ -282,12 +282,12 @@ describe('LGraphCanvas group selection', () => {
     })
   })
 
-  describe('processSelect modifier-click deselect', () => {
+  describe("processSelect modifier-click deselect", () => {
     beforeEach(() => {
       canvas.groupSelectChildren = true
     })
 
-    test('modifier-click deselects only the group, not its children', () => {
+    test("modifier-click deselects only the group, not its children", () => {
       canvas.select(group)
       expect(group.selected).toBe(true)
       expect(nodeA.selected).toBe(true)
@@ -304,7 +304,7 @@ describe('LGraphCanvas group selection', () => {
       expect(canvas.selectedItems.has(nodeB)).toBe(true)
     })
 
-    test('ctrl-click deselects only the group, not its children', () => {
+    test("ctrl-click deselects only the group, not its children", () => {
       canvas.select(group)
 
       const ctrlEvent = { ctrlKey: true } as CanvasPointerEvent
@@ -316,8 +316,8 @@ describe('LGraphCanvas group selection', () => {
     })
   })
 
-  describe('deselect with groupSelectChildren disabled', () => {
-    test('does not deselect children when deselecting a group', () => {
+  describe("deselect with groupSelectChildren disabled", () => {
+    test("does not deselect children when deselecting a group", () => {
       canvas.groupSelectChildren = true
       canvas.select(group)
 
@@ -330,14 +330,14 @@ describe('LGraphCanvas group selection', () => {
     })
   })
 
-  describe('deleteSelected with groupSelectChildren enabled', () => {
+  describe("deleteSelected with groupSelectChildren enabled", () => {
     beforeEach(() => {
       canvas.groupSelectChildren = true
       // Attach canvas to DOM so checkPanels() can query parentNode
-      document.body.appendChild(canvas.canvas)
+      document.body.append(canvas.canvas)
     })
 
-    test('deletes group and all selected children', () => {
+    test("deletes group and all selected children", () => {
       canvas.select(group)
 
       expect(canvas.selectedItems.size).toBeGreaterThan(1)

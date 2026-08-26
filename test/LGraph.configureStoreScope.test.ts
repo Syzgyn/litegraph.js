@@ -21,7 +21,7 @@ LiteGraph.registerNodeType("test/LabelledWidget", LabelledWidgetNode)
 /**
  * `configure` adopts the payload's graph id (`_configureBase`). Widget display labels are
  * serialised on input slots; without syncing them back onto widgets after configure, a reload
- * can leave stale {@link IBaseWidget.label} values on in-memory widget instances.
+ * can leave stale `IBaseWidget.label` values on in-memory widget instances.
  */
 describe("LGraph.configure restores widget labels from the payload", () => {
   function addLabelledNode(graph: LGraph, label: string) {

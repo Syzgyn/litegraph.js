@@ -446,7 +446,7 @@ export class ContextMenu<TValue = unknown> {
    * Returns the originating mouse event from the root menu's options.
    *
    * Used to recover the pointer position that opened the menu hierarchy.
-   * @returns The first {@link IContextMenuOptions.event} in the parent chain, or `undefined`.
+   * @returns The first `IContextMenuOptions.event` in the parent chain, or `undefined`.
    */
   getFirstEvent(): MouseEvent | undefined {
     return this.options.parentMenu

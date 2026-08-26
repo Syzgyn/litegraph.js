@@ -1,5 +1,5 @@
-import type { LGraphCanvas } from "@/LGraphCanvas"
 import type { IContextMenuValue } from "@/interfaces"
+import type { LGraphCanvas } from "@/LGraphCanvas"
 
 /**
  * Simple compatibility layer for legacy getCanvasMenuOptions and getNodeMenuOptions monkey patches.
@@ -21,6 +21,7 @@ class LegacyMenuCompat {
     string,
     ContextMenuValueProvider
   >()
+
   private readonly wrapperInstalled = new Map<string, boolean>()
 
   /**
@@ -43,15 +44,15 @@ class LegacyMenuCompat {
     methodName: K,
     wrapperFn: LGraphCanvas[K],
     preWrapperFn: LGraphCanvas[K],
-    prototype?: LGraphCanvas
+    prototype?: LGraphCanvas,
   ) {
     this.wrapperMethods.set(
       methodName as string,
-      wrapperFn as unknown as ContextMenuValueProvider
+      wrapperFn as unknown as ContextMenuValueProvider,
     )
     this.preWrapperMethods.set(
       methodName as string,
-      preWrapperFn as unknown as ContextMenuValueProvider
+      preWrapperFn as unknown as ContextMenuValueProvider,
     )
     const isInstalled = prototype && prototype[methodName] === wrapperFn
     this.wrapperInstalled.set(methodName as string, !!isInstalled)
@@ -64,14 +65,14 @@ class LegacyMenuCompat {
    */
   install<K extends keyof LGraphCanvas>(
     prototype: LGraphCanvas,
-    methodName: K
+    methodName: K,
   ) {
     if (!ENABLE_LEGACY_SUPPORT) return
 
     const originalMethod = prototype[methodName]
     this.originalMethods.set(
       methodName as string,
-      originalMethod as unknown as ContextMenuValueProvider
+      originalMethod as unknown as ContextMenuValueProvider,
     )
 
     let currentImpl = originalMethod
@@ -88,14 +89,14 @@ class LegacyMenuCompat {
 
           console.warn(
             `%c[DEPRECATED]%c Monkey-patching ${methodName as string} is deprecated. (Extension: "${this.currentExtension}")\n` +
-              `Please use the new context menu API instead.\n\n` +
-              `See: https://docs.comfy.org/custom-nodes/js/context-menu-migration`,
-            'color: orange; font-weight: bold',
-            'color: inherit'
+            `Please use the new context menu API instead.\n\n` +
+            `See: https://docs.comfy.org/custom-nodes/js/context-menu-migration`,
+            "color: orange; font-weight: bold",
+            "color: inherit",
           )
         }
         currentImpl = newImpl
-      }
+      },
     })
   }
 
@@ -108,7 +109,6 @@ class LegacyMenuCompat {
    *
    * Note: If a monkey patch removes items (patchedItems has fewer unique items
    * than originalItems), a warning is logged but we still return any new items.
-   *
    * @param methodName The method name that was monkey-patched
    * @param context The context to call methods with
    * @param args Arguments to pass to the methods
@@ -159,26 +159,26 @@ class LegacyMenuCompat {
       // Create composite keys from multiple properties to handle undefined content
       const createItemKey = (item: IContextMenuValue): string => {
         const parts = [
-          item.content ?? '',
-          item.title ?? '',
-          item.className ?? '',
-          item.property ?? '',
-          item.type ?? ''
+          item.content ?? "",
+          item.title ?? "",
+          item.className ?? "",
+          item.property ?? "",
+          item.type ?? "",
         ]
-        return parts.join('|')
+        return parts.join("|")
       }
 
       const originalKeys = new Set(
         originalItems
           .filter(
             (item): item is IContextMenuValue =>
-              item !== null && typeof item === 'object' && 'content' in item
+              item !== null && typeof item === "object" && "content" in item,
           )
-          .map(createItemKey)
+          .map(createItemKey),
       )
       const addedItems = patchedItems.filter((item) => {
         if (item === null) return false
-        if (typeof item !== 'object' || !('content' in item)) return false
+        if (typeof item !== "object" || !("content" in item)) return false
         return !originalKeys.has(createItemKey(item))
       })
 
@@ -187,23 +187,23 @@ class LegacyMenuCompat {
         patchedItems
           .filter(
             (item): item is IContextMenuValue =>
-              item !== null && typeof item === 'object' && 'content' in item
+              item !== null && typeof item === "object" && "content" in item,
           )
-          .map(createItemKey)
+          .map(createItemKey),
       )
       const removedCount = [...originalKeys].filter(
-        (key) => !patchedKeys.has(key)
+        key => !patchedKeys.has(key),
       ).length
       if (removedCount > 0) {
         console.warn(
           `[Context Menu Compat] Monkey patch for ${methodName} removed ${removedCount} original menu item(s). ` +
-            `This may cause unexpected behavior.`
+          `This may cause unexpected behavior.`,
         )
       }
 
       return addedItems
-    } catch (e) {
-      console.error('[Context Menu Compat] Failed to extract legacy items:', e)
+    } catch (error) {
+      console.error("[Context Menu Compat] Failed to extract legacy items:", error)
       return []
     } finally {
       this.isExtracting = false

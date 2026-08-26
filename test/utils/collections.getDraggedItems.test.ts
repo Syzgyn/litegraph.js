@@ -1,6 +1,7 @@
+import type { Positionable } from "@/interfaces"
+
 import { beforeEach, describe, expect, test } from "vitest"
 
-import type { Positionable } from "@/interfaces"
 import { LGraph, LGraphGroup, LGraphNode } from "@/litegraph"
 import { getDraggedItems } from "@/utils/collections"
 

@@ -135,7 +135,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   constructor(
     /** The actual node that this DTO wraps. */
     readonly node: LGraphNode | SubgraphNode,
-    /** A list of subgraph instance node IDs from the root graph to the containing instance. @see {@link id} */
+    /** A list of subgraph instance node IDs from the root graph to the containing instance. @see `id` */
     readonly subgraphNodePath: readonly NodeId[],
     /** A flattened map of all DTOs in this node network. Subgraph instances have been expanded into their inner nodes. */
     readonly nodesByExecutionId: Map<ExecutionId, ExecutableLGraphNode>,

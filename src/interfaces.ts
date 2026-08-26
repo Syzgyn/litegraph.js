@@ -107,7 +107,7 @@ export interface Positionable extends Parent<Positionable>, HasBoundingRect {
   /** `true` if this object is part of the current selection, otherwise `false`. */
   selected?: boolean
 
-  /** See {@link IPinnable.pinned} */
+  /** See `IPinnable.pinned` */
   readonly pinned?: boolean
 
   /**

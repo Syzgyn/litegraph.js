@@ -84,7 +84,7 @@ export interface SerialisableGraph extends BaseExportedGraph {
 /**
  * Serialisable representation of a node input slot.
  *
- * Omits runtime-only properties ({@link INodeInputSlot.boundingRect}, live widget reference).
+ * Omits runtime-only properties (`INodeInputSlot.boundingRect`, live widget reference).
  * Widget-backed slots serialise a `{ widget: { name } }` reference instead of a position.
  */
 export type ISerialisableNodeInput = Omit<INodeInputSlot, "boundingRect" | "widget"> & {
@@ -95,7 +95,7 @@ export type ISerialisableNodeInput = Omit<INodeInputSlot, "boundingRect" | "widg
 /**
  * Serialisable representation of a node output slot.
  *
- * Omits runtime-only properties ({@link INodeOutputSlot.boundingRect}, {@link INodeOutputSlot._data}).
+ * Omits runtime-only properties (`INodeOutputSlot.boundingRect`, `INodeOutputSlot._data`).
  */
 export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "_data"> & {
   /** Reference to an associated widget, used by some downstream workarounds. */

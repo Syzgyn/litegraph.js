@@ -24,8 +24,8 @@ import type { IBaseWidget, TWidgetValue } from "./types/widgets"
 import type { UUID } from "@/utils/uuid"
 
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID, UNASSIGNED_NODE_ID } from "@/constants"
-import { createUuidv4, zeroUuid } from "@/utils/uuid"
 import { forEachNode } from "@/utils/graphTraversal"
+import { createUuidv4, zeroUuid } from "@/utils/uuid"
 
 import { CustomEventTarget } from "./infrastructure/CustomEventTarget"
 import { LGraphCanvas } from "./LGraphCanvas"
@@ -303,7 +303,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     return this.rootGraph === this
   }
 
-  /** @deprecated See {@link state}.{@link LGraphState.lastNodeId lastNodeId} */
+  /** @deprecated See {@link LGraph.state} `lastNodeId` instead. */
   get last_node_id() {
     return this.state.lastNodeId
   }
@@ -312,7 +312,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.state.lastNodeId = value
   }
 
-  /** @deprecated See {@link state}.{@link LGraphState.lastLinkId lastLinkId} */
+  /** @deprecated See {@link LGraph.state} `lastLinkId` instead. */
   get last_link_id() {
     return this.state.lastLinkId
   }
@@ -769,7 +769,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     /** Ensure type is set */
     type OrderedLGraphNode = LGraphNode & { order: number }
 
-    /** Sets the order property of each provided node to its index in {@link nodes}. */
+    // Sets the order property of each provided node to its index in nodes.
     function setOrder(nodes: LGraphNode[]): asserts nodes is OrderedLGraphNode[] {
       const l = nodes.length
       for (let i = 0; i < l; ++i) {

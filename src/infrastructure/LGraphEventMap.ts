@@ -23,7 +23,7 @@ export interface LGraphEventMap {
   "configuring": {
     /** The serialised graph payload about to be applied. */
     data: ISerialisedGraph | SerialisableGraph
-    /** When `true`, existing nodes and links are cleared before applying {@link data}. */
+    /** When `true`, existing nodes and links are cleared before applying `data`. */
     clearGraph: boolean
   }
 

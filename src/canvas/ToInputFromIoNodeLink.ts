@@ -126,8 +126,9 @@ export class ToInputFromIoNodeLink implements RenderLink {
       existingLink &&
       node.id === existingLink.target_id &&
       node.inputs[existingLink.target_slot] === input
-    )
+    ) {
       return
+    }
 
     const newLink = fromSlot.connect(input, node, fromReroute?.id)
 

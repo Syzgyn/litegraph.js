@@ -389,7 +389,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   private _previously_dragging_canvas: boolean | null = null
 
   // #region Legacy accessors
-  /** @deprecated @inheritdoc {@link LGraphCanvasState.readOnly} */
+  /** @deprecated Use {@link LGraphCanvas.state} `readOnly` instead. */
   get read_only(): boolean {
     return this.state.readOnly
   }
@@ -426,7 +426,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     return this.pointer.isDouble
   }
 
-  /** @deprecated @inheritdoc {@link LGraphCanvasState.draggingCanvas} */
+  /** @deprecated Use {@link LGraphCanvas.state} `draggingCanvas` instead. */
   get dragging_canvas(): boolean {
     return this.state.draggingCanvas
   }
@@ -3085,7 +3085,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     if (e.isPrimary) pointer.move(e)
 
-    /** See {@link state}.{@link LGraphCanvasState.hoveringOver hoveringOver} */
+    // See this.state.hoveringOver
     let underPointer = CanvasItem.Nothing
     if (subgraph) {
       underPointer |= subgraph.inputNode.onPointerMove(e)
@@ -5935,11 +5935,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       num_sublines = 1,
       disabled = false,
     }: {
-      /** When defined, render data will be saved to this reroute instead of the {@link link}. */
+      /** When defined, render data will be saved to this reroute instead of the `link` parameter. */
       reroute?: Reroute
-      /** Offset of the bezier curve control point from {@link a point a} (output side) */
+      /** Offset of the bezier curve control point from point `a` (output side) */
       startControl?: ReadOnlyPoint
-      /** Offset of the bezier curve control point from {@link b point b} (input side) */
+      /** Offset of the bezier curve control point from point `b` (input side) */
       endControl?: ReadOnlyPoint
       /** Number of sublines (useful to represent vec3 or rgb) @todo If implemented, refactor calculations out of the loop */
       num_sublines?: number
@@ -5979,7 +5979,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const innerA = LGraphCanvas.#lTempA
     const innerB = LGraphCanvas.#lTempB
 
-    /** Reference to {@link reroute._pos} if present, or {@link link._pos} if present.  Caches the centre point of the link. */
+    // Reference to reroute._pos if present, or link._pos if present. Caches the centre point of the link.
     const pos: Point = linkSegment?._pos ?? [0, 0]
 
     for (let i = 0; i < num_sublines; i++) {

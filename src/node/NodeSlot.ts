@@ -70,7 +70,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
     return this.#node
   }
 
-  /** Colour used for the slot label when {@link IDrawOptions.highlight} is `true`. */
+  /** Colour used for the slot label when `IDrawOptions.highlight` is `true`. */
   get highlightColor(): CanvasColour {
     return LiteGraph.NODE_TEXT_HIGHLIGHT_COLOR ?? LiteGraph.NODE_SELECTED_TITLE_COLOR ?? LiteGraph.NODE_TEXT_COLOR
   }

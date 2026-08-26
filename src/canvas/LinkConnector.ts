@@ -12,9 +12,9 @@ import type { IBaseWidget } from "@/types/widgets"
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 import { CustomEventTarget } from "@/infrastructure/CustomEventTarget"
 import { LLink } from "@/LLink"
-import { Subgraph } from "@/subgraph/Subgraph"
 import { EmptySubgraphInput } from "@/subgraph/EmptySubgraphInput"
 import { EmptySubgraphOutput } from "@/subgraph/EmptySubgraphOutput"
+import { Subgraph } from "@/subgraph/Subgraph"
 import { SubgraphInputNode } from "@/subgraph/SubgraphInputNode"
 import { SubgraphOutputNode } from "@/subgraph/SubgraphOutputNode"
 import { LinkDirection } from "@/types/globalEnums"
@@ -685,7 +685,7 @@ export class LinkConnector {
         link.connectToSubgraphOutput(targetSlot, this.events)
 
         if (output instanceof EmptySubgraphOutput && ioNode.slots.length > 0) {
-          const createdSlot = ioNode.slots[ioNode.slots.length - 1]
+          const createdSlot = ioNode.slots.at(-1)
           const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
           if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
             targetSlot = createdSlot
@@ -717,7 +717,7 @@ export class LinkConnector {
         link.connectToSubgraphInput(targetSlot, this.events)
 
         if (input instanceof EmptySubgraphInput && ioNode.slots.length > 0) {
-          const createdSlot = ioNode.slots[ioNode.slots.length - 1]
+          const createdSlot = ioNode.slots.at(-1)
           const nextLink = renderLinks[renderLinks.indexOf(link) + 1]
           if (nextLink && link.fromSlot.type === nextLink.fromSlot.type) {
             targetSlot = createdSlot

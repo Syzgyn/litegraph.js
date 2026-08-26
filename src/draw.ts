@@ -238,7 +238,7 @@ function truncateTextToWidth(ctx: CanvasRenderingContext2D, text: string, maxWid
 /**
  * Draws text within an area, truncating it and adding an ellipsis if necessary.
  *
- * Uses binary search to fit the string within {@link IDrawTextInAreaOptions.area} width.
+ * Uses binary search to fit the string within `IDrawTextInAreaOptions.area` width.
  * When truncated, the ellipsis is right-aligned within the area.
  * @param options Canvas context, text, bounding area, and optional alignment.
  */

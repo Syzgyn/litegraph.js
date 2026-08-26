@@ -245,7 +245,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /** Pixel size of edge resize hit areas. */
   static resizeEdgeSize = 5
 
-  /** Default setting for {@link LGraphNode.connectInputToOutput}. @see {@link INodeFlags.keepAllLinksOnBypass} */
+  /** Default setting for {@link LGraphNode.connectInputToOutput}. @see `keepAllLinksOnBypass` on `INodeFlags` */
   static keepAllLinksOnBypass: boolean = false
 
   /** The title text of the node. */
@@ -354,7 +354,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return LiteGraph.NODE_DEFAULT_BOXCOLOR
   }
 
-  /** @inheritdoc {@link IColorable.setColorOption} */
+  /** @inheritdoc */
   setColorOption(colorOption: ColorOption | null): void {
     if (colorOption == null) {
       delete this.color
@@ -365,7 +365,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
   }
 
-  /** @inheritdoc {@link IColorable.getColorOption} */
+  /** @inheritdoc */
   getColorOption(): ColorOption | null {
     return Object.values(LGraphCanvas.node_colors).find(
       colorOption =>
@@ -3762,13 +3762,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    *
    * Each input is checked against each output.  This is done on a matching index basis, i.e. input 3 -> output 3.
    * If there are any input links remaining,
-   * and {@link flags}.{@link INodeFlags.keepAllLinksOnBypass keepAllLinksOnBypass} is `true`,
+   * and {@link flags} `keepAllLinksOnBypass` is `true`,
    * each input will check for outputs that match, and take the first one that matches
    * `true`: Try the index matching first, then every input to every output.
    * `false`: Only matches indexes, e.g. input 3 to output 3.
    *
-   * If {@link flags}.{@link INodeFlags.keepAllLinksOnBypass keepAllLinksOnBypass} is `undefined`, it will fall back to
-   * the static {@link keepAllLinksOnBypass}.
+   * If {@link flags} `keepAllLinksOnBypass` is `undefined`, it will fall back to
+   * the static {@link LGraphNode.keepAllLinksOnBypass}.
    * @returns `true` if any new links were established, otherwise `false`.
    * @todo Decision: Change API to return array of new links instead?
    */
@@ -3927,7 +3927,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     for (const [slotIndex, slot] of this.#concreteInputs.entries()) {
       // Unrecognized nodes (Nodes with error) has inputs but no widgets. Treat
       // converted inputs as normal inputs.
-      /** Widget input slots are handled in {@link layoutWidgetInputSlots} */
+      // Widget input slots are handled in layoutWidgetInputSlots
       if (this.widgets?.length && isWidgetInputSlot(slot)) continue
 
       this.#measureSlot(slot, slotIndex, true)
@@ -4017,8 +4017,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Arranges the node's widgets vertically.
    * Sets following properties on each widget:
-   * -  {@link IBaseWidget.computedHeight}
-   * -  {@link IBaseWidget.y}
+   * -  `computedHeight`
+   * -  `y`
    * @param widgetStartY The y-coordinate of the first widget
    */
   #arrangeWidgets(widgetStartY: number): void {

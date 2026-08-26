@@ -86,7 +86,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   _children: Set<Positionable> = new Set()
   /** The {@link LGraph} that owns this group, set by {@link LGraph.add}. */
   graph?: LGraph
-  /** Persistent flags such as {@link IGraphGroupFlags.pinned pinned}. */
+  /** Persistent flags such as the `pinned` flag on {@link flags}. */
   flags: IGraphGroupFlags = {}
   /** Whether the group is currently selected on the canvas. */
   selected?: boolean
@@ -109,7 +109,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     this.color = pale_blue ? pale_blue.groupcolor : "#AAA"
   }
 
-  /** @inheritdoc {@link IColorable.setColorOption} */
+  /** @inheritdoc */
   setColorOption(colorOption: ColorOption | null): void {
     if (colorOption == null) {
       delete this.color
@@ -118,7 +118,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     }
   }
 
-  /** @inheritdoc {@link IColorable.getColorOption} */
+  /** @inheritdoc */
   getColorOption(): ColorOption | null {
     return Object.values(LGraphCanvas.node_colors).find(
       colorOption => colorOption.groupcolor === this.color,
@@ -168,7 +168,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     return this._children
   }
 
-  /** Whether {@link IGraphGroupFlags.pinned} is set on {@link flags}. */
+  /** Whether the `pinned` flag is set on {@link flags}. */
   get pinned() {
     return !!this.flags.pinned
   }
@@ -475,7 +475,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     )
   }
 
-  /** @inheritdoc Positionable.isPointInside — delegated to {@link LGraphNode.prototype.isPointInside}. */
+  /** @inheritdoc — delegated to {@link LGraphNode.prototype.isPointInside}. */
   isPointInside = LGraphNode.prototype.isPointInside
   /** @inheritdoc — requests a canvas redraw via the owning graph's canvases. */
   setDirtyCanvas = LGraphNode.prototype.setDirtyCanvas

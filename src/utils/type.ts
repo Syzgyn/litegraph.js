@@ -16,7 +16,7 @@ export function toClass<P, C extends P, Args extends unknown[]>(
 }
 
 /**
- * Checks if an object is an instance of {@link IColorable}.
+ * Checks if an object is an instance of `IColorable`.
  */
 export function isColorable(obj: unknown): obj is IColorable {
   return typeof obj === "object" && obj !== null && "setColorOption" in obj && "getColorOption" in obj
@@ -38,9 +38,10 @@ export function commonType(...types: ISlotType[]): ISlotType | undefined {
 
 function intersection(...sets: string[][]): string[] {
   const itemCounts: Record<string, number> = {}
-  for (const set of sets)
+  for (const set of sets) {
     for (const item of new Set(set))
       itemCounts[item] = (itemCounts[item] ?? 0) + 1
+  }
   return Object.entries(itemCounts)
     .filter(([, count]) => count === sets.length)
     .map(([key]) => key)

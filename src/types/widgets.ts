@@ -24,7 +24,7 @@ export interface IWidgetOptions<TValues = unknown[]> {
   /** When `true`, the widget cannot be edited by the user. */
   read_only?: boolean
   /**
-   * @deprecated Use {@link IWidgetOptions.step2} instead.
+   * @deprecated Use `IWidgetOptions.step2` instead.
    * The legacy step is scaled up by 10x in the legacy frontend logic.
    */
   step?: number
@@ -219,7 +219,7 @@ export interface IBaseWidget<
    * The y position of the widget after drawing (rendering).
    * @readonly [Computed] This property is computed by the node.
    * @deprecated There is no longer dynamic y adjustment on rendering anymore.
-   * Use {@link IBaseWidget.y} instead.
+   * Use `IBaseWidget.y` instead.
    */
   last_y?: number
 
@@ -227,13 +227,13 @@ export interface IBaseWidget<
   width?: number
   /**
    * Whether the widget is disabled. Disabled widgets are rendered at half opacity.
-   * See also {@link IBaseWidget.computedDisabled}.
+   * See also `IBaseWidget.computedDisabled`.
    */
   disabled?: boolean
 
   /**
    * The disabled state used for rendering based on various conditions including
-   * {@link IBaseWidget.disabled}.
+   * `IBaseWidget.disabled`.
    * @readonly [Computed] This property is computed by the node.
    */
   computedDisabled?: boolean
@@ -285,9 +285,9 @@ export interface IBaseWidget<
   ): void
 
   /**
-   * Compute the size of the widget. Overrides {@link IBaseWidget.computeSize}.
+   * Compute the size of the widget. Overrides `IBaseWidget.computeSize`.
    * @param width The width of the widget.
-   * @deprecated Use {@link IBaseWidget.computeLayoutSize} instead.
+   * @deprecated Use `IBaseWidget.computeLayoutSize` instead.
    * @returns The size of the widget.
    */
   computeSize?(width?: number): Size

@@ -31,7 +31,6 @@ export function warnDeprecated(message: string, source?: object): void {
  * logging a deprecation warning on first access.
  *
  * Warning is deduplicated by {@link warnDeprecated} (once per unique message per session).
- *
  * @param target The object to define the deprecated property on.
  * @param deprecatedKey The old property name to deprecate.
  * @param currentKey The new property name to proxy to.
