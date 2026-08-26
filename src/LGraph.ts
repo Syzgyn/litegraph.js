@@ -1252,7 +1252,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @returns The group or null
    */
   getGroupOnPos(x: number, y: number): LGraphGroup | undefined {
-    return this._groups.toReversed().find(g => g.isPointInside(x, y))
+    return this._groups.findLast(g => g.isPointInside(x, y))
   }
 
   /**
@@ -1262,7 +1262,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @returns The group or null
    */
   getGroupTitlebarOnPos(x: number, y: number): LGraphGroup | undefined {
-    return this._groups.toReversed().find(g => g.isPointInTitlebar(x, y))
+    return this._groups.findLast(g => g.isPointInTitlebar(x, y))
   }
 
   /**
@@ -1361,13 +1361,19 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
   }
 
-  /** Undo/redo hook invoked before structural changes. @see {@link onBeforeChange} */
+  /**
+   * Undo/redo hook invoked before structural changes.
+   * @see {@link onBeforeChange}
+   */
   beforeChange(info?: LGraphNode): void {
     this.onBeforeChange?.(this, info)
     this.canvasAction(c => c.onBeforeChange?.(this))
   }
 
-  /** Undo/redo hook invoked after structural changes. @see {@link onAfterChange} */
+  /**
+   * Undo/redo hook invoked after structural changes.
+   * @see {@link onAfterChange}
+   */
   afterChange(info?: LGraphNode | null): void {
     this.onAfterChange?.(this, info)
     this.canvasAction(c => c.onAfterChange?.(this))
@@ -1385,7 +1391,9 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /* Called when something visually changed (not the graph structure). */
-  /** Notifies canvases and {@link on_change} that a visual refresh is needed. */
+  /**
+   * Notifies canvases and {@link on_change} that a visual refresh is needed.
+   */
   change(): void {
     if (LiteGraph.debug) {
       console.log("Graph changed")
@@ -1518,8 +1526,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       if (link.parentId === before.parentId) link.parentId = rerouteId
 
       const reroutes = LLink.getReroutes(this, link)
-      for (const x of reroutes.filter(x => x.parentId === before.parentId)) {
-        x.parentId = rerouteId
+      for (const x of reroutes) {
+        if (x.parentId === before.parentId) {
+          x.parentId = rerouteId
+        }
       }
     }
 
@@ -1529,8 +1539,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       if (link.parentId === before.parentId) link.parentId = rerouteId
 
       const reroutes = LLink.getReroutes(this, link)
-      for (const x of reroutes.filter(x => x.parentId === before.parentId)) {
-        x.parentId = rerouteId
+      for (const x of reroutes) {
+        if (x.parentId === before.parentId) {
+          x.parentId = rerouteId
+        }
       }
     }
 
@@ -2115,10 +2127,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           console.error("Ignoring link to subgraph outside subgraph")
           continue
         }
+        const subgraph = this
+
         if (newLink.tid === UNASSIGNED_NODE_ID) continue
-        const tnode = this.getNodeById(newLink.tid)
+        const tnode = subgraph.getNodeById(newLink.tid)
         if (!tnode) continue
-        created = this.inputNode.slots[newLink.oslot].connect(
+        created = subgraph.inputNode.slots[newLink.oslot].connect(
           tnode.inputs[newLink.tslot],
           tnode,
         )
@@ -2127,10 +2141,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           console.error("Ignoring link to subgraph outside subgraph")
           continue
         }
+        const subgraph = this
+
         if (newLink.oid === UNASSIGNED_NODE_ID) continue
-        const tnode = this.getNodeById(newLink.oid)
+        const tnode = subgraph.getNodeById(newLink.oid)
         if (!tnode) continue
-        created = this.outputNode.slots[newLink.tslot].connect(
+        created = subgraph.outputNode.slots[newLink.tslot].connect(
           tnode.outputs[newLink.oslot],
           tnode,
         )
@@ -2615,11 +2631,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @param URL URL string, or a file/blob to read as JSON.
    * @param callback Called after {@link configure} completes successfully.
    */
-  load(url: string | Blob | URL | File, callback: () => void) {
+  load(URL: string | Blob | URL | File, callback: () => void) {
     const that = this
 
     // from file
-    if (url instanceof Blob || url instanceof File) {
+    if (URL instanceof Blob || URL instanceof File) {
       const reader = new FileReader()
       reader.addEventListener("load", function (event) {
         const result = stringOrEmpty(event.target?.result)
@@ -2628,13 +2644,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         callback?.()
       })
 
-      reader.readAsText(url)
+      reader.readAsText(URL)
       return
     }
 
     // is a string, then an URL
     const req = new XMLHttpRequest()
-    req.open("GET", url, true)
+    req.open("GET", URL, true)
     req.send(null)
     req.addEventListener("load", function () {
       if (req.status !== 200) {

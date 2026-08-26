@@ -82,17 +82,17 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
   const narrowedWidget = widget as RemoveBaseWidgetType<TWidget>
 
   switch (narrowedWidget.type) {
-  case "button": return toClass(ButtonWidget, narrowedWidget, node)
-  case "toggle": return toClass(BooleanWidget, narrowedWidget, node)
-  case "slider": return toClass(SliderWidget, narrowedWidget, node)
-  case "knob": return toClass(KnobWidget, narrowedWidget, node)
-  case "combo": return toClass(ComboWidget, narrowedWidget, node)
-  case "number": return toClass(NumberWidget, narrowedWidget, node)
-  case "string": return toClass(TextWidget, narrowedWidget, node)
-  case "text": return toClass(TextWidget, narrowedWidget, node)
-  default: {
-    if (wrapLegacyWidgets) return toClass(LegacyWidget, widget, node)
-  }
+    case "button": return toClass(ButtonWidget, narrowedWidget, node)
+    case "toggle": return toClass(BooleanWidget, narrowedWidget, node)
+    case "slider": return toClass(SliderWidget, narrowedWidget, node)
+    case "knob": return toClass(KnobWidget, narrowedWidget, node)
+    case "combo": return toClass(ComboWidget, narrowedWidget, node)
+    case "number": return toClass(NumberWidget, narrowedWidget, node)
+    case "string": return toClass(TextWidget, narrowedWidget, node)
+    case "text": return toClass(TextWidget, narrowedWidget, node)
+    default: {
+      if (wrapLegacyWidgets) return toClass(LegacyWidget, widget, node)
+    }
   }
 }
 

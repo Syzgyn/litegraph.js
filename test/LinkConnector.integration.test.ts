@@ -893,7 +893,7 @@ describe("LinkConnector Integration", () => {
 
     const originalParentChain = LLink.getReroutes(graph, toReroute)
 
-    const sortAndJoin = (numbers: Iterable<number>) => [...numbers].sort().join(",")
+    const sortAndJoin = (numbers: Iterable<number>) => [...numbers].sort((a, b) => a - b).join(",")
     const hasIdenticalLinks = (a: Reroute, b: Reroute) =>
       sortAndJoin(a.linkIds) === sortAndJoin(b.linkIds) &&
       sortAndJoin(a.floatingLinkIds) === sortAndJoin(b.floatingLinkIds)

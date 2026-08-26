@@ -68,7 +68,7 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
     if (typeof values === "function") return false
 
     const valuesArray = toArray(values)
-    if (!(valuesArray.length > 1)) return false
+    if (valuesArray.length <= 1) return false
 
     // Edge case where the value is both the first and last item in the list
     const firstValue = valuesArray.at(0)

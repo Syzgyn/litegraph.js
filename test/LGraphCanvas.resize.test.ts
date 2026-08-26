@@ -9,8 +9,10 @@ describe("LGraphCanvas.resize", () => {
   beforeEach(() => {
     originalDPR = window.devicePixelRatio
     parent = document.createElement("div")
-    Object.defineProperty(parent, "offsetWidth", { configurable: true, value: 800 })
-    Object.defineProperty(parent, "offsetHeight", { configurable: true, value: 600 })
+    Object.defineProperties(parent, {
+      offsetWidth: { configurable: true, value: 800 },
+      offsetHeight: { configurable: true, value: 600 },
+    })
     document.body.append(parent)
   })
 

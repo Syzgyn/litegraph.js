@@ -10,7 +10,7 @@ function tokenize(input: string): Token[] | undefined {
     if (gap.trim()) return undefined
     lastIndex = match.index + match[0].length
 
-    if (match[1]) tokens.push({ type: "number", value: parseFloat(match[1]) })
+    if (match[1]) tokens.push({ type: "number", value: Number(match[1]) })
     else tokens.push({ type: "op", value: match[2] })
   }
 

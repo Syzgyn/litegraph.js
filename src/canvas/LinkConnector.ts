@@ -58,13 +58,13 @@ export interface LinkConnectorState {
 
 /** Discriminated union to simplify type narrowing. */
 type RenderLinkUnion =
-  | MovingInputLink
-  | MovingOutputLink
-  | FloatingRenderLink
-  | ToInputRenderLink
-  | ToOutputRenderLink
-  | ToInputFromIoNodeLink
-  | ToOutputFromIoNodeLink
+  | MovingInputLink |
+  MovingOutputLink |
+  FloatingRenderLink |
+  ToInputRenderLink |
+  ToOutputRenderLink |
+  ToInputFromIoNodeLink |
+  ToOutputFromIoNodeLink
 
 /**
  * Snapshot of an in-progress link drag operation, returned by {@link LinkConnector.export}.
@@ -828,7 +828,7 @@ export class LinkConnector {
     const maybeReroutes = reroute.getReroutes()
     if (maybeReroutes === null) throw new Error("Reroute loop detected.")
 
-    const originalReroutes = maybeReroutes.slice(0, -1).reverse()
+    const originalReroutes = maybeReroutes.slice(0, -1).toReversed()
 
     // From reroute to reroute
     if (renderLink instanceof ToInputRenderLink) {

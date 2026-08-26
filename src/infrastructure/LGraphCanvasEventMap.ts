@@ -33,28 +33,28 @@ export interface LGraphCanvasEventMap {
    * `subType` to handle double-clicks, empty-canvas releases, or pre/post change hooks.
    */
   "litegraph:canvas":
-    | { subType: "before-change" | "after-change" }
-    | {
+    | { subType: "before-change" | "after-change" } |
+    {
       /** Pointer released on empty canvas, optionally carrying link-drop context. */
       subType: "empty-release"
       /** The original pointer event, when available. */
       originalEvent?: CanvasPointerEvent
       /** Links that were being dragged when the pointer was released. */
       linkReleaseContext?: { links: ConnectingLink[] }
-    }
-    | {
+    } |
+    {
       /** The user double-clicked a {@link LGraphGroup}. */
       subType: "group-double-click"
       originalEvent?: CanvasPointerEvent
       /** The group that was double-clicked. */
       group: LGraphGroup
-    }
-    | {
+    } |
+    {
       /** The user double-clicked empty canvas space. */
       subType: "empty-double-click"
       originalEvent?: CanvasPointerEvent
-    }
-    | {
+    } |
+    {
       /** The user double-clicked a {@link LGraphNode}. */
       subType: "node-double-click"
       originalEvent?: CanvasPointerEvent

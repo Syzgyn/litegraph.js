@@ -195,18 +195,18 @@ export function addDirectionalOffset(
   out: Point,
 ): void {
   switch (direction) {
-  case LinkDirection.LEFT:
-    out[0] -= amount
-    return
-  case LinkDirection.RIGHT:
-    out[0] += amount
-    return
-  case LinkDirection.UP:
-    out[1] -= amount
-    return
-  case LinkDirection.DOWN:
-    out[1] += amount
-    return
+    case LinkDirection.LEFT:
+      out[0] -= amount
+      return
+    case LinkDirection.RIGHT:
+      out[0] += amount
+      return
+    case LinkDirection.UP:
+      out[1] -= amount
+      return
+    case LinkDirection.DOWN:
+      out[1] += amount
+      return
     // LinkDirection.CENTER: Nothing to do.
   }
 }
@@ -230,54 +230,54 @@ export function rotateLink(
 
   // Normalise to left
   switch (from) {
-  case to:
-  case LinkDirection.CENTER:
-  case LinkDirection.NONE:
-  default:
+    case to:
+    case LinkDirection.CENTER:
+    case LinkDirection.NONE:
+    default:
     // Nothing to do
-    return
+      return
 
-  case LinkDirection.LEFT:
-    x = offset[0]
-    y = offset[1]
-    break
-  case LinkDirection.RIGHT:
-    x = -offset[0]
-    y = -offset[1]
-    break
-  case LinkDirection.UP:
-    x = -offset[1]
-    y = offset[0]
-    break
-  case LinkDirection.DOWN:
-    x = offset[1]
-    y = -offset[0]
-    break
+    case LinkDirection.LEFT:
+      x = offset[0]
+      y = offset[1]
+      break
+    case LinkDirection.RIGHT:
+      x = -offset[0]
+      y = -offset[1]
+      break
+    case LinkDirection.UP:
+      x = -offset[1]
+      y = offset[0]
+      break
+    case LinkDirection.DOWN:
+      x = offset[1]
+      y = -offset[0]
+      break
   }
 
   // Apply new direction
   switch (to) {
-  case LinkDirection.CENTER:
-  case LinkDirection.NONE:
+    case LinkDirection.CENTER:
+    case LinkDirection.NONE:
     // Nothing to do
-    return
+      return
 
-  case LinkDirection.LEFT:
-    offset[0] = x
-    offset[1] = y
-    break
-  case LinkDirection.RIGHT:
-    offset[0] = -x
-    offset[1] = -y
-    break
-  case LinkDirection.UP:
-    offset[0] = y
-    offset[1] = -x
-    break
-  case LinkDirection.DOWN:
-    offset[0] = -y
-    offset[1] = x
-    break
+    case LinkDirection.LEFT:
+      offset[0] = x
+      offset[1] = y
+      break
+    case LinkDirection.RIGHT:
+      offset[0] = -x
+      offset[1] = -y
+      break
+    case LinkDirection.UP:
+      offset[0] = y
+      offset[1] = -x
+      break
+    case LinkDirection.DOWN:
+      offset[0] = -y
+      offset[1] = x
+      break
   }
 }
 

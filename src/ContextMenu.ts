@@ -13,23 +13,32 @@ const ALLOWED_STYLE_PROPS = new Set([
   "border-left",
 ])
 
-DOMPurify.addHook("uponSanitizeAttribute", (_node, data) => {
-  if (data.attrName === "style") {
-    const sanitizedStyle = data.attrValue
-      .split(";")
-      .map(s => s.trim())
-      .filter((s) => {
-        const colonIdx = s.indexOf(":")
-        if (colonIdx === -1) return false
-        const prop = s.slice(0, colonIdx).trim().toLowerCase()
-        return ALLOWED_STYLE_PROPS.has(prop)
-      })
-      .join("; ")
-    data.attrValue = sanitizedStyle
-  }
-})
+let domPurifyStyleHookRegistered = false
+
+function ensureDomPurifyStyleHook(): void {
+  if (domPurifyStyleHookRegistered) return
+  domPurifyStyleHookRegistered = true
+
+  DOMPurify.addHook("uponSanitizeAttribute", (_node, data) => {
+    if (data.attrName === "style") {
+      const sanitizedStyle = data.attrValue
+        .split(";")
+        .map(s => s.trim())
+        .filter((s) => {
+          const colonIdx = s.indexOf(":")
+          if (colonIdx === -1) return false
+          const prop = s.slice(0, colonIdx).trim().toLowerCase()
+          return ALLOWED_STYLE_PROPS.has(prop)
+        })
+        .join("; ")
+      data.attrValue = sanitizedStyle
+    }
+  })
+}
 
 function sanitizeMenuHTML(html: string): string {
+  ensureDomPurifyStyleHook()
+
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
     ALLOWED_ATTR: ["style"],
@@ -299,7 +308,7 @@ export class ContextMenu<TValue = unknown> {
 
     const setAriaExpanded = () => {
       const entries = this.root.querySelectorAll("div.litemenu-entry.has_submenu")
-      if (entries) {
+      if (entries.length > 0) {
         for (const entry of entries) {
           entry.setAttribute("aria-expanded", "false")
         }

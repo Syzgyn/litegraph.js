@@ -89,7 +89,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   }
 
   set pos(value: Point) {
-    if (!(value?.length >= 2))
+    if ((value?.length ?? 0) < 2)
       throw new TypeError("Reroute.pos is an x,y point, and expects an indexable with at least two values.")
     this.#pos[0] = value[0]
     this.#pos[1] = value[1]
@@ -320,7 +320,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * Finds the output node and output slot of the first link passing through this reroute.
    * @returns The output node and output slot of the first link passing through this reroute, or `undefined` if no link is found.
    */
-  findSourceOutput(): { node: LGraphNode, output: INodeOutputSlot } | undefined {
+  findSourceOutput(): undefined | { node: LGraphNode, output: INodeOutputSlot } {
     const link = this.firstLink ?? this.firstFloatingLink
     if (!link) return
 
@@ -511,7 +511,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    */
   calculateAngle(lastRenderTime: number, network: ReadonlyLinkNetwork, linkStart: Point): void {
     // Ensure we run once per render
-    if (!(lastRenderTime > this.#lastRenderTime)) return
+    if (lastRenderTime <= this.#lastRenderTime) return
     this.#lastRenderTime = lastRenderTime
 
     const { id, pos: thisPos } = this

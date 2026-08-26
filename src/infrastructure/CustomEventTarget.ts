@@ -79,7 +79,7 @@ export interface CustomEventDispatcher<
 }
 
 /**
- * Strongly-typed {@link EventTarget} for custom application events.
+ * Strongly-typed {@link EventTarget} for custom app events.
  *
  * Subclass or instantiate directly to emit and listen for events defined by an event-map
  * interface (e.g. {@link LGraphEventMap}, {@link LinkConnectorEventMap}).

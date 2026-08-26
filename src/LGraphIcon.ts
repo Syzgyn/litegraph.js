@@ -23,7 +23,7 @@ export interface LGraphIconOptions {
 /**
  * Icon-font glyph renderer for node badges and buttons.
  *
- * Draws a single unicode character from an icon font (default PrimeIcons), optionally
+ * Draws a single Unicode character from an icon font (default PrimeIcons), optionally
  * inside a filled circle. Used by {@link LGraphBadge} and {@link LGraphButton}.
  * @see {@link LGraphBadge}
  */

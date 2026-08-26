@@ -295,7 +295,7 @@ export class DragAndScale {
       easing = EaseFunction.EASE_IN_OUT_QUAD,
     }: AnimationOptions = {},
   ) {
-    if (!(duration > 0)) throw new RangeError("Duration must be greater than 0")
+    if (duration <= 0) throw new RangeError("Duration must be greater than 0")
 
     const easeFunctions = {
       linear: (t: number) => t,

@@ -17,7 +17,7 @@ import { isInRectangle } from "@/measure"
  * Label width is approximated as `20 + labelLength * 7` pixels. A TODO in the source notes that
  * this should eventually use cached text measurement updated on label change.
  */
-export function getNodeInputOnPos(node: LGraphNode, x: number, y: number): { index: number, input: INodeInputSlot, pos: Point } | undefined {
+export function getNodeInputOnPos(node: LGraphNode, x: number, y: number): undefined | { index: number, input: INodeInputSlot, pos: Point } {
   const { inputs } = node
   if (!inputs) return
 
@@ -53,7 +53,7 @@ export function getNodeInputOnPos(node: LGraphNode, x: number, y: number): { ind
  * @returns The slot index, slot reference, and canvas position when a hit is found;
  * `undefined` when the pointer is not over any output slot.
  */
-export function getNodeOutputOnPos(node: LGraphNode, x: number, y: number): { index: number, output: INodeOutputSlot, pos: Point } | undefined {
+export function getNodeOutputOnPos(node: LGraphNode, x: number, y: number): undefined | { index: number, output: INodeOutputSlot, pos: Point } {
   const { outputs } = node
   if (!outputs) return
 

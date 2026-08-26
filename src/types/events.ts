@@ -93,11 +93,11 @@ export interface CanvasDragEvent extends
  * Each variant is identified by its `subType` field.
  */
 export type CanvasEventDetail =
-  | GenericEventDetail
-  | GroupDoubleClickEventDetail
-  | NodeDoubleClickEventDetail
-  | EmptyDoubleClickEventDetail
-  | EmptyReleaseEventDetail
+  | GenericEventDetail |
+  GroupDoubleClickEventDetail |
+  NodeDoubleClickEventDetail |
+  EmptyDoubleClickEventDetail |
+  EmptyReleaseEventDetail
 
 /** Detail payload for generic before/after change notifications on the canvas. */
 export interface GenericEventDetail {

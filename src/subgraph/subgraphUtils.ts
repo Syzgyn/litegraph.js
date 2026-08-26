@@ -54,24 +54,24 @@ export function splitPositionables(items: Iterable<Positionable>): FilteredItems
 
   for (const item of items) {
     switch (true) {
-    case item instanceof LGraphNode:
-      nodes.add(item)
-      break
-    case item instanceof LGraphGroup:
-      groups.add(item)
-      break
-    case item instanceof Reroute:
-      reroutes.add(item)
-      break
-    case item instanceof SubgraphInputNode:
-      subgraphInputNodes.add(item)
-      break
-    case item instanceof SubgraphOutputNode:
-      subgraphOutputNodes.add(item)
-      break
-    default:
-      unknown.add(item)
-      break
+      case item instanceof LGraphNode:
+        nodes.add(item)
+        break
+      case item instanceof LGraphGroup:
+        groups.add(item)
+        break
+      case item instanceof Reroute:
+        reroutes.add(item)
+        break
+      case item instanceof SubgraphInputNode:
+        subgraphInputNodes.add(item)
+        break
+      case item instanceof SubgraphOutputNode:
+        subgraphOutputNodes.add(item)
+        break
+      default:
+        unknown.add(item)
+        break
     }
   }
 

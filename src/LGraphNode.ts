@@ -234,18 +234,24 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   static filter?: string
   /** When `true`, excluded from node picker lists. */
   static skip_list?: boolean
-  /** Optional node-definition metadata from the host application (e.g. widget value migration maps). */
+  /** Optional node-definition metadata from the host app (e.g. widget value migration maps). */
   static nodeData?: {
     /** Maps legacy `widgets_values` indices to widget names for named-value restore. */
     fallbackWidgetsValuesNames?: string[]
   }
 
-  /** Pixel size of corner resize handles. @see {@link findResizeDirection} */
+  /**
+   * Pixel size of corner resize handles.
+   * @see {@link findResizeDirection}
+   */
   static resizeHandleSize = 15
   /** Pixel size of edge resize hit areas. */
   static resizeEdgeSize = 5
 
-  /** Default setting for {@link LGraphNode.connectInputToOutput}. @see `keepAllLinksOnBypass` on `INodeFlags` */
+  /**
+   * Default setting for {@link LGraphNode.connectInputToOutput}.
+   * @see `keepAllLinksOnBypass` on `INodeFlags`
+   */
   static keepAllLinksOnBypass: boolean = false
 
   /** The title text of the node. */
@@ -304,7 +310,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   locked?: boolean
 
-  /** Execution order, automatically computed during run @see {@link LGraph.computeExecutionOrder} */
+  /**
+   * Execution order, automatically computed during run
+   * @see {@link LGraph.computeExecutionOrder}
+   */
   order: number = 0
   /** Controls when {@link onExecute} runs; see {@link LGraphEventMode}. */
   mode: LGraphEventMode = LGraphEventMode.ALWAYS
@@ -528,28 +537,29 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   set shape(v: RenderShape | "default" | "box" | "round" | "circle" | "card") {
     switch (v) {
-    case "default":
-      delete this._shape
-      break
-    case "box":
-      this._shape = RenderShape.BOX
-      break
-    case "round":
-      this._shape = RenderShape.ROUND
-      break
-    case "circle":
-      this._shape = RenderShape.CIRCLE
-      break
-    case "card":
-      this._shape = RenderShape.CARD
-      break
-    default:
-      this._shape = v
+      case "default":
+        delete this._shape
+        break
+      case "box":
+        this._shape = RenderShape.BOX
+        break
+      case "round":
+        this._shape = RenderShape.ROUND
+        break
+      case "circle":
+        this._shape = RenderShape.CIRCLE
+        break
+      case "card":
+        this._shape = RenderShape.CARD
+        break
+      default:
+        this._shape = v
     }
   }
 
   /**
-   * The shape of the node used for rendering. @see {@link RenderShape}
+   * The shape of the node used for rendering.
+   * @see {@link RenderShape}
    */
   get renderingShape(): RenderShape {
     return this._shape || this.constructor.shape || LiteGraph.NODE_DEFAULT_SHAPE
@@ -718,7 +728,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   getExtraSlotMenuOptions?(this: LGraphNode, slot: IFoundSlot): IContextMenuValue[]
 
   // FIXME: Re-typing
-  /** Handle drag-and-drop of DOM items onto the node. @returns `true` if handled. */
+  /**
+   * Handle drag-and-drop of DOM items onto the node.
+   * @returns `true` if handled.
+   */
   onDropItem?(this: LGraphNode, event: Event): boolean
   onDropData?(
     this: LGraphNode,
@@ -754,7 +767,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onMouseUp?(this: LGraphNode, e: CanvasPointerEvent, pos: Point): void
   /** Called when the pointer enters the node area. */
   onMouseEnter?(this: LGraphNode, e: CanvasPointerEvent): void
-  /** Blocks drag if return value is truthy. @param pos Offset from {@link LGraphNode.pos}. */
+  /**
+   * Blocks drag if return value is truthy.
+   * @param pos Offset from {@link LGraphNode.pos}.
+   */
   onMouseDown?(
     this: LGraphNode,
     e: CanvasPointerEvent,
@@ -768,7 +784,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     pos: Point,
     canvas: LGraphCanvas,
   ): void
-  /** Double-click on the title bar. @param pos Offset from {@link pos}. */
+  /**
+   * Double-click on the title bar.
+   * @param pos Offset from {@link pos}.
+   */
   onNodeTitleDblClick?(
     this: LGraphNode,
     e: CanvasPointerEvent,
@@ -880,8 +899,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       // @ts-expect-error #594
       if (info[j] == null) {
         continue
+      }
       // @ts-expect-error #594
-      } else if (typeof info[j] == "object") {
+      if (typeof info[j] == "object") {
         // @ts-expect-error #594
         if (this[j]?.configure) {
           // @ts-expect-error #594
@@ -1245,7 +1265,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @returns object or null { link: id, name: string, type: string or 0 }
    */
   getInputInfo(slot: number): INodeInputSlot | null {
-    return !this.inputs || !(slot < this.inputs.length)
+    return !this.inputs || (slot >= this.inputs.length)
       ? null
       : this.inputs[slot]
   }
@@ -1323,7 +1343,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @returns object or null { name: string, type: string, links: [ ids of links in number ] }
    */
   getOutputInfo(slot: number): INodeOutputSlot | null {
-    return !this.outputs || !(slot < this.outputs.length)
+    return !this.outputs || (slot >= this.outputs.length)
       ? null
       : this.outputs[slot]
   }
@@ -1424,27 +1444,27 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   changeMode(modeTo: number): boolean {
     switch (modeTo) {
-    case LGraphEventMode.ON_EVENT:
-      break
+      case LGraphEventMode.ON_EVENT:
+        break
 
-    case LGraphEventMode.ON_TRIGGER:
-      this.addOnTriggerInput()
-      this.addOnExecutedOutput()
-      break
+      case LGraphEventMode.ON_TRIGGER:
+        this.addOnTriggerInput()
+        this.addOnExecutedOutput()
+        break
 
-    case LGraphEventMode.NEVER:
-      break
+      case LGraphEventMode.NEVER:
+        break
 
-    case LGraphEventMode.ALWAYS:
-      break
+      case LGraphEventMode.ALWAYS:
+        break
 
       // @ts-expect-error Not impl.
-    case LiteGraph.ON_REQUEST:
-      break
+      case LiteGraph.ON_REQUEST:
+        break
 
-    default:
-      return false
-      break
+      default:
+        return false
+        break
     }
     this.mode = modeTo
     return true
@@ -1940,9 +1960,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         }
       }
     }
+
+    const key = `@${property}`
     // litescene mode using the constructor
     // @ts-expect-error deprecated https://github.com/Comfy-Org/litegraph.js/issues/639
-    if (this.constructor[`@${property}`]) info = this.constructor[`@${property}`]
+    if (this.constructor[key]) info = this.constructor[key]
 
     if (this.constructor.widgets_info?.[property])
       info = this.constructor.widgets_info[property]
@@ -2399,7 +2421,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
     const opts = Object.assign(defaults, options || {})
     const length = slots?.length
-    if (!(length > 0)) return -1
+    if (length <= 0) return -1
 
     for (let i = 0; i < length; ++i) {
       const slot: TSlot & IGenericLinkOrLinks = slots[i]
@@ -2652,7 +2674,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @param type The {@link ISlotType type} of slot to find
    * @returns The index and slot if found, otherwise `undefined`.
    */
-  findOutputByType(type: ISlotType): { index: number, slot: INodeOutputSlot } | undefined {
+  findOutputByType(type: ISlotType): undefined | { index: number, slot: INodeOutputSlot } {
     return findFreeSlotOfType(this.outputs, type, output => !output.links?.length)
   }
 
@@ -2666,7 +2688,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @param type The {@link ISlotType type} of slot to find
    * @returns The index and slot if found, otherwise `undefined`.
    */
-  findInputByType(type: ISlotType): { index: number, slot: INodeInputSlot } | undefined {
+  findInputByType(type: ISlotType): undefined | { index: number, slot: INodeInputSlot } {
     return findFreeSlotOfType(this.inputs, type, input => input.link == null)
   }
 
@@ -3270,7 +3292,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       out[0] = nodeX + inputPos[0]
       out[1] = nodeY + inputPos[1]
       return out
-    } else if (!is_input && outputPos) {
+    }
+    if (!is_input && outputPos) {
       out[0] = nodeX + outputPos[0]
       out[1] = nodeY + outputPos[1]
       return out
@@ -3410,14 +3433,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Loads an image from {@link LiteGraph.node_images_path} for use in custom drawing.
-   * @param url Filename relative to the node images path.
+   * @param URL Filename relative to the node images path.
    * @returns The loading `HTMLImageElement`; `ready` is set when load completes.
    */
-  loadImage(url: string): HTMLImageElement {
+  loadImage(URL: string): HTMLImageElement {
     interface AsyncImageElement extends HTMLImageElement { ready?: boolean }
 
     const img: AsyncImageElement = new Image()
-    img.src = LiteGraph.node_images_path + url
+    img.src = LiteGraph.node_images_path + URL
     img.ready = false
 
     const dirty = () => this.setDirtyCanvas(true)

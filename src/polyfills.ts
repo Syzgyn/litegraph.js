@@ -26,10 +26,10 @@ export function loadPolyfills() {
       radius: number | number[],
       radius_low: number | number[],
     ) {
-      let top_left_radius = 0
-      let top_right_radius = 0
-      let bottom_left_radius = 0
-      let bottom_right_radius = 0
+      let top_left_radius
+      let top_right_radius
+      let bottom_left_radius
+      let bottom_right_radius
 
       if (radius === 0) {
         this.rect(x, y, w, h)
@@ -88,6 +88,7 @@ export function loadPolyfills() {
   }
 
   if (typeof window != "undefined" && !window["requestAnimationFrame"]) {
+    // eslint-disable-next-line unicorn/no-global-object-property-assignment
     window.requestAnimationFrame =
       // @ts-expect-error Legacy code
       window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||

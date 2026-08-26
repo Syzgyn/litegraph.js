@@ -36,7 +36,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
   has(target: Map<number | string, V>, p: string | symbol): boolean {
     if (typeof p === "symbol") return false
 
-    const int = parseInt(p, 10)
+    const int = Number(p)
     return target.has(!isNaN(int) ? int : p)
   }
 
@@ -58,7 +58,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
     if (p in target) return Reflect.get(target, p, target)
     if (typeof p === "symbol") return
 
-    const int = parseInt(p, 10)
+    const int = Number(p)
     return target.get(!isNaN(int) ? int : p)
   }
 
@@ -72,7 +72,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
   set(target: Map<number | string, V>, p: string | symbol, newValue: any): boolean {
     if (typeof p === "symbol") return false
 
-    const int = parseInt(p, 10)
+    const int = Number(p)
     target.set(!isNaN(int) ? int : p, newValue)
     return true
   }

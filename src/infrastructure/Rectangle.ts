@@ -469,12 +469,12 @@ export class Rectangle extends Float64Array {
  */
 export type ReadOnlyRectangle = Omit<
   ReadOnlyTypedArray<Rectangle>,
-  | "setHeightBottomAnchored"
-  | "setWidthRightAnchored"
-  | "resizeTopLeft"
-  | "resizeBottomLeft"
-  | "resizeTopRight"
-  | "resizeBottomRight"
-  | "resizeBottomRight"
-  | "updateTo"
+  | "setHeightBottomAnchored" |
+  "setWidthRightAnchored" |
+  "resizeTopLeft" |
+  "resizeBottomLeft" |
+  "resizeTopRight" |
+  "resizeBottomRight" |
+  "resizeBottomRight" |
+  "updateTo"
 >

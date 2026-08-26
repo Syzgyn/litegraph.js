@@ -35,6 +35,7 @@ import { loadPolyfills } from "./polyfills"
 export const LiteGraph = new LiteGraphGlobal()
 
 // Load legacy polyfills
+// eslint-disable-next-line unicorn/no-top-level-side-effects
 loadPolyfills()
 
 // Backwards compat

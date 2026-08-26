@@ -227,7 +227,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
    */
   protected showSlotContextMenu(slot: TSlot, event: CanvasPointerEvent): void {
     const options: IContextMenuValue[] = this.#getSlotMenuOptions(slot)
-    if (!(options.length > 0)) return
+    if (options.length <= 0) return
 
     new LiteGraph.ContextMenu(
       options,
@@ -274,23 +274,23 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   #onSlotMenuAction(selectedItem: IContextMenuValue, slot: TSlot, event: CanvasPointerEvent): void {
     switch (selectedItem.value) {
     // Disconnect all links from this output
-    case "disconnect":
-      slot.disconnect()
-      break
+      case "disconnect":
+        slot.disconnect()
+        break
 
-    // Remove the slot
-    case "remove":
-      if (slot !== this.emptySlot) {
-        this.removeSlot(slot)
-      }
-      break
+        // Remove the slot
+      case "remove":
+        if (slot !== this.emptySlot) {
+          this.removeSlot(slot)
+        }
+        break
 
-    // Rename the slot
-    case "rename":
-      if (slot !== this.emptySlot) {
-        this.#promptForSlotRename(slot, event)
-      }
-      break
+        // Rename the slot
+      case "rename":
+        if (slot !== this.emptySlot) {
+          this.#promptForSlotRename(slot, event)
+        }
+        break
     }
 
     this.subgraph.setDirtyCanvas(true, true)

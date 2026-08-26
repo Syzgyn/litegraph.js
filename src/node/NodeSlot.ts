@@ -195,7 +195,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
         const colorMapper = this.isConnected
           ? colorContext.getConnectedColor
           : colorContext.getDisconnectedColor
-        const types = `${this.type}`
+        const types = String(this.type)
           .split(",")
           .map(t => colorMapper(t))
           .slice(0, MAX_MULTITYPE_SLICES)
@@ -203,29 +203,37 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
         if (types.length > 1) {
           doFill = false
           const arcLen = (Math.PI * 2) / types.length
+
+          ctx.save()
+          ctx.translate(pos[0], pos[1])
+
           for (const [idx, type] of types.entries()) {
-            ctx.moveTo(pos[0], pos[1])
-            ctx.fillStyle = type
-            ctx.arc(
-              pos[0],
-              pos[1],
+            const slice = new Path2D()
+            slice.moveTo(0, 0)
+            slice.arc(
+              0,
+              0,
               radius,
               arcLen * idx + ROTATION_OFFSET,
               Math.PI * 2 + ROTATION_OFFSET,
             )
-            ctx.fill()
-            ctx.beginPath()
+            ctx.fillStyle = type
+            // Not an array.fill() call.
+            // eslint-disable-next-line unicorn/no-array-fill-with-reference-type
+            ctx.fill(slice)
           }
-          ctx.save()
-          ctx.strokeStyle = "black"
-          ctx.lineWidth = 0.5
+
+          const separators = new Path2D()
           for (const [idx] of types.entries()) {
-            ctx.moveTo(pos[0], pos[1])
+            separators.moveTo(0, 0)
             const xOffset = Math.cos(arcLen * idx + ROTATION_OFFSET) * radius
             const yOffset = Math.sin(arcLen * idx + ROTATION_OFFSET) * radius
-            ctx.lineTo(pos[0] + xOffset, pos[1] + yOffset)
+            separators.lineTo(xOffset, yOffset)
           }
-          ctx.stroke()
+          ctx.strokeStyle = "black"
+          ctx.lineWidth = 0.5
+          ctx.stroke(separators)
+
           ctx.restore()
           ctx.beginPath()
         }

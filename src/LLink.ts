@@ -162,7 +162,11 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     return this.target_id === -1 && this.target_slot === -1
   }
 
-  /** `true` when either end of the link is floating. @see {@link isFloatingOutput} {@link isFloatingInput} */
+  /**
+   * `true` when either end of the link is floating.
+   * @see {@link isFloatingOutput}
+   * @see {@link isFloatingInput}
+   */
   public get isFloating(): boolean {
     return this.isFloatingOutput || this.isFloatingInput
   }

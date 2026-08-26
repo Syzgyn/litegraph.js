@@ -42,7 +42,7 @@ export function getBoundaryNodes(nodes: LGraphNode[]): IBoundaryNodes | null {
  */
 export function distributeNodes(nodes: LGraphNode[], horizontal?: boolean): void {
   const nodeCount = nodes?.length
-  if (!(nodeCount > 1)) return
+  if (nodeCount <= 1) return
 
   const index = horizontal ? 0 : 1
 
@@ -88,18 +88,18 @@ export function alignNodes(
 
   for (const node of nodes) {
     switch (direction) {
-    case "right":
-      node.pos[0] = boundary.right.pos[0] + boundary.right.size[0] - node.size[0]
-      break
-    case "left":
-      node.pos[0] = boundary.left.pos[0]
-      break
-    case "top":
-      node.pos[1] = boundary.top.pos[1]
-      break
-    case "bottom":
-      node.pos[1] = boundary.bottom.pos[1] + boundary.bottom.size[1] - node.size[1]
-      break
+      case "right":
+        node.pos[0] = boundary.right.pos[0] + boundary.right.size[0] - node.size[0]
+        break
+      case "left":
+        node.pos[0] = boundary.left.pos[0]
+        break
+      case "top":
+        node.pos[1] = boundary.top.pos[1]
+        break
+      case "bottom":
+        node.pos[1] = boundary.bottom.pos[1] + boundary.bottom.size[1] - node.size[1]
+        break
     }
   }
 }

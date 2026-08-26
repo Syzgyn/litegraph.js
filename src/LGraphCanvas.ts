@@ -818,9 +818,15 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** @deprecated Panels */
   NODEPANEL_IS_OPEN?: boolean
 
-  /** Once per frame check of snap to grid value.  @todo Update on change. */
+  /**
+   * Once per frame check of snap to grid value.
+   * @todo Update on change.
+   */
   #snapToGrid?: number
-  /** Set on keydown, keyup. @todo */
+  /**
+   * Set on keydown, keyup.
+   * @todo
+   */
   #shiftDown: boolean = false
 
   /** If true, enable drag zoom. Ctrl+Shift+Drag Up/Down: zoom canvas. */
@@ -847,7 +853,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   onAfterChange?(graph: LGraph): void
   /** Called when {@link clear} resets canvas state. */
   onClear?: () => void
-  /** called after moving a node @deprecated Does not handle multi-node move, and can return the wrong node. */
+  /**
+   * Called after moving a node
+   * @deprecated Does not handle multi-node move, and can return the wrong node.
+   */
   onNodeMoved?: (node_dragged: LGraphNode | undefined) => void
   /** @deprecated Called with the deprecated {@link selected_nodes} when the selection changes. Replacement not yet impl. */
   onSelectionChange?: (selected: Dictionary<Positionable>) => void
@@ -3357,7 +3366,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             this._highlight_pos = reroute.pos
           }
 
-          return underPointer |= CanvasItem.RerouteSlot
+          return underPointer | CanvasItem.RerouteSlot
         }
       }
     }
@@ -3741,17 +3750,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.node_panel?.close()
         this.options_panel?.close()
         if (this.node_panel || this.options_panel) block_default = true
-      } else if (e.keyCode === 65 && e.ctrlKey) {
+      } else if (e.key === "a" && e.ctrlKey) {
         // select all Control A
         this.selectItems()
         block_default = true
-      } else if (e.keyCode === 67 && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+      } else if (e.key === "c" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
         // copy
         if (this.selected_nodes) {
           this.copyToClipboard()
           block_default = true
         }
-      } else if (e.keyCode === 86 && (e.metaKey || e.ctrlKey)) {
+      } else if (e.key === "v" && (e.metaKey || e.ctrlKey)) {
         // paste
         this.pasteFromClipboard({ connectInputs: e.shiftKey })
       } else if (e.key === "Delete" || e.key === "Backspace") {
@@ -4823,25 +4832,27 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             dragDirection,
           )
 
-          ctx.beginPath()
+          const path = new Path2D()
+
           if (connType === LiteGraph.EVENT || connShape === RenderShape.BOX) {
-            ctx.rect(pos[0] - 6 + 0.5, pos[1] - 5 + 0.5, 14, 10)
-            ctx.rect(
+            path.rect(pos[0] - 6 + 0.5, pos[1] - 5 + 0.5, 14, 10)
+            path.rect(
               highlightPos[0] - 6 + 0.5,
               highlightPos[1] - 5 + 0.5,
               14,
               10,
             )
           } else if (connShape === RenderShape.ARROW) {
-            ctx.moveTo(pos[0] + 8, pos[1] + 0.5)
-            ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5)
-            ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5)
-            ctx.closePath()
+            path.moveTo(pos[0] + 8, pos[1] + 0.5)
+            path.lineTo(pos[0] - 4, pos[1] + 6 + 0.5)
+            path.lineTo(pos[0] - 4, pos[1] - 6 + 0.5)
+            path.closePath()
           } else {
-            ctx.arc(pos[0], pos[1], 4, 0, Math.PI * 2)
-            ctx.arc(highlightPos[0], highlightPos[1], 4, 0, Math.PI * 2)
+            path.arc(pos[0], pos[1], 4, 0, Math.PI * 2)
+            path.arc(highlightPos[0], highlightPos[1], 4, 0, Math.PI * 2)
           }
-          ctx.fill()
+          // eslint-disable-next-line unicorn/no-array-fill-with-reference-type
+          ctx.fill(path)
           if (renderLink instanceof MovingInputLink) this.setDirty(false, true)
         }
 
@@ -4859,10 +4870,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           ctx.save()
           ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR
           ctx.lineWidth = 2
-          ctx.beginPath()
-          ctx.moveTo(originX + radius, originY)
-          ctx.arc(originX, originY, radius, 0, Math.PI * 2)
-          ctx.stroke()
+          const path = new Path2D()
+          path.moveTo(originX + radius, originY)
+          path.arc(originX, originY, radius, 0, Math.PI * 2)
+          ctx.stroke(path)
           ctx.restore()
 
           link.disconnectOnDrop = distSquared < radius ** 2
@@ -5384,7 +5395,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // @ts-expect-error TODO: Better value typing
     if (this.onDrawLinkTooltip?.(ctx, link, this) == true) return
 
-    let text: string | null = null
+    let text: string | null
 
     if (typeof data === "number")
       text = data.toFixed(2)
@@ -5943,7 +5954,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       startControl?: ReadOnlyPoint
       /** Offset of the bezier curve control point from point `b` (input side) */
       endControl?: ReadOnlyPoint
-      /** Number of sublines (useful to represent vec3 or rgb) @todo If implemented, refactor calculations out of the loop */
+      /**
+       * Number of sublines (useful to represent vec3 or rgb)
+       * @todo If implemented, refactor calculations out of the loop
+       */
       num_sublines?: number
       /** Whether this is a floating link segment */
       disabled?: boolean
@@ -6123,8 +6137,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         const posD = this.computeConnectionPoint(a, b, 0.76, startDir, endDir)
 
         // compute the angle between them so the arrow points in the right direction
-        let angleA = 0
-        let angleB = 0
+        let angleA: number
+        let angleB: number
         if (this.render_curved_connections) {
           angleA = -Math.atan2(posB[0] - posA[0], posB[1] - posA[1])
           angleB = -Math.atan2(posD[0] - posC[0], posD[1] - posC[1])
@@ -6507,7 +6521,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     let slotX = isFrom ? opts.slotFrom : opts.slotTo
 
-    let iSlotConn: number | false = false
+    let iSlotConn: number | false
     if (nodeX instanceof SubgraphIONodeBase) {
       if (typeof slotX !== "object" || !slotX) {
         console.warn("Cant get slot information", slotX)
@@ -6787,10 +6801,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
           if (node instanceof SubgraphIONodeBase) {
             throw new TypeError("Cannot add floating reroute to Subgraph IO Nodes")
-          } else {
-            const reroute = node.connectFloatingReroute([opts.e.canvasX, opts.e.canvasY], slot, afterRerouteId)
-            if (!reroute) throw new Error("Failed to create reroute")
           }
+
+          const reroute = node.connectFloatingReroute([opts.e.canvasX, opts.e.canvasY], slot, afterRerouteId)
+          if (!reroute) throw new Error("Failed to create reroute")
 
           dirty()
           break
@@ -7221,7 +7235,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           // join node after inserting
           if (options.node_from) {
             // FIXME: any
-            let iS: any = false
+            let iS: any
             switch (typeof options.slot_from) {
               case "string":
                 iS = options.node_from.findOutputSlot(options.slot_from)
@@ -7254,7 +7268,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           }
           if (options.node_to) {
             // FIXME: any
-            let iS: any = false
+            let iS: any
             switch (typeof options.slot_from) {
               case "string":
                 iS = options.node_to.findInputSlot(options.slot_from)
@@ -7297,7 +7311,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const prev = selected
       if (!selected) {
         selected = forward
-          ? helper.childNodes[0]
+          ? helper.firstChild
           : helper.childNodes[helper.childNodes.length]
       } else if (selected instanceof Element) {
         selected.classList.remove("selected")
@@ -7492,7 +7506,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const info = node.getPropertyInfo(property)
     const { type } = info
 
-    let input_html = ""
+    let input_html: string
 
     if (
       type == "string" ||
@@ -7947,6 +7961,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const fUpdate = (name: string, value: string | number | boolean | object | undefined) => {
         if (!this.graph) throw new NullGraphError()
         this.graph.beforeChange(node)
+        const strValue: string = String(value)
         switch (name) {
           case "Title":
             if (typeof value !== "string") throw new TypeError("Attempting to set title to non-string value.")
@@ -7967,11 +7982,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           case "Color":
             if (typeof value !== "string") throw new TypeError("Attempting to set colour to non-string value.")
 
-            if (LGraphCanvas.node_colors[value]) {
-              node.color = LGraphCanvas.node_colors[value].color
-              node.bgcolor = LGraphCanvas.node_colors[value].bgcolor
+            if (LGraphCanvas.node_colors[strValue]) {
+              node.color = LGraphCanvas.node_colors[strValue].color
+              node.bgcolor = LGraphCanvas.node_colors[strValue].bgcolor
             } else {
-              console.warn(`unexpected color: ${value}`)
+              console.warn(`unexpected color: ${strValue}`)
             }
             break
           default:

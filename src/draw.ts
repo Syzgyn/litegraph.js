@@ -63,7 +63,10 @@ export interface IDrawBoundingOptions {
   shape?: RenderShape
   /** The radius of the rounded corners for {@link RenderShape.ROUND} and {@link RenderShape.CARD} */
   round_radius?: number
-  /** Shape will extend above the Y-axis 0 by this amount @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly */
+  /**
+   * Shape will extend above the Y-axis 0 by this amount
+   * @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly
+   */
   title_height?: number
   /** @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly */
   title_mode?: TitleMode
@@ -132,39 +135,39 @@ export function strokeShape(
   // Draw shape based on type
   const [x, y, width, height] = area
   switch (shape) {
-  case RenderShape.BOX: {
-    ctx.rect(
-      x - padding,
-      y - padding,
-      width + 2 * padding,
-      height + 2 * padding,
-    )
-    break
-  }
-  case RenderShape.ROUND:
-  case RenderShape.CARD: {
-    const radius = round_radius + padding
-    const isCollapsed = shape === RenderShape.CARD && collapsed
-    const cornerRadii =
+    case RenderShape.BOX: {
+      ctx.rect(
+        x - padding,
+        y - padding,
+        width + 2 * padding,
+        height + 2 * padding,
+      )
+      break
+    }
+    case RenderShape.ROUND:
+    case RenderShape.CARD: {
+      const radius = round_radius + padding
+      const isCollapsed = shape === RenderShape.CARD && collapsed
+      const cornerRadii =
         isCollapsed || shape === RenderShape.ROUND
           ? [radius]
           : [radius, 2, radius, 2]
-    ctx.roundRect(
-      x - padding,
-      y - padding,
-      width + 2 * padding,
-      height + 2 * padding,
-      cornerRadii,
-    )
-    break
-  }
-  case RenderShape.CIRCLE: {
-    const centerX = x + width / 2
-    const centerY = y + height / 2
-    const radius = Math.max(width, height) / 2 + padding
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
-    break
-  }
+      ctx.roundRect(
+        x - padding,
+        y - padding,
+        width + 2 * padding,
+        height + 2 * padding,
+        cornerRadii,
+      )
+      break
+    }
+    case RenderShape.CIRCLE: {
+      const centerX = x + width / 2
+      const centerY = y + height / 2
+      const radius = Math.max(width, height) / 2 + padding
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+      break
+    }
   }
 
   // Stroke the shape
@@ -186,7 +189,7 @@ export function strokeShape(
  * @returns The truncated text, or the original text if it fits.
  */
 function truncateTextToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
-  if (!(maxWidth > 0)) return ""
+  if (maxWidth <= 0) return ""
 
   // Text fits
   const fullWidth = cachedMeasureText(ctx, text)

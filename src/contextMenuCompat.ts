@@ -78,9 +78,7 @@ class LegacyMenuCompat {
     let currentImpl = originalMethod
 
     Object.defineProperty(prototype, methodName, {
-      get() {
-        return currentImpl
-      },
+      get: () => currentImpl,
       set: (newImpl: LGraphCanvas[K]) => {
         if (!newImpl) return
         const fnKey = `${methodName as string}:${newImpl.toString().slice(0, 100)}`
@@ -129,8 +127,8 @@ class LegacyMenuCompat {
       this.isExtracting = true
 
       const originalItems = originalMethod.apply(context, args) as
-        | (IContextMenuValue | null)[]
-        | undefined
+        | (IContextMenuValue | null)[] |
+        undefined
       if (!originalItems) return []
 
       const currentMethod = context.constructor.prototype[methodName]
@@ -150,8 +148,8 @@ class LegacyMenuCompat {
       const methodToCall = shouldSkipWrapper ? preWrapperMethod : currentMethod
 
       const patchedItems = methodToCall.apply(context, args) as
-        | (IContextMenuValue | null)[]
-        | undefined
+        | (IContextMenuValue | null)[] |
+        undefined
       if (!patchedItems) {
         return []
       }
@@ -174,7 +172,7 @@ class LegacyMenuCompat {
             (item): item is IContextMenuValue =>
               item !== null && typeof item === "object" && "content" in item,
           )
-          .map(createItemKey),
+          .map(item => createItemKey(item)),
       )
       const addedItems = patchedItems.filter((item) => {
         if (item === null) return false
@@ -189,7 +187,7 @@ class LegacyMenuCompat {
             (item): item is IContextMenuValue =>
               item !== null && typeof item === "object" && "content" in item,
           )
-          .map(createItemKey),
+          .map(item => createItemKey(item)),
       )
       const removedCount = [...originalKeys].filter(
         key => !patchedKeys.has(key),

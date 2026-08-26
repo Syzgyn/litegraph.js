@@ -149,9 +149,15 @@ export class LiteGraphGlobal {
   OUTPUT = NodeSlotType.OUTPUT
 
   // TODO: -1 can lead to ambiguity in JS; these should be updated to a more explicit constant or Symbol.
-  /** Event slot type sentinel for outputs. @see {@link NodeSlotType} */
+  /**
+   * Event slot type sentinel for outputs.
+   * @see {@link NodeSlotType}
+   */
   EVENT = -1 as const
-  /** Action slot type sentinel for inputs. @see {@link NodeSlotType} */
+  /**
+   * Action slot type sentinel for inputs.
+   * @see {@link NodeSlotType}
+   */
   ACTION = -1 as const
 
   /** Human-readable node execution mode names. */
@@ -517,7 +523,7 @@ export class LiteGraphGlobal {
     // @ts-expect-error Confirm this function no longer supports string types - base_class should always be an instance not a constructor.
     const class_type = base_class.constructor.type
 
-    let allTypes = []
+    let allTypes
     if (typeof slot_type === "string") {
       allTypes = slot_type.split(",")
     } else if (slot_type == this.EVENT || slot_type == this.ACTION) {
@@ -545,7 +551,7 @@ export class LiteGraphGlobal {
 
       if (!types.includes(type)) {
         types.push(type)
-        types.sort()
+        types.sort((a, b) => a.localeCompare(b))
       }
     }
   }
@@ -579,7 +585,7 @@ export class LiteGraphGlobal {
 
     title = title || base_class.title || type
 
-    let node = null
+    let node
 
     if (this.catch_exceptions) {
       try {
@@ -724,7 +730,10 @@ export class LiteGraphGlobal {
     return target
   }
 
-  /** @see {@link createUuidv4} @inheritdoc */
+  /**
+   * @see {@link createUuidv4}
+   * @inheritdoc
+   */
   uuidv4 = createUuidv4
 
   /**
@@ -810,55 +819,55 @@ export class LiteGraphGlobal {
       console.warn("sMethod=='pointer' && !window.PointerEvent")
       console.log(`Converting pointer[${sEvent}] : down move up cancel enter TO touchstart touchmove touchend, etc ..`)
       switch (sEvent) {
-      case "down": {
-        sMethod = "touch"
-        sEvent = "start"
-        break
-      }
-      case "move": {
-        sMethod = "touch"
-        // sEvent = "move";
-        break
-      }
-      case "up": {
-        sMethod = "touch"
-        sEvent = "end"
-        break
-      }
-      case "cancel": {
-        sMethod = "touch"
-        // sEvent = "cancel";
-        break
-      }
-      case "enter": {
-        console.log("debug: Should I send a move event?") // ???
-        break
-      }
-      // case "over": case "out": not used at now
-      default: {
-        console.warn(`PointerEvent not available in this browser ? The event ${sEvent} would not be called`)
-      }
+        case "down": {
+          sMethod = "touch"
+          sEvent = "start"
+          break
+        }
+        case "move": {
+          sMethod = "touch"
+          // sEvent = "move";
+          break
+        }
+        case "up": {
+          sMethod = "touch"
+          sEvent = "end"
+          break
+        }
+        case "cancel": {
+          sMethod = "touch"
+          // sEvent = "cancel";
+          break
+        }
+        case "enter": {
+          console.log("debug: Should I send a move event?") // ???
+          break
+        }
+        // case "over": case "out": not used at now
+        default: {
+          console.warn(`PointerEvent not available in this browser ? The event ${sEvent} would not be called`)
+        }
       }
     }
 
     switch (sEvent) {
     // @ts-expect-error
     // both pointer and move events
-    case "down": case "up": case "move": case "over": case "out": case "enter":
-    {
-      oDOM.addEventListener(sMethod + sEvent, fCall, capture)
-    }
-    // @ts-expect-error
-    // only pointerevents
-    case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
-    {
-      if (sMethod != "mouse") {
-        return oDOM.addEventListener(sMethod + sEvent, fCall, capture)
+      case "down": case "up": case "move": case "over": case "out": case "enter":
+      {
+        oDOM.addEventListener(sMethod + sEvent, fCall, capture)
       }
-    }
-    // not "pointer" || "mouse"
-    default:
-      return oDOM.addEventListener(sEvent, fCall, capture)
+      // @ts-expect-error
+      // only pointerevents
+      case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
+      {
+        if (sMethod != "mouse") {
+          return oDOM.addEventListener(sMethod + sEvent, fCall, capture)
+        }
+      }
+      // not "pointer" || "mouse"
+      default:
+        return oDOM.addEventListener(sEvent, fCall, capture)
     }
   }
 
@@ -875,23 +884,23 @@ export class LiteGraphGlobal {
     switch (sEvent) {
     // @ts-expect-error
     // both pointer and move events
-    case "down": case "up": case "move": case "over": case "out": case "enter":
-    {
-      if (this.pointerevents_method == "pointer" || this.pointerevents_method == "mouse") {
-        oDOM.removeEventListener(this.pointerevents_method + sEvent, fCall, capture)
+      case "down": case "up": case "move": case "over": case "out": case "enter":
+      {
+        if (this.pointerevents_method == "pointer" || this.pointerevents_method == "mouse") {
+          oDOM.removeEventListener(this.pointerevents_method + sEvent, fCall, capture)
+        }
       }
-    }
-    // @ts-expect-error
-    // only pointerevents
-    case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
-    {
-      if (this.pointerevents_method == "pointer") {
-        return oDOM.removeEventListener(this.pointerevents_method + sEvent, fCall, capture)
+      // @ts-expect-error
+      // only pointerevents
+      case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
+      {
+        if (this.pointerevents_method == "pointer") {
+          return oDOM.removeEventListener(this.pointerevents_method + sEvent, fCall, capture)
+        }
       }
-    }
-    // not "pointer" || "mouse"
-    default:
-      return oDOM.removeEventListener(sEvent, fCall, capture)
+      // not "pointer" || "mouse"
+      default:
+        return oDOM.removeEventListener(sEvent, fCall, capture)
     }
   }
 

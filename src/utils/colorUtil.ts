@@ -5,9 +5,9 @@ export function hexToRgb(hex: string): RGB {
   let g = 0
   let b = 0
   if (hex.length === 4 || hex.length === 5) {
-    r = parseInt(hex[1] + hex[1], 16)
-    g = parseInt(hex[2] + hex[2], 16)
-    b = parseInt(hex[3] + hex[3], 16)
+    r = parseInt(hex.at(1)! + hex.at(1), 16)
+    g = parseInt(hex.at(2)! + hex.at(2), 16)
+    b = parseInt(hex.at(3)! + hex.at(3), 16)
   } else if (hex.length === 7 || hex.length === 9) {
     r = parseInt(hex.slice(1, 3), 16)
     g = parseInt(hex.slice(3, 5), 16)

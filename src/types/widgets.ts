@@ -76,15 +76,15 @@ export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
  * @see ICustomWidget
  */
 export type IWidget =
-  | IBooleanWidget
-  | INumericWidget
-  | IStringWidget
-  | IComboWidget
-  | IStringComboWidget
-  | ICustomWidget
-  | ISliderWidget
-  | IButtonWidget
-  | IKnobWidget
+  | IBooleanWidget |
+  INumericWidget |
+  IStringWidget |
+  IComboWidget |
+  IStringComboWidget |
+  ICustomWidget |
+  ISliderWidget |
+  IButtonWidget |
+  IKnobWidget
 
 /** A boolean toggle widget with on/off states. */
 export interface IBooleanWidget extends IBaseWidget<boolean, "toggle"> {

@@ -300,7 +300,10 @@ export interface LinkSegment {
    */
   _centreAngle?: number
 
-  /** Whether the link is currently being moved. @internal */
+  /**
+   * Whether the link is currently being moved.
+   * @internal
+   */
   _dragging?: boolean
 
   /** Output node ID at the origin of this segment. */
@@ -346,32 +349,32 @@ export type Rect = ArRect | Float32Array | Float64Array
 
 /** A read-only 2D point that will not be modified by consumers. */
 export type ReadOnlyPoint =
-  | readonly [x: number, y: number]
-  | ReadOnlyTypedArray<Float32Array>
-  | ReadOnlyTypedArray<Float64Array>
+  | readonly [x: number, y: number] |
+  ReadOnlyTypedArray<Float32Array> |
+  ReadOnlyTypedArray<Float64Array>
 
 /** A read-only 2D size that will not be modified by consumers. */
 export type ReadOnlySize =
-  | readonly [width: number, height: number]
-  | ReadOnlyTypedArray<Float32Array>
-  | ReadOnlyTypedArray<Float64Array>
+  | readonly [width: number, height: number] |
+  ReadOnlyTypedArray<Float32Array> |
+  ReadOnlyTypedArray<Float64Array>
 
 /** A read-only rectangle `[x, y, width, height]` that will not be modified by consumers. */
 export type ReadOnlyRect =
-  | readonly [x: number, y: number, width: number, height: number]
-  | ReadOnlyTypedArray<Float32Array>
-  | ReadOnlyTypedArray<Float64Array>
+  | readonly [x: number, y: number, width: number, height: number] |
+  ReadOnlyTypedArray<Float32Array> |
+  ReadOnlyTypedArray<Float64Array>
 
 type TypedArrays =
-  | Int8Array
-  | Uint8Array
-  | Uint8ClampedArray
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Float32Array
-  | Float64Array
+  | Int8Array |
+  Uint8Array |
+  Uint8ClampedArray |
+  Int16Array |
+  Uint16Array |
+  Int32Array |
+  Uint32Array |
+  Float32Array |
+  Float64Array
 
 type TypedBigIntArrays = BigInt64Array | BigUint64Array
 

@@ -70,7 +70,7 @@ export interface LGraphEventMap {
   }
 
   /**
-   * The user or host application opened a subgraph for editing.
+   * The user or host app opened a subgraph for editing.
    *
    * Dispatched when navigation switches the active editing context from a parent graph to a
    * nested {@link Subgraph} view.
