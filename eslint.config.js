@@ -74,11 +74,10 @@ export default tseslint.config(
 
       // Temporarily disabled after updating to Unicorn v66
       "unicorn/prefer-private-class-fields": "off",
-      "unicorn/consistent-class-member-order": "off",
+
       "unicorn/no-this-outside-of-class": "off",
       "unicorn/no-break-in-nested-loop": "off",
       "unicorn/prefer-minimal-ternary": "off",
-
       "unicorn/no-declarations-before-early-exit": "off",
       "unicorn/no-array-sort": "off",
       "unicorn/numeric-separators-style": "off",

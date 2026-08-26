@@ -96,6 +96,11 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /** Title text colour, cached until the background colour changes */
   _titleTextColor: string = LGraphGroup.defaultColour
 
+  /** @inheritdoc — delegated to {@link LGraphNode.prototype.isPointInside}. */
+  isPointInside = LGraphNode.prototype.isPointInside
+  /** @inheritdoc — requests a canvas redraw via the owning graph's canvases. */
+  setDirtyCanvas = LGraphNode.prototype.setDirtyCanvas
+
   /**
    * @param title Initial title bar label. Defaults to `"Group"`.
    * @param id Optional ID; if omitted, {@link LGraph.add} assigns one from {@link LGraph.state}.
@@ -474,9 +479,4 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
       x - right + (y - bottom) > -LGraphGroup.resizeLength
     )
   }
-
-  /** @inheritdoc — delegated to {@link LGraphNode.prototype.isPointInside}. */
-  isPointInside = LGraphNode.prototype.isPointInside
-  /** @inheritdoc — requests a canvas redraw via the owning graph's canvases. */
-  setDirtyCanvas = LGraphNode.prototype.setDirtyCanvas
 }

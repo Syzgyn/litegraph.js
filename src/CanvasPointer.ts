@@ -30,16 +30,6 @@ export class CanvasPointer {
   /** Maximum gap between pointerup and pointerdown events to be considered as a double click */
   static doubleClickTime = 300
 
-  /** Maximum offset from click location */
-  static get maxClickDrift() {
-    return this.#maxClickDrift
-  }
-
-  static set maxClickDrift(value) {
-    this.#maxClickDrift = value
-    this.#maxClickDrift2 = value * value
-  }
-
   static #maxClickDrift = 6
   /** {@link maxClickDrift} squared.  Used to calculate click drift without `sqrt`. */
   static #maxClickDrift2 = this.#maxClickDrift ** 2
@@ -59,6 +49,8 @@ export class CanvasPointer {
 
   /** The maximum time in milliseconds to buffer a high-res wheel event. */
   static maxHighResBufferTime = 10
+
+  #finally?: () => unknown
 
   /** The element this PointerState should capture input against when dragging. */
   element: Element
@@ -112,119 +104,18 @@ export class CanvasPointer {
   /** Timer ID for Linux buffer clearing */
   linuxBufferTimeoutId?: ReturnType<typeof setTimeout>
 
-  /**
-   * If set, as soon as the mouse moves outside the click drift threshold, this action is run once.
-   * @param pointer [DEPRECATED] This parameter will be removed in a future release.
-   * @param eMove The pointermove event of this ongoing drag action.
-   *
-   * It is possible for no `pointermove` events to occur, but still be far from
-   * the original `pointerdown` event. In this case, {@link eMove} will be null, and
-   * {@link onDragEnd} will be called immediately after {@link onDragStart}.
-   */
-  onDragStart?(pointer: this, eMove?: CanvasPointerEvent): unknown
-
-  /**
-   * Called on pointermove whilst dragging.
-   * @param eMove The pointermove event of this ongoing drag action
-   */
-  onDrag?(eMove: CanvasPointerEvent): unknown
-
-  /**
-   * Called on pointerup after dragging (i.e. not called if clicked).
-   * @param upEvent The pointerup or pointermove event that triggered this callback
-   */
-  onDragEnd?(upEvent: CanvasPointerEvent): unknown
-
-  /**
-   * Callback that will be run once, the next time a pointerup event appears to be a normal click.
-   * @param upEvent The pointerup or pointermove event that triggered this callback
-   */
-  onClick?(upEvent: CanvasPointerEvent): unknown
-
-  /**
-   * Callback that will be run once, the next time a pointerup event appears to be a normal click.
-   * @param upEvent The pointerup or pointermove event that triggered this callback
-   */
-  onDoubleClick?(upEvent: CanvasPointerEvent): unknown
-
-  /**
-   * Run-once callback, called at the end of any click or drag, whether or not it was successful in any way.
-   *
-   * The setter of this callback will call the existing value before replacing it.
-   * Therefore, simply setting this value twice will execute the first callback.
-   */
-  get finally() {
-    return this.#finally
-  }
-
-  set finally(value) {
-    try {
-      this.#finally?.()
-    } finally {
-      this.#finally = value
-    }
-  }
-
-  #finally?: () => unknown
-
   constructor(element: Element) {
     this.element = element
   }
 
-  /**
-   * Callback for `pointerdown` events.  To be used as the event handler (or called by it).
-   * @param e The `pointerdown` event
-   */
-  down(e: CanvasPointerEvent): void {
-    this.reset()
-    this.eDown = e
-    this.pointerId = e.pointerId
-    this.element.setPointerCapture(e.pointerId)
+  /** Maximum offset from click location */
+  static get maxClickDrift() {
+    return this.#maxClickDrift
   }
 
-  /**
-   * Callback for `pointermove` events.  To be used as the event handler (or called by it).
-   * @param e The `pointermove` event
-   */
-  move(e: CanvasPointerEvent): void {
-    const { eDown } = this
-    if (!eDown) return
-
-    // No buttons down, but eDown exists - clean up & leave
-    if (!e.buttons) {
-      this.reset()
-      return
-    }
-
-    // Primary button released - treat as pointerup.
-    if (!(e.buttons & eDown.buttons)) {
-      this.#completeClick(e)
-      this.reset()
-      return
-    }
-    this.eMove = e
-    this.onDrag?.(e)
-
-    // Dragging, but no callback to run
-    if (this.dragStarted) return
-
-    const longerThanBufferTime = e.timeStamp - eDown.timeStamp > CanvasPointer.bufferTime
-    if (longerThanBufferTime || !this.#hasSamePosition(e, eDown)) {
-      this.#setDragStarted(e)
-    }
-  }
-
-  /**
-   * Callback for `pointerup` events.  To be used as the event handler (or called by it).
-   * @param e The `pointerup` event
-   */
-  up(e: CanvasPointerEvent): boolean {
-    if (e.button !== this.eDown?.button) return false
-
-    this.#completeClick(e)
-    const { dragStarted } = this
-    this.reset()
-    return !dragStarted
+  static set maxClickDrift(value) {
+    this.#maxClickDrift = value
+    this.#maxClickDrift2 = value * value
   }
 
   #completeClick(e: CanvasPointerEvent): void {
@@ -287,31 +178,6 @@ export class CanvasPointer {
     this.dragStarted = true
     this.onDragStart?.(this, eMove)
     delete this.onDragStart
-  }
-
-  /**
-   * Checks if the given wheel event is part of a trackpad gesture.
-   * This method now uses the new device detection internally for improved accuracy.
-   * @param e The wheel event to check
-   * @returns `true` if the event is part of a trackpad gesture, otherwise `false`
-   */
-  isTrackpadGesture(e: WheelEvent): boolean {
-    const now = performance.now()
-    const timeSinceLastEvent = Math.max(0, now - this.lastWheelEventTime)
-    this.lastWheelEventTime = now
-
-    if (this.#isHighResWheelEvent(e, now)) {
-      this.detectedDevice = "mouse"
-    } else if (this.#isWithinCooldown(timeSinceLastEvent)) {
-      if (this.#shouldBufferLinuxEvent(e)) {
-        this.#bufferLinuxEvent(e, now)
-      }
-    } else {
-      this.#updateDeviceMode(e, now)
-      this.hasReceivedWheelEvent = true
-    }
-
-    return this.detectedDevice === "trackpad"
   }
 
   /**
@@ -461,6 +327,140 @@ export class CanvasPointer {
 
     // Check if one value is a multiple of the other
     return absolute1 % absolute2 === 0 || absolute2 % absolute1 === 0
+  }
+
+  /**
+   * If set, as soon as the mouse moves outside the click drift threshold, this action is run once.
+   * @param pointer [DEPRECATED] This parameter will be removed in a future release.
+   * @param eMove The pointermove event of this ongoing drag action.
+   *
+   * It is possible for no `pointermove` events to occur, but still be far from
+   * the original `pointerdown` event. In this case, {@link eMove} will be null, and
+   * {@link onDragEnd} will be called immediately after {@link onDragStart}.
+   */
+  onDragStart?(pointer: this, eMove?: CanvasPointerEvent): unknown
+
+  /**
+   * Called on pointermove whilst dragging.
+   * @param eMove The pointermove event of this ongoing drag action
+   */
+  onDrag?(eMove: CanvasPointerEvent): unknown
+
+  /**
+   * Called on pointerup after dragging (i.e. not called if clicked).
+   * @param upEvent The pointerup or pointermove event that triggered this callback
+   */
+  onDragEnd?(upEvent: CanvasPointerEvent): unknown
+
+  /**
+   * Callback that will be run once, the next time a pointerup event appears to be a normal click.
+   * @param upEvent The pointerup or pointermove event that triggered this callback
+   */
+  onClick?(upEvent: CanvasPointerEvent): unknown
+
+  /**
+   * Callback that will be run once, the next time a pointerup event appears to be a normal click.
+   * @param upEvent The pointerup or pointermove event that triggered this callback
+   */
+  onDoubleClick?(upEvent: CanvasPointerEvent): unknown
+
+  /**
+   * Run-once callback, called at the end of any click or drag, whether or not it was successful in any way.
+   *
+   * The setter of this callback will call the existing value before replacing it.
+   * Therefore, simply setting this value twice will execute the first callback.
+   */
+  get finally() {
+    return this.#finally
+  }
+
+  set finally(value) {
+    try {
+      this.#finally?.()
+    } finally {
+      this.#finally = value
+    }
+  }
+
+  /**
+   * Callback for `pointerdown` events.  To be used as the event handler (or called by it).
+   * @param e The `pointerdown` event
+   */
+  down(e: CanvasPointerEvent): void {
+    this.reset()
+    this.eDown = e
+    this.pointerId = e.pointerId
+    this.element.setPointerCapture(e.pointerId)
+  }
+
+  /**
+   * Callback for `pointermove` events.  To be used as the event handler (or called by it).
+   * @param e The `pointermove` event
+   */
+  move(e: CanvasPointerEvent): void {
+    const { eDown } = this
+    if (!eDown) return
+
+    // No buttons down, but eDown exists - clean up & leave
+    if (!e.buttons) {
+      this.reset()
+      return
+    }
+
+    // Primary button released - treat as pointerup.
+    if (!(e.buttons & eDown.buttons)) {
+      this.#completeClick(e)
+      this.reset()
+      return
+    }
+    this.eMove = e
+    this.onDrag?.(e)
+
+    // Dragging, but no callback to run
+    if (this.dragStarted) return
+
+    const longerThanBufferTime = e.timeStamp - eDown.timeStamp > CanvasPointer.bufferTime
+    if (longerThanBufferTime || !this.#hasSamePosition(e, eDown)) {
+      this.#setDragStarted(e)
+    }
+  }
+
+  /**
+   * Callback for `pointerup` events.  To be used as the event handler (or called by it).
+   * @param e The `pointerup` event
+   */
+  up(e: CanvasPointerEvent): boolean {
+    if (e.button !== this.eDown?.button) return false
+
+    this.#completeClick(e)
+    const { dragStarted } = this
+    this.reset()
+    return !dragStarted
+  }
+
+  /**
+   * Checks if the given wheel event is part of a trackpad gesture.
+   * This method now uses the new device detection internally for improved accuracy.
+   * @param e The wheel event to check
+   * @returns `true` if the event is part of a trackpad gesture, otherwise `false`
+   */
+  isTrackpadGesture(e: WheelEvent): boolean {
+    const now = performance.now()
+    const timeSinceLastEvent = Math.max(0, now - this.lastWheelEventTime)
+    this.lastWheelEventTime = now
+
+    if (this.#isHighResWheelEvent(e, now)) {
+      this.detectedDevice = "mouse"
+    } else if (this.#isWithinCooldown(timeSinceLastEvent)) {
+      if (this.#shouldBufferLinuxEvent(e)) {
+        this.#bufferLinuxEvent(e, now)
+      }
+    } else {
+      this.#updateDeviceMode(e, now)
+      this.hasReceivedWheelEvent = true
+    }
+
+    return this.detectedDevice === "trackpad"
   }
 
   /**

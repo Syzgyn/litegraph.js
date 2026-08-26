@@ -10,6 +10,26 @@
  */
 export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>> {
   /**
+   * Binds Map prototype methods on a proxied instance so `this` refers to the map.
+   *
+   * Required because property access through the proxy can detach method `this` binding.
+   * @param map The map instance to patch in place.
+   */
+  static bindAllMethods(map: Map<any, any>): void {
+    map.clear = map.clear.bind(map)
+    map.delete = map.delete.bind(map)
+    map.forEach = map.forEach.bind(map)
+    map.get = map.get.bind(map)
+    map.has = map.has.bind(map)
+    map.set = map.set.bind(map)
+    map.entries = map.entries.bind(map)
+    map.keys = map.keys.bind(map)
+    map.values = map.values.bind(map)
+
+    map[Symbol.iterator] = map[Symbol.iterator].bind(map)
+  }
+
+  /**
    * Returns a property descriptor when {@link get} would return a defined value.
    * @param target The proxied map.
    * @param p Property key or symbol.
@@ -85,25 +105,5 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
    */
   deleteProperty(target: Map<number | string, V>, p: string | symbol): boolean {
     return target.delete(p as number | string)
-  }
-
-  /**
-   * Binds Map prototype methods on a proxied instance so `this` refers to the map.
-   *
-   * Required because property access through the proxy can detach method `this` binding.
-   * @param map The map instance to patch in place.
-   */
-  static bindAllMethods(map: Map<any, any>): void {
-    map.clear = map.clear.bind(map)
-    map.delete = map.delete.bind(map)
-    map.forEach = map.forEach.bind(map)
-    map.get = map.get.bind(map)
-    map.has = map.has.bind(map)
-    map.set = map.set.bind(map)
-    map.entries = map.entries.bind(map)
-    map.keys = map.keys.bind(map)
-    map.values = map.values.bind(map)
-
-    map[Symbol.iterator] = map[Symbol.iterator].bind(map)
   }
 }

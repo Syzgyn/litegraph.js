@@ -19,9 +19,20 @@ import { isSubgraphInput } from "@/subgraph/subgraphUtils"
  * @see {@link NodeSlot}
  */
 export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
+  #widget: WeakRef<IBaseWidget> | undefined
+
   /** The ID of the {@link LLink} connected to this slot, or `null` if disconnected. */
   link: LinkId | null
   alwaysVisible?: boolean
+
+  /**
+   * @param slot Serialised or partial slot properties used to initialise this instance.
+   * @param node The parent node that owns this input slot.
+   */
+  constructor(slot: OptionalProps<INodeInputSlot, "boundingRect">, node: LGraphNode) {
+    super(slot, node)
+    this.link = slot.link
+  }
 
   /**
    * Whether this input slot is backed by a widget rather than a traditional socket.
@@ -31,8 +42,6 @@ export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
   get isWidgetInputSlot(): boolean {
     return !!this.widget
   }
-
-  #widget: WeakRef<IBaseWidget> | undefined
 
   /**
    * The widget associated with this input slot, if any.
@@ -54,15 +63,6 @@ export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
    */
   get collapsedPos(): ReadOnlyPoint {
     return [0, LiteGraph.NODE_TITLE_HEIGHT * -0.5]
-  }
-
-  /**
-   * @param slot Serialised or partial slot properties used to initialise this instance.
-   * @param node The parent node that owns this input slot.
-   */
-  constructor(slot: OptionalProps<INodeInputSlot, "boundingRect">, node: LGraphNode) {
-    super(slot, node)
-    this.link = slot.link
   }
 
   /** Whether this slot currently has an active link connected to it. */

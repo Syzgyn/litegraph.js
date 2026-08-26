@@ -33,6 +33,12 @@ import { type ExecutableLGraphNode, ExecutableNodeDTO, type ExecutionId } from "
  * @see {@link ExecutableNodeDTO}
  */
 export class SubgraphNode extends LGraphNode implements BaseLGraph {
+  /** Widgets added programmatically outside the promotion system. */
+  readonly #extraWidgets: IBaseWidget[] = []
+
+  /** Manages lifecycle of all subgraph event listeners */
+  #eventAbortController = new AbortController()
+
   /** Input slots mirroring {@link Subgraph.inputs}, with optional subgraph-specific metadata. */
   declare inputs: (INodeInputSlot & Partial<ISubgraphInput>)[]
 
@@ -41,34 +47,8 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
   /** Subgraph instances are virtual nodes whose behaviour is expanded at execution time. */
   override readonly isVirtualNode = true as const
 
-  /** The root graph that ultimately owns this instance's subgraph definition. */
-  get rootGraph(): LGraph {
-    return this.graph!.rootGraph
-  }
-
-  /** `true` when this instance has been removed from its parent graph. */
-  get isDetached(): boolean {
-    return !this.graph
-  }
-
-  /** User-facing type label shown in the node UI. */
-  override get displayType(): string {
-    return "Subgraph node"
-  }
-
-  /** Narrows this node to {@link SubgraphNode} for type guards. */
-  override isSubgraphNode(): this is SubgraphNode {
-    return true
-  }
-
   /** Widgets promoted from internal subgraph inputs and displayed on this node. */
   override widgets: IBaseWidget[] = []
-
-  /** Widgets added programmatically outside the promotion system. */
-  readonly #extraWidgets: IBaseWidget[] = []
-
-  /** Manages lifecycle of all subgraph event listeners */
-  #eventAbortController = new AbortController()
 
   /** The parent graph (root or nested subgraph) containing this instance, or `null` when detached. */
   override graph: GraphOrSubgraph | null
@@ -168,19 +148,6 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     })
   }
 
-  /**
-   * Opens the subgraph editor when the "enter subgraph" title button is clicked.
-   * @param button The title button that was clicked.
-   * @param canvas The active graph canvas.
-   */
-  override onTitleButtonClick(button: LGraphButton, canvas: LGraphCanvas): void {
-    if (button.name === "enter_subgraph") {
-      canvas.openSubgraph(this.subgraph)
-    } else {
-      super.onTitleButtonClick(button, canvas)
-    }
-  }
-
   #addSubgraphInputListeners(subgraphInput: SubgraphInput, input: INodeInputSlot & Partial<ISubgraphInput>) {
     input._subgraphSlot = subgraphInput
     input._listenerController?.abort()
@@ -232,34 +199,6 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     )
   }
 
-  /**
-   * Rebuilds input/output slots from the subgraph definition and applies instance data.
-   * @param info Serialised per-instance node state.
-   */
-  override configure(info: ExportedSubgraphInstance): void {
-    for (const input of this.inputs) {
-      input._listenerController?.abort()
-    }
-
-    this.inputs.length = 0
-    this.inputs.push(
-      ...this.subgraph.inputNode.slots.map((slot) => {
-        const input = new NodeInputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, shape: this.getSlotShape(slot), type: slot.type, link: null }, this) as INodeInputSlot & Partial<ISubgraphInput>
-        input._subgraphSlot = slot
-        return input
-      }),
-    )
-
-    this.outputs.length = 0
-    this.outputs.push(
-      ...this.subgraph.outputNode.slots.map(
-        slot => new NodeOutputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, type: slot.type, links: null }, this),
-      ),
-    )
-
-    super.configure(info)
-  }
-
   #rebindInputSubgraphSlots(): void {
     const subgraphSlots = [...this.subgraph.inputNode.slots]
     const slotsBySignature = new Map<string, SubgraphInput[]>()
@@ -301,6 +240,131 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
         delete input._subgraphSlot
       }
     }
+  }
+
+  #resolveInputWidget(subgraphInput: SubgraphInput, input: INodeInputSlot): void {
+    for (const linkId of subgraphInput.linkIds) {
+      const link = this.subgraph.getLink(linkId)
+      if (!link) {
+        console.warn(`[SubgraphNode.configure] No link found for link ID ${linkId}`, this)
+        continue
+      }
+
+      const resolved = link.resolve(this.subgraph)
+      if (!resolved.input || !resolved.inputNode) {
+        console.warn("Invalid resolved link", resolved, this)
+        continue
+      }
+
+      const widget = resolved.inputNode.getWidgetFromSlot(resolved.input)
+      if (!widget) continue
+
+      this.#setWidget(subgraphInput, input, widget)
+      break
+    }
+  }
+
+  #setWidget(subgraphInput: Readonly<SubgraphInput>, input: INodeInputSlot, widget: Readonly<IBaseWidget>) {
+    // Use the first matching widget
+    const promotedWidget = toConcreteWidget(widget, this).createCopyForNode(this)
+
+    Object.assign(promotedWidget, {
+      get name() {
+        return subgraphInput.name
+      },
+      set name(value) {
+        console.warn("Promoted widget: setting name is not allowed", this, value)
+      },
+      get localized_name() {
+        return subgraphInput.localized_name
+      },
+      set localized_name(value) {
+        console.warn("Promoted widget: setting localized_name is not allowed", this, value)
+      },
+      get label() {
+        return subgraphInput.label
+      },
+      set label(value) {
+        console.warn("Promoted widget: setting label is not allowed", this, value)
+      },
+      get tooltip() {
+        // Preserve the original widget's tooltip for promoted widgets
+        return widget.tooltip
+      },
+      set tooltip(value) {
+        console.warn("Promoted widget: setting tooltip is not allowed", this, value)
+      },
+    })
+
+    this.widgets.push(promotedWidget)
+
+    // Dispatch widget-promoted event
+    this.subgraph.events.dispatch("widget-promoted", { widget: promotedWidget, subgraphNode: this })
+
+    input.widget = { name: subgraphInput.name }
+    input._widget = promotedWidget
+    this._widgetSlotsDirty = true
+  }
+
+  /** The root graph that ultimately owns this instance's subgraph definition. */
+  get rootGraph(): LGraph {
+    return this.graph!.rootGraph
+  }
+
+  /** `true` when this instance has been removed from its parent graph. */
+  get isDetached(): boolean {
+    return !this.graph
+  }
+
+  /** User-facing type label shown in the node UI. */
+  override get displayType(): string {
+    return "Subgraph node"
+  }
+
+  /** Narrows this node to {@link SubgraphNode} for type guards. */
+  override isSubgraphNode(): this is SubgraphNode {
+    return true
+  }
+
+  /**
+   * Opens the subgraph editor when the "enter subgraph" title button is clicked.
+   * @param button The title button that was clicked.
+   * @param canvas The active graph canvas.
+   */
+  override onTitleButtonClick(button: LGraphButton, canvas: LGraphCanvas): void {
+    if (button.name === "enter_subgraph") {
+      canvas.openSubgraph(this.subgraph)
+    } else {
+      super.onTitleButtonClick(button, canvas)
+    }
+  }
+
+  /**
+   * Rebuilds input/output slots from the subgraph definition and applies instance data.
+   * @param info Serialised per-instance node state.
+   */
+  override configure(info: ExportedSubgraphInstance): void {
+    for (const input of this.inputs) {
+      input._listenerController?.abort()
+    }
+
+    this.inputs.length = 0
+    this.inputs.push(
+      ...this.subgraph.inputNode.slots.map((slot) => {
+        const input = new NodeInputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, shape: this.getSlotShape(slot), type: slot.type, link: null }, this) as INodeInputSlot & Partial<ISubgraphInput>
+        input._subgraphSlot = slot
+        return input
+      }),
+    )
+
+    this.outputs.length = 0
+    this.outputs.push(
+      ...this.subgraph.outputNode.slots.map(
+        slot => new NodeOutputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, type: slot.type, links: null }, this),
+      ),
+    )
+
+    super.configure(info)
   }
 
   override _internalConfigureAfterSlots() {
@@ -373,70 +437,6 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       this.#setWidget(subgraphInput, input, sourceWidget)
       this.widgets.at(-1)!.value = saved
     }
-  }
-
-  #resolveInputWidget(subgraphInput: SubgraphInput, input: INodeInputSlot): void {
-    for (const linkId of subgraphInput.linkIds) {
-      const link = this.subgraph.getLink(linkId)
-      if (!link) {
-        console.warn(`[SubgraphNode.configure] No link found for link ID ${linkId}`, this)
-        continue
-      }
-
-      const resolved = link.resolve(this.subgraph)
-      if (!resolved.input || !resolved.inputNode) {
-        console.warn("Invalid resolved link", resolved, this)
-        continue
-      }
-
-      const widget = resolved.inputNode.getWidgetFromSlot(resolved.input)
-      if (!widget) continue
-
-      this.#setWidget(subgraphInput, input, widget)
-      break
-    }
-  }
-
-  #setWidget(subgraphInput: Readonly<SubgraphInput>, input: INodeInputSlot, widget: Readonly<IBaseWidget>) {
-    // Use the first matching widget
-    const promotedWidget = toConcreteWidget(widget, this).createCopyForNode(this)
-
-    Object.assign(promotedWidget, {
-      get name() {
-        return subgraphInput.name
-      },
-      set name(value) {
-        console.warn("Promoted widget: setting name is not allowed", this, value)
-      },
-      get localized_name() {
-        return subgraphInput.localized_name
-      },
-      set localized_name(value) {
-        console.warn("Promoted widget: setting localized_name is not allowed", this, value)
-      },
-      get label() {
-        return subgraphInput.label
-      },
-      set label(value) {
-        console.warn("Promoted widget: setting label is not allowed", this, value)
-      },
-      get tooltip() {
-        // Preserve the original widget's tooltip for promoted widgets
-        return widget.tooltip
-      },
-      set tooltip(value) {
-        console.warn("Promoted widget: setting tooltip is not allowed", this, value)
-      },
-    })
-
-    this.widgets.push(promotedWidget)
-
-    // Dispatch widget-promoted event
-    this.subgraph.events.dispatch("widget-promoted", { widget: promotedWidget, subgraphNode: this })
-
-    input.widget = { name: subgraphInput.name }
-    input._widget = promotedWidget
-    this._widgetSlotsDirty = true
   }
 
   /**

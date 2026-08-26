@@ -254,26 +254,17 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   static keepAllLinksOnBypass: boolean = false
 
+  #concreteInputs: NodeInputSlot[] = []
+  #concreteOutputs: NodeOutputSlot[] = []
+
+  /** @inheritdoc {@link renderArea} */
+  #renderArea: Float32Array = new Float32Array(4)
+
+  /** @inheritdoc {@link boundingRect} */
+  #boundingRect: Rectangle = new Rectangle()
+
   /** The title text of the node. */
   title: string
-  /**
-   * The font style used to render the node's title text.
-   */
-  get titleFontStyle(): string {
-    return `${LiteGraph.NODE_TEXT_SIZE}px ${LiteGraph.NODE_FONT}`
-  }
-
-  /**
-   * CSS font shorthand for rendering slot labels and subtext.
-   */
-  get innerFontStyle(): string {
-    return `normal ${LiteGraph.NODE_SUBTEXT_SIZE}px ${LiteGraph.NODE_FONT}`
-  }
-
-  /** Type string shown in the node header; defaults to {@link type}. */
-  get displayType(): string {
-    return this.type
-  }
 
   /** Owning graph or subgraph; `null` before {@link LGraph.add}. */
   graph: LGraph | Subgraph | null = null
@@ -285,9 +276,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   inputs: INodeInputSlot[] = []
   /** Output connection slots on the right side of the node. */
   outputs: INodeOutputSlot[] = []
-
-  #concreteInputs: NodeInputSlot[] = []
-  #concreteOutputs: NodeOutputSlot[] = []
 
   properties: Dictionary<NodeProperty | undefined> = {}
   /** Metadata describing custom properties for the properties panel. */
@@ -337,6 +325,377 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   boxcolor?: string
 
+  /**
+   * Map of named stroke styles applied when drawing the node bounding outline.
+   *
+   * Keys `"error"` and `"selected"` are populated by default.
+   */
+  strokeStyles: Record<string, (this: LGraphNode) => IDrawBoundingOptions | undefined>
+
+  /**
+   * The progress of node execution. Used to render a progress bar. Value between 0 and 1.
+   */
+  progress?: number
+
+  exec_version?: number
+  action_call?: string
+  /** Frame counter showing recent execution; decremented each step for visual feedback. */
+  execute_triggered?: number
+  /** Frame counter showing recent action; decremented each step for visual feedback. */
+  action_triggered?: number
+  /** When `true`, widgets render above slots instead of below. */
+  widgets_up?: boolean
+  /** Y offset in graph units where widgets begin when not using automatic layout. */
+  widgets_start_y?: number
+  lostFocusAt?: number
+  gotFocusAt?: number
+  /** Badges drawn above the title bar (static or factory functions). */
+  badges: (LGraphBadge | (() => LGraphBadge))[] = []
+  /** Clickable buttons rendered in the title bar. */
+  title_buttons: LGraphButton[] = []
+  /** Corner alignment for {@link badges}. */
+  badgePosition: BadgePosition = BadgePosition.TopLeft
+  _collapsed_width?: number
+  /** Rolling debug log displayed on the node when enabled. */
+  console?: string[]
+  /** Topological depth assigned by {@link LGraph.computeExecutionOrder}. */
+  _level?: number
+  /** Override for {@link renderingShape}; unset uses constructor or global default. */
+  _shape?: RenderShape
+  /** Current pointer hover state for slots and widgets. */
+  mouseOver?: IMouseOverData
+  redraw_on_mouse?: boolean
+  /** When `false`, the node cannot be resized interactively. */
+  resizable?: boolean
+  /** When `true`, the node may be duplicated via the context menu. */
+  clonable?: boolean
+  _relative_id?: number
+  /** When `true`, content drawn outside the node body is clipped. */
+  clip_area?: boolean
+  /** When `true`, {@link LGraph.remove} refuses to delete this node. */
+  ignore_remove?: boolean
+  /** Set when deserialisation failed and a placeholder node was created. */
+  has_errors?: boolean
+  removable?: boolean
+  block_delete?: boolean
+  /** Whether the node is selected on the canvas. */
+  selected?: boolean
+  /** When `true`, widgets marked `advanced` are visible. */
+  showAdvanced?: boolean
+
+  declare comfyClass?: string
+  declare isVirtualNode?: boolean
+
+  /** {@link pos} and {@link size} values are backed by this {@link Rect}. */
+  _posSize: Float32Array = new Float32Array(4)
+  _pos: Point = this._posSize.subarray(0, 2)
+  _size: Size = this._posSize.subarray(2, 4)
+
+  /**
+   * Creates a node with default title, type, and size.
+   * @param title Display title; defaults internally to `"Unnamed"` if empty.
+   * @param type Registered node type string.
+   */
+  constructor(title: string, type?: string) {
+    this.id = LiteGraph.use_uuids ? LiteGraph.uuidv4() : -1
+    this.title = title || "Unnamed"
+    this.type = type ?? ""
+    this.size = [LiteGraph.NODE_WIDTH, 60]
+    this.pos = [10, 10]
+    // Assign stroke style getters
+    this.strokeStyles = {
+      error: this.#getErrorStrokeStyle,
+      selected: this.#getSelectedStrokeStyle,
+    }
+  }
+
+  #getErrorStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
+    if (this.has_errors) {
+      return {
+        padding: 12,
+        lineWidth: 10,
+        color: LiteGraph.NODE_ERROR_COLOUR,
+      }
+    }
+  }
+
+  #getSelectedStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
+    if (this.selected) {
+      return {
+        padding: this.has_errors ? 20 : undefined,
+      }
+    }
+  }
+
+  /**
+   * Finds the next free slot
+   * @param slots The slots to search, i.e. this.inputs or this.outputs
+   */
+  #findFreeSlot<TSlot extends INodeInputSlot | INodeOutputSlot>(
+    slots: TSlot[],
+    options?: FindFreeSlotOptions,
+  ): TSlot | number {
+    const defaults = {
+      returnObj: false,
+      typesNotAccepted: [],
+    }
+    const opts = Object.assign(defaults, options || {})
+    const length = slots?.length
+    if (length <= 0) return -1
+
+    for (let i = 0; i < length; ++i) {
+      const slot: TSlot & IGenericLinkOrLinks = slots[i]
+      if (!slot || slot.link || slot.links?.length) continue
+      if (opts.typesNotAccepted?.includes?.(slot.type)) continue
+      return !opts.returnObj ? i : slot
+    }
+    return -1
+  }
+
+  /**
+   * Finds a matching slot from those provided, returning the slot itself or its index in {@link slots}.
+   * @param slots Slots to search (this.inputs or this.outputs)
+   * @param type Type of slot to look for
+   * @param returnObj If true, returns the slot itself.  Otherwise, the index.
+   * @param preferFreeSlot Prefer a free slot, but if none are found, fall back to an occupied slot.
+   * @param doNotUseOccupied Do not fall back to occupied slots.
+   * @see {findSlotByType}
+   * @see {findOutputSlotByType}
+   * @see {findInputSlotByType}
+   * @returns If a match is found, the slot if returnObj is true, otherwise the index.  If no matches are found, -1
+   */
+  #findSlotByType<TSlot extends INodeInputSlot | INodeOutputSlot>(
+    slots: TSlot[],
+    type: ISlotType,
+    returnObj?: boolean,
+    preferFreeSlot?: boolean,
+    doNotUseOccupied?: boolean,
+  ): TSlot | number {
+    const length = slots?.length
+    if (!length) return -1
+
+    // Empty string and * match anything (type:  0)
+    if (type == "" || type == "*") type = 0
+    const sourceTypes = String(type).toLowerCase().split(",")
+
+    // Run the search
+    let occupiedSlot: number | TSlot | null = null
+    for (let i = 0; i < length; ++i) {
+      const slot: TSlot & IGenericLinkOrLinks = slots[i]
+      const destTypes = slot.type == "0" || slot.type == "*"
+        ? ["0"]
+        : String(slot.type).toLowerCase().split(",")
+
+      for (const sourceType of sourceTypes) {
+        // TODO: Remove _event_ entirely.
+        const source = sourceType == "_event_" ? LiteGraph.EVENT : sourceType
+
+        for (const destType of destTypes) {
+          const dest = destType == "_event_" ? LiteGraph.EVENT : destType
+
+          if (source == dest || source === "*" || dest === "*") {
+            if (preferFreeSlot && (slot.links?.length || slot.link != null)) {
+              // In case we can't find a free slot.
+              occupiedSlot ??= returnObj ? slot : i
+              continue
+            }
+            return returnObj ? slot : i
+          }
+        }
+      }
+    }
+
+    return doNotUseOccupied ? -1 : occupiedSlot ?? -1
+  }
+
+  #measureSlot(slot: NodeInputSlot | NodeOutputSlot, slotIndex: number, isInput: boolean): void {
+    const pos = isInput ? this.getInputPos(slotIndex) : this.getOutputPos(slotIndex)
+
+    slot.boundingRect[0] = pos[0] - LiteGraph.NODE_SLOT_HEIGHT * 0.5
+    slot.boundingRect[1] = pos[1] - LiteGraph.NODE_SLOT_HEIGHT * 0.5
+    slot.boundingRect[2] = slot.isWidgetInputSlot ? BaseWidget.margin : LiteGraph.NODE_SLOT_HEIGHT
+    slot.boundingRect[3] = LiteGraph.NODE_SLOT_HEIGHT
+  }
+
+  #measureSlots(): ReadOnlyRect | null {
+    const slots: (NodeInputSlot | NodeOutputSlot)[] = []
+
+    for (const [slotIndex, slot] of this.#concreteInputs.entries()) {
+      // Unrecognized nodes (Nodes with error) has inputs but no widgets. Treat
+      // converted inputs as normal inputs.
+      // Widget input slots are handled in layoutWidgetInputSlots
+      if (this.widgets?.length && isWidgetInputSlot(slot)) continue
+
+      this.#measureSlot(slot, slotIndex, true)
+      slots.push(slot)
+    }
+    for (const [slotIndex, slot] of this.#concreteOutputs.entries()) {
+      this.#measureSlot(slot, slotIndex, false)
+      slots.push(slot)
+    }
+
+    return slots.length ? createBounds(slots, 0) : null
+  }
+
+  #getMouseOverSlot(slot: INodeSlot): INodeSlot | null {
+    const isInput = isINodeInputSlot(slot)
+    const mouseOverId = this.mouseOver?.[isInput ? "inputId" : "outputId"] ?? -1
+    if (mouseOverId === -1) {
+      return null
+    }
+    return isInput ? this.inputs[mouseOverId] : this.outputs[mouseOverId]
+  }
+
+  #isMouseOverSlot(slot: INodeSlot): boolean {
+    return this.#getMouseOverSlot(slot) === slot
+  }
+
+  #isMouseOverWidget(widget: IBaseWidget | undefined): boolean {
+    if (!widget) return false
+    return this.mouseOver?.overWidget === widget
+  }
+
+  /**
+   * @internal The inputs that are not positioned with absolute coordinates.
+   */
+  get #defaultVerticalInputs() {
+    return this.inputs.filter(
+      slot => !slot.pos && !(this.widgets?.length && isWidgetInputSlot(slot)),
+    )
+  }
+
+  /**
+   * @internal The outputs that are not positioned with absolute coordinates.
+   */
+  get #defaultVerticalOutputs() {
+    return this.outputs.filter((slot: INodeOutputSlot) => !slot.pos)
+  }
+
+  /**
+   * Arranges the node's widgets vertically.
+   * Sets following properties on each widget:
+   * -  `computedHeight`
+   * -  `y`
+   * @param widgetStartY The y-coordinate of the first widget
+   */
+  #arrangeWidgets(widgetStartY: number): void {
+    if (!this.widgets || !this.widgets.length) return
+
+    const bodyHeight = this.bodyHeight
+    const startY = this.widgets_start_y ?? (
+      (this.widgets_up ? 0 : widgetStartY) + 2
+    )
+
+    let freeSpace = bodyHeight - startY
+
+    // Collect fixed height widgets first
+    let fixedWidgetHeight = 0
+    const growableWidgets: {
+      minHeight: number
+      prefHeight?: number
+      w: IBaseWidget
+    }[] = []
+
+    for (const w of this.widgets) {
+      if (w.computeSize) {
+        const height = w.computeSize()[1] + 4
+        w.computedHeight = height
+        fixedWidgetHeight += height
+      } else if (w.computeLayoutSize) {
+        const { minHeight, maxHeight } = w.computeLayoutSize(this)
+        growableWidgets.push({
+          minHeight,
+          prefHeight: maxHeight,
+          w,
+        })
+      } else {
+        const height = LiteGraph.NODE_WIDGET_HEIGHT + 4
+        w.computedHeight = height
+        fixedWidgetHeight += height
+      }
+    }
+
+    // Calculate remaining space for DOM widgets
+    freeSpace -= fixedWidgetHeight
+    this.freeWidgetSpace = freeSpace
+
+    // Prepare space requests for distribution
+    const spaceRequests = growableWidgets.map(d => ({
+      minSize: d.minHeight,
+      maxSize: d.prefHeight,
+    }))
+
+    // Distribute space among DOM widgets
+    const allocations = distributeSpace(Math.max(0, freeSpace), spaceRequests)
+
+    // Apply computed heights
+    for (const [i, d] of growableWidgets.entries()) {
+      d.w.computedHeight = allocations[i]
+    }
+
+    // Position widgets
+    let y = startY
+    for (const w of this.widgets) {
+      w.y = y
+      y += w.computedHeight ?? 0
+    }
+
+    if (!this.graph) throw new NullGraphError()
+
+    // Grow the node if necessary.
+    // Ref: https://github.com/Comfy-Org/ComfyUI_frontend/issues/2652
+    // TODO: Move the layout logic before drawing of the node shape, so we don't
+    // need to trigger extra round of rendering.
+    if (y > bodyHeight) {
+      this.setSize([this.size[0], y])
+      this.graph.setDirtyCanvas(false, true)
+    }
+  }
+
+  /**
+   * Arranges the layout of the node's widget input slots.
+   */
+  #arrangeWidgetInputSlots(): void {
+    if (!this.widgets?.length) return
+
+    // Build a name→widget map for fast lookup.
+    const widgetByName = new Map<string, IBaseWidget>()
+    for (const w of this.widgets) widgetByName.set(w.name, w)
+
+    // Set widget-backed slot positions from widget Y coordinates.
+    for (const [i, slot] of this.#concreteInputs.entries()) {
+      if (!isWidgetInputSlot(slot)) continue
+
+      // Prefer the slot's direct _widget binding (1:1 for promoted inputs).
+      // Fall back to name-map lookup for regular nodes without _widget set.
+      const widget = slot._widget ?? widgetByName.get(slot.widget.name)
+      if (!widget) continue
+
+      const offset = LiteGraph.NODE_SLOT_HEIGHT * 0.5
+      slot.pos = [offset, widget.y + offset]
+      this.#measureSlot(slot, i, true)
+    }
+  }
+
+  /**
+   * The font style used to render the node's title text.
+   */
+  get titleFontStyle(): string {
+    return `${LiteGraph.NODE_TEXT_SIZE}px ${LiteGraph.NODE_FONT}`
+  }
+
+  /**
+   * CSS font shorthand for rendering slot labels and subtext.
+   */
+  get innerFontStyle(): string {
+    return `normal ${LiteGraph.NODE_SUBTEXT_SIZE}px ${LiteGraph.NODE_FONT}`
+  }
+
+  /** Type string shown in the node header; defaults to {@link type}. */
+  get displayType(): string {
+    return this.type
+  }
+
   /** The fg color used to render the node. */
   get renderingColor(): string {
     return this.color || this.constructor.color || LiteGraph.NODE_DEFAULT_COLOR
@@ -381,37 +740,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         colorOption.color === this.color && colorOption.bgcolor === this.bgcolor,
     ) ?? null
   }
-
-  /**
-   * Map of named stroke styles applied when drawing the node bounding outline.
-   *
-   * Keys `"error"` and `"selected"` are populated by default.
-   */
-  strokeStyles: Record<string, (this: LGraphNode) => IDrawBoundingOptions | undefined>
-
-  /**
-   * The progress of node execution. Used to render a progress bar. Value between 0 and 1.
-   */
-  progress?: number
-
-  exec_version?: number
-  action_call?: string
-  /** Frame counter showing recent execution; decremented each step for visual feedback. */
-  execute_triggered?: number
-  /** Frame counter showing recent action; decremented each step for visual feedback. */
-  action_triggered?: number
-  /** When `true`, widgets render above slots instead of below. */
-  widgets_up?: boolean
-  /** Y offset in graph units where widgets begin when not using automatic layout. */
-  widgets_start_y?: number
-  lostFocusAt?: number
-  gotFocusAt?: number
-  /** Badges drawn above the title bar (static or factory functions). */
-  badges: (LGraphBadge | (() => LGraphBadge))[] = []
-  /** Clickable buttons rendered in the title bar. */
-  title_buttons: LGraphButton[] = []
-  /** Corner alignment for {@link badges}. */
-  badgePosition: BadgePosition = BadgePosition.TopLeft
   /** Called from {@link removeOutput} after an output slot is spliced out. */
   onOutputRemoved?(this: LGraphNode, slot: number): void
   /** Called from {@link removeInput} after an input slot is spliced out. */
@@ -420,41 +748,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * The width of the node when collapsed.
    * Updated by {@link LGraphCanvas.drawNode}
    */
-  _collapsed_width?: number
   /**
    * Called once at the start of every frame.  Caller may change the values in {@link out}, which will be reflected in {@link boundingRect}.
    * WARNING: Making changes to boundingRect via onBounding is poorly supported, and will likely result in strange behaviour.
    */
   onBounding?(this: LGraphNode, out: Rect): void
-  /** Rolling debug log displayed on the node when enabled. */
-  console?: string[]
-  /** Topological depth assigned by {@link LGraph.computeExecutionOrder}. */
-  _level?: number
-  /** Override for {@link renderingShape}; unset uses constructor or global default. */
-  _shape?: RenderShape
-  /** Current pointer hover state for slots and widgets. */
-  mouseOver?: IMouseOverData
-  redraw_on_mouse?: boolean
-  /** When `false`, the node cannot be resized interactively. */
-  resizable?: boolean
-  /** When `true`, the node may be duplicated via the context menu. */
-  clonable?: boolean
-  _relative_id?: number
-  /** When `true`, content drawn outside the node body is clipped. */
-  clip_area?: boolean
-  /** When `true`, {@link LGraph.remove} refuses to delete this node. */
-  ignore_remove?: boolean
-  /** Set when deserialisation failed and a placeholder node was created. */
-  has_errors?: boolean
-  removable?: boolean
-  block_delete?: boolean
-  /** Whether the node is selected on the canvas. */
-  selected?: boolean
-  /** When `true`, widgets marked `advanced` are visible. */
-  showAdvanced?: boolean
 
-  declare comfyClass?: string
-  declare isVirtualNode?: boolean
   /** ComfyUI extension hook for applying virtual node side effects. */
   applyToGraph?(extraLinks?: LLink[]): void
 
@@ -463,8 +762,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return false
   }
 
-  /** @inheritdoc {@link renderArea} */
-  #renderArea: Float32Array = new Float32Array(4)
   /**
    * Rect describing the node area, including shadows and any protrusions.
    * Determines if the node is visible.  Calculated once at the start of every frame.
@@ -473,8 +770,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return this.#renderArea
   }
 
-  /** @inheritdoc {@link boundingRect} */
-  #boundingRect: Rectangle = new Rectangle()
   /**
    * Cached node position & area as `x, y, width, height`.  Includes changes made by {@link onBounding}, if present.
    *
@@ -491,11 +786,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     const [bX, bY] = boundingRect
     return [posX - bX, posY - bY]
   }
-
-  /** {@link pos} and {@link size} values are backed by this {@link Rect}. */
-  _posSize: Float32Array = new Float32Array(4)
-  _pos: Point = this._posSize.subarray(0, 2)
-  _size: Size = this._posSize.subarray(2, 4)
 
   /** Anchor position in graph space; may differ from the top-left of {@link boundingRect}. */
   public get pos() {
@@ -837,42 +1127,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onPropertyChange?(this: LGraphNode): void
   /** Forces recomputation of output {@link LLink.data} for upstream reads via {@link getInputData}. */
   updateOutputData?(this: LGraphNode, origin_slot: number): void
-
-  #getErrorStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
-    if (this.has_errors) {
-      return {
-        padding: 12,
-        lineWidth: 10,
-        color: LiteGraph.NODE_ERROR_COLOUR,
-      }
-    }
-  }
-
-  #getSelectedStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
-    if (this.selected) {
-      return {
-        padding: this.has_errors ? 20 : undefined,
-      }
-    }
-  }
-
-  /**
-   * Creates a node with default title, type, and size.
-   * @param title Display title; defaults internally to `"Unnamed"` if empty.
-   * @param type Registered node type string.
-   */
-  constructor(title: string, type?: string) {
-    this.id = LiteGraph.use_uuids ? LiteGraph.uuidv4() : -1
-    this.title = title || "Unnamed"
-    this.type = type ?? ""
-    this.size = [LiteGraph.NODE_WIDTH, 60]
-    this.pos = [10, 10]
-    // Assign stroke style getters
-    this.strokeStyles = {
-      error: this.#getErrorStrokeStyle,
-      selected: this.#getSelectedStrokeStyle,
-    }
-  }
 
   /** Internal callback for subgraph nodes. Do not implement externally. */
   _internalConfigureAfterSlots?(): void
@@ -2410,31 +2664,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Finds the next free slot
-   * @param slots The slots to search, i.e. this.inputs or this.outputs
-   */
-  #findFreeSlot<TSlot extends INodeInputSlot | INodeOutputSlot>(
-    slots: TSlot[],
-    options?: FindFreeSlotOptions,
-  ): TSlot | number {
-    const defaults = {
-      returnObj: false,
-      typesNotAccepted: [],
-    }
-    const opts = Object.assign(defaults, options || {})
-    const length = slots?.length
-    if (length <= 0) return -1
-
-    for (let i = 0; i < length; ++i) {
-      const slot: TSlot & IGenericLinkOrLinks = slots[i]
-      if (!slot || slot.link || slot.links?.length) continue
-      if (opts.typesNotAccepted?.includes?.(slot.type)) continue
-      return !opts.returnObj ? i : slot
-    }
-    return -1
-  }
-
-  /**
    * findSlotByType for INPUTS
    */
   findInputSlotByType<TReturn extends false>(
@@ -2545,62 +2774,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         preferFreeSlot,
         doNotUseOccupied,
       )
-  }
-
-  /**
-   * Finds a matching slot from those provided, returning the slot itself or its index in {@link slots}.
-   * @param slots Slots to search (this.inputs or this.outputs)
-   * @param type Type of slot to look for
-   * @param returnObj If true, returns the slot itself.  Otherwise, the index.
-   * @param preferFreeSlot Prefer a free slot, but if none are found, fall back to an occupied slot.
-   * @param doNotUseOccupied Do not fall back to occupied slots.
-   * @see {findSlotByType}
-   * @see {findOutputSlotByType}
-   * @see {findInputSlotByType}
-   * @returns If a match is found, the slot if returnObj is true, otherwise the index.  If no matches are found, -1
-   */
-  #findSlotByType<TSlot extends INodeInputSlot | INodeOutputSlot>(
-    slots: TSlot[],
-    type: ISlotType,
-    returnObj?: boolean,
-    preferFreeSlot?: boolean,
-    doNotUseOccupied?: boolean,
-  ): TSlot | number {
-    const length = slots?.length
-    if (!length) return -1
-
-    // Empty string and * match anything (type:  0)
-    if (type == "" || type == "*") type = 0
-    const sourceTypes = String(type).toLowerCase().split(",")
-
-    // Run the search
-    let occupiedSlot: number | TSlot | null = null
-    for (let i = 0; i < length; ++i) {
-      const slot: TSlot & IGenericLinkOrLinks = slots[i]
-      const destTypes = slot.type == "0" || slot.type == "*"
-        ? ["0"]
-        : String(slot.type).toLowerCase().split(",")
-
-      for (const sourceType of sourceTypes) {
-        // TODO: Remove _event_ entirely.
-        const source = sourceType == "_event_" ? LiteGraph.EVENT : sourceType
-
-        for (const destType of destTypes) {
-          const dest = destType == "_event_" ? LiteGraph.EVENT : destType
-
-          if (source == dest || source === "*" || dest === "*") {
-            if (preferFreeSlot && (slot.links?.length || slot.link != null)) {
-              // In case we can't find a free slot.
-              occupiedSlot ??= returnObj ? slot : i
-              continue
-            }
-            return returnObj ? slot : i
-          }
-        }
-      }
-    }
-
-    return doNotUseOccupied ? -1 : occupiedSlot ?? -1
   }
 
   /**
@@ -3320,22 +3493,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * @internal The inputs that are not positioned with absolute coordinates.
-   */
-  get #defaultVerticalInputs() {
-    return this.inputs.filter(
-      slot => !slot.pos && !(this.widgets?.length && isWidgetInputSlot(slot)),
-    )
-  }
-
-  /**
-   * @internal The outputs that are not positioned with absolute coordinates.
-   */
-  get #defaultVerticalOutputs() {
-    return this.outputs.filter((slot: INodeOutputSlot) => !slot.pos)
-  }
-
-  /**
    * Gets the position of an input slot, in graph co-ordinates.
    *
    * This method is preferred over the legacy {@link getConnectionPos} method.
@@ -3942,53 +4099,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return [...this.inputs, ...this.outputs]
   }
 
-  #measureSlot(slot: NodeInputSlot | NodeOutputSlot, slotIndex: number, isInput: boolean): void {
-    const pos = isInput ? this.getInputPos(slotIndex) : this.getOutputPos(slotIndex)
-
-    slot.boundingRect[0] = pos[0] - LiteGraph.NODE_SLOT_HEIGHT * 0.5
-    slot.boundingRect[1] = pos[1] - LiteGraph.NODE_SLOT_HEIGHT * 0.5
-    slot.boundingRect[2] = slot.isWidgetInputSlot ? BaseWidget.margin : LiteGraph.NODE_SLOT_HEIGHT
-    slot.boundingRect[3] = LiteGraph.NODE_SLOT_HEIGHT
-  }
-
-  #measureSlots(): ReadOnlyRect | null {
-    const slots: (NodeInputSlot | NodeOutputSlot)[] = []
-
-    for (const [slotIndex, slot] of this.#concreteInputs.entries()) {
-      // Unrecognized nodes (Nodes with error) has inputs but no widgets. Treat
-      // converted inputs as normal inputs.
-      // Widget input slots are handled in layoutWidgetInputSlots
-      if (this.widgets?.length && isWidgetInputSlot(slot)) continue
-
-      this.#measureSlot(slot, slotIndex, true)
-      slots.push(slot)
-    }
-    for (const [slotIndex, slot] of this.#concreteOutputs.entries()) {
-      this.#measureSlot(slot, slotIndex, false)
-      slots.push(slot)
-    }
-
-    return slots.length ? createBounds(slots, 0) : null
-  }
-
-  #getMouseOverSlot(slot: INodeSlot): INodeSlot | null {
-    const isInput = isINodeInputSlot(slot)
-    const mouseOverId = this.mouseOver?.[isInput ? "inputId" : "outputId"] ?? -1
-    if (mouseOverId === -1) {
-      return null
-    }
-    return isInput ? this.inputs[mouseOverId] : this.outputs[mouseOverId]
-  }
-
-  #isMouseOverSlot(slot: INodeSlot): boolean {
-    return this.#getMouseOverSlot(slot) === slot
-  }
-
-  #isMouseOverWidget(widget: IBaseWidget | undefined): boolean {
-    if (!widget) return false
-    return this.mouseOver?.overWidget === widget
-  }
-
   /**
    * Returns the input slot that is associated with the given widget.
    */
@@ -4041,112 +4151,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           highlight,
         })
       }
-    }
-  }
-
-  /**
-   * Arranges the node's widgets vertically.
-   * Sets following properties on each widget:
-   * -  `computedHeight`
-   * -  `y`
-   * @param widgetStartY The y-coordinate of the first widget
-   */
-  #arrangeWidgets(widgetStartY: number): void {
-    if (!this.widgets || !this.widgets.length) return
-
-    const bodyHeight = this.bodyHeight
-    const startY = this.widgets_start_y ?? (
-      (this.widgets_up ? 0 : widgetStartY) + 2
-    )
-
-    let freeSpace = bodyHeight - startY
-
-    // Collect fixed height widgets first
-    let fixedWidgetHeight = 0
-    const growableWidgets: {
-      minHeight: number
-      prefHeight?: number
-      w: IBaseWidget
-    }[] = []
-
-    for (const w of this.widgets) {
-      if (w.computeSize) {
-        const height = w.computeSize()[1] + 4
-        w.computedHeight = height
-        fixedWidgetHeight += height
-      } else if (w.computeLayoutSize) {
-        const { minHeight, maxHeight } = w.computeLayoutSize(this)
-        growableWidgets.push({
-          minHeight,
-          prefHeight: maxHeight,
-          w,
-        })
-      } else {
-        const height = LiteGraph.NODE_WIDGET_HEIGHT + 4
-        w.computedHeight = height
-        fixedWidgetHeight += height
-      }
-    }
-
-    // Calculate remaining space for DOM widgets
-    freeSpace -= fixedWidgetHeight
-    this.freeWidgetSpace = freeSpace
-
-    // Prepare space requests for distribution
-    const spaceRequests = growableWidgets.map(d => ({
-      minSize: d.minHeight,
-      maxSize: d.prefHeight,
-    }))
-
-    // Distribute space among DOM widgets
-    const allocations = distributeSpace(Math.max(0, freeSpace), spaceRequests)
-
-    // Apply computed heights
-    for (const [i, d] of growableWidgets.entries()) {
-      d.w.computedHeight = allocations[i]
-    }
-
-    // Position widgets
-    let y = startY
-    for (const w of this.widgets) {
-      w.y = y
-      y += w.computedHeight ?? 0
-    }
-
-    if (!this.graph) throw new NullGraphError()
-
-    // Grow the node if necessary.
-    // Ref: https://github.com/Comfy-Org/ComfyUI_frontend/issues/2652
-    // TODO: Move the layout logic before drawing of the node shape, so we don't
-    // need to trigger extra round of rendering.
-    if (y > bodyHeight) {
-      this.setSize([this.size[0], y])
-      this.graph.setDirtyCanvas(false, true)
-    }
-  }
-
-  /**
-   * Arranges the layout of the node's widget input slots.
-   */
-  #arrangeWidgetInputSlots(): void {
-    if (!this.widgets?.length) return
-
-    // Build a name→widget map for fast lookup.
-    const widgetByName = new Map<string, IBaseWidget>()
-    for (const w of this.widgets) widgetByName.set(w.name, w)
-
-    // Set widget-backed slot positions from widget Y coordinates.
-    for (const [i, slot] of this.#concreteInputs.entries()) {
-      if (!isWidgetInputSlot(slot)) continue
-
-      // Prefer the slot's direct _widget binding (1:1 for promoted inputs).
-      // Fall back to name-map lookup for regular nodes without _widget set.
-      const widget = slot._widget ?? widgetByName.get(slot.widget.name)
-      if (!widget) continue
-
-      const offset = LiteGraph.NODE_SLOT_HEIGHT * 0.5
-      slot.pos = [offset, widget.y + offset]
-      this.#measureSlot(slot, i, true)
     }
   }
 

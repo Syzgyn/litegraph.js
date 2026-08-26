@@ -31,6 +31,33 @@ export class ConstrainedSize {
   /** Maximum allowed {@link height} after clamping. Defaults to {@link Infinity}. */
   maxHeight: number = Infinity
 
+  /**
+   * @param width Initial desired width; clamped immediately using current min/max bounds.
+   * @param height Initial desired height; clamped immediately using current min/max bounds.
+   */
+  constructor(width: number, height: number) {
+    this.desiredWidth = width
+    this.desiredHeight = height
+  }
+
+  /**
+   * Creates a {@link ConstrainedSize} from a {@link ReadOnlySize} tuple.
+   * @param size `[width, height]` pair to use as initial desired dimensions.
+   * @returns A new instance with clamped {@link width} and {@link height}.
+   */
+  static fromSize(size: ReadOnlySize): ConstrainedSize {
+    return new ConstrainedSize(size[0], size[1])
+  }
+
+  /**
+   * Creates a {@link ConstrainedSize} from the width and height components of a rectangle.
+   * @param rect `[x, y, width, height]` tuple; only indices 2 and 3 are used.
+   * @returns A new instance sized to the rectangle's dimensions.
+   */
+  static fromRect(rect: ReadOnlyRect): ConstrainedSize {
+    return new ConstrainedSize(rect[2], rect[3])
+  }
+
   /** Current clamped width; updated whenever {@link desiredWidth} changes. */
   get width() {
     return this.#width
@@ -59,33 +86,6 @@ export class ConstrainedSize {
   set desiredHeight(value: number) {
     this.#desiredHeight = value
     this.#height = clamp(value, this.minHeight, this.maxHeight)
-  }
-
-  /**
-   * @param width Initial desired width; clamped immediately using current min/max bounds.
-   * @param height Initial desired height; clamped immediately using current min/max bounds.
-   */
-  constructor(width: number, height: number) {
-    this.desiredWidth = width
-    this.desiredHeight = height
-  }
-
-  /**
-   * Creates a {@link ConstrainedSize} from a {@link ReadOnlySize} tuple.
-   * @param size `[width, height]` pair to use as initial desired dimensions.
-   * @returns A new instance with clamped {@link width} and {@link height}.
-   */
-  static fromSize(size: ReadOnlySize): ConstrainedSize {
-    return new ConstrainedSize(size[0], size[1])
-  }
-
-  /**
-   * Creates a {@link ConstrainedSize} from the width and height components of a rectangle.
-   * @param rect `[x, y, width, height]` tuple; only indices 2 and 3 are used.
-   * @returns A new instance sized to the rectangle's dimensions.
-   */
-  static fromRect(rect: ReadOnlyRect): ConstrainedSize {
-    return new ConstrainedSize(rect[2], rect[3])
   }
 
   /**

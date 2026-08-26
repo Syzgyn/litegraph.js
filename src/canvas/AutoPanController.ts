@@ -58,22 +58,6 @@ export class AutoPanController {
     this.onPan = options.onPan
   }
 
-  updatePointer(screenX: number, screenY: number): void {
-    this.pointerX = screenX
-    this.pointerY = screenY
-  }
-
-  start(): void {
-    if (this.rafId != null) return
-    this.tick()
-  }
-
-  stop(): void {
-    if (this.rafId == null) return
-    cancelAnimationFrame(this.rafId)
-    this.rafId = undefined
-  }
-
   private tick(): void {
     const rect = this.canvas.getBoundingClientRect()
     const scale = this.ds.scale
@@ -100,5 +84,21 @@ export class AutoPanController {
     }
 
     this.rafId = requestAnimationFrame(() => this.tick())
+  }
+
+  updatePointer(screenX: number, screenY: number): void {
+    this.pointerX = screenX
+    this.pointerY = screenY
+  }
+
+  start(): void {
+    if (this.rafId != null) return
+    this.tick()
+  }
+
+  stop(): void {
+    if (this.rafId == null) return
+    cancelAnimationFrame(this.rafId)
+    this.rafId = undefined
   }
 }

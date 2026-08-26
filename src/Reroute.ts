@@ -42,11 +42,6 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   static drawIdBadge: boolean = false
   /** Radius of the small input/output slot circles shown on hover. */
   static slotRadius: number = 5
-  /** Distance from reroute centre to slot centre along the link axis. */
-  static get slotOffset(): number {
-    const gap = this.slotRadius * 0.33
-    return this.radius + gap + this.slotRadius
-  }
 
   #malloc = new Float32Array(8)
 
@@ -54,26 +49,17 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   #network: WeakRef<LinkNetwork>
 
   #parentId?: RerouteId
-  /** ID of the reroute closer to the output side in the chain; `undefined` for the first reroute after a node output. */
-  public get parentId(): RerouteId | undefined {
-    return this.#parentId
-  }
 
   /**
-   * Sets the parent reroute in the chain.
-   *
-   * Ignores assignments that would create a self-loop or an infinite parent chain.
+   * Used to ensure reroute angles are only executed once per frame.
+   * @todo Calculate on change instead.
    */
-  public set parentId(value) {
-    if (value === this.id) return
-    if (this.getReroutes() === null) return
-    this.#parentId = value
-  }
+  #lastRenderTime: number = -Infinity
 
-  /** The reroute immediately upstream (toward the output) in the chain, if any. */
-  public get parent(): Reroute | undefined {
-    return this.#network.deref()?.getReroute(this.#parentId)
-  }
+  #inputSlot = new RerouteSlot(this, true)
+  #outputSlot = new RerouteSlot(this, false)
+
+  #pos = this.#malloc.subarray(0, 2)
 
   /**
    * Present only on the last reroute of a floating chain (closest to the input end).
@@ -81,43 +67,6 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * Records which slot type ({@link FloatingRerouteSlot.slotType}) the dangling end connects to.
    */
   floating?: FloatingRerouteSlot
-
-  #pos = this.#malloc.subarray(0, 2)
-  /** @inheritdoc */
-  get pos(): Point {
-    return this.#pos
-  }
-
-  set pos(value: Point) {
-    if ((value?.length ?? 0) < 2)
-      throw new TypeError("Reroute.pos is an x,y point, and expects an indexable with at least two values.")
-    this.#pos[0] = value[0]
-    this.#pos[1] = value[1]
-  }
-
-  /** @inheritdoc */
-  get boundingRect(): ReadOnlyRect {
-    const { radius } = Reroute
-    const [x, y] = this.#pos
-    return [x - radius, y - radius, 2 * radius, 2 * radius]
-  }
-
-  /**
-   * Slightly over-sized rectangle, guaranteed to contain the entire surface area for hover detection.
-   * Eliminates most hover positions using an extremely cheap check.
-   */
-  get #hoverArea(): ReadOnlyRect {
-    const xOffset = 2 * Reroute.slotOffset
-    const yOffset = 2 * Math.max(Reroute.radius, Reroute.slotRadius)
-
-    const [x, y] = this.#pos
-    return [x - xOffset, y - yOffset, 2 * xOffset, 2 * yOffset]
-  }
-
-  /** The total number of links & floating links using this reroute */
-  get totalLinks(): number {
-    return this.linkIds.size + this.floatingLinkIds.size
-  }
 
   /** @inheritdoc */
   selected?: boolean
@@ -148,19 +97,99 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /** Colour of the first link that rendered this reroute */
   _colour?: CanvasColour
 
+  /**
+   * Initialises a new link reroute object.
+   * @param id Unique identifier for this reroute
+   * @param network The network of links this reroute belongs to.  Internally converted to a WeakRef.
+   * @param pos Position in graph coordinates
+   * @param linkIds Link IDs ({@link LLink.id}) of all links that use this reroute
+   */
+  constructor(
+    public readonly id: RerouteId,
+    network: LinkNetwork,
+    pos?: Point,
+    parentId?: RerouteId,
+    linkIds?: Iterable<LinkId>,
+    floatingLinkIds?: Iterable<LinkId>,
+  ) {
+    this.#network = new WeakRef(network)
+    this.parentId = parentId
+    if (pos) this.pos = pos
+    this.linkIds = new Set(linkIds)
+    this.floatingLinkIds = new Set(floatingLinkIds)
+  }
+
+  /** Distance from reroute centre to slot centre along the link axis. */
+  static get slotOffset(): number {
+    const gap = this.slotRadius * 0.33
+    return this.radius + gap + this.slotRadius
+  }
+
+  #contains(pos: Point): boolean {
+    return distance(this.pos, pos) <= Reroute.radius
+  }
+
+  /**
+   * Slightly over-sized rectangle, guaranteed to contain the entire surface area for hover detection.
+   * Eliminates most hover positions using an extremely cheap check.
+   */
+  get #hoverArea(): ReadOnlyRect {
+    const xOffset = 2 * Reroute.slotOffset
+    const yOffset = 2 * Math.max(Reroute.radius, Reroute.slotRadius)
+
+    const [x, y] = this.#pos
+    return [x - xOffset, y - yOffset, 2 * xOffset, 2 * yOffset]
+  }
+
+  /** @inheritdoc */
+  get pos(): Point {
+    return this.#pos
+  }
+
+  set pos(value: Point) {
+    if ((value?.length ?? 0) < 2)
+      throw new TypeError("Reroute.pos is an x,y point, and expects an indexable with at least two values.")
+    this.#pos[0] = value[0]
+    this.#pos[1] = value[1]
+  }
+
+  /** @inheritdoc */
+  get boundingRect(): ReadOnlyRect {
+    const { radius } = Reroute
+    const [x, y] = this.#pos
+    return [x - radius, y - radius, 2 * radius, 2 * radius]
+  }
+
+  /** The total number of links & floating links using this reroute */
+  get totalLinks(): number {
+    return this.linkIds.size + this.floatingLinkIds.size
+  }
+
+  /** ID of the reroute closer to the output side in the chain; `undefined` for the first reroute after a node output. */
+  public get parentId(): RerouteId | undefined {
+    return this.#parentId
+  }
+
+  /**
+   * Sets the parent reroute in the chain.
+   *
+   * Ignores assignments that would create a self-loop or an infinite parent chain.
+   */
+  public set parentId(value) {
+    if (value === this.id) return
+    if (this.getReroutes() === null) return
+    this.#parentId = value
+  }
+
+  /** The reroute immediately upstream (toward the output) in the chain, if any. */
+  public get parent(): Reroute | undefined {
+    return this.#network.deref()?.getReroute(this.#parentId)
+  }
+
   /** Colour of the first link that rendered this reroute */
   get colour(): CanvasColour {
     return this._colour ?? "#18184d"
   }
-
-  /**
-   * Used to ensure reroute angles are only executed once per frame.
-   * @todo Calculate on change instead.
-   */
-  #lastRenderTime: number = -Infinity
-
-  #inputSlot = new RerouteSlot(this, true)
-  #outputSlot = new RerouteSlot(this, false)
 
   /** Whether the pointer is over either the input or output slot affordance. */
   get isSlotHovered(): boolean {
@@ -207,28 +236,6 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /** @inheritdoc */
   get origin_slot(): number | undefined {
     return this.firstLink?.origin_slot
-  }
-
-  /**
-   * Initialises a new link reroute object.
-   * @param id Unique identifier for this reroute
-   * @param network The network of links this reroute belongs to.  Internally converted to a WeakRef.
-   * @param pos Position in graph coordinates
-   * @param linkIds Link IDs ({@link LLink.id}) of all links that use this reroute
-   */
-  constructor(
-    public readonly id: RerouteId,
-    network: LinkNetwork,
-    pos?: Point,
-    parentId?: RerouteId,
-    linkIds?: Iterable<LinkId>,
-    floatingLinkIds?: Iterable<LinkId>,
-  ) {
-    this.#network = new WeakRef(network)
-    this.parentId = parentId
-    if (pos) this.pos = pos
-    this.linkIds = new Set(linkIds)
-    this.floatingLinkIds = new Set(floatingLinkIds)
   }
 
   /**
@@ -693,10 +700,6 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     return isPointInRect(pos, this.#hoverArea) && this.#contains(pos)
   }
 
-  #contains(pos: Point): boolean {
-    return distance(this.pos, pos) <= Reroute.radius
-  }
-
   /** @inheritdoc Serialisable.asSerialisable */
   asSerialisable(): SerialisableReroute {
     const { id, parentId, pos, linkIds } = this
@@ -719,16 +722,24 @@ class RerouteSlot {
   readonly #reroute: Reroute
 
   readonly #offsetMultiplier: 1 | -1
+
+  #hovering = false
+  #showOutline = false
+
+  /** Whether any changes require a redraw. */
+  dirty: boolean = false
+
+  constructor(reroute: Reroute, isInput: boolean) {
+    this.#reroute = reroute
+    this.#offsetMultiplier = isInput ? -1 : 1
+  }
+
   /** Centre point of this slot. */
   get pos(): Point {
     const [x, y] = this.#reroute.pos
     return [x + Reroute.slotOffset * this.#offsetMultiplier, y]
   }
 
-  /** Whether any changes require a redraw. */
-  dirty: boolean = false
-
-  #hovering = false
   /** Whether the pointer is hovering over the slot itself. */
   get hovering() {
     return this.#hovering
@@ -743,7 +754,6 @@ class RerouteSlot {
     this.dirty = true
   }
 
-  #showOutline = false
   /** Whether the slot outline / faint background is visible. */
   get showOutline() {
     return this.#showOutline
@@ -756,11 +766,6 @@ class RerouteSlot {
 
     this.#showOutline = value
     this.dirty = true
-  }
-
-  constructor(reroute: Reroute, isInput: boolean) {
-    this.#reroute = reroute
-    this.#offsetMultiplier = isInput ? -1 : 1
   }
 
   /**

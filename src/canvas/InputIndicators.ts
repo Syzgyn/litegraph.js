@@ -17,6 +17,12 @@ import { isMiddleButtonHeld } from "@/utils/pointerUtils"
  * @see {@link LGraphCanvas}
  */
 export class InputIndicators implements Disposable {
+  #onPointerDownOrMove = this.onPointerDownOrMove.bind(this)
+
+  #onPointerUp = this.onPointerUp.bind(this)
+
+  #onKeyDownOrUp = this.onKeyDownOrUp.bind(this)
+
   // #region config
 
   /** Radius in pixels of the mouse-button indicator dots. */
@@ -111,8 +117,6 @@ export class InputIndicators implements Disposable {
     }
   }
 
-  #onPointerDownOrMove = this.onPointerDownOrMove.bind(this)
-
   /**
    * Updates mouse-button and cursor position state from a pointer event.
    *
@@ -130,8 +134,6 @@ export class InputIndicators implements Disposable {
     this.canvas.setDirty(true)
   }
 
-  #onPointerUp = this.onPointerUp.bind(this)
-
   /**
    * Clears all mouse-button state when the pointer is released.
    */
@@ -140,8 +142,6 @@ export class InputIndicators implements Disposable {
     this.mouse1Down = false
     this.mouse2Down = false
   }
-
-  #onKeyDownOrUp = this.onKeyDownOrUp.bind(this)
 
   /**
    * Updates modifier-key and undo/redo state from a keyboard event.

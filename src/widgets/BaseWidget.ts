@@ -70,6 +70,12 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   /** Minimum horizontal gap between label and value text when both are drawn inline. */
   static labelValueGap = 5
 
+  /** The {@link LGraphNode} that owns and displays this widget. */
+  #node: LGraphNode
+
+  /** Current widget value; assignment does not trigger callbacks — use {@link setValue} instead. */
+  #value?: TWidget["value"]
+
   /**
    * Optional override for widget height, set by layout when the widget needs non-standard vertical space
    * (e.g. {@link KnobWidget}).
@@ -77,22 +83,6 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   declare computedHeight?: number
   /** When `false`, this widget is omitted from graph serialization. */
   declare serialize?: boolean
-  /**
-   * Reports min/max width and height constraints for automatic node layout.
-   * @param node The node requesting layout hints.
-   */
-  computeLayoutSize?(node: LGraphNode): {
-    minHeight: number
-    maxHeight?: number
-    minWidth: number
-    maxWidth?: number
-  }
-
-  #node: LGraphNode
-  /** The {@link LGraphNode} that owns and displays this widget. */
-  get node() {
-    return this.#node
-  }
 
   /** Widgets whose visibility or value is tied to this widget (e.g. linked combo entries). */
   linkedWidgets?: IBaseWidget[]
@@ -122,6 +112,47 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   tooltip?: string
   /** DOM element backing hybrid DOM/canvas widgets; unused by pure canvas widgets. */
   element?: HTMLElement
+
+  /**
+   * @param widget Widget definition POJO, optionally including an embedded `node` reference.
+   * @param node The owning node when `widget` does not carry `node` directly.
+   */
+  constructor(widget: TWidget & { node: LGraphNode })
+  constructor(widget: TWidget, node: LGraphNode)
+  constructor(widget: TWidget & { node: LGraphNode }, node?: LGraphNode) {
+    // Private fields
+    this.#node = node ?? widget.node
+
+    // The set and get functions for DOM widget values are hacked on to the options object;
+    // attempting to set value before options will throw.
+    // https://github.com/Comfy-Org/ComfyUI_frontend/blob/df86da3d672628a452baed3df3347a52c0c8d378/src/scripts/domWidget.ts#L125
+    this.name = widget.name
+    this.options = widget.options
+    this.type = widget.type
+
+    // `node` has no setter - Object.assign will throw.
+    // TODO: Resolve this workaround. Ref: https://github.com/Comfy-Org/litegraph.js/issues/1022
+    // @ts-expect-error Prevent naming conflicts with custom nodes.
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    const { node: _, outline_color, background_color, height, text_color, secondary_text_color, disabledTextColor, displayName, displayValue, labelBaseline, ...safeValues } = widget
+
+    Object.assign(this, safeValues)
+  }
+
+  /** The {@link LGraphNode} that owns and displays this widget. */
+  get node() {
+    return this.#node
+  }
+  /**
+   * Reports min/max width and height constraints for automatic node layout.
+   * @param node The node requesting layout hints.
+   */
+  computeLayoutSize?(node: LGraphNode): {
+    minHeight: number
+    maxHeight?: number
+    minWidth: number
+    maxWidth?: number
+  }
   /**
    * Invoked after {@link setValue} changes the widget value.
    * @param value The new widget value (type varies by widget).
@@ -150,7 +181,6 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    */
   onPointerDown?(pointer: CanvasPointer, node: LGraphNode, canvas: LGraphCanvas): boolean
 
-  #value?: TWidget["value"]
   /** Current widget value; assignment does not trigger callbacks — use {@link setValue} instead. */
   get value(): TWidget["value"] {
     return this.#value
@@ -159,32 +189,6 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   /** Assigns backing storage only; does not run the change notification pipeline. */
   set value(value: TWidget["value"]) {
     this.#value = value
-  }
-
-  /**
-   * @param widget Widget definition POJO, optionally including an embedded `node` reference.
-   * @param node The owning node when `widget` does not carry `node` directly.
-   */
-  constructor(widget: TWidget & { node: LGraphNode })
-  constructor(widget: TWidget, node: LGraphNode)
-  constructor(widget: TWidget & { node: LGraphNode }, node?: LGraphNode) {
-    // Private fields
-    this.#node = node ?? widget.node
-
-    // The set and get functions for DOM widget values are hacked on to the options object;
-    // attempting to set value before options will throw.
-    // https://github.com/Comfy-Org/ComfyUI_frontend/blob/df86da3d672628a452baed3df3347a52c0c8d378/src/scripts/domWidget.ts#L125
-    this.name = widget.name
-    this.options = widget.options
-    this.type = widget.type
-
-    // `node` has no setter - Object.assign will throw.
-    // TODO: Resolve this workaround. Ref: https://github.com/Comfy-Org/litegraph.js/issues/1022
-    // @ts-expect-error Prevent naming conflicts with custom nodes.
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const { node: _, outline_color, background_color, height, text_color, secondary_text_color, disabledTextColor, displayName, displayValue, labelBaseline, ...safeValues } = widget
-
-    Object.assign(this, safeValues)
   }
 
   /** Stroke colour for the widget capsule outline; advanced widgets use a distinct palette entry. */

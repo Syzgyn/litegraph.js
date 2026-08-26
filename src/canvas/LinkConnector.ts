@@ -97,6 +97,8 @@ export interface LinkConnectorExport {
  * @see {@link LLink}
  */
 export class LinkConnector {
+  readonly #setConnectingLinks: (value: ConnectingLink[]) => void
+
   /**
    * Link connection state POJO. Source of truth for state of link drag operations.
    *
@@ -164,8 +166,6 @@ export class LinkConnector {
    */
   overReroute?: Reroute
 
-  readonly #setConnectingLinks: (value: ConnectingLink[]) => void
-
   /**
    * @param setConnectingLinks Callback that synchronises the legacy `connecting_links` array
    * on {@link LGraphCanvas}. Invoked whenever a drag operation starts to populate the
@@ -173,6 +173,48 @@ export class LinkConnector {
    */
   constructor(setConnectingLinks: (value: ConnectingLink[]) => void) {
     this.#setConnectingLinks = setConnectingLinks
+  }
+
+  #dropOnInput(node: LGraphNode, input: INodeInputSlot): void {
+    for (const link of this.renderLinks) {
+      if (!link.canConnectToInput(node, input)) continue
+
+      link.connectToInput(node, input, this.events)
+    }
+  }
+
+  #dropOnOutput(node: LGraphNode, output: INodeOutputSlot): void {
+    for (const link of this.renderLinks) {
+      if (!link.canConnectToOutput(node, output)) {
+        if (link instanceof MovingOutputLink && link.link.parentId !== undefined) {
+          // Reconnect link without reroutes
+          link.outputNode.connectSlots(link.outputSlot, link.inputNode, link.inputSlot, undefined!)
+        }
+        continue
+      }
+
+      link.connectToOutput(node, output, this.events)
+    }
+  }
+
+  /** Sets connecting_links, used by some extensions still. */
+  #setLegacyLinks(fromSlotIsInput: boolean): void {
+    const links = this.renderLinks.map((link) => {
+      const input = fromSlotIsInput ? link.fromSlot as INodeInputSlot : null
+      const output = fromSlotIsInput ? null : link.fromSlot as INodeOutputSlot
+
+      const afterRerouteId = link instanceof MovingLinkBase ? link.link?.parentId : link.fromReroute?.id
+
+      return {
+        node: link.node as LGraphNode,
+        slot: link.fromSlotIndex,
+        input,
+        output,
+        pos: link.fromPos,
+        afterRerouteId,
+      } satisfies ConnectingLink
+    })
+    this.#setConnectingLinks(links)
   }
 
   /**
@@ -934,28 +976,6 @@ export class LinkConnector {
     }
   }
 
-  #dropOnInput(node: LGraphNode, input: INodeInputSlot): void {
-    for (const link of this.renderLinks) {
-      if (!link.canConnectToInput(node, input)) continue
-
-      link.connectToInput(node, input, this.events)
-    }
-  }
-
-  #dropOnOutput(node: LGraphNode, output: INodeOutputSlot): void {
-    for (const link of this.renderLinks) {
-      if (!link.canConnectToOutput(node, output)) {
-        if (link instanceof MovingOutputLink && link.link.parentId !== undefined) {
-          // Reconnect link without reroutes
-          link.outputNode.connectSlots(link.outputSlot, link.inputNode, link.inputSlot, undefined!)
-        }
-        continue
-      }
-
-      link.connectToOutput(node, output, this.events)
-    }
-  }
-
   /**
    * Checks whether any active render link can be dropped on the given input slot.
    * @param node The node that owns the candidate input slot.
@@ -1021,26 +1041,6 @@ export class LinkConnector {
     }
 
     return false
-  }
-
-  /** Sets connecting_links, used by some extensions still. */
-  #setLegacyLinks(fromSlotIsInput: boolean): void {
-    const links = this.renderLinks.map((link) => {
-      const input = fromSlotIsInput ? link.fromSlot as INodeInputSlot : null
-      const output = fromSlotIsInput ? null : link.fromSlot as INodeOutputSlot
-
-      const afterRerouteId = link instanceof MovingLinkBase ? link.link?.parentId : link.fromReroute?.id
-
-      return {
-        node: link.node as LGraphNode,
-        slot: link.fromSlotIndex,
-        input,
-        output,
-        pos: link.fromPos,
-        afterRerouteId,
-      } satisfies ConnectingLink
-    })
-    this.#setConnectingLinks(links)
   }
 
   /**

@@ -299,6 +299,64 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    */
   static _measureText?: (text: string, fontStyle?: string) => number
 
+  /** The canvas instance that most recently received pointer input. Used by static menu handlers. */
+  static active_canvas: LGraphCanvas
+
+  /** The node that was most recently right-clicked. Set during {@link processContextMenu}. */
+  static active_node: LGraphNode
+
+  #subgraph?: Subgraph
+  #maximumFrameGap = 0
+
+  // Whether the canvas was previously being dragged prior to pressing space key.
+  // null if space key is not pressed.
+  private _previously_dragging_canvas: boolean | null = null
+
+  #setCursor!: ReturnType<typeof createCursorCache>
+
+  // Cached LOD threshold values for performance
+  private _lowQualityZoomThreshold: number = 0
+  private _isLowQuality: boolean = false
+
+  /**
+   * Once per frame check of snap to grid value.
+   * @todo Update on change.
+   */
+  #snapToGrid?: number
+  /**
+   * Set on keydown, keyup.
+   * @todo
+   */
+  #shiftDown: boolean = false
+  /** The start position of the drag zoom. */
+  #dragZoomStart: null | { pos: Point, scale: number } = null
+  /** Minimum font size in pixels before switching to low quality rendering. */
+  private _min_font_size_for_lod: number = 8
+  /**
+   * The IDs of the nodes that are currently visible on the canvas. More
+   * performant than {@link visible_nodes} for visibility checks.
+   */
+  #visible_node_ids: Set<NodeId> = new Set()
+
+  #visibleReroutes: Set<Reroute> = new Set()
+  private _autoPan: AutoPanController | null = null
+  /**
+   * Modifier state of the most recent drag pointer event, so the auto-pan
+   * callback resolves the same dragged-item set as normal pointer movement
+   * (e.g. Cmd/Ctrl-drag moves a group without its contents). Updated on every
+   * drag move and seeded from the pointer-down event when a drag starts.
+   */
+  private _lastDragModifiers: Pick<MouseEvent, "ctrlKey" | "metaKey"> = {
+    ctrlKey: false,
+    metaKey: false,
+  }
+
+  private _ghostPointerHandler: ((e: PointerEvent) => void) | null = null
+  private _ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
+
+  /** If true, enable drag zoom. Ctrl+Shift+Drag Up/Down: zoom canvas. */
+  dragZoomEnabled: boolean = false
+
   /**
    * The state of this canvas, e.g. whether it is being dragged, or read-only.
    *
@@ -312,200 +370,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     shouldSetCursor: true,
     selectionChanged: false,
     ghostNodeId: null,
-  }
-
-  #subgraph?: Subgraph
-  /** The subgraph currently being edited inline, if the canvas has navigated into a subgraph. */
-  get subgraph(): Subgraph | undefined {
-    return this.#subgraph
-  }
-
-  /**
-   * Sets the active subgraph context for this canvas.
-   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:set-graph"` when the value changes.
-   */
-  set subgraph(value: Subgraph | undefined) {
-    if (value === this.#subgraph) {
-      return
-    }
-
-    this.#subgraph = value
-    if (value) this.dispatch("litegraph:set-graph", { oldGraph: this.#subgraph, newGraph: value })
-  }
-
-  /** Dispatches a custom event on the canvas element with a detail payload. */
-  dispatch<T extends keyof NeverNever<LGraphCanvasEventMap>>(type: T, detail: LGraphCanvasEventMap[T]): boolean
-  /**
-   * Dispatches a custom event on the canvas element with no detail payload.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
-   */
-  dispatch<T extends keyof PickNevers<LGraphCanvasEventMap>>(type: T): boolean
-  /**
-   * Dispatches a custom event on the canvas element.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
-   * @param detail Event-specific payload. Omitted for events with no detail.
-   */
-  dispatch<T extends keyof LGraphCanvasEventMap>(type: T, detail?: LGraphCanvasEventMap[T]) {
-    const event = new CustomEvent(type as string, { detail, bubbles: true })
-    return this.canvas.dispatchEvent(event)
-  }
-
-  /**
-   * Dispatches a custom event on the canvas element.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
-   * @param detail Event-specific payload.
-   */
-  dispatchEvent<TEvent extends keyof LGraphCanvasEventMap>(type: TEvent, detail: LGraphCanvasEventMap[TEvent]) {
-    this.canvas.dispatchEvent(new CustomEvent(type, { detail }))
-  }
-
-  #setCursor!: ReturnType<typeof createCursorCache>
-
-  #updateCursorStyle() {
-    if (!this.state.shouldSetCursor) return
-
-    const crosshairItems =
-      CanvasItem.Node |
-      CanvasItem.RerouteSlot |
-      CanvasItem.SubgraphIoNode |
-      CanvasItem.SubgraphIoSlot
-
-    let cursor = "default"
-    if (this.state.draggingCanvas) {
-      cursor = "grabbing"
-    } else if (this.state.readOnly) {
-      cursor = "grab"
-    } else if (this.pointer.resizeDirection) {
-      cursor = cursors[this.pointer.resizeDirection] ?? cursors.SE
-    } else if (this.state.hoveringOver & crosshairItems) {
-      cursor = "crosshair"
-    } else if (this.state.hoveringOver & CanvasItem.Reroute) {
-      cursor = "grab"
-    }
-
-    this.#setCursor(cursor)
-  }
-
-  // Whether the canvas was previously being dragged prior to pressing space key.
-  // null if space key is not pressed.
-  private _previously_dragging_canvas: boolean | null = null
-
-  // #region Legacy accessors
-  /** @deprecated Use {@link LGraphCanvas.state} `readOnly` instead. */
-  get read_only(): boolean {
-    return this.state.readOnly
-  }
-
-  set read_only(value: boolean) {
-    this.state.readOnly = value
-    this.#updateCursorStyle()
-  }
-
-  get isDragging(): boolean {
-    return this.state.draggingItems
-  }
-
-  set isDragging(value: boolean) {
-    this.state.draggingItems = value
-  }
-
-  get hoveringOver(): CanvasItem {
-    return this.state.hoveringOver
-  }
-
-  set hoveringOver(value: CanvasItem) {
-    this.state.hoveringOver = value
-    this.#updateCursorStyle()
-  }
-
-  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDown isDown}. */
-  get pointer_is_down() {
-    return this.pointer.isDown
-  }
-
-  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDouble isDouble}. */
-  get pointer_is_double() {
-    return this.pointer.isDouble
-  }
-
-  /** @deprecated Use {@link LGraphCanvas.state} `draggingCanvas` instead. */
-  get dragging_canvas(): boolean {
-    return this.state.draggingCanvas
-  }
-
-  set dragging_canvas(value: boolean) {
-    this.state.draggingCanvas = value
-    this.#updateCursorStyle()
-  }
-
-  /**
-   * @deprecated Use {@link LGraphNode.titleFontStyle} instead.
-   */
-  get title_text_font(): string {
-    return `${LiteGraph.NODE_TEXT_SIZE}px ${LiteGraph.NODE_FONT}`
-  }
-  // #endregion Legacy accessors
-
-  get inner_text_font(): string {
-    return `normal ${LiteGraph.NODE_SUBTEXT_SIZE}px ${LiteGraph.NODE_FONT}`
-  }
-
-  #maximumFrameGap = 0
-  /** Maximum frames per second to render. 0: unlimited. Default: 0 */
-  public get maximumFps() {
-    return this.#maximumFrameGap > Number.EPSILON ? this.#maximumFrameGap / 1000 : 0
-  }
-
-  public set maximumFps(value) {
-    this.#maximumFrameGap = value > Number.EPSILON ? 1000 / value : 0
-  }
-
-  /**
-   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
-   */
-  get round_radius() {
-    return LiteGraph.ROUND_RADIUS
-  }
-
-  /**
-   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
-   */
-  set round_radius(value: number) {
-    LiteGraph.ROUND_RADIUS = value
-  }
-
-  // Cached LOD threshold values for performance
-  private _lowQualityZoomThreshold: number = 0
-  private _isLowQuality: boolean = false
-
-  /**
-   * Updates the low quality zoom threshold based on current settings.
-   * Called when min_font_size_for_lod or DPR changes.
-   */
-  private updateLowQualityThreshold(): void {
-    if (this._min_font_size_for_lod === 0) {
-      // LOD disabled
-      this._lowQualityZoomThreshold = 0
-      this._isLowQuality = false
-      return
-    }
-
-    const baseFontSize = LiteGraph.NODE_TEXT_SIZE // 14px
-    const dprAdjustment = Math.sqrt(window.devicePixelRatio || 1)
-
-    // Calculate the zoom level where text becomes unreadable
-    this._lowQualityZoomThreshold =
-      this._min_font_size_for_lod / (baseFontSize * dprAdjustment)
-
-    // Update current state based on current zoom
-    this._isLowQuality = this.ds.scale < this._lowQualityZoomThreshold
-  }
-
-  /**
-   * Render low quality when zoomed out based on minimum readable font size.
-   */
-  get low_quality(): boolean {
-    return this._isLowQuality
   }
 
   /**
@@ -623,21 +487,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
   /** Controls link rendering style. See {@link LinkRenderType} constants. */
   links_render_mode: number
-  /** Minimum font size in pixels before switching to low quality rendering. */
-  private _min_font_size_for_lod: number = 8
-
-  get min_font_size_for_lod(): number {
-    return this._min_font_size_for_lod
-  }
-
-  set min_font_size_for_lod(value: number) {
-    if (this._min_font_size_for_lod === value) {
-      return
-    }
-
-    this._min_font_size_for_lod = value
-    this.updateLowQualityThreshold()
-  }
 
   /** Pointer position in canvas pixel coordinates, where `(0, 0)` is the top-left of the canvas element. */
   readonly mouse: Point
@@ -690,8 +539,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   readonly viewport?: Rect
   /** When `true`, resizes the canvas to match its parent element dimensions. */
   autoresize: boolean
-  /** The canvas instance that most recently received pointer input. Used by static menu handlers. */
-  static active_canvas: LGraphCanvas
   /** Incremented each render frame; used for animation timing. */
   frame = 0
   /** Timestamp (ms) of the last completed draw call. */
@@ -710,33 +557,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   selected_group: LGraphGroup | null = null
   /** The nodes that are currently visible on the canvas. */
   visible_nodes: LGraphNode[] = []
-  /**
-   * The IDs of the nodes that are currently visible on the canvas. More
-   * performant than {@link visible_nodes} for visibility checks.
-   */
-  #visible_node_ids: Set<NodeId> = new Set()
   /** The node currently under the pointer, if any. Cleared on pointer leave. */
   node_over?: LGraphNode
   /** Node that has captured keyboard/pointer input for widget editing, if any. */
   node_capturing_input?: LGraphNode | null
   /** Map of link IDs that should be rendered in a highlighted state (e.g. when their endpoint node is selected). */
   highlighted_links: Dictionary<boolean> = {}
-
-  #visibleReroutes: Set<Reroute> = new Set()
-  private _autoPan: AutoPanController | null = null
-  /**
-   * Modifier state of the most recent drag pointer event, so the auto-pan
-   * callback resolves the same dragged-item set as normal pointer movement
-   * (e.g. Cmd/Ctrl-drag moves a group without its contents). Updated on every
-   * drag move and seeded from the pointer-down event when a drag starts.
-   */
-  private _lastDragModifiers: Pick<MouseEvent, "ctrlKey" | "metaKey"> = {
-    ctrlKey: false,
-    metaKey: false,
-  }
-
-  private _ghostPointerHandler: ((e: PointerEvent) => void) | null = null
-  private _ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
 
   /** When `true`, the foreground canvas needs to be redrawn on the next frame. */
   dirty_canvas: boolean = true
@@ -754,10 +580,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   last_mouseclick: number = 0
   /** The {@link LGraph} or {@link Subgraph} currently displayed and edited by this canvas. */
   graph: LGraph | Subgraph | null
-  get _graph(): LGraph | Subgraph {
-    if (!this.graph) throw new NullGraphError()
-    return this.graph
-  }
 
   /** The primary HTML canvas element used for foreground rendering and event dispatch. */
   canvas: HTMLCanvasElement & ICustomEventTarget<LGraphCanvasEventMap>
@@ -767,20 +589,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   ctx: CanvasRenderingContext2D
   /** Whether pointer and keyboard events are currently bound to {@link canvas}. */
   _events_binded?: boolean
-  /** Bound pointer-down handler registered on {@link canvas}. */
-  _mousedown_callback?(e: PointerEvent): void
-  /** Bound wheel handler registered on {@link canvas}. */
-  _mousewheel_callback?(e: WheelEvent): void
-  /** Bound pointer-move handler registered on {@link canvas}. */
-  _mousemove_callback?(e: PointerEvent): void
-  /** Bound pointer-up handler registered on {@link canvas}. */
-  _mouseup_callback?(e: PointerEvent): void
-  /** Bound pointer-out handler registered on {@link canvas}. */
-  _mouseout_callback?(e: PointerEvent): void
-  /** Bound pointer-cancel handler registered on {@link canvas}. */
-  _mousecancel_callback?(e: PointerEvent): void
-  /** Bound keyboard handler registered on {@link canvas} and its document. */
-  _key_callback?(e: KeyboardEvent): void
   /** 2D rendering context for the off-screen {@link bgcanvas}. */
   bgctx?: CanvasRenderingContext2D | null
   /** Whether the requestAnimationFrame render loop is currently active. */
@@ -821,40 +629,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   SELECTED_NODE?: LGraphNode
   /** @deprecated Panels */
   NODEPANEL_IS_OPEN?: boolean
-
-  /**
-   * Once per frame check of snap to grid value.
-   * @todo Update on change.
-   */
-  #snapToGrid?: number
-  /**
-   * Set on keydown, keyup.
-   * @todo
-   */
-  #shiftDown: boolean = false
-
-  /** If true, enable drag zoom. Ctrl+Shift+Drag Up/Down: zoom canvas. */
-  dragZoomEnabled: boolean = false
-  /** The start position of the drag zoom. */
-  #dragZoomStart: null | { pos: Point, scale: number } = null
-
-  /** Override to supply entries for the canvas background context menu. */
-  getMenuOptions?(): IContextMenuValue<string>[]
-  /**
-   * Override to append entries to the canvas background context menu.
-   * @param canvas This canvas instance.
-   * @param options Mutable menu entries array to append to.
-   */
-  getExtraMenuOptions?(
-    canvas: LGraphCanvas,
-    options: IContextMenuValue<string>[],
-  ): IContextMenuValue<string>[]
-  /** The node that was most recently right-clicked. Set during {@link processContextMenu}. */
-  static active_node: LGraphNode
-  /** Called before the graph is modified. Use for undo/redo or validation hooks. */
-  onBeforeChange?(graph: LGraph): void
-  /** Called after the graph has been modified. Use for undo/redo or persistence hooks. */
-  onAfterChange?(graph: LGraph): void
   /** Called when {@link clear} resets canvas state. */
   onClear?: () => void
   /**
@@ -1837,83 +1611,51 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * clears all the data inside
-   *
+   * Updates the low quality zoom threshold based on current settings.
+   * Called when min_font_size_for_lod or DPR changes.
    */
-  clear(): void {
-    this.frame = 0
-    this.last_draw_time = 0
-    this.render_time = 0
-    this.fps = 0
+  private updateLowQualityThreshold(): void {
+    if (this._min_font_size_for_lod === 0) {
+      // LOD disabled
+      this._lowQualityZoomThreshold = 0
+      this._isLowQuality = false
+      return
+    }
 
-    // this.scale = 1;
-    // this.offset = [0,0];
-    this.dragging_rectangle = null
+    const baseFontSize = LiteGraph.NODE_TEXT_SIZE // 14px
+    const dprAdjustment = Math.sqrt(window.devicePixelRatio || 1)
 
-    this.selected_nodes = {}
-    this.selected_group = null
-    this.selectedItems.clear()
-    this.state.selectionChanged = true
-    this.onSelectionChange?.(this.selected_nodes)
+    // Calculate the zoom level where text becomes unreadable
+    this._lowQualityZoomThreshold =
+      this._min_font_size_for_lod / (baseFontSize * dprAdjustment)
 
-    this.visible_nodes = []
-    this.node_over = undefined
-    this.node_capturing_input = null
-    this.connecting_links = null
-    this.highlighted_links = {}
-
-    this.dragging_canvas = false
-
-    this.#dirty()
-    this.dirty_area = null
-
-    this.node_in_panel = null
-    this.node_widget = null
-
-    this.last_mouse = [0, 0]
-    this.last_mouseclick = 0
-    this.pointer.reset()
-    this.visible_area.set([0, 0, 0, 0])
-
-    this.onClear?.()
+    // Update current state based on current zoom
+    this._isLowQuality = this.ds.scale < this._lowQualityZoomThreshold
   }
 
-  /**
-   * Assigns a new graph to this canvas.
-   */
-  setGraph(newGraph: LGraph | Subgraph): void {
-    const { graph } = this
-    if (newGraph === graph) return
+  #updateCursorStyle() {
+    if (!this.state.shouldSetCursor) return
 
-    if (this.state.ghostNodeId != null) this.finalizeGhostPlacement(true)
+    const crosshairItems =
+      CanvasItem.Node |
+      CanvasItem.RerouteSlot |
+      CanvasItem.SubgraphIoNode |
+      CanvasItem.SubgraphIoSlot
 
-    this.clear()
-    newGraph.attachCanvas(this)
+    let cursor = "default"
+    if (this.state.draggingCanvas) {
+      cursor = "grabbing"
+    } else if (this.state.readOnly) {
+      cursor = "grab"
+    } else if (this.pointer.resizeDirection) {
+      cursor = cursors[this.pointer.resizeDirection] ?? cursors.SE
+    } else if (this.state.hoveringOver & crosshairItems) {
+      cursor = "crosshair"
+    } else if (this.state.hoveringOver & CanvasItem.Reroute) {
+      cursor = "grab"
+    }
 
-    this.dispatch("litegraph:set-graph", { newGraph, oldGraph: graph })
-    this.#dirty()
-  }
-
-  openSubgraph(subgraph: Subgraph): void {
-    const { graph } = this
-    if (!graph) throw new NullGraphError()
-
-    const options = { bubbles: true, detail: { subgraph, closingGraph: graph }, cancelable: true }
-    const mayContinue = this.canvas.dispatchEvent(new CustomEvent("subgraph-opening", options))
-    if (!mayContinue) return
-
-    this.clear()
-    this.subgraph = subgraph
-    this.setGraph(subgraph)
-
-    this.canvas.dispatchEvent(new CustomEvent("subgraph-opened", options))
-  }
-
-  /**
-   * @returns the visually active graph (in case there are more in the stack)
-   */
-  getCurrentGraph(): LGraph | null {
-    return this.graph
+    this.#setCursor(cursor)
   }
 
   /**
@@ -1931,155 +1673,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       return el
     }
     return canvas
-  }
-
-  /**
-   * Sets the current HTML canvas element.
-   * Calls bindEvents to add input event listeners, and (re)creates the background canvas.
-   * @param canvas The canvas element to assign, or its HTML element ID.  If null or undefined, the current reference is cleared.
-   * @param skip_events If true, events on the previous canvas will not be removed.  Has no effect on the first invocation.
-   */
-  setCanvas(canvas: string | HTMLCanvasElement, skip_events?: boolean) {
-    const element = this.#validateCanvas(canvas)
-    if (element === this.canvas) return
-    // maybe detach events from old_canvas
-    if (!element && this.canvas && !skip_events) this.unbindEvents()
-
-    this.canvas = element
-    this.ds.element = element
-    this.pointer.element = element
-
-    if (!element) return
-    this.#setCursor = createCursorCache(element)
-
-    // TODO: classList.add
-    element.className += " lgraphcanvas"
-    element.data = this
-
-    // Background canvas: To render objects behind nodes (background, links, groups)
-    this.bgcanvas = document.createElement("canvas")
-    this.bgcanvas.width = this.canvas.width
-    this.bgcanvas.height = this.canvas.height
-
-    const ctx = element.getContext?.("2d")
-    if (ctx == null) {
-      if (element.localName != "canvas") {
-        throw `Element supplied for LGraphCanvas must be a <canvas> element, you passed a ${element.localName}`
-      }
-      throw "This browser doesn't support Canvas"
-    }
-    this.ctx = ctx
-
-    if (!skip_events) this.bindEvents()
-  }
-
-  /** Prevents default for middle-click auxclick only. */
-  _preventMiddleAuxClick(e: MouseEvent): void {
-    if (isMiddleButtonEvent(e)) e.preventDefault()
-  }
-
-  /** Captures an event and prevents default - returns false. */
-  _doNothing(e: Event): boolean {
-    // console.log("pointerevents: _doNothing "+e.type);
-    e.preventDefault()
-    return false
-  }
-
-  /** Captures an event and prevents default - returns true. */
-  _doReturnTrue(e: Event): boolean {
-    e.preventDefault()
-    return true
-  }
-
-  /**
-   * binds mouse, keyboard, touch and drag events to the canvas
-   */
-  bindEvents(): void {
-    if (this._events_binded) {
-      console.warn("LGraphCanvas: events already bound")
-      return
-    }
-
-    const { canvas } = this
-    // hack used when moving canvas between windows
-    const { document } = this.getCanvasWindow()
-
-    this._mousedown_callback = this.processMouseDown.bind(this)
-    this._mousewheel_callback = this.processMouseWheel.bind(this)
-    this._mousemove_callback = this.processMouseMove.bind(this)
-    this._mouseup_callback = this.processMouseUp.bind(this)
-    this._mouseout_callback = this.processMouseOut.bind(this)
-    this._mousecancel_callback = this.processMouseCancel.bind(this)
-
-    canvas.addEventListener("pointerdown", this._mousedown_callback, { capture: true })
-    canvas.addEventListener("wheel", this._mousewheel_callback, { capture: false })
-
-    canvas.addEventListener("pointerup", this._mouseup_callback, { capture: true })
-    canvas.addEventListener("pointermove", this._mousemove_callback)
-    canvas.addEventListener("pointerout", this._mouseout_callback)
-    canvas.addEventListener("pointercancel", this._mousecancel_callback, { capture: true })
-
-    canvas.addEventListener("contextmenu", this._doNothing)
-    // Prevent middle-click paste (PRIMARY clipboard on Linux) - fixes #4464
-    canvas.addEventListener("auxclick", this._preventMiddleAuxClick)
-
-    // Keyboard
-    this._key_callback = this.processKey.bind(this)
-
-    canvas.addEventListener("keydown", this._key_callback, { capture: true })
-    // keyup event must be bound on the document
-    document.addEventListener("keyup", this._key_callback, { capture: true })
-
-    canvas.addEventListener("dragover", this._doNothing, { capture: false })
-    canvas.addEventListener("dragend", this._doNothing, { capture: false })
-    canvas.addEventListener("dragenter", this._doReturnTrue, { capture: false })
-
-    this._events_binded = true
-  }
-
-  /**
-   * unbinds mouse events from the canvas
-   */
-  unbindEvents(): void {
-    if (!this._events_binded) {
-      console.warn("LGraphCanvas: no events bound")
-      return
-    }
-
-    // console.log("pointerevents: unbindEvents");
-    const { document } = this.getCanvasWindow()
-    const { canvas } = this
-
-    // Assertions: removing nullish is fine.
-    canvas.removeEventListener("pointercancel", this._mousecancel_callback!)
-    canvas.removeEventListener("pointerout", this._mouseout_callback!)
-    canvas.removeEventListener("pointermove", this._mousemove_callback!)
-    canvas.removeEventListener("pointerup", this._mouseup_callback!)
-    canvas.removeEventListener("pointerdown", this._mousedown_callback!)
-    canvas.removeEventListener("wheel", this._mousewheel_callback!)
-    canvas.removeEventListener("keydown", this._key_callback!)
-    document.removeEventListener("keyup", this._key_callback!)
-    canvas.removeEventListener("contextmenu", this._doNothing)
-    canvas.removeEventListener("auxclick", this._preventMiddleAuxClick)
-    canvas.removeEventListener("dragenter", this._doReturnTrue)
-
-    this._mousedown_callback = undefined
-    this._mousewheel_callback = undefined
-    this._key_callback = undefined
-
-    this._events_binded = false
-  }
-
-  /**
-   * Ensures the canvas will be redrawn on the next frame by setting the dirty flag(s).
-   * Without parameters, this function does nothing.
-   * @todo Impl. `setDirty()` or similar as shorthand to redraw everything.
-   * @param fgcanvas If true, marks the foreground canvas as dirty (nodes and anything drawn on top of them).  Default: false
-   * @param bgcanvas If true, mark the background canvas as dirty (background, groups, links).  Default: false
-   */
-  setDirty(fgcanvas: boolean, bgcanvas?: boolean): void {
-    if (fgcanvas) this.dirty_canvas = true
-    if (bgcanvas) this.dirty_bgcanvas = true
   }
 
   /** Marks the entire canvas as dirty. */
@@ -2115,241 +1708,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     })
     this._autoPan.updatePointer(this.mouse[0], this.mouse[1])
     this._autoPan.start()
-  }
-
-  /**
-   * Used to attach the canvas in a popup
-   * @returns returns the window where the canvas is attached (the DOM root node)
-   */
-  getCanvasWindow(): Window {
-    if (!this.canvas) return window
-
-    const doc = this.canvas.ownerDocument
-    // @ts-expect-error Check if required
-    return doc.defaultView || doc.parentWindow
-  }
-
-  /**
-   * starts rendering the content of the canvas when needed
-   *
-   */
-  startRendering(): void {
-    // already rendering
-    if (this.is_rendering) return
-
-    this.is_rendering = true
-    renderFrame.call(this)
-
-    /** Render loop */
-    function renderFrame(this: LGraphCanvas) {
-      if (!this.pause_rendering) {
-        this.draw()
-      }
-
-      const window = this.getCanvasWindow()
-      if (this.is_rendering) {
-        if (this.#maximumFrameGap > 0) {
-          // Manual FPS limit
-          const gap = this.#maximumFrameGap - (LiteGraph.getTime() - this.last_draw_time)
-          setTimeout(renderFrame.bind(this), Math.max(1, gap))
-        } else {
-          // FPS limited by refresh rate
-          window.requestAnimationFrame(renderFrame.bind(this))
-        }
-      }
-    }
-  }
-
-  /**
-   * stops rendering the content of the canvas (to save resources)
-   *
-   */
-  stopRendering(): void {
-    this.is_rendering = false
-    /*
-    if(this.rendering_timer_id)
-    {
-        clearInterval(this.rendering_timer_id);
-        this.rendering_timer_id = null;
-    }
-    */
-  }
-
-  /* LiteGraphCanvas input */
-  // used to block future mouse events (because of im gui)
-  blockClick(): void {
-    this.block_click = true
-    this.last_mouseclick = 0
-  }
-
-  /**
-   * Gets the widget at the current cursor position.
-   * @param node Optional node to check for widgets under cursor
-   * @returns The widget located at the current cursor position, if any is found.
-   * @deprecated Use {@link LGraphNode.getWidgetOnPos} instead.
-   * ```ts
-   * const [x, y] = canvas.graph_mouse
-   * const widget = canvas.node_over?.getWidgetOnPos(x, y, true)
-   * ```
-   */
-  getWidgetAtCursor(node?: LGraphNode): IBaseWidget | undefined {
-    node ??= this.node_over
-    return node?.getWidgetOnPos(this.graph_mouse[0], this.graph_mouse[1], true)
-  }
-
-  /**
-   * Clears highlight and mouse-over information from nodes that should not have it.
-   *
-   * Intended to be called when the pointer moves away from a node.
-   * @param node The node that the mouse is now over
-   * @param e MouseEvent that is triggering this
-   */
-  updateMouseOverNodes(node: LGraphNode | null, e: CanvasPointerEvent): void {
-    if (!this.graph) throw new NullGraphError()
-
-    const { pointer } = this
-    const nodes = this.graph._nodes
-    for (const otherNode of nodes) {
-      if (otherNode.mouseOver && node != otherNode) {
-        // mouse leave
-        if (!pointer.eDown) pointer.resizeDirection = undefined
-        otherNode.mouseOver = undefined
-        this._highlight_input = undefined
-        this._highlight_pos = undefined
-        this.linkConnector.overWidget = undefined
-
-        // Hover transitions
-        // TODO: Implement single lerp ease factor for current progress on hover in/out.
-        // In drawNode, multiply by ease factor and differential value (e.g. bg alpha +0.5).
-        otherNode.lostFocusAt = LiteGraph.getTime()
-
-        this.node_over?.onMouseLeave?.(e)
-        this.node_over = undefined
-        this.dirty_canvas = true
-      }
-    }
-  }
-
-  /** Primary pointer-down handler. Routes clicks to selection, dragging, linking, and widget interaction. */
-  processMouseDown(e: PointerEvent): void {
-    if (this.state.ghostNodeId != null) {
-      if (e.button === 0) this.finalizeGhostPlacement(false)
-      if (e.button === 2) this.finalizeGhostPlacement(true)
-      e.stopPropagation()
-      e.preventDefault()
-      return
-    }
-
-    if (this.dragZoomEnabled && e.ctrlKey && e.shiftKey && !e.altKey && e.buttons) {
-      this.#dragZoomStart = { pos: [e.x, e.y], scale: this.ds.scale }
-      return
-    }
-
-    const { graph, pointer } = this
-    this.adjustMouseEvent(e)
-    if (e.isPrimary) pointer.down(e)
-
-    if (this.set_canvas_dirty_on_mouse_event) this.dirty_canvas = true
-
-    if (!graph) return
-
-    const ref_window = this.getCanvasWindow()
-    LGraphCanvas.active_canvas = this
-
-    const x = e.clientX
-    const y = e.clientY
-    this.ds.viewport = this.viewport
-    const is_inside = !this.viewport || isInRect(x, y, this.viewport)
-
-    if (!is_inside) return
-
-    const node = graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes) ?? undefined
-
-    this.mouse[0] = x
-    this.mouse[1] = y
-    this.graph_mouse[0] = e.canvasX
-    this.graph_mouse[1] = e.canvasY
-    this.last_click_position = [this.mouse[0], this.mouse[1]]
-
-    pointer.isDouble = pointer.isDown && e.isPrimary
-    pointer.isDown = true
-
-    this.canvas.focus()
-
-    LiteGraph.closeAllContextMenus(ref_window)
-
-    if (this.onMouse?.(e) == true) return
-
-    // left button mouse / single finger
-    if (e.button === 0 && !pointer.isDouble) {
-      this.#processPrimaryButton(e, node)
-    } else if (isMiddleButtonEvent(e)) {
-      this.#processMiddleButton(e, node)
-    } else if (
-      (e.button === 2 || pointer.isDouble) &&
-      this.allow_interaction &&
-      !this.read_only
-    ) {
-      // Right / aux button
-      const { linkConnector, subgraph } = this
-
-      // Sticky select - won't remove single nodes
-      if (subgraph?.inputNode.containsPoint(this.graph_mouse)) {
-        // Subgraph input node
-        this.processSelect(subgraph.inputNode, e, true)
-        subgraph.inputNode.onPointerDown(e, pointer, linkConnector)
-      } else if (subgraph?.outputNode.containsPoint(this.graph_mouse)) {
-        // Subgraph output node
-        this.processSelect(subgraph.outputNode, e, true)
-        subgraph.outputNode.onPointerDown(e, pointer, linkConnector)
-      } else {
-        if (node) {
-          this.processSelect(node, e, true)
-        } else if (this.links_render_mode !== LinkRenderType.HIDDEN_LINK) {
-        // Reroutes
-          const reroute = graph.getRerouteOnPos(e.canvasX, e.canvasY, this.#visibleReroutes)
-          if (reroute) {
-            if (e.altKey) {
-              pointer.onClick = (upEvent) => {
-                if (!upEvent.altKey) {
-                  return
-                }
-
-                // Ensure deselected
-                if (reroute.selected) {
-                  this.deselect(reroute)
-                  this.onSelectionChange?.(this.selected_nodes)
-                }
-                reroute.remove()
-              }
-            } else {
-              this.processSelect(reroute, e, true)
-            }
-          }
-        }
-
-        // Show context menu for the node or group under the pointer
-        pointer.onClick ??= () => this.processContextMenu(node, e)
-      }
-    }
-
-    this.last_mouse = [x, y]
-    this.last_mouseclick = LiteGraph.getTime()
-    this.last_mouse_dragging = true
-
-    graph.change()
-
-    // this is to ensure to defocus(blur) if a text input element is on focus
-    if (
-      !ref_window.document.activeElement ||
-      (ref_window.document.activeElement.nodeName.toLowerCase() != "input" &&
-        ref_window.document.activeElement.nodeName.toLowerCase() != "textarea")
-    ) {
-      e.preventDefault()
-    }
-    e.stopPropagation()
-
-    this.onMouseDown?.(e)
   }
 
   /**
@@ -3071,6 +2429,1243 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
+   * Updates the hover / snap state of all visible reroutes.
+   * @returns The original value of {@link underPointer}, with any found reroute items added.
+   */
+  #updateReroutes(underPointer: CanvasItem): CanvasItem {
+    const { graph, pointer, linkConnector } = this
+    if (!graph) throw new NullGraphError()
+
+    // Update reroute hover state
+    if (!pointer.isDown) {
+      let anyChanges = false
+      for (const reroute of this.#visibleReroutes) {
+        anyChanges ||= reroute.updateVisibility(this.graph_mouse)
+
+        if (reroute.isSlotHovered) underPointer |= CanvasItem.RerouteSlot
+      }
+      if (anyChanges) this.dirty_bgcanvas = true
+    } else if (linkConnector.isConnecting) {
+      // Highlight the reroute that the mouse is over
+      for (const reroute of this.#visibleReroutes) {
+        if (reroute.containsPoint(this.graph_mouse)) {
+          if (linkConnector.isRerouteValidDrop(reroute)) {
+            linkConnector.overReroute = reroute
+            this._highlight_pos = reroute.pos
+          }
+
+          return underPointer | CanvasItem.RerouteSlot
+        }
+      }
+    }
+
+    this._highlight_pos &&= undefined
+    linkConnector.overReroute &&= undefined
+    return underPointer
+  }
+
+  /**
+   * Start dragging an item, optionally including all other selected items.
+   *
+   * ** This function sets the {@link CanvasPointer.finally}() callback. **
+   * @param item The item that the drag event started on
+   * @param pointer The pointer event that initiated the drag, e.g. pointerdown
+   * @param sticky If `true`, the item is added to the selection - see {@link processSelect}
+   */
+  #startDraggingItems(item: Positionable, pointer: CanvasPointer, sticky = false): void {
+    this.emitBeforeChange()
+    this.graph?.beforeChange()
+    // Ensure that dragging is properly cleaned up, on success or failure.
+    pointer.finally = () => {
+      this.isDragging = false
+      this._autoPan?.stop()
+      this._autoPan = null
+      this.graph?.afterChange()
+      this.emitAfterChange()
+    }
+
+    this.processSelect(item, pointer.eDown, sticky)
+    this.isDragging = true
+
+    // Seed the auto-pan modifier state from the pointer-down event so a drag
+    // that reaches the canvas edge before the first move still honours the
+    // "move group without contents" modifier.
+    if (pointer.eDown) {
+      this._lastDragModifiers = {
+        ctrlKey: pointer.eDown.ctrlKey,
+        metaKey: pointer.eDown.metaKey,
+      }
+    }
+
+    this.#startNodeAutoPan()
+  }
+
+  #startNodeAutoPan(): void {
+    this._autoPan = new AutoPanController({
+      canvas: this.canvas,
+      ds: this.ds,
+      maxPanSpeed: this.auto_pan_speed,
+      onPan: (panX, panY) => {
+        const selected = this.selectedItems
+        const allItems = getDraggedItems(selected, this._lastDragModifiers)
+
+        for (const item of allItems) {
+          item.move(panX, panY, true)
+        }
+
+        this.#dirty()
+      },
+    })
+    this._autoPan.updatePointer(this.mouse[0], this.mouse[1])
+    this._autoPan.start()
+  }
+
+  /**
+   * Handles shared clean up and placement after items have been dragged.
+   * @param e The event that completed the drag, e.g. pointerup, pointermove
+   */
+  #processDraggedItems(e: CanvasPointerEvent): void {
+    const { graph } = this
+    if (e.shiftKey || LiteGraph.alwaysSnapToGrid)
+      graph?.snapToGrid(this.selectedItems)
+
+    this.dirty_canvas = true
+    this.dirty_bgcanvas = true
+
+    // TODO: Replace legacy behaviour: callbacks were never extended for multiple items
+    this.onNodeMoved?.(findFirstNode(this.selectedItems))
+  }
+
+  #noItemsSelected(): void {
+    const event = new CustomEvent("litegraph:no-items-selected", { bubbles: true })
+    this.canvas.dispatchEvent(event)
+  }
+
+  #handleMultiSelect(e: CanvasPointerEvent, dragRect: Float32Array) {
+    // Process drag
+    // Convert Point pair (pos, offset) to Rect
+    const { graph, selectedItems, subgraph } = this
+    if (!graph) throw new NullGraphError()
+
+    const w = Math.abs(dragRect[2])
+    const h = Math.abs(dragRect[3])
+    if (dragRect[2] < 0) dragRect[0] -= w
+    if (dragRect[3] < 0) dragRect[1] -= h
+    dragRect[2] = w
+    dragRect[3] = h
+
+    // Select nodes - any part of the node is in the select area
+    const isSelected = new Set<Positionable>()
+    const notSelected: Positionable[] = []
+
+    if (subgraph) {
+      const { inputNode, outputNode } = subgraph
+
+      if (overlapBounding(dragRect, inputNode.boundingRect)) {
+        addPositionable(inputNode)
+      }
+      if (overlapBounding(dragRect, outputNode.boundingRect)) {
+        addPositionable(outputNode)
+      }
+    }
+
+    for (const nodeX of graph._nodes) {
+      if (overlapBounding(dragRect, nodeX.boundingRect)) {
+        addPositionable(nodeX)
+      }
+    }
+
+    // Select groups - the group is wholly inside the select area
+    for (const group of graph.groups) {
+      if (!containsRect(dragRect, group._bounding)) continue
+
+      group.recomputeInsideNodes()
+      addPositionable(group)
+    }
+
+    // Select reroutes - the centre point is inside the select area
+    for (const reroute of graph.reroutes.values()) {
+      if (!isPointInRect(reroute.pos, dragRect)) continue
+
+      selectedItems.add(reroute)
+      reroute.selected = true
+      addPositionable(reroute)
+    }
+
+    if (e.shiftKey) {
+      // Add to selection
+      for (const item of notSelected) this.select(item)
+    } else if (e.altKey) {
+      // Remove from selection
+      for (const item of isSelected) this.deselect(item)
+    } else {
+      // Replace selection
+      for (const item of selectedItems) {
+        if (!isSelected.has(item)) this.deselect(item)
+      }
+      for (const item of notSelected) this.select(item)
+    }
+    this.onSelectionChange?.(this.selected_nodes)
+
+    function addPositionable(item: Positionable): void {
+      if (!item.selected || !selectedItems.has(item)) notSelected.push(item)
+      else isSelected.add(item)
+    }
+  }
+
+  /**
+   * Iterative traversal of a group's descendants.
+   * Calls {@link groupAction} on nested groups and {@link leafAction} on
+   * non-group children.  Always recurses into nested groups regardless of
+   * their current selection state.
+   */
+  #traverseGroupChildren(
+    group: LGraphGroup,
+    groupAction: (child: LGraphGroup) => void,
+    leafAction: (child: Positionable) => void,
+  ): void {
+    const stack: Positionable[] = [...group._children]
+    while (stack.length > 0) {
+      const child = stack.pop()!
+      if (child instanceof LGraphGroup) {
+        groupAction(child)
+        for (const nested of child._children) stack.push(nested)
+      } else {
+        leafAction(child)
+      }
+    }
+  }
+
+  /** @returns If the pointer is over a link centre marker, the link segment it belongs to.  Otherwise, `undefined`.  */
+  #getLinkCentreOnPos(e: CanvasPointerEvent): LinkSegment | undefined {
+    for (const linkSegment of this.renderedPaths) {
+      const centre = linkSegment._pos
+      if (!centre) continue
+
+      if (isInRectangle(e.canvasX, e.canvasY, centre[0] - 4, centre[1] - 4, 8, 8)) {
+        return linkSegment
+      }
+    }
+  }
+
+  /** Get the target snap / highlight point in graph space */
+  #getHighlightPosition(): ReadOnlyPoint {
+    return LiteGraph.snaps_for_comfy
+      ? this.linkConnector.state.snapLinksPos ?? this._highlight_pos ?? this.graph_mouse
+      : this.graph_mouse
+  }
+
+  /**
+   * Renders indicators showing where a link will connect if released.
+   * Partial border over target node and a highlight over the slot itself.
+   * @param ctx Canvas 2D context
+   */
+  #renderSnapHighlight(
+    ctx: CanvasRenderingContext2D,
+    highlightPos: ReadOnlyPoint,
+  ): void {
+    const linkConnectorSnap = !!this.linkConnector.state.snapLinksPos
+    if (!this._highlight_pos && !linkConnectorSnap) return
+
+    ctx.fillStyle = "#ffcc00"
+    ctx.beginPath()
+    const shape = this._highlight_input?.shape
+
+    if (shape === RenderShape.ARROW) {
+      ctx.moveTo(highlightPos[0] + 8, highlightPos[1] + 0.5)
+      ctx.lineTo(highlightPos[0] - 4, highlightPos[1] + 6 + 0.5)
+      ctx.lineTo(highlightPos[0] - 4, highlightPos[1] - 6 + 0.5)
+      ctx.closePath()
+    } else {
+      ctx.arc(highlightPos[0], highlightPos[1], 6, 0, Math.PI * 2)
+    }
+    ctx.fill()
+
+    const { linkConnector } = this
+    const { overReroute, overWidget } = linkConnector
+    if (!LiteGraph.snap_highlights_node || !linkConnector.isConnecting || linkConnectorSnap) return
+
+    // Reroute highlight
+    overReroute?.drawHighlight(ctx, "#ffcc00aa")
+
+    // Ensure we're mousing over a node and connecting a link
+    const node = this.node_over
+    if (!node) return
+
+    const { strokeStyle, lineWidth } = ctx
+
+    const area = node.boundingRect
+    const gap = 3
+    const radius = LiteGraph.ROUND_RADIUS + gap
+
+    const x = area[0] - gap
+    const y = area[1] - gap
+    const width = area[2] + gap * 2
+    const height = area[3] + gap * 2
+
+    ctx.beginPath()
+    ctx.roundRect(x, y, width, height, radius)
+
+    // TODO: Currently works on LTR slots only.  Add support for other directions.
+    const start = linkConnector.state.connectingTo === "output" ? 0 : 1
+    const inverter = start ? -1 : 1
+
+    // Radial highlight centred on highlight pos
+    const hx = highlightPos[0]
+    const hy = highlightPos[1]
+    const gRadius = width < height
+      ? width
+      : width * Math.max(height / width, 0.5)
+
+    const gradient = ctx.createRadialGradient(hx, hy, 0, hx, hy, gRadius)
+    gradient.addColorStop(1, "#00000000")
+    gradient.addColorStop(0, "#ffcc00aa")
+
+    // Linear gradient over half the node.
+    const linearGradient = ctx.createLinearGradient(x, y, x + width, y)
+    linearGradient.addColorStop(0.5, "#00000000")
+    linearGradient.addColorStop(start + 0.67 * inverter, "#ddeeff33")
+    linearGradient.addColorStop(start + inverter, "#ffcc0055")
+
+    /**
+     * Workaround for a canvas render issue.
+     * In Chromium 129 (2024-10-15), rounded corners can be rendered with the wrong part of a gradient colour.
+     * Occurs only at certain thicknesses / arc sizes.
+     */
+    ctx.setLineDash([radius, radius * 0.001])
+
+    ctx.lineWidth = 1
+    ctx.strokeStyle = linearGradient
+    ctx.stroke()
+
+    if (overWidget) {
+      const { computedHeight } = overWidget
+
+      ctx.beginPath()
+      const { pos } = node
+      const [nodeX, nodeY] = pos
+      const height = LiteGraph.NODE_WIDGET_HEIGHT
+      if (
+        overWidget.type.startsWith("custom") &&
+        computedHeight != null &&
+        computedHeight > height * 2
+      ) {
+        // Most likely DOM widget text box
+        ctx.rect(
+          nodeX + 9,
+          nodeY + overWidget.y + 9,
+          (overWidget.width ?? area[2]) - 18,
+          computedHeight - 18,
+        )
+      } else {
+        // Regular widget, probably
+        ctx.roundRect(
+          nodeX + BaseWidget.margin,
+          nodeY + overWidget.y,
+          overWidget.width ?? area[2],
+          height,
+          height * 0.5,
+        )
+      }
+      ctx.stroke()
+    }
+
+    ctx.strokeStyle = gradient
+    ctx.stroke()
+
+    ctx.setLineDash([])
+    ctx.lineWidth = lineWidth
+    ctx.strokeStyle = strokeStyle
+  }
+
+  /**
+   * draws the given node inside the canvas
+   */
+  #getNodeModeAlpha(node: LGraphNode): number {
+    if (node.flags.ghost) return 0.3
+    return node.mode === LGraphEventMode.BYPASS
+      ? 0.2
+      : (node.mode === LGraphEventMode.NEVER
+        ? 0.4
+        : this.editor_alpha)
+  }
+
+  #renderFloatingLinks(ctx: CanvasRenderingContext2D, graph: LGraph, visibleReroutes: Reroute[], now: number) {
+    // Render floating links with 3/4 current alpha
+    const { globalAlpha } = ctx
+    ctx.globalAlpha = globalAlpha * 0.33
+
+    // Floating reroutes
+    for (const link of graph.floatingLinks.values()) {
+      const reroutes = LLink.getReroutes(graph, link)
+      const firstReroute = reroutes[0]
+      const reroute = reroutes.at(-1)
+      if (!firstReroute || !reroute?.floating) continue
+
+      // Input not connected
+      if (reroute.floating.slotType === "input") {
+        const node = graph.getNodeById(link.target_id)
+        if (!node) continue
+
+        const startPos = firstReroute.pos
+        const endPos = node.getInputPos(link.target_slot)
+        const endDirection = node.inputs[link.target_slot]?.dir
+
+        firstReroute._dragging = true
+        this.#renderAllLinkSegments(ctx, link, startPos, endPos, visibleReroutes, now, LinkDirection.CENTER, endDirection, true)
+      } else {
+        const node = graph.getNodeById(link.origin_id)
+        if (!node) continue
+
+        const startPos = node.getOutputPos(link.origin_slot)
+        const endPos = reroute.pos
+        const startDirection = node.outputs[link.origin_slot]?.dir
+
+        link._dragging = true
+        this.#renderAllLinkSegments(ctx, link, startPos, endPos, visibleReroutes, now, startDirection, LinkDirection.CENTER, true)
+      }
+    }
+    ctx.globalAlpha = globalAlpha
+  }
+
+  #renderAllLinkSegments(
+    ctx: CanvasRenderingContext2D,
+    link: LLink,
+    startPos: Point,
+    endPos: Point,
+    visibleReroutes: Reroute[],
+    now: number,
+    startDirection?: LinkDirection,
+    endDirection?: LinkDirection,
+    disabled: boolean = false,
+  ) {
+    const { graph, renderedPaths } = this
+    if (!graph) return
+
+    // Get all points this link passes through
+    const reroutes = LLink.getReroutes(graph, link)
+    const points: [Point, ...Point[], Point] = [
+      startPos,
+      ...reroutes.map(x => x.pos),
+      endPos,
+    ]
+
+    // Bounding box of all points (bezier overshoot on long links will be cut)
+    const pointsX = points.map(x => x[0])
+    const pointsY = points.map(x => x[1])
+    LGraphCanvas.#link_bounding[0] = Math.min(...pointsX)
+    LGraphCanvas.#link_bounding[1] = Math.min(...pointsY)
+    LGraphCanvas.#link_bounding[2] = Math.max(...pointsX) - LGraphCanvas.#link_bounding[0]
+    LGraphCanvas.#link_bounding[3] = Math.max(...pointsY) - LGraphCanvas.#link_bounding[1]
+
+    // skip links outside of the visible area of the canvas
+    if (!overlapBounding(LGraphCanvas.#link_bounding, LGraphCanvas.#margin_area))
+      return
+
+    const start_dir = startDirection || LinkDirection.RIGHT
+    const end_dir = endDirection || LinkDirection.LEFT
+
+    // Has reroutes
+    if (reroutes.length) {
+      let startControl: Point | undefined
+
+      const l = reroutes.length
+      for (let j = 0; j < l; j++) {
+        const reroute = reroutes[j]
+
+        // Only render once
+        if (!renderedPaths.has(reroute)) {
+          renderedPaths.add(reroute)
+          visibleReroutes.push(reroute)
+          reroute._colour = link.color ||
+            LGraphCanvas.link_type_colors[link.type] ||
+            this.default_link_color
+
+          const prevReroute = graph.getReroute(reroute.parentId)
+          const rerouteStartPos = prevReroute?.pos ?? startPos
+          reroute.calculateAngle(this.last_draw_time, graph, rerouteStartPos)
+
+          // Skip the first segment if it is being dragged
+          if (!reroute._dragging) {
+            this.renderLink(
+              ctx,
+              rerouteStartPos,
+              reroute.pos,
+              link,
+              false,
+              0,
+              null,
+              startControl === undefined ? start_dir : LinkDirection.CENTER,
+              LinkDirection.CENTER,
+              {
+                startControl,
+                endControl: reroute.controlPoint,
+                reroute,
+                disabled,
+              },
+            )
+          }
+        }
+
+        if (!startControl && reroutes.at(-1)?.floating?.slotType === "input") {
+          // Floating link connected to an input
+          startControl = [0, 0]
+        } else {
+          // Calculate start control for the next iter control point
+          const nextPos = reroutes[j + 1]?.pos ?? endPos
+          const dist = Math.min(Reroute.maxSplineOffset, distance(reroute.pos, nextPos) * 0.25)
+          startControl = [dist * reroute.cos, dist * reroute.sin]
+        }
+      }
+
+      // Skip the last segment if it is being dragged
+      if (link._dragging) return
+
+      // Use runtime fallback; TypeScript cannot evaluate this correctly.
+      const segmentStartPos = points.at(-2) ?? startPos
+
+      // Render final link segment
+      this.renderLink(
+        ctx,
+        segmentStartPos,
+        endPos,
+        link,
+        false,
+        0,
+        null,
+        LinkDirection.CENTER,
+        end_dir,
+        { startControl, disabled },
+      )
+      // Skip normal render when link is being dragged
+    } else if (!link._dragging) {
+      this.renderLink(
+        ctx,
+        startPos,
+        endPos,
+        link,
+        false,
+        0,
+        null,
+        start_dir,
+        end_dir,
+      )
+    }
+    renderedPaths.add(link)
+
+    // event triggered rendered on top
+    if (link?._last_time && now - link._last_time < 1000) {
+      const f = 2.0 - (now - link._last_time) * 0.002
+      const tmp = ctx.globalAlpha
+      ctx.globalAlpha = tmp * f
+      this.renderLink(
+        ctx,
+        startPos,
+        endPos,
+        link,
+        true,
+        f,
+        "white",
+        start_dir,
+        end_dir,
+      )
+      ctx.globalAlpha = tmp
+    }
+  }
+
+  /**
+   * Modifies an existing point, adding a single-axis offset.
+   * @param point The point to add the offset to
+   * @param direction The direction to add the offset in
+   * @param dist Distance to offset
+   * @param factor Distance is mulitplied by this value.  Default: 0.25
+   */
+  #addSplineOffset(
+    point: Point,
+    direction: LinkDirection,
+    dist: number,
+    factor = 0.25,
+  ): void {
+    switch (direction) {
+      case LinkDirection.LEFT:
+        point[0] += dist * -factor
+        break
+      case LinkDirection.RIGHT:
+        point[0] += dist * factor
+        break
+      case LinkDirection.UP:
+        point[1] += dist * -factor
+        break
+      case LinkDirection.DOWN:
+        point[1] += dist * factor
+        break
+    }
+  }
+
+  /** Bound pointer-down handler registered on {@link canvas}. */
+  _mousedown_callback?(e: PointerEvent): void
+  /** Bound wheel handler registered on {@link canvas}. */
+  _mousewheel_callback?(e: WheelEvent): void
+  /** Bound pointer-move handler registered on {@link canvas}. */
+  _mousemove_callback?(e: PointerEvent): void
+  /** Bound pointer-up handler registered on {@link canvas}. */
+  _mouseup_callback?(e: PointerEvent): void
+  /** Bound pointer-out handler registered on {@link canvas}. */
+  _mouseout_callback?(e: PointerEvent): void
+  /** Bound pointer-cancel handler registered on {@link canvas}. */
+  _mousecancel_callback?(e: PointerEvent): void
+  /** Bound keyboard handler registered on {@link canvas} and its document. */
+  _key_callback?(e: KeyboardEvent): void
+
+  get min_font_size_for_lod(): number {
+    return this._min_font_size_for_lod
+  }
+
+  set min_font_size_for_lod(value: number) {
+    if (this._min_font_size_for_lod === value) {
+      return
+    }
+
+    this._min_font_size_for_lod = value
+    this.updateLowQualityThreshold()
+  }
+
+  /** The subgraph currently being edited inline, if the canvas has navigated into a subgraph. */
+  get subgraph(): Subgraph | undefined {
+    return this.#subgraph
+  }
+
+  /**
+   * Sets the active subgraph context for this canvas.
+   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:set-graph"` when the value changes.
+   */
+  set subgraph(value: Subgraph | undefined) {
+    if (value === this.#subgraph) {
+      return
+    }
+
+    this.#subgraph = value
+    if (value) this.dispatch("litegraph:set-graph", { oldGraph: this.#subgraph, newGraph: value })
+  }
+
+  /** Dispatches a custom event on the canvas element with a detail payload. */
+  dispatch<T extends keyof NeverNever<LGraphCanvasEventMap>>(type: T, detail: LGraphCanvasEventMap[T]): boolean
+  /**
+   * Dispatches a custom event on the canvas element with no detail payload.
+   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   */
+  dispatch<T extends keyof PickNevers<LGraphCanvasEventMap>>(type: T): boolean
+  /**
+   * Dispatches a custom event on the canvas element.
+   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   * @param detail Event-specific payload. Omitted for events with no detail.
+   */
+  dispatch<T extends keyof LGraphCanvasEventMap>(type: T, detail?: LGraphCanvasEventMap[T]) {
+    const event = new CustomEvent(type as string, { detail, bubbles: true })
+    return this.canvas.dispatchEvent(event)
+  }
+
+  /**
+   * Dispatches a custom event on the canvas element.
+   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   * @param detail Event-specific payload.
+   */
+  dispatchEvent<TEvent extends keyof LGraphCanvasEventMap>(type: TEvent, detail: LGraphCanvasEventMap[TEvent]) {
+    this.canvas.dispatchEvent(new CustomEvent(type, { detail }))
+  }
+
+  get inner_text_font(): string {
+    return `normal ${LiteGraph.NODE_SUBTEXT_SIZE}px ${LiteGraph.NODE_FONT}`
+  }
+
+  /** Maximum frames per second to render. 0: unlimited. Default: 0 */
+  public get maximumFps() {
+    return this.#maximumFrameGap > Number.EPSILON ? this.#maximumFrameGap / 1000 : 0
+  }
+
+  public set maximumFps(value) {
+    this.#maximumFrameGap = value > Number.EPSILON ? 1000 / value : 0
+  }
+
+  /**
+   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
+   */
+  get round_radius() {
+    return LiteGraph.ROUND_RADIUS
+  }
+
+  /**
+   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
+   */
+  set round_radius(value: number) {
+    LiteGraph.ROUND_RADIUS = value
+  }
+
+  /**
+   * Render low quality when zoomed out based on minimum readable font size.
+   */
+  get low_quality(): boolean {
+    return this._isLowQuality
+  }
+
+  /** Override to supply entries for the canvas background context menu. */
+  getMenuOptions?(): IContextMenuValue<string>[]
+  /**
+   * Override to append entries to the canvas background context menu.
+   * @param canvas This canvas instance.
+   * @param options Mutable menu entries array to append to.
+   */
+  getExtraMenuOptions?(
+    canvas: LGraphCanvas,
+    options: IContextMenuValue<string>[],
+  ): IContextMenuValue<string>[]
+  /** Called before the graph is modified. Use for undo/redo or validation hooks. */
+  onBeforeChange?(graph: LGraph): void
+  /** Called after the graph has been modified. Use for undo/redo or persistence hooks. */
+  onAfterChange?(graph: LGraph): void
+
+  get _graph(): LGraph | Subgraph {
+    if (!this.graph) throw new NullGraphError()
+    return this.graph
+  }
+
+  // #region Legacy accessors
+  /** @deprecated Use {@link LGraphCanvas.state} `readOnly` instead. */
+  get read_only(): boolean {
+    return this.state.readOnly
+  }
+
+  set read_only(value: boolean) {
+    this.state.readOnly = value
+    this.#updateCursorStyle()
+  }
+
+  get isDragging(): boolean {
+    return this.state.draggingItems
+  }
+
+  set isDragging(value: boolean) {
+    this.state.draggingItems = value
+  }
+
+  get hoveringOver(): CanvasItem {
+    return this.state.hoveringOver
+  }
+
+  set hoveringOver(value: CanvasItem) {
+    this.state.hoveringOver = value
+    this.#updateCursorStyle()
+  }
+
+  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDown isDown}. */
+  get pointer_is_down() {
+    return this.pointer.isDown
+  }
+
+  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDouble isDouble}. */
+  get pointer_is_double() {
+    return this.pointer.isDouble
+  }
+
+  /** @deprecated Use {@link LGraphCanvas.state} `draggingCanvas` instead. */
+  get dragging_canvas(): boolean {
+    return this.state.draggingCanvas
+  }
+
+  set dragging_canvas(value: boolean) {
+    this.state.draggingCanvas = value
+    this.#updateCursorStyle()
+  }
+
+  /**
+   * @deprecated Use {@link LGraphNode.titleFontStyle} instead.
+   */
+  get title_text_font(): string {
+    return `${LiteGraph.NODE_TEXT_SIZE}px ${LiteGraph.NODE_FONT}`
+  }
+  // #endregion Legacy accessors
+
+  /**
+   * draws the widgets stored inside a node
+   * @deprecated Use {@link LGraphNode.drawWidgets} instead.
+   * @remarks Currently there are extensions hijacking this function, so we cannot remove it.
+   */
+  drawNodeWidgets(
+    node: LGraphNode,
+    _posY: null,
+    ctx: CanvasRenderingContext2D,
+  ): void {
+    node.drawWidgets(ctx, {
+      lowQuality: this.low_quality,
+      editorAlpha: this.editor_alpha,
+    })
+  }
+
+  /**
+   * clears all the data inside
+   *
+   */
+  clear(): void {
+    this.frame = 0
+    this.last_draw_time = 0
+    this.render_time = 0
+    this.fps = 0
+
+    // this.scale = 1;
+    // this.offset = [0,0];
+    this.dragging_rectangle = null
+
+    this.selected_nodes = {}
+    this.selected_group = null
+    this.selectedItems.clear()
+    this.state.selectionChanged = true
+    this.onSelectionChange?.(this.selected_nodes)
+
+    this.visible_nodes = []
+    this.node_over = undefined
+    this.node_capturing_input = null
+    this.connecting_links = null
+    this.highlighted_links = {}
+
+    this.dragging_canvas = false
+
+    this.#dirty()
+    this.dirty_area = null
+
+    this.node_in_panel = null
+    this.node_widget = null
+
+    this.last_mouse = [0, 0]
+    this.last_mouseclick = 0
+    this.pointer.reset()
+    this.visible_area.set([0, 0, 0, 0])
+
+    this.onClear?.()
+  }
+
+  /**
+   * Assigns a new graph to this canvas.
+   */
+  setGraph(newGraph: LGraph | Subgraph): void {
+    const { graph } = this
+    if (newGraph === graph) return
+
+    if (this.state.ghostNodeId != null) this.finalizeGhostPlacement(true)
+
+    this.clear()
+    newGraph.attachCanvas(this)
+
+    this.dispatch("litegraph:set-graph", { newGraph, oldGraph: graph })
+    this.#dirty()
+  }
+
+  openSubgraph(subgraph: Subgraph): void {
+    const { graph } = this
+    if (!graph) throw new NullGraphError()
+
+    const options = { bubbles: true, detail: { subgraph, closingGraph: graph }, cancelable: true }
+    const mayContinue = this.canvas.dispatchEvent(new CustomEvent("subgraph-opening", options))
+    if (!mayContinue) return
+
+    this.clear()
+    this.subgraph = subgraph
+    this.setGraph(subgraph)
+
+    this.canvas.dispatchEvent(new CustomEvent("subgraph-opened", options))
+  }
+
+  /**
+   * @returns the visually active graph (in case there are more in the stack)
+   */
+  getCurrentGraph(): LGraph | null {
+    return this.graph
+  }
+
+  /**
+   * Sets the current HTML canvas element.
+   * Calls bindEvents to add input event listeners, and (re)creates the background canvas.
+   * @param canvas The canvas element to assign, or its HTML element ID.  If null or undefined, the current reference is cleared.
+   * @param skip_events If true, events on the previous canvas will not be removed.  Has no effect on the first invocation.
+   */
+  setCanvas(canvas: string | HTMLCanvasElement, skip_events?: boolean) {
+    const element = this.#validateCanvas(canvas)
+    if (element === this.canvas) return
+    // maybe detach events from old_canvas
+    if (!element && this.canvas && !skip_events) this.unbindEvents()
+
+    this.canvas = element
+    this.ds.element = element
+    this.pointer.element = element
+
+    if (!element) return
+    this.#setCursor = createCursorCache(element)
+
+    // TODO: classList.add
+    element.className += " lgraphcanvas"
+    element.data = this
+
+    // Background canvas: To render objects behind nodes (background, links, groups)
+    this.bgcanvas = document.createElement("canvas")
+    this.bgcanvas.width = this.canvas.width
+    this.bgcanvas.height = this.canvas.height
+
+    const ctx = element.getContext?.("2d")
+    if (ctx == null) {
+      if (element.localName != "canvas") {
+        throw `Element supplied for LGraphCanvas must be a <canvas> element, you passed a ${element.localName}`
+      }
+      throw "This browser doesn't support Canvas"
+    }
+    this.ctx = ctx
+
+    if (!skip_events) this.bindEvents()
+  }
+
+  /** Prevents default for middle-click auxclick only. */
+  _preventMiddleAuxClick(e: MouseEvent): void {
+    if (isMiddleButtonEvent(e)) e.preventDefault()
+  }
+
+  /** Captures an event and prevents default - returns false. */
+  _doNothing(e: Event): boolean {
+    // console.log("pointerevents: _doNothing "+e.type);
+    e.preventDefault()
+    return false
+  }
+
+  /** Captures an event and prevents default - returns true. */
+  _doReturnTrue(e: Event): boolean {
+    e.preventDefault()
+    return true
+  }
+
+  /**
+   * binds mouse, keyboard, touch and drag events to the canvas
+   */
+  bindEvents(): void {
+    if (this._events_binded) {
+      console.warn("LGraphCanvas: events already bound")
+      return
+    }
+
+    const { canvas } = this
+    // hack used when moving canvas between windows
+    const { document } = this.getCanvasWindow()
+
+    this._mousedown_callback = this.processMouseDown.bind(this)
+    this._mousewheel_callback = this.processMouseWheel.bind(this)
+    this._mousemove_callback = this.processMouseMove.bind(this)
+    this._mouseup_callback = this.processMouseUp.bind(this)
+    this._mouseout_callback = this.processMouseOut.bind(this)
+    this._mousecancel_callback = this.processMouseCancel.bind(this)
+
+    canvas.addEventListener("pointerdown", this._mousedown_callback, { capture: true })
+    canvas.addEventListener("wheel", this._mousewheel_callback, { capture: false })
+
+    canvas.addEventListener("pointerup", this._mouseup_callback, { capture: true })
+    canvas.addEventListener("pointermove", this._mousemove_callback)
+    canvas.addEventListener("pointerout", this._mouseout_callback)
+    canvas.addEventListener("pointercancel", this._mousecancel_callback, { capture: true })
+
+    canvas.addEventListener("contextmenu", this._doNothing)
+    // Prevent middle-click paste (PRIMARY clipboard on Linux) - fixes #4464
+    canvas.addEventListener("auxclick", this._preventMiddleAuxClick)
+
+    // Keyboard
+    this._key_callback = this.processKey.bind(this)
+
+    canvas.addEventListener("keydown", this._key_callback, { capture: true })
+    // keyup event must be bound on the document
+    document.addEventListener("keyup", this._key_callback, { capture: true })
+
+    canvas.addEventListener("dragover", this._doNothing, { capture: false })
+    canvas.addEventListener("dragend", this._doNothing, { capture: false })
+    canvas.addEventListener("dragenter", this._doReturnTrue, { capture: false })
+
+    this._events_binded = true
+  }
+
+  /**
+   * unbinds mouse events from the canvas
+   */
+  unbindEvents(): void {
+    if (!this._events_binded) {
+      console.warn("LGraphCanvas: no events bound")
+      return
+    }
+
+    // console.log("pointerevents: unbindEvents");
+    const { document } = this.getCanvasWindow()
+    const { canvas } = this
+
+    // Assertions: removing nullish is fine.
+    canvas.removeEventListener("pointercancel", this._mousecancel_callback!)
+    canvas.removeEventListener("pointerout", this._mouseout_callback!)
+    canvas.removeEventListener("pointermove", this._mousemove_callback!)
+    canvas.removeEventListener("pointerup", this._mouseup_callback!)
+    canvas.removeEventListener("pointerdown", this._mousedown_callback!)
+    canvas.removeEventListener("wheel", this._mousewheel_callback!)
+    canvas.removeEventListener("keydown", this._key_callback!)
+    document.removeEventListener("keyup", this._key_callback!)
+    canvas.removeEventListener("contextmenu", this._doNothing)
+    canvas.removeEventListener("auxclick", this._preventMiddleAuxClick)
+    canvas.removeEventListener("dragenter", this._doReturnTrue)
+
+    this._mousedown_callback = undefined
+    this._mousewheel_callback = undefined
+    this._key_callback = undefined
+
+    this._events_binded = false
+  }
+
+  /**
+   * Ensures the canvas will be redrawn on the next frame by setting the dirty flag(s).
+   * Without parameters, this function does nothing.
+   * @todo Impl. `setDirty()` or similar as shorthand to redraw everything.
+   * @param fgcanvas If true, marks the foreground canvas as dirty (nodes and anything drawn on top of them).  Default: false
+   * @param bgcanvas If true, mark the background canvas as dirty (background, groups, links).  Default: false
+   */
+  setDirty(fgcanvas: boolean, bgcanvas?: boolean): void {
+    if (fgcanvas) this.dirty_canvas = true
+    if (bgcanvas) this.dirty_bgcanvas = true
+  }
+
+  /**
+   * Used to attach the canvas in a popup
+   * @returns returns the window where the canvas is attached (the DOM root node)
+   */
+  getCanvasWindow(): Window {
+    if (!this.canvas) return window
+
+    const doc = this.canvas.ownerDocument
+    // @ts-expect-error Check if required
+    return doc.defaultView || doc.parentWindow
+  }
+
+  /**
+   * starts rendering the content of the canvas when needed
+   *
+   */
+  startRendering(): void {
+    // already rendering
+    if (this.is_rendering) return
+
+    this.is_rendering = true
+    renderFrame.call(this)
+
+    /** Render loop */
+    function renderFrame(this: LGraphCanvas) {
+      if (!this.pause_rendering) {
+        this.draw()
+      }
+
+      const window = this.getCanvasWindow()
+      if (this.is_rendering) {
+        if (this.#maximumFrameGap > 0) {
+          // Manual FPS limit
+          const gap = this.#maximumFrameGap - (LiteGraph.getTime() - this.last_draw_time)
+          setTimeout(renderFrame.bind(this), Math.max(1, gap))
+        } else {
+          // FPS limited by refresh rate
+          window.requestAnimationFrame(renderFrame.bind(this))
+        }
+      }
+    }
+  }
+
+  /**
+   * stops rendering the content of the canvas (to save resources)
+   *
+   */
+  stopRendering(): void {
+    this.is_rendering = false
+    /*
+    if(this.rendering_timer_id)
+    {
+        clearInterval(this.rendering_timer_id);
+        this.rendering_timer_id = null;
+    }
+    */
+  }
+
+  /* LiteGraphCanvas input */
+  // used to block future mouse events (because of im gui)
+  blockClick(): void {
+    this.block_click = true
+    this.last_mouseclick = 0
+  }
+
+  /**
+   * Gets the widget at the current cursor position.
+   * @param node Optional node to check for widgets under cursor
+   * @returns The widget located at the current cursor position, if any is found.
+   * @deprecated Use {@link LGraphNode.getWidgetOnPos} instead.
+   * ```ts
+   * const [x, y] = canvas.graph_mouse
+   * const widget = canvas.node_over?.getWidgetOnPos(x, y, true)
+   * ```
+   */
+  getWidgetAtCursor(node?: LGraphNode): IBaseWidget | undefined {
+    node ??= this.node_over
+    return node?.getWidgetOnPos(this.graph_mouse[0], this.graph_mouse[1], true)
+  }
+
+  /**
+   * Clears highlight and mouse-over information from nodes that should not have it.
+   *
+   * Intended to be called when the pointer moves away from a node.
+   * @param node The node that the mouse is now over
+   * @param e MouseEvent that is triggering this
+   */
+  updateMouseOverNodes(node: LGraphNode | null, e: CanvasPointerEvent): void {
+    if (!this.graph) throw new NullGraphError()
+
+    const { pointer } = this
+    const nodes = this.graph._nodes
+    for (const otherNode of nodes) {
+      if (otherNode.mouseOver && node != otherNode) {
+        // mouse leave
+        if (!pointer.eDown) pointer.resizeDirection = undefined
+        otherNode.mouseOver = undefined
+        this._highlight_input = undefined
+        this._highlight_pos = undefined
+        this.linkConnector.overWidget = undefined
+
+        // Hover transitions
+        // TODO: Implement single lerp ease factor for current progress on hover in/out.
+        // In drawNode, multiply by ease factor and differential value (e.g. bg alpha +0.5).
+        otherNode.lostFocusAt = LiteGraph.getTime()
+
+        this.node_over?.onMouseLeave?.(e)
+        this.node_over = undefined
+        this.dirty_canvas = true
+      }
+    }
+  }
+
+  /** Primary pointer-down handler. Routes clicks to selection, dragging, linking, and widget interaction. */
+  processMouseDown(e: PointerEvent): void {
+    if (this.state.ghostNodeId != null) {
+      if (e.button === 0) this.finalizeGhostPlacement(false)
+      if (e.button === 2) this.finalizeGhostPlacement(true)
+      e.stopPropagation()
+      e.preventDefault()
+      return
+    }
+
+    if (this.dragZoomEnabled && e.ctrlKey && e.shiftKey && !e.altKey && e.buttons) {
+      this.#dragZoomStart = { pos: [e.x, e.y], scale: this.ds.scale }
+      return
+    }
+
+    const { graph, pointer } = this
+    this.adjustMouseEvent(e)
+    if (e.isPrimary) pointer.down(e)
+
+    if (this.set_canvas_dirty_on_mouse_event) this.dirty_canvas = true
+
+    if (!graph) return
+
+    const ref_window = this.getCanvasWindow()
+    LGraphCanvas.active_canvas = this
+
+    const x = e.clientX
+    const y = e.clientY
+    this.ds.viewport = this.viewport
+    const is_inside = !this.viewport || isInRect(x, y, this.viewport)
+
+    if (!is_inside) return
+
+    const node = graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes) ?? undefined
+
+    this.mouse[0] = x
+    this.mouse[1] = y
+    this.graph_mouse[0] = e.canvasX
+    this.graph_mouse[1] = e.canvasY
+    this.last_click_position = [this.mouse[0], this.mouse[1]]
+
+    pointer.isDouble = pointer.isDown && e.isPrimary
+    pointer.isDown = true
+
+    this.canvas.focus()
+
+    LiteGraph.closeAllContextMenus(ref_window)
+
+    if (this.onMouse?.(e) == true) return
+
+    // left button mouse / single finger
+    if (e.button === 0 && !pointer.isDouble) {
+      this.#processPrimaryButton(e, node)
+    } else if (isMiddleButtonEvent(e)) {
+      this.#processMiddleButton(e, node)
+    } else if (
+      (e.button === 2 || pointer.isDouble) &&
+      this.allow_interaction &&
+      !this.read_only
+    ) {
+      // Right / aux button
+      const { linkConnector, subgraph } = this
+
+      // Sticky select - won't remove single nodes
+      if (subgraph?.inputNode.containsPoint(this.graph_mouse)) {
+        // Subgraph input node
+        this.processSelect(subgraph.inputNode, e, true)
+        subgraph.inputNode.onPointerDown(e, pointer, linkConnector)
+      } else if (subgraph?.outputNode.containsPoint(this.graph_mouse)) {
+        // Subgraph output node
+        this.processSelect(subgraph.outputNode, e, true)
+        subgraph.outputNode.onPointerDown(e, pointer, linkConnector)
+      } else {
+        if (node) {
+          this.processSelect(node, e, true)
+        } else if (this.links_render_mode !== LinkRenderType.HIDDEN_LINK) {
+        // Reroutes
+          const reroute = graph.getRerouteOnPos(e.canvasX, e.canvasY, this.#visibleReroutes)
+          if (reroute) {
+            if (e.altKey) {
+              pointer.onClick = (upEvent) => {
+                if (!upEvent.altKey) {
+                  return
+                }
+
+                // Ensure deselected
+                if (reroute.selected) {
+                  this.deselect(reroute)
+                  this.onSelectionChange?.(this.selected_nodes)
+                }
+                reroute.remove()
+              }
+            } else {
+              this.processSelect(reroute, e, true)
+            }
+          }
+        }
+
+        // Show context menu for the node or group under the pointer
+        pointer.onClick ??= () => this.processContextMenu(node, e)
+      }
+    }
+
+    this.last_mouse = [x, y]
+    this.last_mouseclick = LiteGraph.getTime()
+    this.last_mouse_dragging = true
+
+    graph.change()
+
+    // this is to ensure to defocus(blur) if a text input element is on focus
+    if (
+      !ref_window.document.activeElement ||
+      (ref_window.document.activeElement.nodeName.toLowerCase() != "input" &&
+        ref_window.document.activeElement.nodeName.toLowerCase() != "textarea")
+    ) {
+      e.preventDefault()
+    }
+    e.stopPropagation()
+
+    this.onMouseDown?.(e)
+  }
+
+  /**
    * Called when a mouse move event has to be processed
    */
   processMouseMove(e: PointerEvent): void {
@@ -3348,114 +3943,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Updates the hover / snap state of all visible reroutes.
-   * @returns The original value of {@link underPointer}, with any found reroute items added.
-   */
-  #updateReroutes(underPointer: CanvasItem): CanvasItem {
-    const { graph, pointer, linkConnector } = this
-    if (!graph) throw new NullGraphError()
-
-    // Update reroute hover state
-    if (!pointer.isDown) {
-      let anyChanges = false
-      for (const reroute of this.#visibleReroutes) {
-        anyChanges ||= reroute.updateVisibility(this.graph_mouse)
-
-        if (reroute.isSlotHovered) underPointer |= CanvasItem.RerouteSlot
-      }
-      if (anyChanges) this.dirty_bgcanvas = true
-    } else if (linkConnector.isConnecting) {
-      // Highlight the reroute that the mouse is over
-      for (const reroute of this.#visibleReroutes) {
-        if (reroute.containsPoint(this.graph_mouse)) {
-          if (linkConnector.isRerouteValidDrop(reroute)) {
-            linkConnector.overReroute = reroute
-            this._highlight_pos = reroute.pos
-          }
-
-          return underPointer | CanvasItem.RerouteSlot
-        }
-      }
-    }
-
-    this._highlight_pos &&= undefined
-    linkConnector.overReroute &&= undefined
-    return underPointer
-  }
-
-  /**
-   * Start dragging an item, optionally including all other selected items.
-   *
-   * ** This function sets the {@link CanvasPointer.finally}() callback. **
-   * @param item The item that the drag event started on
-   * @param pointer The pointer event that initiated the drag, e.g. pointerdown
-   * @param sticky If `true`, the item is added to the selection - see {@link processSelect}
-   */
-  #startDraggingItems(item: Positionable, pointer: CanvasPointer, sticky = false): void {
-    this.emitBeforeChange()
-    this.graph?.beforeChange()
-    // Ensure that dragging is properly cleaned up, on success or failure.
-    pointer.finally = () => {
-      this.isDragging = false
-      this._autoPan?.stop()
-      this._autoPan = null
-      this.graph?.afterChange()
-      this.emitAfterChange()
-    }
-
-    this.processSelect(item, pointer.eDown, sticky)
-    this.isDragging = true
-
-    // Seed the auto-pan modifier state from the pointer-down event so a drag
-    // that reaches the canvas edge before the first move still honours the
-    // "move group without contents" modifier.
-    if (pointer.eDown) {
-      this._lastDragModifiers = {
-        ctrlKey: pointer.eDown.ctrlKey,
-        metaKey: pointer.eDown.metaKey,
-      }
-    }
-
-    this.#startNodeAutoPan()
-  }
-
-  #startNodeAutoPan(): void {
-    this._autoPan = new AutoPanController({
-      canvas: this.canvas,
-      ds: this.ds,
-      maxPanSpeed: this.auto_pan_speed,
-      onPan: (panX, panY) => {
-        const selected = this.selectedItems
-        const allItems = getDraggedItems(selected, this._lastDragModifiers)
-
-        for (const item of allItems) {
-          item.move(panX, panY, true)
-        }
-
-        this.#dirty()
-      },
-    })
-    this._autoPan.updatePointer(this.mouse[0], this.mouse[1])
-    this._autoPan.start()
-  }
-
-  /**
-   * Handles shared clean up and placement after items have been dragged.
-   * @param e The event that completed the drag, e.g. pointerup, pointermove
-   */
-  #processDraggedItems(e: CanvasPointerEvent): void {
-    const { graph } = this
-    if (e.shiftKey || LiteGraph.alwaysSnapToGrid)
-      graph?.snapToGrid(this.selectedItems)
-
-    this.dirty_canvas = true
-    this.dirty_bgcanvas = true
-
-    // TODO: Replace legacy behaviour: callbacks were never extended for multiple items
-    this.onNodeMoved?.(findFirstNode(this.selectedItems))
-  }
-
-  /**
    * Starts ghost placement mode for a node.
    * The node will be semi-transparent and follow the cursor until the user
    * clicks to place it, or presses Escape/right-clicks to cancel.
@@ -3717,11 +4204,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     e.preventDefault()
     return
-  }
-
-  #noItemsSelected(): void {
-    const event = new CustomEvent("litegraph:no-items-selected", { bubbles: true })
-    this.canvas.dispatchEvent(event)
   }
 
   /**
@@ -4115,78 +4597,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.setDirty(true)
   }
 
-  #handleMultiSelect(e: CanvasPointerEvent, dragRect: Float32Array) {
-    // Process drag
-    // Convert Point pair (pos, offset) to Rect
-    const { graph, selectedItems, subgraph } = this
-    if (!graph) throw new NullGraphError()
-
-    const w = Math.abs(dragRect[2])
-    const h = Math.abs(dragRect[3])
-    if (dragRect[2] < 0) dragRect[0] -= w
-    if (dragRect[3] < 0) dragRect[1] -= h
-    dragRect[2] = w
-    dragRect[3] = h
-
-    // Select nodes - any part of the node is in the select area
-    const isSelected = new Set<Positionable>()
-    const notSelected: Positionable[] = []
-
-    if (subgraph) {
-      const { inputNode, outputNode } = subgraph
-
-      if (overlapBounding(dragRect, inputNode.boundingRect)) {
-        addPositionable(inputNode)
-      }
-      if (overlapBounding(dragRect, outputNode.boundingRect)) {
-        addPositionable(outputNode)
-      }
-    }
-
-    for (const nodeX of graph._nodes) {
-      if (overlapBounding(dragRect, nodeX.boundingRect)) {
-        addPositionable(nodeX)
-      }
-    }
-
-    // Select groups - the group is wholly inside the select area
-    for (const group of graph.groups) {
-      if (!containsRect(dragRect, group._bounding)) continue
-
-      group.recomputeInsideNodes()
-      addPositionable(group)
-    }
-
-    // Select reroutes - the centre point is inside the select area
-    for (const reroute of graph.reroutes.values()) {
-      if (!isPointInRect(reroute.pos, dragRect)) continue
-
-      selectedItems.add(reroute)
-      reroute.selected = true
-      addPositionable(reroute)
-    }
-
-    if (e.shiftKey) {
-      // Add to selection
-      for (const item of notSelected) this.select(item)
-    } else if (e.altKey) {
-      // Remove from selection
-      for (const item of isSelected) this.deselect(item)
-    } else {
-      // Replace selection
-      for (const item of selectedItems) {
-        if (!isSelected.has(item)) this.deselect(item)
-      }
-      for (const item of notSelected) this.select(item)
-    }
-    this.onSelectionChange?.(this.selected_nodes)
-
-    function addPositionable(item: Positionable): void {
-      if (!item.selected || !selectedItems.has(item)) notSelected.push(item)
-      else isSelected.add(item)
-    }
-  }
-
   /**
    * Determines whether to select or deselect an item that has received a pointer event.  Will deselect other nodes if
    * @param item Canvas item to select/deselect
@@ -4346,29 +4756,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (node && this.selectedItems.has(node)) continue
 
         delete this.highlighted_links[id]
-      }
-    }
-  }
-
-  /**
-   * Iterative traversal of a group's descendants.
-   * Calls {@link groupAction} on nested groups and {@link leafAction} on
-   * non-group children.  Always recurses into nested groups regardless of
-   * their current selection state.
-   */
-  #traverseGroupChildren(
-    group: LGraphGroup,
-    groupAction: (child: LGraphGroup) => void,
-    leafAction: (child: Positionable) => void,
-  ): void {
-    const stack: Positionable[] = [...group._children]
-    while (stack.length > 0) {
-      const child = stack.pop()!
-      if (child instanceof LGraphGroup) {
-        groupAction(child)
-        for (const nested of child._children) stack.push(nested)
-      } else {
-        leafAction(child)
       }
     }
   }
@@ -4933,148 +5320,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     if (area) ctx.restore()
   }
 
-  /** @returns If the pointer is over a link centre marker, the link segment it belongs to.  Otherwise, `undefined`.  */
-  #getLinkCentreOnPos(e: CanvasPointerEvent): LinkSegment | undefined {
-    for (const linkSegment of this.renderedPaths) {
-      const centre = linkSegment._pos
-      if (!centre) continue
-
-      if (isInRectangle(e.canvasX, e.canvasY, centre[0] - 4, centre[1] - 4, 8, 8)) {
-        return linkSegment
-      }
-    }
-  }
-
-  /** Get the target snap / highlight point in graph space */
-  #getHighlightPosition(): ReadOnlyPoint {
-    return LiteGraph.snaps_for_comfy
-      ? this.linkConnector.state.snapLinksPos ?? this._highlight_pos ?? this.graph_mouse
-      : this.graph_mouse
-  }
-
-  /**
-   * Renders indicators showing where a link will connect if released.
-   * Partial border over target node and a highlight over the slot itself.
-   * @param ctx Canvas 2D context
-   */
-  #renderSnapHighlight(
-    ctx: CanvasRenderingContext2D,
-    highlightPos: ReadOnlyPoint,
-  ): void {
-    const linkConnectorSnap = !!this.linkConnector.state.snapLinksPos
-    if (!this._highlight_pos && !linkConnectorSnap) return
-
-    ctx.fillStyle = "#ffcc00"
-    ctx.beginPath()
-    const shape = this._highlight_input?.shape
-
-    if (shape === RenderShape.ARROW) {
-      ctx.moveTo(highlightPos[0] + 8, highlightPos[1] + 0.5)
-      ctx.lineTo(highlightPos[0] - 4, highlightPos[1] + 6 + 0.5)
-      ctx.lineTo(highlightPos[0] - 4, highlightPos[1] - 6 + 0.5)
-      ctx.closePath()
-    } else {
-      ctx.arc(highlightPos[0], highlightPos[1], 6, 0, Math.PI * 2)
-    }
-    ctx.fill()
-
-    const { linkConnector } = this
-    const { overReroute, overWidget } = linkConnector
-    if (!LiteGraph.snap_highlights_node || !linkConnector.isConnecting || linkConnectorSnap) return
-
-    // Reroute highlight
-    overReroute?.drawHighlight(ctx, "#ffcc00aa")
-
-    // Ensure we're mousing over a node and connecting a link
-    const node = this.node_over
-    if (!node) return
-
-    const { strokeStyle, lineWidth } = ctx
-
-    const area = node.boundingRect
-    const gap = 3
-    const radius = LiteGraph.ROUND_RADIUS + gap
-
-    const x = area[0] - gap
-    const y = area[1] - gap
-    const width = area[2] + gap * 2
-    const height = area[3] + gap * 2
-
-    ctx.beginPath()
-    ctx.roundRect(x, y, width, height, radius)
-
-    // TODO: Currently works on LTR slots only.  Add support for other directions.
-    const start = linkConnector.state.connectingTo === "output" ? 0 : 1
-    const inverter = start ? -1 : 1
-
-    // Radial highlight centred on highlight pos
-    const hx = highlightPos[0]
-    const hy = highlightPos[1]
-    const gRadius = width < height
-      ? width
-      : width * Math.max(height / width, 0.5)
-
-    const gradient = ctx.createRadialGradient(hx, hy, 0, hx, hy, gRadius)
-    gradient.addColorStop(1, "#00000000")
-    gradient.addColorStop(0, "#ffcc00aa")
-
-    // Linear gradient over half the node.
-    const linearGradient = ctx.createLinearGradient(x, y, x + width, y)
-    linearGradient.addColorStop(0.5, "#00000000")
-    linearGradient.addColorStop(start + 0.67 * inverter, "#ddeeff33")
-    linearGradient.addColorStop(start + inverter, "#ffcc0055")
-
-    /**
-     * Workaround for a canvas render issue.
-     * In Chromium 129 (2024-10-15), rounded corners can be rendered with the wrong part of a gradient colour.
-     * Occurs only at certain thicknesses / arc sizes.
-     */
-    ctx.setLineDash([radius, radius * 0.001])
-
-    ctx.lineWidth = 1
-    ctx.strokeStyle = linearGradient
-    ctx.stroke()
-
-    if (overWidget) {
-      const { computedHeight } = overWidget
-
-      ctx.beginPath()
-      const { pos } = node
-      const [nodeX, nodeY] = pos
-      const height = LiteGraph.NODE_WIDGET_HEIGHT
-      if (
-        overWidget.type.startsWith("custom") &&
-        computedHeight != null &&
-        computedHeight > height * 2
-      ) {
-        // Most likely DOM widget text box
-        ctx.rect(
-          nodeX + 9,
-          nodeY + overWidget.y + 9,
-          (overWidget.width ?? area[2]) - 18,
-          computedHeight - 18,
-        )
-      } else {
-        // Regular widget, probably
-        ctx.roundRect(
-          nodeX + BaseWidget.margin,
-          nodeY + overWidget.y,
-          overWidget.width ?? area[2],
-          height,
-          height * 0.5,
-        )
-      }
-      ctx.stroke()
-    }
-
-    ctx.strokeStyle = gradient
-    ctx.stroke()
-
-    ctx.setLineDash([])
-    ctx.lineWidth = lineWidth
-    ctx.strokeStyle = strokeStyle
-  }
-
   /**
    * draws some useful stats in the corner of the canvas
    */
@@ -5239,18 +5484,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.dirty_bgcanvas = false
     // Forces repaint of the front canvas.
     this.dirty_canvas = true
-  }
-
-  /**
-   * draws the given node inside the canvas
-   */
-  #getNodeModeAlpha(node: LGraphNode): number {
-    if (node.flags.ghost) return 0.3
-    return node.mode === LGraphEventMode.BYPASS
-      ? 0.2
-      : (node.mode === LGraphEventMode.NEVER
-        ? 0.4
-        : this.editor_alpha)
   }
 
   drawNode(node: LGraphNode, ctx: CanvasRenderingContext2D): void {
@@ -5749,189 +5982,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     ctx.globalAlpha = 1
   }
 
-  #renderFloatingLinks(ctx: CanvasRenderingContext2D, graph: LGraph, visibleReroutes: Reroute[], now: number) {
-    // Render floating links with 3/4 current alpha
-    const { globalAlpha } = ctx
-    ctx.globalAlpha = globalAlpha * 0.33
-
-    // Floating reroutes
-    for (const link of graph.floatingLinks.values()) {
-      const reroutes = LLink.getReroutes(graph, link)
-      const firstReroute = reroutes[0]
-      const reroute = reroutes.at(-1)
-      if (!firstReroute || !reroute?.floating) continue
-
-      // Input not connected
-      if (reroute.floating.slotType === "input") {
-        const node = graph.getNodeById(link.target_id)
-        if (!node) continue
-
-        const startPos = firstReroute.pos
-        const endPos = node.getInputPos(link.target_slot)
-        const endDirection = node.inputs[link.target_slot]?.dir
-
-        firstReroute._dragging = true
-        this.#renderAllLinkSegments(ctx, link, startPos, endPos, visibleReroutes, now, LinkDirection.CENTER, endDirection, true)
-      } else {
-        const node = graph.getNodeById(link.origin_id)
-        if (!node) continue
-
-        const startPos = node.getOutputPos(link.origin_slot)
-        const endPos = reroute.pos
-        const startDirection = node.outputs[link.origin_slot]?.dir
-
-        link._dragging = true
-        this.#renderAllLinkSegments(ctx, link, startPos, endPos, visibleReroutes, now, startDirection, LinkDirection.CENTER, true)
-      }
-    }
-    ctx.globalAlpha = globalAlpha
-  }
-
-  #renderAllLinkSegments(
-    ctx: CanvasRenderingContext2D,
-    link: LLink,
-    startPos: Point,
-    endPos: Point,
-    visibleReroutes: Reroute[],
-    now: number,
-    startDirection?: LinkDirection,
-    endDirection?: LinkDirection,
-    disabled: boolean = false,
-  ) {
-    const { graph, renderedPaths } = this
-    if (!graph) return
-
-    // Get all points this link passes through
-    const reroutes = LLink.getReroutes(graph, link)
-    const points: [Point, ...Point[], Point] = [
-      startPos,
-      ...reroutes.map(x => x.pos),
-      endPos,
-    ]
-
-    // Bounding box of all points (bezier overshoot on long links will be cut)
-    const pointsX = points.map(x => x[0])
-    const pointsY = points.map(x => x[1])
-    LGraphCanvas.#link_bounding[0] = Math.min(...pointsX)
-    LGraphCanvas.#link_bounding[1] = Math.min(...pointsY)
-    LGraphCanvas.#link_bounding[2] = Math.max(...pointsX) - LGraphCanvas.#link_bounding[0]
-    LGraphCanvas.#link_bounding[3] = Math.max(...pointsY) - LGraphCanvas.#link_bounding[1]
-
-    // skip links outside of the visible area of the canvas
-    if (!overlapBounding(LGraphCanvas.#link_bounding, LGraphCanvas.#margin_area))
-      return
-
-    const start_dir = startDirection || LinkDirection.RIGHT
-    const end_dir = endDirection || LinkDirection.LEFT
-
-    // Has reroutes
-    if (reroutes.length) {
-      let startControl: Point | undefined
-
-      const l = reroutes.length
-      for (let j = 0; j < l; j++) {
-        const reroute = reroutes[j]
-
-        // Only render once
-        if (!renderedPaths.has(reroute)) {
-          renderedPaths.add(reroute)
-          visibleReroutes.push(reroute)
-          reroute._colour = link.color ||
-            LGraphCanvas.link_type_colors[link.type] ||
-            this.default_link_color
-
-          const prevReroute = graph.getReroute(reroute.parentId)
-          const rerouteStartPos = prevReroute?.pos ?? startPos
-          reroute.calculateAngle(this.last_draw_time, graph, rerouteStartPos)
-
-          // Skip the first segment if it is being dragged
-          if (!reroute._dragging) {
-            this.renderLink(
-              ctx,
-              rerouteStartPos,
-              reroute.pos,
-              link,
-              false,
-              0,
-              null,
-              startControl === undefined ? start_dir : LinkDirection.CENTER,
-              LinkDirection.CENTER,
-              {
-                startControl,
-                endControl: reroute.controlPoint,
-                reroute,
-                disabled,
-              },
-            )
-          }
-        }
-
-        if (!startControl && reroutes.at(-1)?.floating?.slotType === "input") {
-          // Floating link connected to an input
-          startControl = [0, 0]
-        } else {
-          // Calculate start control for the next iter control point
-          const nextPos = reroutes[j + 1]?.pos ?? endPos
-          const dist = Math.min(Reroute.maxSplineOffset, distance(reroute.pos, nextPos) * 0.25)
-          startControl = [dist * reroute.cos, dist * reroute.sin]
-        }
-      }
-
-      // Skip the last segment if it is being dragged
-      if (link._dragging) return
-
-      // Use runtime fallback; TypeScript cannot evaluate this correctly.
-      const segmentStartPos = points.at(-2) ?? startPos
-
-      // Render final link segment
-      this.renderLink(
-        ctx,
-        segmentStartPos,
-        endPos,
-        link,
-        false,
-        0,
-        null,
-        LinkDirection.CENTER,
-        end_dir,
-        { startControl, disabled },
-      )
-      // Skip normal render when link is being dragged
-    } else if (!link._dragging) {
-      this.renderLink(
-        ctx,
-        startPos,
-        endPos,
-        link,
-        false,
-        0,
-        null,
-        start_dir,
-        end_dir,
-      )
-    }
-    renderedPaths.add(link)
-
-    // event triggered rendered on top
-    if (link?._last_time && now - link._last_time < 1000) {
-      const f = 2.0 - (now - link._last_time) * 0.002
-      const tmp = ctx.globalAlpha
-      ctx.globalAlpha = tmp * f
-      this.renderLink(
-        ctx,
-        startPos,
-        endPos,
-        link,
-        true,
-        f,
-        "white",
-        start_dir,
-        end_dir,
-      )
-      ctx.globalAlpha = tmp
-    }
-  }
-
   /**
    * draws a link between two points
    * @param ctx Canvas 2D rendering context
@@ -6279,35 +6329,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     return [x, y]
   }
 
-  /**
-   * Modifies an existing point, adding a single-axis offset.
-   * @param point The point to add the offset to
-   * @param direction The direction to add the offset in
-   * @param dist Distance to offset
-   * @param factor Distance is mulitplied by this value.  Default: 0.25
-   */
-  #addSplineOffset(
-    point: Point,
-    direction: LinkDirection,
-    dist: number,
-    factor = 0.25,
-  ): void {
-    switch (direction) {
-      case LinkDirection.LEFT:
-        point[0] += dist * -factor
-        break
-      case LinkDirection.RIGHT:
-        point[0] += dist * factor
-        break
-      case LinkDirection.UP:
-        point[1] += dist * -factor
-        break
-      case LinkDirection.DOWN:
-        point[1] += dist * factor
-        break
-    }
-  }
-
   drawExecutionOrder(ctx: CanvasRenderingContext2D): void {
     ctx.shadowColor = "transparent"
     ctx.globalAlpha = 0.25
@@ -6341,22 +6362,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       )
     }
     ctx.globalAlpha = 1
-  }
-
-  /**
-   * draws the widgets stored inside a node
-   * @deprecated Use {@link LGraphNode.drawWidgets} instead.
-   * @remarks Currently there are extensions hijacking this function, so we cannot remove it.
-   */
-  drawNodeWidgets(
-    node: LGraphNode,
-    _posY: null,
-    ctx: CanvasRenderingContext2D,
-  ): void {
-    node.drawWidgets(ctx, {
-      lowQuality: this.low_quality,
-      editorAlpha: this.editor_alpha,
-    })
   }
 
   /**

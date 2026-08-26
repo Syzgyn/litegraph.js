@@ -36,11 +36,6 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   /** Sentinel node ID used in links referencing this boundary node. */
   abstract readonly id: NodeId
 
-  /** Axis-aligned bounds of this IO node in canvas space. */
-  get boundingRect(): Rectangle {
-    return this.#boundingRect
-  }
-
   /** Whether this IO node is currently selected in the editor. */
   selected: boolean = false
   /** When `true`, the node cannot be moved by the user. */
@@ -53,6 +48,88 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
 
   /** Placeholder slot for creating a new IO slot on first connection. */
   abstract readonly emptySlot: EmptySubgraphInput | EmptySubgraphOutput
+
+  /** Concrete IO slots defined on the subgraph (excludes {@link emptySlot}). */
+  abstract readonly slots: TSlot[]
+
+  /**
+   * @param subgraph The subgraph definition that owns this boundary node.
+   */
+  constructor(
+    /** The subgraph that this node belongs to. */
+    readonly subgraph: Subgraph,
+  ) {}
+
+  /**
+   * Gets the context menu options for an IO slot.
+   * @param slot The slot to get the context menu options for.
+   * @returns The context menu options.
+   */
+  #getSlotMenuOptions(slot: TSlot): IContextMenuValue[] {
+    const options: IContextMenuValue[] = []
+
+    // Disconnect option if slot has connections
+    if (slot !== this.emptySlot && slot.linkIds.length > 0) {
+      options.push({ content: "Disconnect Links", value: "disconnect" })
+    }
+
+    // Remove / rename slot option (except for the empty slot)
+    if (slot !== this.emptySlot) {
+      options.push(
+        { content: "Remove Slot", value: "remove" },
+        { content: "Rename Slot", value: "rename" },
+      )
+    }
+
+    return options
+  }
+
+  /**
+   * Handles the action for an IO slot context menu.
+   * @param selectedItem The item that was selected from the context menu.
+   * @param slot The slot
+   * @param event The event that triggered the context menu.
+   */
+  #onSlotMenuAction(selectedItem: IContextMenuValue, slot: TSlot, event: CanvasPointerEvent): void {
+    switch (selectedItem.value) {
+    // Disconnect all links from this output
+      case "disconnect":
+        slot.disconnect()
+        break
+
+        // Remove the slot
+      case "remove":
+        if (slot !== this.emptySlot) {
+          this.removeSlot(slot)
+        }
+        break
+
+        // Rename the slot
+      case "rename":
+        if (slot !== this.emptySlot) {
+          this.#promptForSlotRename(slot, event)
+        }
+        break
+    }
+
+    this.subgraph.setDirtyCanvas(true, true)
+  }
+
+  /**
+   * Prompts the user to rename a slot.
+   * @param slot The slot to rename.
+   * @param event The event that triggered the rename.
+   */
+  #promptForSlotRename(slot: TSlot, event: CanvasPointerEvent): void {
+    this.subgraph.canvasAction(c => c.prompt(
+      "Slot name",
+      slot.name,
+      (newName: string) => {
+        if (newName) this.renameSlot(slot, newName)
+      },
+      event,
+    ))
+  }
 
   /** Top-left corner of this IO node in canvas space. */
   get pos() {
@@ -82,18 +159,13 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
     return this.isPointerOver ? "white" : "#efefef"
   }
 
-  /** Concrete IO slots defined on the subgraph (excludes {@link emptySlot}). */
-  abstract readonly slots: TSlot[]
   /** All slots to render and hit-test, including {@link emptySlot}. */
   abstract get allSlots(): TSlot[]
 
-  /**
-   * @param subgraph The subgraph definition that owns this boundary node.
-   */
-  constructor(
-    /** The subgraph that this node belongs to. */
-    readonly subgraph: Subgraph,
-  ) {}
+  /** Axis-aligned bounds of this IO node in canvas space. */
+  get boundingRect(): Rectangle {
+    return this.#boundingRect
+  }
 
   /**
    * Translates this IO node by the given delta in canvas space.
@@ -239,77 +311,6 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
         },
       },
     )
-  }
-
-  /**
-   * Gets the context menu options for an IO slot.
-   * @param slot The slot to get the context menu options for.
-   * @returns The context menu options.
-   */
-  #getSlotMenuOptions(slot: TSlot): IContextMenuValue[] {
-    const options: IContextMenuValue[] = []
-
-    // Disconnect option if slot has connections
-    if (slot !== this.emptySlot && slot.linkIds.length > 0) {
-      options.push({ content: "Disconnect Links", value: "disconnect" })
-    }
-
-    // Remove / rename slot option (except for the empty slot)
-    if (slot !== this.emptySlot) {
-      options.push(
-        { content: "Remove Slot", value: "remove" },
-        { content: "Rename Slot", value: "rename" },
-      )
-    }
-
-    return options
-  }
-
-  /**
-   * Handles the action for an IO slot context menu.
-   * @param selectedItem The item that was selected from the context menu.
-   * @param slot The slot
-   * @param event The event that triggered the context menu.
-   */
-  #onSlotMenuAction(selectedItem: IContextMenuValue, slot: TSlot, event: CanvasPointerEvent): void {
-    switch (selectedItem.value) {
-    // Disconnect all links from this output
-      case "disconnect":
-        slot.disconnect()
-        break
-
-        // Remove the slot
-      case "remove":
-        if (slot !== this.emptySlot) {
-          this.removeSlot(slot)
-        }
-        break
-
-        // Rename the slot
-      case "rename":
-        if (slot !== this.emptySlot) {
-          this.#promptForSlotRename(slot, event)
-        }
-        break
-    }
-
-    this.subgraph.setDirtyCanvas(true, true)
-  }
-
-  /**
-   * Prompts the user to rename a slot.
-   * @param slot The slot to rename.
-   * @param event The event that triggered the rename.
-   */
-  #promptForSlotRename(slot: TSlot, event: CanvasPointerEvent): void {
-    this.subgraph.canvasAction(c => c.prompt(
-      "Slot name",
-      slot.name,
-      (newName: string) => {
-        if (newName) this.renameSlot(slot, newName)
-      },
-      event,
-    ))
   }
 
   /** Lays out all slots vertically and resizes the IO panel to fit. */

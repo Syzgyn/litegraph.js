@@ -31,21 +31,24 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   /** Widget type discriminator; always `"combo"`. */
   override type = "combo" as const
 
-  /**
-   * Display string for the current selection.
-   * @remarks Resolves record-map labels, function-backed values, and numeric index coercion.
-   */
-  override get _displayValue() {
-    if (this.computedDisabled) return ""
-    const { values: rawValues } = this.options
-    if (rawValues) {
-      const values = typeof rawValues === "function" ? rawValues() : rawValues
+  #tryChangeValue(delta: number, options: WidgetEventOptions): void {
+    const values = this.#getValues(options.node)
+    const indexedValues = toArray(values)
 
-      if (values && !Array.isArray(values)) {
-        return values[this.value]
-      }
-    }
-    return typeof this.value === "number" ? String(this.value) : this.value
+    // avoids double click event
+    options.canvas.last_mouseclick = 0
+
+    const foundIndex = typeof values === "object"
+      ? indexedValues.indexOf(String(this.value)) + delta
+      // @ts-expect-error handle non-string values
+      : indexedValues.indexOf(this.value) + delta
+
+    const index = clamp(foundIndex, 0, indexedValues.length - 1)
+
+    const value = Array.isArray(values)
+      ? values[index]
+      : index
+    this.setValue(value, options)
   }
 
   #getValues(node: LGraphNode): Values {
@@ -79,6 +82,23 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   }
 
   /**
+   * Display string for the current selection.
+   * @remarks Resolves record-map labels, function-backed values, and numeric index coercion.
+   */
+  override get _displayValue() {
+    if (this.computedDisabled) return ""
+    const { values: rawValues } = this.options
+    if (rawValues) {
+      const values = typeof rawValues === "function" ? rawValues() : rawValues
+
+      if (values && !Array.isArray(values)) {
+        return values[this.value]
+      }
+    }
+    return typeof this.value === "number" ? String(this.value) : this.value
+  }
+
+  /**
    * Returns `true` when the right arrow can advance to another list entry.
    * @remarks Delegates to private edge-case handling for duplicate first/last values.
    */
@@ -99,26 +119,6 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   /** Steps the selection backward one entry in `options.values`. */
   override decrementValue(options: WidgetEventOptions): void {
     this.#tryChangeValue(-1, options)
-  }
-
-  #tryChangeValue(delta: number, options: WidgetEventOptions): void {
-    const values = this.#getValues(options.node)
-    const indexedValues = toArray(values)
-
-    // avoids double click event
-    options.canvas.last_mouseclick = 0
-
-    const foundIndex = typeof values === "object"
-      ? indexedValues.indexOf(String(this.value)) + delta
-      // @ts-expect-error handle non-string values
-      : indexedValues.indexOf(this.value) + delta
-
-    const index = clamp(foundIndex, 0, indexedValues.length - 1)
-
-    const value = Array.isArray(values)
-      ? values[index]
-      : index
-    this.setValue(value, options)
   }
 
   /**

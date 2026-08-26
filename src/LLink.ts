@@ -107,6 +107,8 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /** When `true`, renders debug overlays for link geometry during canvas draw. */
   static _drawDebug = false
 
+  #color?: CanvasColour | null
+
   /** Unique link identifier within the owning graph. */
   id: LinkId
   /** ID of the first {@link Reroute} after the output slot in this link's path, if any. */
@@ -137,49 +139,11 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /** @inheritdoc LinkSegment._dragging */
   _dragging?: boolean
-
-  #color?: CanvasColour | null
   /**
    * Custom colour override for this link only.
    *
    * Setting to an empty string clears the override (`null` internally).
    */
-  public get color(): CanvasColour | null | undefined {
-    return this.#color
-  }
-
-  public set color(value: CanvasColour) {
-    this.#color = value === "" ? null : value
-  }
-
-  /** `true` when the output end is disconnected (`origin_id` and `origin_slot` are `-1`). */
-  public get isFloatingOutput(): boolean {
-    return this.origin_id === -1 && this.origin_slot === -1
-  }
-
-  /** `true` when the input end is disconnected (`target_id` and `target_slot` are `-1`). */
-  public get isFloatingInput(): boolean {
-    return this.target_id === -1 && this.target_slot === -1
-  }
-
-  /**
-   * `true` when either end of the link is floating.
-   * @see {@link isFloatingOutput}
-   * @see {@link isFloatingInput}
-   */
-  public get isFloating(): boolean {
-    return this.isFloatingOutput || this.isFloatingInput
-  }
-
-  /** `true` if this link is connected to a subgraph input node (the actual origin is in a different graph). */
-  get originIsIoNode(): boolean {
-    return this.origin_id === SUBGRAPH_INPUT_ID
-  }
-
-  /** `true` if this link is connected to a subgraph output node (the actual target is in a different graph). */
-  get targetIsIoNode(): boolean {
-    return this.target_id === SUBGRAPH_OUTPUT_ID
-  }
 
   /**
    * @param id Unique link ID within the graph.
@@ -331,6 +295,43 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
       if (r) resolved.push(r)
     }
     return resolved
+  }
+
+  public get color(): CanvasColour | null | undefined {
+    return this.#color
+  }
+
+  public set color(value: CanvasColour) {
+    this.#color = value === "" ? null : value
+  }
+
+  /** `true` when the output end is disconnected (`origin_id` and `origin_slot` are `-1`). */
+  public get isFloatingOutput(): boolean {
+    return this.origin_id === -1 && this.origin_slot === -1
+  }
+
+  /** `true` when the input end is disconnected (`target_id` and `target_slot` are `-1`). */
+  public get isFloatingInput(): boolean {
+    return this.target_id === -1 && this.target_slot === -1
+  }
+
+  /**
+   * `true` when either end of the link is floating.
+   * @see {@link isFloatingOutput}
+   * @see {@link isFloatingInput}
+   */
+  public get isFloating(): boolean {
+    return this.isFloatingOutput || this.isFloatingInput
+  }
+
+  /** `true` if this link is connected to a subgraph input node (the actual origin is in a different graph). */
+  get originIsIoNode(): boolean {
+    return this.origin_id === SUBGRAPH_INPUT_ID
+  }
+
+  /** `true` if this link is connected to a subgraph output node (the actual target is in a different graph). */
+  get targetIsIoNode(): boolean {
+    return this.target_id === SUBGRAPH_OUTPUT_ID
   }
 
   /**

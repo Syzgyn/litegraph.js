@@ -35,15 +35,17 @@ export type GraphOrSubgraph = LGraph | Subgraph
  * @see {@link SubgraphOutput}
  */
 export class Subgraph extends LGraph implements BaseLGraph, Serialisable<ExportedSubgraph> {
-  /** Typed event target for subgraph lifecycle and IO slot changes. */
-  declare readonly events: CustomEventTarget<SubgraphEventMap>
-
   /**
    * Maximum nesting depth for programmatically created subgraphs.
    *
    * Guards against unbounded recursive subgraph creation.
    */
   static MAX_NESTED_SUBGRAPHS = 1000
+
+  #rootGraph: LGraph
+
+  /** Typed event target for subgraph lifecycle and IO slot changes. */
+  declare readonly events: CustomEventTarget<SubgraphEventMap>
 
   /** Human-readable name shown in the editor and on {@link SubgraphNode} instances. */
   name: string = "Unnamed Subgraph"
@@ -72,12 +74,6 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    */
   readonly widgets: ExposedWidget[] = []
 
-  #rootGraph: LGraph
-  /** The top-level {@link LGraph} that owns this subgraph definition in the registry. */
-  override get rootGraph(): LGraph {
-    return this.#rootGraph
-  }
-
   /**
    * @param rootGraph The root graph that registers and owns this subgraph definition.
    * @param data Serialised subgraph configuration used to populate IO slots, nodes, and layout.
@@ -95,18 +91,6 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     const cloned = structuredClone(data)
     this._configureBase(cloned)
     this.#configureSubgraph(cloned)
-  }
-
-  /**
-   * Returns the IO boundary node under the given canvas coordinates, if any.
-   * @param x Canvas-space X coordinate.
-   * @param y Canvas-space Y coordinate.
-   * @returns The input or output boundary node at that position, or `undefined`.
-   */
-  getIoNodeOnPos(x: number, y: number): SubgraphInputNode | SubgraphOutputNode | undefined {
-    const { inputNode, outputNode } = this
-    if (inputNode.containsPoint([x, y])) return inputNode
-    if (outputNode.containsPoint([x, y])) return outputNode
   }
 
   #configureSubgraph(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph): void {
@@ -142,19 +126,6 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
 
     this.inputNode.configure(data.inputNode)
     this.outputNode.configure(data.outputNode)
-  }
-
-  /**
-   * Reconfigures this subgraph from serialised data.
-   * @param data The serialised graph and subgraph metadata.
-   * @param keep_old When `true`, merges with existing state instead of replacing it.
-   * @returns The result of the base {@link LGraph.configure} call.
-   */
-  override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, keep_old?: boolean): boolean | undefined {
-    const r = super.configure(data, keep_old)
-
-    this.#configureSubgraph(data)
-    return r
   }
 
   /**
@@ -199,6 +170,36 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
         return link
       }
     }
+  }
+
+  /** The top-level {@link LGraph} that owns this subgraph definition in the registry. */
+  override get rootGraph(): LGraph {
+    return this.#rootGraph
+  }
+
+  /**
+   * Returns the IO boundary node under the given canvas coordinates, if any.
+   * @param x Canvas-space X coordinate.
+   * @param y Canvas-space Y coordinate.
+   * @returns The input or output boundary node at that position, or `undefined`.
+   */
+  getIoNodeOnPos(x: number, y: number): SubgraphInputNode | SubgraphOutputNode | undefined {
+    const { inputNode, outputNode } = this
+    if (inputNode.containsPoint([x, y])) return inputNode
+    if (outputNode.containsPoint([x, y])) return outputNode
+  }
+
+  /**
+   * Reconfigures this subgraph from serialised data.
+   * @param data The serialised graph and subgraph metadata.
+   * @param keep_old When `true`, merges with existing state instead of replacing it.
+   * @returns The result of the base {@link LGraph.configure} call.
+   */
+  override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, keep_old?: boolean): boolean | undefined {
+    const r = super.configure(data, keep_old)
+
+    this.#configureSubgraph(data)
+    return r
   }
 
   /**

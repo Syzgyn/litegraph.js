@@ -20,6 +20,9 @@ import { isSubgraphOutput } from "@/subgraph/subgraphUtils"
 export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   #node: LGraphNode
 
+  /** Arbitrary runtime data attached to this slot. Not serialised. */
+  _data?: unknown
+
   /**
    * IDs of all {@link LLink} instances connected from this slot, or `null` when none are connected.
    *
@@ -27,11 +30,20 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
    */
   links: LinkId[] | null
 
-  /** Arbitrary runtime data attached to this slot. Not serialised. */
-  _data?: unknown
-
   /** Legacy index used by some custom nodes to identify this slot. */
   slot_index?: number
+
+  /**
+   * @param slot Serialised or partial slot properties used to initialise this instance.
+   * @param node The parent node that owns this output slot.
+   */
+  constructor(slot: OptionalProps<INodeOutputSlot, "boundingRect">, node: LGraphNode) {
+    super(slot, node)
+    this.links = slot.links
+    this._data = slot._data
+    this.slot_index = slot.slot_index
+    this.#node = node
+  }
 
   /** Output slots are never widget-backed; always returns `false`. */
   get isWidgetInputSlot(): false {
@@ -49,18 +61,6 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
       this.#node._collapsed_width ?? LiteGraph.NODE_COLLAPSED_WIDTH,
       LiteGraph.NODE_TITLE_HEIGHT * -0.5,
     ]
-  }
-
-  /**
-   * @param slot Serialised or partial slot properties used to initialise this instance.
-   * @param node The parent node that owns this output slot.
-   */
-  constructor(slot: OptionalProps<INodeOutputSlot, "boundingRect">, node: LGraphNode) {
-    super(slot, node)
-    this.links = slot.links
-    this._data = slot._data
-    this.slot_index = slot.slot_index
-    this.#node = node
   }
 
   /**

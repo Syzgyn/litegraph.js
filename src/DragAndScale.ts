@@ -66,30 +66,6 @@ export class DragAndScale {
   /** Optional sub-rectangle of the canvas used as the viewport (in canvas pixels). */
   viewport?: Rect
 
-  /** Called when pan or zoom changes and the canvas should redraw. */
-  onredraw?(das: DragAndScale): void
-  /** Called when {@link state} changes after {@link computeVisibleArea}. */
-  onChanged?(scale: number, offset: Point): void
-
-  /** Graph-space pan offset (alias for {@link DragAndScaleState.offset}). */
-  get offset(): [number, number] {
-    return this.state.offset
-  }
-
-  set offset(value: Point) {
-    this.state.offset[0] = value[0]
-    this.state.offset[1] = value[1]
-  }
-
-  /** Current zoom scale (alias for {@link DragAndScaleState.scale}). */
-  get scale(): number {
-    return this.state.scale
-  }
-
-  set scale(value: number) {
-    this.state.scale = value
-  }
-
   /**
    * @param element Canvas element whose dimensions define the viewport.
    */
@@ -118,6 +94,30 @@ export class DragAndScale {
     return current.scale !== previous.scale ||
       current.offset[0] !== previous.offset[0] ||
       current.offset[1] !== previous.offset[1]
+  }
+
+  /** Called when pan or zoom changes and the canvas should redraw. */
+  onredraw?(das: DragAndScale): void
+  /** Called when {@link state} changes after {@link computeVisibleArea}. */
+  onChanged?(scale: number, offset: Point): void
+
+  /** Graph-space pan offset (alias for {@link DragAndScaleState.offset}). */
+  get offset(): [number, number] {
+    return this.state.offset
+  }
+
+  set offset(value: Point) {
+    this.state.offset[0] = value[0]
+    this.state.offset[1] = value[1]
+  }
+
+  /** Current zoom scale (alias for {@link DragAndScaleState.scale}). */
+  get scale(): number {
+    return this.state.scale
+  }
+
+  set scale(value: number) {
+    this.state.scale = value
   }
 
   /**

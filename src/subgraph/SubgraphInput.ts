@@ -30,14 +30,14 @@ import { isNodeSlot, isSubgraphOutput } from "./subgraphUtils"
  * @see {@link SubgraphInputNode}
  */
 export class SubgraphInput extends SubgraphSlot {
+  /** The linked widget that this slot is connected to. */
+  #widgetRef?: WeakRef<IBaseWidget>
+
   /** The IO boundary node that owns and lays out this slot. */
   declare parent: SubgraphInputNode
 
   /** Dispatches connect/disconnect events for widget promotion and other listeners. */
   events = new CustomEventTarget<SubgraphInputEventMap>()
-
-  /** The linked widget that this slot is connected to. */
-  #widgetRef?: WeakRef<IBaseWidget>
 
   /**
    * The widget associated with this input, when the slot is connected to widget-backed inputs.

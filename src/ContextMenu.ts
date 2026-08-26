@@ -233,6 +233,53 @@ export class ContextMenu<TValue = unknown> {
     }
   }
 
+  /** @deprecated Likely unused, however code search was inconclusive (too many results to check by hand). */
+  /**
+   * Dispatches a synthetic custom event on a menu element.
+   * @deprecated Legacy helper for mouse-leave handling; prefer standard DOM APIs.
+   * @param element Target menu element.
+   * @param event_name Custom event name to dispatch.
+   * @param params Event detail payload.
+   * @returns The created {@link CustomEvent}.
+   */
+  // this code is used to trigger events easily (used in the context menu mouseleave
+  static trigger(
+    element: HTMLDivElement,
+    event_name: string,
+    params: MouseEvent,
+  ): CustomEvent {
+    const evt = document.createEvent("CustomEvent")
+    evt.initCustomEvent(event_name, true, true, params)
+    if (element.dispatchEvent) element.dispatchEvent(evt)
+    // else nothing seems bound here so nothing to do
+    return evt
+  }
+
+  /** @deprecated Unused. */
+  /**
+   * Tests whether the pointer in {@link event} lies inside {@link element}'s client rect.
+   * @deprecated Unused in current code paths.
+   */
+  static isCursorOverElement(
+    event: MouseEvent,
+    element: HTMLDivElement,
+  ): boolean {
+    const left = event.clientX
+    const top = event.clientY
+    const rect = element.getBoundingClientRect()
+    if (!rect) return false
+
+    if (
+      top > rect.top &&
+      top < rect.top + rect.height &&
+      left > rect.left &&
+      left < rect.left + rect.width
+    ) {
+      return true
+    }
+    return false
+  }
+
   /**
    * Checks if {@link node} is inside this context menu or any of its submenus
    * @param node The {@link Node} to check
@@ -421,28 +468,6 @@ export class ContextMenu<TValue = unknown> {
     this.current_submenu?.close(e, true)
   }
 
-  /** @deprecated Likely unused, however code search was inconclusive (too many results to check by hand). */
-  /**
-   * Dispatches a synthetic custom event on a menu element.
-   * @deprecated Legacy helper for mouse-leave handling; prefer standard DOM APIs.
-   * @param element Target menu element.
-   * @param event_name Custom event name to dispatch.
-   * @param params Event detail payload.
-   * @returns The created {@link CustomEvent}.
-   */
-  // this code is used to trigger events easily (used in the context menu mouseleave
-  static trigger(
-    element: HTMLDivElement,
-    event_name: string,
-    params: MouseEvent,
-  ): CustomEvent {
-    const evt = document.createEvent("CustomEvent")
-    evt.initCustomEvent(event_name, true, true, params)
-    if (element.dispatchEvent) element.dispatchEvent(evt)
-    // else nothing seems bound here so nothing to do
-    return evt
-  }
-
   /**
    * Returns the root menu at the top of the submenu chain.
    * @returns This menu when it has no parent, otherwise the topmost ancestor.
@@ -463,30 +488,5 @@ export class ContextMenu<TValue = unknown> {
     return this.options.parentMenu
       ? this.options.parentMenu.getFirstEvent()
       : this.options.event
-  }
-
-  /** @deprecated Unused. */
-  /**
-   * Tests whether the pointer in {@link event} lies inside {@link element}'s client rect.
-   * @deprecated Unused in current code paths.
-   */
-  static isCursorOverElement(
-    event: MouseEvent,
-    element: HTMLDivElement,
-  ): boolean {
-    const left = event.clientX
-    const top = event.clientY
-    const rect = element.getBoundingClientRect()
-    if (!rect) return false
-
-    if (
-      top > rect.top &&
-      top < rect.top + rect.height &&
-      left > rect.left &&
-      left < rect.left + rect.width
-    ) {
-      return true
-    }
-    return false
   }
 }

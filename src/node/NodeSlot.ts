@@ -37,8 +37,27 @@ export interface IDrawOptions {
  * @see {@link NodeOutputSlot}
  */
 export abstract class NodeSlot extends SlotBase implements INodeSlot {
+  #node: LGraphNode
+
   /** Canvas-space centre point of this slot, set during node layout. */
   pos?: Point
+
+  /**
+   * @param slot Serialised or partial slot properties used to initialise this instance.
+   * @param node The parent node that owns this slot.
+   */
+  constructor(slot: OptionalProps<INodeSlot, "boundingRect">, node: LGraphNode) {
+    // Workaround: Ensure internal properties are not copied to the slot (_listenerController
+    // https://github.com/Comfy-Org/litegraph.js/issues/1138
+    const maybeSubgraphSlot: OptionalProps<ISubgraphInput, "link" | "boundingRect"> = slot
+    const { boundingRect, name, type, _listenerController, ...rest } = maybeSubgraphSlot
+    const rectangle = boundingRect ? Rectangle.ensureRect(boundingRect) : new Rectangle()
+
+    super(name, type, rectangle)
+
+    Object.assign(this, rest)
+    this.#node = node
+  }
 
   /** The offset from the parent node to the centre point of this slot. */
   get #centreOffset(): ReadOnlyPoint {
@@ -63,8 +82,6 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
    */
   abstract get collapsedPos(): ReadOnlyPoint
 
-  #node: LGraphNode
-
   /** The {@link LGraphNode} that owns this slot. */
   get node(): LGraphNode {
     return this.#node
@@ -81,23 +98,6 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
    * Widget input slots suppress label rendering and use the widget's layout bounds.
    */
   abstract get isWidgetInputSlot(): boolean
-
-  /**
-   * @param slot Serialised or partial slot properties used to initialise this instance.
-   * @param node The parent node that owns this slot.
-   */
-  constructor(slot: OptionalProps<INodeSlot, "boundingRect">, node: LGraphNode) {
-    // Workaround: Ensure internal properties are not copied to the slot (_listenerController
-    // https://github.com/Comfy-Org/litegraph.js/issues/1138
-    const maybeSubgraphSlot: OptionalProps<ISubgraphInput, "link" | "boundingRect"> = slot
-    const { boundingRect, name, type, _listenerController, ...rest } = maybeSubgraphSlot
-    const rectangle = boundingRect ? Rectangle.ensureRect(boundingRect) : new Rectangle()
-
-    super(name, type, rectangle)
-
-    Object.assign(this, rest)
-    this.#node = node
-  }
 
   /**
    * Determines whether a dragging link originating from {@link fromSlot} may connect here.

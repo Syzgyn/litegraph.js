@@ -58,12 +58,8 @@ type ResolvedInput = {
  * @see {@link SubgraphNode.getInnerNodes}
  */
 export class ExecutableNodeDTO implements ExecutableLGraphNode {
-  /**
-   * Optional wrapper around the wrapped node's `applyToGraph` callback.
-   *
-   * Only assigned when the source node defines `applyToGraph`.
-   */
-  applyToGraph?(...args: CallbackParams<typeof this.node.applyToGraph>): CallbackReturn<typeof this.node.applyToGraph>
+  /** Backing field for {@link id}. */
+  #id: ExecutionId
 
   /** The graph (or subgraph definition) that owns the wrapped node. */
   readonly graph: LGraph | Subgraph
@@ -75,8 +71,111 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
    */
   inputs: { linkId: number | null, name: string, type: ISlotType }[]
 
-  /** Backing field for {@link id}. */
-  #id: ExecutionId
+  /**
+   * @param node The live node this DTO represents.
+   * @param subgraphNodePath Ordered list of {@link SubgraphNode} instance IDs from the root graph
+   * to the containing instance. Empty when the node lives directly in the root graph.
+   * @param nodesByExecutionId Shared map populated during flattening; used to resolve links across
+   * the expanded node network.
+   * @param subgraphNode The {@link SubgraphNode} instance that directly contains this node,
+   * or `undefined` when the node is not inside a subgraph instance.
+   */
+  constructor(
+    /** The actual node that this DTO wraps. */
+    readonly node: LGraphNode | SubgraphNode,
+    /**
+     * A list of subgraph instance node IDs from the root graph to the containing instance.
+     * @see `id`
+     */
+    readonly subgraphNodePath: readonly NodeId[],
+    /** A flattened map of all DTOs in this node network. Subgraph instances have been expanded into their inner nodes. */
+    readonly nodesByExecutionId: Map<ExecutionId, ExecutableLGraphNode>,
+    /** The actual subgraph instance that contains this node, otherise undefined. */
+    readonly subgraphNode?: SubgraphNode,
+  ) {
+    if (!node.graph) throw new NullGraphError()
+
+    // Set the internal ID of the DTO
+    this.#id = [...this.subgraphNodePath, this.node.id].join(":")
+    this.graph = node.graph
+    this.inputs = this.node.inputs.map(x => ({
+      linkId: x.link,
+      name: x.name,
+      type: x.type,
+    }))
+
+    // Only create a wrapper if the node has an applyToGraph method
+    if (this.node.applyToGraph) {
+      this.applyToGraph = (...args) => this.node.applyToGraph?.(...args)
+    }
+  }
+
+  /**
+   * Finds the index of the input slot on this node that matches the given output {@link slot} index.
+   * Used when bypassing nodes.
+   * @param slot The output slot index on this node
+   * @param type The type of the final target input (so type list matches are accurate)
+   * @returns The index of the input slot on this node, otherwise `undefined`.
+   */
+  #getBypassSlotIndex(slot: number, type: ISlotType) {
+    const { inputs } = this
+
+    // Any type short circuit - match slot ID, fallback to first slot
+    if (type === "*" || type === "") {
+      return inputs.length > slot ? slot : 0
+    }
+
+    const oppositeInput = inputs[slot]
+    const outputType = this.node.outputs[slot].type
+
+    // Prefer input with the same slot ID
+    if (
+      oppositeInput &&
+      LiteGraph.isValidConnection(oppositeInput.type, outputType) &&
+      LiteGraph.isValidConnection(oppositeInput.type, type)
+    ) {
+      return slot
+    }
+
+    // Find first matching slot - prefer exact type
+    return (
+      // Preserve legacy behaviour; use exact match first.
+      inputs.findIndex(input => input.type === type) ??
+      inputs.findIndex(
+        input =>
+          LiteGraph.isValidConnection(input.type, outputType) &&
+          LiteGraph.isValidConnection(input.type, type),
+      )
+    )
+  }
+
+  /**
+   * Resolves the link inside a subgraph node, from the subgraph IO node to the node inside the subgraph.
+   * @param slot The slot index of the output on the subgraph node.
+   * @param visited A set of unique IDs to guard against infinite recursion. See {@link resolveInput}.
+   * @returns A DTO for the node, and the origin ID / slot index of the output.
+   */
+  #resolveSubgraphOutput(slot: number, type: ISlotType, visited: Set<string>): ResolvedInput | undefined {
+    const { node } = this
+    const output = node.outputs.at(slot)
+
+    if (!output) throw new SlotIndexError(`No output found for flattened id [${this.id}] slot [${slot}]`)
+    if (!node.isSubgraphNode()) throw new TypeError(`Node is not a subgraph node: ${node.id}`)
+
+    // Link inside the subgraph
+    const innerResolved = node.resolveSubgraphOutputLink(slot)
+    if (!innerResolved) return
+
+    const innerNode = innerResolved.outputNode
+    if (!innerNode) throw new Error(`No output node found for id [${this.id}] slot [${slot}] ${output.name}`)
+
+    // Recurse into the subgraph
+    const innerNodeExecutionId = [...this.subgraphNodePath, node.id, innerNode.id].join(":")
+    const innerNodeDto = this.nodesByExecutionId.get(innerNodeExecutionId)
+    if (!innerNodeDto) throw new Error(`No inner node DTO found for id [${innerNodeExecutionId}]`)
+
+    return innerNodeDto.resolveOutput(innerResolved.link.origin_slot, type, visited)
+  }
 
   /**
    * Unique execution identifier for this node within the flattened graph.
@@ -124,43 +223,11 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   }
 
   /**
-   * @param node The live node this DTO represents.
-   * @param subgraphNodePath Ordered list of {@link SubgraphNode} instance IDs from the root graph
-   * to the containing instance. Empty when the node lives directly in the root graph.
-   * @param nodesByExecutionId Shared map populated during flattening; used to resolve links across
-   * the expanded node network.
-   * @param subgraphNode The {@link SubgraphNode} instance that directly contains this node,
-   * or `undefined` when the node is not inside a subgraph instance.
+   * Optional wrapper around the wrapped node's `applyToGraph` callback.
+   *
+   * Only assigned when the source node defines `applyToGraph`.
    */
-  constructor(
-    /** The actual node that this DTO wraps. */
-    readonly node: LGraphNode | SubgraphNode,
-    /**
-     * A list of subgraph instance node IDs from the root graph to the containing instance.
-     * @see `id`
-     */
-    readonly subgraphNodePath: readonly NodeId[],
-    /** A flattened map of all DTOs in this node network. Subgraph instances have been expanded into their inner nodes. */
-    readonly nodesByExecutionId: Map<ExecutionId, ExecutableLGraphNode>,
-    /** The actual subgraph instance that contains this node, otherise undefined. */
-    readonly subgraphNode?: SubgraphNode,
-  ) {
-    if (!node.graph) throw new NullGraphError()
-
-    // Set the internal ID of the DTO
-    this.#id = [...this.subgraphNodePath, this.node.id].join(":")
-    this.graph = node.graph
-    this.inputs = this.node.inputs.map(x => ({
-      linkId: x.link,
-      name: x.name,
-      type: x.type,
-    }))
-
-    // Only create a wrapper if the node has an applyToGraph method
-    if (this.node.applyToGraph) {
-      this.applyToGraph = (...args) => this.node.applyToGraph?.(...args)
-    }
-  }
+  applyToGraph?(...args: CallbackParams<typeof this.node.applyToGraph>): CallbackReturn<typeof this.node.applyToGraph>
 
   /**
    * Returns the DTOs that should be executed for this node.
@@ -318,72 +385,5 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
       origin_id: this.id,
       origin_slot: slot,
     }
-  }
-
-  /**
-   * Finds the index of the input slot on this node that matches the given output {@link slot} index.
-   * Used when bypassing nodes.
-   * @param slot The output slot index on this node
-   * @param type The type of the final target input (so type list matches are accurate)
-   * @returns The index of the input slot on this node, otherwise `undefined`.
-   */
-  #getBypassSlotIndex(slot: number, type: ISlotType) {
-    const { inputs } = this
-
-    // Any type short circuit - match slot ID, fallback to first slot
-    if (type === "*" || type === "") {
-      return inputs.length > slot ? slot : 0
-    }
-
-    const oppositeInput = inputs[slot]
-    const outputType = this.node.outputs[slot].type
-
-    // Prefer input with the same slot ID
-    if (
-      oppositeInput &&
-      LiteGraph.isValidConnection(oppositeInput.type, outputType) &&
-      LiteGraph.isValidConnection(oppositeInput.type, type)
-    ) {
-      return slot
-    }
-
-    // Find first matching slot - prefer exact type
-    return (
-      // Preserve legacy behaviour; use exact match first.
-      inputs.findIndex(input => input.type === type) ??
-      inputs.findIndex(
-        input =>
-          LiteGraph.isValidConnection(input.type, outputType) &&
-          LiteGraph.isValidConnection(input.type, type),
-      )
-    )
-  }
-
-  /**
-   * Resolves the link inside a subgraph node, from the subgraph IO node to the node inside the subgraph.
-   * @param slot The slot index of the output on the subgraph node.
-   * @param visited A set of unique IDs to guard against infinite recursion. See {@link resolveInput}.
-   * @returns A DTO for the node, and the origin ID / slot index of the output.
-   */
-  #resolveSubgraphOutput(slot: number, type: ISlotType, visited: Set<string>): ResolvedInput | undefined {
-    const { node } = this
-    const output = node.outputs.at(slot)
-
-    if (!output) throw new SlotIndexError(`No output found for flattened id [${this.id}] slot [${slot}]`)
-    if (!node.isSubgraphNode()) throw new TypeError(`Node is not a subgraph node: ${node.id}`)
-
-    // Link inside the subgraph
-    const innerResolved = node.resolveSubgraphOutputLink(slot)
-    if (!innerResolved) return
-
-    const innerNode = innerResolved.outputNode
-    if (!innerNode) throw new Error(`No output node found for id [${this.id}] slot [${slot}] ${output.name}`)
-
-    // Recurse into the subgraph
-    const innerNodeExecutionId = [...this.subgraphNodePath, node.id, innerNode.id].join(":")
-    const innerNodeDto = this.nodesByExecutionId.get(innerNodeExecutionId)
-    if (!innerNodeDto) throw new Error(`No inner node DTO found for id [${innerNodeExecutionId}]`)
-
-    return innerNodeDto.resolveOutput(innerResolved.link.origin_slot, type, visited)
   }
 }

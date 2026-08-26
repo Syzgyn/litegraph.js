@@ -42,23 +42,14 @@ export interface SubgraphSlotDrawOptions {
  * @see {@link SubgraphOutput}
  */
 export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hoverable, Serialisable<SubgraphIO> {
-  /** Default vertical height of a subgraph IO slot row, matching standard node slot height. */
-  static get defaultHeight() {
-    return LiteGraph.NODE_SLOT_HEIGHT
-  }
-
+  /** Canvas-space position of this slot. */
   readonly #pos: Point = new Float32Array(2)
-
   /** Cached label width/height used during {@link arrange}. */
   readonly measurement: ConstrainedSize = new ConstrainedSize(SubgraphSlot.defaultHeight, SubgraphSlot.defaultHeight)
-
   /** Stable unique identifier for this slot within the subgraph definition. */
   readonly id: UUID
   /** The IO boundary node ({@link SubgraphInputNode} or {@link SubgraphOutputNode}) that owns this slot. */
   readonly parent: SubgraphInputNode | SubgraphOutputNode
-  /** Slot type string used for connection compatibility checks. */
-  override type: string
-
   /**
    * IDs of all {@link LLink} instances attached to this slot.
    *
@@ -66,8 +57,31 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
    */
   readonly linkIds: LinkId[] = []
 
+  /** Whether the pointer is currently over this slot. */
+  isPointerOver: boolean = false
+
+  /** Slot type string used for connection compatibility checks. */
+  override type: string
   /** Axis-aligned bounds used for layout and hit-testing. */
   override readonly boundingRect: Rectangle = new Rectangle(0, 0, 0, SubgraphSlot.defaultHeight)
+
+  /**
+   * @param slot Serialised slot metadata (name, type, optional styling).
+   * @param parent The IO boundary node that will own and lay out this slot.
+   */
+  constructor(slot: SubgraphIO, parent: SubgraphInputNode | SubgraphOutputNode) {
+    super(slot.name, slot.type)
+
+    Object.assign(this, slot)
+    this.id = slot.id ?? createUuidv4()
+    this.type = slot.type
+    this.parent = parent
+  }
+
+  /** Default vertical height of a subgraph IO slot row, matching standard node slot height. */
+  static get defaultHeight() {
+    return LiteGraph.NODE_SLOT_HEIGHT
+  }
 
   /** Canvas-space centre of the slot connection circle. */
   override get pos() {
@@ -90,25 +104,6 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   get displayName() {
     return this.label ?? this.localized_name ?? this.name
   }
-
-  /** Canvas-space position for rendering this slot's text label. */
-  abstract get labelPos(): Point
-
-  /**
-   * @param slot Serialised slot metadata (name, type, optional styling).
-   * @param parent The IO boundary node that will own and lay out this slot.
-   */
-  constructor(slot: SubgraphIO, parent: SubgraphInputNode | SubgraphOutputNode) {
-    super(slot.name, slot.type)
-
-    Object.assign(this, slot)
-    this.id = slot.id ?? createUuidv4()
-    this.type = slot.type
-    this.parent = parent
-  }
-
-  /** Whether the pointer is currently over this slot. */
-  isPointerOver: boolean = false
 
   /**
    * Tests whether a canvas point lies inside this slot's bounding rectangle.
@@ -168,24 +163,6 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
     this.measurement.setValues(width + defaultHeight, defaultHeight)
     return this.measurement.toSize()
   }
-
-  /**
-   * Positions this slot within its parent IO node's vertical layout.
-   * @param rect Layout rectangle assigned by {@link SubgraphIONodeBase.arrange}.
-   */
-  abstract arrange(rect: ReadOnlyRect): void
-
-  /**
-   * Creates a connection from or to this slot, depending on the concrete subclass.
-   * @param slot The node slot on the other end of the connection.
-   * @param node The node that owns {@link slot}.
-   * @param afterRerouteId Optional reroute parent when the link passes through reroutes.
-   */
-  abstract connect(
-    slot: INodeInputSlot | INodeOutputSlot,
-    node: LGraphNode,
-    afterRerouteId?: RerouteId,
-  ): LLink | undefined
 
   /**
    * Disconnects all links connected to this slot.
@@ -278,4 +255,25 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
     const { id, name, type, linkIds, localized_name, label, dir, shape, color_off, color_on, pos } = this
     return { id, name, type, linkIds, localized_name, label, dir, shape, color_off, color_on, pos }
   }
+
+  /** Canvas-space position for rendering this slot's text label. */
+  abstract get labelPos(): Point
+
+  /**
+   * Positions this slot within its parent IO node's vertical layout.
+   * @param rect Layout rectangle assigned by {@link SubgraphIONodeBase.arrange}.
+   */
+  abstract arrange(rect: ReadOnlyRect): void
+
+  /**
+   * Creates a connection from or to this slot, depending on the concrete subclass.
+   * @param slot The node slot on the other end of the connection.
+   * @param node The node that owns {@link slot}.
+   * @param afterRerouteId Optional reroute parent when the link passes through reroutes.
+   */
+  abstract connect(
+    slot: INodeInputSlot | INodeOutputSlot,
+    node: LGraphNode,
+    afterRerouteId?: RerouteId,
+  ): LLink | undefined
 }

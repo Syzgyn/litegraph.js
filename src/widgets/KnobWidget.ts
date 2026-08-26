@@ -18,6 +18,12 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
   override type = "knob" as const
 
   /**
+   * Accumulated pointer movement since {@link onClick}; used to threshold discrete step changes
+   * during drag.
+   */
+  current_drag_offset = 0
+
+  /**
    * Reports flexible min/max dimensions so layout can allocate a tall knob region.
    * @returns Minimum 60px height and 20px width with very large max bounds.
    */
@@ -202,12 +208,6 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
   onClick(): void {
     this.current_drag_offset = 0
   }
-
-  /**
-   * Accumulated pointer movement since {@link onClick}; used to threshold discrete step changes
-   * during drag.
-   */
-  current_drag_offset = 0
 
   /**
    * Adjusts the value based on horizontal or vertical drag delta.

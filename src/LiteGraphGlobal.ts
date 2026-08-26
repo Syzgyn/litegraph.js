@@ -418,10 +418,6 @@ export class LiteGraphGlobal {
   /** @see {@link Reroute} Legacy constructor reference on the global object. */
   Reroute = Reroute
 
-  constructor() {
-    Object.defineProperty(this, "Classes", { writable: false })
-  }
-
   /**
    * Lazily-resolved internal class references exposed for advanced extension.
    *
@@ -436,6 +432,25 @@ export class LiteGraphGlobal {
 
     // Debug / helpers
     get InputIndicators() { return InputIndicators },
+  }
+
+  /**
+   * @see {@link createUuidv4}
+   * @inheritdoc
+   */
+  uuidv4 = createUuidv4
+
+  /** @see {@link distance} Re-exported geometry helper. */
+  distance = distance
+
+  /** @see {@link isInsideRectangle} Re-exported hit-test helper (legacy edge semantics). */
+  isInsideRectangle = isInsideRectangle
+
+  /** @see {@link overlapBounding} Re-exported rectangle overlap test. */
+  overlapBounding = overlapBounding
+
+  constructor() {
+    Object.defineProperty(this, "Classes", { writable: false })
   }
 
   /** Called after a new node type is registered via {@link registerNodeType}. */
@@ -731,12 +746,6 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * @see {@link createUuidv4}
-   * @inheritdoc
-   */
-  uuidv4 = createUuidv4
-
-  /**
    * Returns whether two slot types can be connected (wildcards, events, and comma-lists).
    * @param type_a Output slot type.
    * @param type_b Input slot type.
@@ -909,9 +918,6 @@ export class LiteGraphGlobal {
     return performance.now()
   }
 
-  /** @see {@link distance} Re-exported geometry helper. */
-  distance = distance
-
   /**
    * Converts normalised RGBA components `[0–1]` to a CSS `rgba(...)` string.
    * @param c Colour as `[r, g, b]` or `[r, g, b, a]` with components in `0–1`.
@@ -929,9 +935,6 @@ export class LiteGraphGlobal {
       })`
     )
   }
-
-  /** @see {@link isInsideRectangle} Re-exported hit-test helper (legacy edge semantics). */
-  isInsideRectangle = isInsideRectangle
 
   /**
    * Expands an axis-aligned bounding box `[minX, minY, maxX, maxY]` to include `(x, y)`.
@@ -952,9 +955,6 @@ export class LiteGraphGlobal {
       bounding[3] = y
     }
   }
-
-  /** @see {@link overlapBounding} Re-exported rectangle overlap test. */
-  overlapBounding = overlapBounding
 
   /**
    * Tests whether point `p` lies inside an axis-aligned bounding box pair `bb`.
