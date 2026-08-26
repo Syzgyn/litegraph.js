@@ -259,7 +259,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     network: Pick<ReadonlyLinkNetwork, "reroutes">,
     linkSegment: LinkSegment,
   ): Reroute | undefined {
-    return LLink.getReroutes(network, linkSegment).at(0)
+    return this.getReroutes(network, linkSegment).at(0)
   }
 
   /**

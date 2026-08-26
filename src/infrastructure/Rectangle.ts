@@ -60,7 +60,7 @@ export class Rectangle extends Float64Array {
    * @returns A {@link Rectangle} sharing or copying the same `[x, y, width, height]` data.
    */
   static ensureRect(rect: ReadOnlyRect): Rectangle {
-    return rect instanceof Rectangle
+    return rect instanceof this
       ? rect
       : new Rectangle(rect[0], rect[1], rect[2], rect[3])
   }

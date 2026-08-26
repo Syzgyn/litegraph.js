@@ -1107,7 +1107,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Context-menu callback that creates a new {@link LGraphGroup} at the pointer position. */
   static onGroupAdd(_info: unknown, _entry: unknown, mouse_event: MouseEvent): void {
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
 
     const group = new LiteGraph.LGraphGroup()
     group.pos = canvas.convertEventToCanvasOffset(mouse_event)
@@ -1147,7 +1147,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     align_to?: LGraphNode,
   ): void {
     alignNodes(Object.values(nodes), direction, align_to)
-    LGraphCanvas.active_canvas.setDirty(true, true)
+    this.active_canvas.setDirty(true, true)
   }
 
   /** Context-menu callback that opens a submenu to align selected nodes relative to a reference node. */
@@ -1227,7 +1227,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     prev_menu?: ContextMenu<string>,
     callback?: (node: LGraphNode | null) => void,
   ): boolean | undefined {
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
     const ref_window = canvas.getCanvasWindow()
     const { graph } = canvas
     if (!graph) return
@@ -1336,7 +1336,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   ): boolean | undefined {
     if (!node) return
 
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
 
     let entries: (IContextMenuValue<INodeSlotContextItem> | null)[] = []
 
@@ -1410,7 +1410,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   ): boolean | undefined {
     if (!node || !node.properties) return
 
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
     const ref_window = canvas.getCanvasWindow()
 
     const entries: IContextMenuValue<string>[] = []
@@ -1420,7 +1420,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         value = JSON.stringify(value)
       const info = node.getPropertyInfo(i)
       if (info.type == "enum" || info.type == "combo")
-        value = LGraphCanvas.getPropertyPrintableValue(value, info.values)
+        value = this.getPropertyPrintableValue(value, info.values)
 
       // value could contain invalid HTML characters, clean that
       value = DOMPurify.sanitize(stringOrEmpty(value))
@@ -1479,7 +1479,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       node.setSize(node.computeSize())
     }
 
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
     if (!canvas.selected_nodes || Object.keys(canvas.selected_nodes).length <= 1) {
       fApplyMultiNode(node)
     } else {
@@ -1540,7 +1540,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       e.stopPropagation()
     })
 
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
     const canvasEl = canvas.canvas
 
     const rect = canvasEl.getBoundingClientRect()
@@ -1632,7 +1632,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       node.collapse()
     }
 
-    const graphcanvas = LGraphCanvas.active_canvas
+    const graphcanvas = this.active_canvas
     if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
       fApplyMultiNode(node)
     } else {
@@ -1659,7 +1659,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       node.toggleAdvanced()
     }
 
-    const graphcanvas = LGraphCanvas.active_canvas
+    const graphcanvas = this.active_canvas
     if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
       fApplyMultiNode(node)
     } else {
@@ -1726,8 +1726,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       },
     ]
 
-    for (const i in LGraphCanvas.node_colors) {
-      const color = LGraphCanvas.node_colors[i]
+    for (const i in this.node_colors) {
+      const color = this.node_colors[i]
       value = {
         value: i,
         content: `<span style='display: block; color: #999; padding-left: 4px;` +
@@ -1808,7 +1808,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   static onMenuNodeRemove(): void {
-    LGraphCanvas.active_canvas.deleteSelected()
+    this.active_canvas.deleteSelected()
   }
 
   /** Context-menu callback that clones the active node (and multi-selection) with a small offset. */
@@ -1819,7 +1819,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     _menu: ContextMenu,
     node: LGraphNode,
   ): void {
-    const canvas = LGraphCanvas.active_canvas
+    const canvas = this.active_canvas
     const nodes = canvas.selectedItems.size ? canvas.selectedItems : [node]
 
     let offsetX = Infinity

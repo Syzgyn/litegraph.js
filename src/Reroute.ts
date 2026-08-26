@@ -44,8 +44,8 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   static slotRadius: number = 5
   /** Distance from reroute centre to slot centre along the link axis. */
   static get slotOffset(): number {
-    const gap = Reroute.slotRadius * 0.33
-    return Reroute.radius + gap + Reroute.slotRadius
+    const gap = this.slotRadius * 0.33
+    return this.radius + gap + this.slotRadius
   }
 
   #malloc = new Float32Array(8)
