@@ -387,8 +387,10 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * Correctly and safely typing this is currently not possible (practical?) in TypeScript 5.8.
    */
   createCopyForNode(node: LGraphNode): this {
-    // @ts-expect-error
-    const cloned: this = new (this.constructor as typeof this)(this, node)
+    type WidgetConstructor = new (widget: this, node: LGraphNode) => this
+
+    const WidgetConstructor = this.constructor as WidgetConstructor
+    const cloned: this = new WidgetConstructor(this, node)
     cloned.value = this.value
     return cloned
   }

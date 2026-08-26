@@ -146,7 +146,8 @@ const test = baseTest.extend<TestContext>({
 
   getNextLinkIds: async ({ graph }, use) => {
     await use((linkIds, expectedExtraLinks = 0) => {
-      const indexes = [...new Array(linkIds.size + expectedExtraLinks).keys()]
+      const array = new Array(linkIds.size + expectedExtraLinks)
+      const indexes = [...array.keys()]
       return indexes.map(index => graph.last_link_id + index + 1)
     })
   },
