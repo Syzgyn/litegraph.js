@@ -263,12 +263,12 @@ export class FloatingRenderLink implements RenderLink {
 
   /**
    * Resolves the floating end by attaching it to a reroute's input side.
-   * @param reroute The reroute being dropped on.
+   * @param _reroute The reroute being dropped on.
    * @param param1 The target input node and slot at the reroute terminus.
    * @param events Dispatches `"input-moved"` after the connection is made.
    */
   connectToRerouteInput(
-    reroute: Reroute,
+    _reroute: Reroute,
     { node: inputNode, input }: { node: LGraphNode, input: INodeInputSlot },
     events: CustomEventTarget<LinkConnectorEventMap>,
   ) {
@@ -285,13 +285,13 @@ export class FloatingRenderLink implements RenderLink {
 
   /**
    * Resolves the floating end by attaching it to a reroute's output side.
-   * @param reroute The reroute being dropped on.
+   * @param _reroute The reroute being dropped on.
    * @param outputNode The node that owns the output slot the link ultimately connects through.
    * @param output The output slot on {@link outputNode}.
    * @param events Dispatches `"output-moved"` after the connection is made.
    */
   connectToRerouteOutput(
-    reroute: Reroute,
+    _reroute: Reroute,
     outputNode: LGraphNode,
     output: INodeOutputSlot,
     events: CustomEventTarget<LinkConnectorEventMap>,

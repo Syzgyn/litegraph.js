@@ -65,9 +65,9 @@ export interface LGraphState {
 }
 
 type ParamsArray<T extends Record<any, any>, K extends MethodNames<T>> =
- Parameters<T[K]>[1] extends undefined
-   ? Parameters<T[K]> | Parameters<T[K]>[0]
-   : Parameters<T[K]>
+  Parameters<T[K]>[1] extends undefined
+    ? Parameters<T[K]> | Parameters<T[K]>[0]
+    : Parameters<T[K]>
 
 /** Configuration used by {@link LGraph.config}. */
 export interface LGraphConfig {
@@ -105,13 +105,6 @@ export interface LGraphExtra extends Dictionary<unknown> {
 export interface BaseLGraph {
   /** The top-level graph that owns subgraph definitions and the primary canvas. */
   readonly rootGraph: LGraph
-}
-
-function forEachSubgraphNode(subgraph: Subgraph, fn: (node: LGraphNode) => void): void {
-  for (const innerNode of subgraph.nodes) {
-    if (innerNode.isSubgraphNode()) forEachSubgraphNode(innerNode.subgraph, fn)
-    fn(innerNode)
-  }
 }
 
 function fireNodeRemovalLifecycle(node: LGraphNode): void {
@@ -240,8 +233,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   starttime: number = 0
   /** When `true`, {@link runStep} catches errors and calls {@link stop} on failure. */
   catch_errors: boolean = true
-  /** Timer handle for the execution loop (`-1` when using `requestAnimationFrame`). */
-  execution_timer_id?: number | null
+  /** Timer handle for the execution loop; unset when using `requestAnimationFrame`. */
+  execution_timer_id?: ReturnType<typeof setInterval> | null
+  /** When `true`, the graph execution loop is driven by `requestAnimationFrame`. */
+  #executionRafActive = false
   /** Set when the last {@link runStep} caught an execution error. */
   errors_in_execution?: boolean
   /** @deprecated Unused */
@@ -271,7 +266,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /** @returns All selectable items on the canvas: nodes, groups, and reroutes. */
-  *positionableItems(): Generator<LGraphNode | LGraphGroup | Reroute> {
+  * positionableItems(): Generator<LGraphNode | LGraphGroup | Reroute> {
     for (const node of this._nodes) yield node
     for (const group of this._groups) yield group
     for (const reroute of this.reroutes.values()) yield reroute
@@ -352,8 +347,6 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   onConfigure?(data: ISerialisedGraph | SerialisableGraph): void
   /** Allows extending the node context menu when a node is right-clicked. */
   onGetNodeMenuOptions?(options: (IContextMenuValue<unknown> | null)[], node: LGraphNode): void
-
-  private _input_nodes?: LGraphNode[]
 
   /**
    * Creates a new graph, optionally configuring it from serialised data.
@@ -527,16 +520,18 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       window.requestAnimationFrame
     ) {
       const on_frame = () => {
-        if (this.execution_timer_id != -1) return
+        if (!this.#executionRafActive) return
 
         window.requestAnimationFrame(on_frame)
         this.onBeforeStep?.()
         this.runStep(1, !this.catch_errors)
         this.onAfterStep?.()
       }
-      this.execution_timer_id = -1
+      this.#executionRafActive = true
+      this.execution_timer_id = null
       on_frame()
     } else {
+      this.#executionRafActive = false
       // execute every 'interval' ms
       this.execution_timer_id = setInterval(() => {
         // execute
@@ -559,11 +554,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.onStopEvent?.()
 
     if (this.execution_timer_id != null) {
-      if (this.execution_timer_id != -1) {
-        clearInterval(this.execution_timer_id)
-      }
-      this.execution_timer_id = null
+      clearInterval(this.execution_timer_id)
     }
+    this.#executionRafActive = false
+    this.execution_timer_id = null
 
     this.sendEventToAllNodes("onStop")
   }
@@ -1580,7 +1574,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       if (reroute !== lastReroute) {
         continue
-      } else if (secondLastReroute?.totalLinks !== 1) {
+      }
+      if (secondLastReroute?.totalLinks !== 1) {
         this.removeFloatingLink(link)
       } else if (link.parentId === id) {
         link.parentId = parentId
@@ -2617,7 +2612,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
   /**
    * Loads graph JSON from a URL, {@link File}, or {@link Blob}.
-   * @param url URL string, or a file/blob to read as JSON.
+   * @param URL URL string, or a file/blob to read as JSON.
    * @param callback Called after {@link configure} completes successfully.
    */
   load(url: string | Blob | URL | File, callback: () => void) {

@@ -34,7 +34,6 @@ LGraph {
       "title": "A group to test with",
     },
   ],
-  "_input_nodes": undefined,
   "_last_trigger_time": undefined,
   "_links": Map {},
   "_nodes": [

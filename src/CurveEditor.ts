@@ -73,7 +73,7 @@ export class CurveEditor {
    * Renders the curve, optional background grid, and control-point handles.
    * @param ctx Canvas context to draw into.
    * @param size Widget area as `[width, height]` in pixels.
-   * @param graphcanvas Optional canvas reference (unused by this method; retained for API compat).
+   * @param _graphcanvas Optional canvas reference (unused by this method; retained for API compat).
    * @param background_color When set, draws a dark grid background behind the curve.
    * @param line_color Stroke colour for the curve path. Defaults to `"#666"`.
    * @param inactive When `true`, draws at reduced opacity and omits interactive handles.
@@ -81,7 +81,7 @@ export class CurveEditor {
   draw(
     ctx: CanvasRenderingContext2D,
     size: Rect,
-    graphcanvas?: LGraphCanvas,
+    _graphcanvas?: LGraphCanvas,
     background_color?: string,
     line_color?: string,
     inactive = false,
