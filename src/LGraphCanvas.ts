@@ -6886,7 +6886,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (LiteGraph.dialog_close_on_mouse_leave && dialogCloseTimer)
         clearTimeout(dialogCloseTimer)
     })
-    const selInDia = dialog.querySelectorAll("select")
+    const selInDia = dialog.querySelectorAll(":scope select")
     if (selInDia.length > 0) {
       // if filtering, check focus changed to comboboxes and prevent closing
       for (const selIn of selInDia) {
@@ -6904,11 +6904,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.prompt_box?.close()
     this.prompt_box = dialog
 
-    const name_element: HTMLSpanElement | null = dialog.querySelector(".name")
+    const name_element: HTMLSpanElement | null = dialog.querySelector(":scope .name")
     if (!name_element) throw new TypeError("name_element was null")
 
     name_element.textContent = title
-    const value_element: HTMLInputElement | null = dialog.querySelector(".value")
+    const value_element: HTMLInputElement | null = dialog.querySelector(":scope .value")
     if (!value_element) throw new TypeError("value_element was null")
 
     value_element.value = value
@@ -6935,7 +6935,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       e.stopPropagation()
     })
 
-    const button = dialog.querySelector("button")
+    const button = dialog.querySelector(":scope button")
     if (!button) throw new TypeError("button was null when opening prompt")
 
     button.addEventListener("click", function () {
@@ -7043,8 +7043,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     let selIn
     let selOut
     if (options.do_type_filter) {
-      selIn = dialog.querySelector(".slot_in_type_filter")
-      selOut = dialog.querySelector(".slot_out_type_filter")
+      selIn = dialog.querySelector(":scope .slot_in_type_filter")
+      selOut = dialog.querySelector(":scope .slot_out_type_filter")
     }
 
     if (this.ds.scale > 1) {
@@ -7103,7 +7103,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     let timeout: ReturnType<typeof setTimeout> | null = null
     let selected: ChildNode | null = null
 
-    const maybeInput = dialog.querySelector("input")
+    const maybeInput = dialog.querySelector(":scope input") as HTMLInputElement | null
     if (!maybeInput) throw new TypeError("Could not create search input box.")
 
     const input = maybeInput
@@ -7354,8 +7354,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         let sIn: any = false
         let sOut: any = false
         if (options.do_type_filter && that.search_box) {
-          sIn = that.search_box.querySelector(".slot_in_type_filter")
-          sOut = that.search_box.querySelector(".slot_out_type_filter")
+          sIn = that.search_box.querySelector(":scope .slot_in_type_filter")
+          sOut = that.search_box.querySelector(":scope .slot_out_type_filter")
         }
 
         const keys = Object.keys(LiteGraph.registered_node_types)
@@ -7541,20 +7541,20 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     let input: HTMLInputElement | HTMLSelectElement | null
     if ((type == "enum" || type == "combo") && info.values) {
-      input = dialog.querySelector("select")
+      input = dialog.querySelector(":scope select")
       input?.addEventListener("change", function (e) {
         dialog.modified()
         setValue((e.target as HTMLSelectElement)?.value)
       })
     } else if (type == "boolean" || type == "toggle") {
-      input = dialog.querySelector("input")
+      input = dialog.querySelector(":scope input")
       input?.addEventListener("click", function () {
         dialog.modified()
         // @ts-expect-error
         setValue(!!input.checked)
       })
     } else {
-      input = dialog.querySelector("input")
+      input = dialog.querySelector(":scope input") as HTMLInputElement | null
       if (input) {
         input.addEventListener("blur", function () {
           this.focus()
@@ -7588,7 +7588,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
     input?.focus()
 
-    const button = dialog.querySelector("button")
+    const button = dialog.querySelector(":scope button")
     if (!button) throw new TypeError("Show edit property value button was null.")
     button.addEventListener("click", inner)
 
@@ -7678,7 +7678,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     // acheck for input and use default behaviour: save on enter, close on esc
     if (options.checkForInput) {
-      const aI = dialog.querySelectorAll("input")
+      const aI = dialog.querySelectorAll(":scope input") as NodeListOf<HTMLInputElement>
       if (aI.length > 0) {
         for (const iX of aI) {
           iX.addEventListener("keydown", function (e) {
@@ -7713,7 +7713,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (dialogCloseTimer) clearTimeout(dialogCloseTimer)
       }
     })
-    const selInDia = dialog.querySelectorAll("select")
+    const selInDia = dialog.querySelectorAll(":scope select")
     // if filtering, check focus changed to comboboxes and prevent closing
     if (selInDia.length > 0) {
       for (const selIn of selInDia) {
@@ -7740,7 +7740,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const root: any = document.createElement("div")
     root.className = "litegraph dialog"
     root.innerHTML = "<div class='dialog-header'><span class='dialog-title'></span></div><div class='dialog-content'></div><div style='display:none;' class='dialog-alt-content'></div><div class='dialog-footer'></div>"
-    root.header = root.querySelector(".dialog-header")
+    root.header = root.querySelector(":scope .dialog-header")
 
     if (options.width)
       root.style.width = options.width + (typeof options.width === "number" ? "px" : "")
@@ -7755,11 +7755,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       })
       root.header.append(close)
     }
-    root.title_element = root.querySelector(".dialog-title")
+    root.title_element = root.querySelector(":scope .dialog-title")
     root.title_element.textContent = title
-    root.content = root.querySelector(".dialog-content")
-    root.alt_content = root.querySelector(".dialog-alt-content")
-    root.footer = root.querySelector(".dialog-footer")
+    root.content = root.querySelector(":scope .dialog-content")
+    root.alt_content = root.querySelector(":scope .dialog-alt-content")
+    root.footer = root.querySelector(":scope .dialog-footer")
 
     root.close = function () {
       if (typeof root.onClose == "function") root.onClose()
@@ -7832,12 +7832,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const elem: HTMLDivElement & { options?: unknown, value?: unknown } = document.createElement("div")
       elem.className = "property"
       elem.innerHTML = "<span class='property_name'></span><span class='property_value'></span>"
-      const nameSpan = elem.querySelector(".property_name")
+      const nameSpan = elem.querySelector(":scope .property_name")
       if (!nameSpan) throw new TypeError("Property name element was null.")
 
       nameSpan.textContent = options.label || name
       // TODO: any kludge
-      const value_element: HTMLSpanElement | null = elem.querySelector(".property_value")
+      const value_element: HTMLSpanElement | null = elem.querySelector(":scope .property_value")
       if (!value_element) throw new TypeError("Property name element was null.")
       value_element.textContent = str_value
       elem.dataset["property"] = name
@@ -8039,7 +8039,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       panel.classList.add("centered")
 
       panel.alt_content.innerHTML = "<textarea class='code'></textarea>"
-      const textarea: HTMLTextAreaElement = panel.alt_content.querySelector("textarea")
+      const textarea: HTMLTextAreaElement = panel.alt_content.querySelector(":scope textarea")
       const fDoneWith = function () {
         panel.toggleAltContent(false)
         panel.toggleFooterVisibility(true)
@@ -8079,7 +8079,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     if (!this.canvas) return
 
     if (!this.canvas.parentNode) throw new TypeError("checkPanels - this.canvas.parentNode was null")
-    const panels = this.canvas.parentNode.querySelectorAll(".litegraph.dialog")
+    const panels = this.canvas.parentNode.querySelectorAll(":scope .litegraph.dialog")
     for (const panel of panels) {
       // @ts-expect-error Panel
       if (!panel.node) continue
@@ -8422,7 +8422,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           : node.getOutputInfo(info.slot)
         const dialog = createDialog(options)
 
-        const input = dialog.querySelector("input")
+        const input = dialog.querySelector(":scope input") as HTMLInputElement | null
         if (input && slot_info) {
           input.value = slot_info.label || ""
         }
@@ -8439,7 +8439,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           dialog.close()
           node.graph.afterChange()
         }
-        dialog.querySelector("button")?.addEventListener("click", inner)
+        dialog.querySelector(":scope button")?.addEventListener("click", inner)
         if (!input) throw new TypeError("Input element was null when processing context menu.")
 
         input.addEventListener("keydown", function (e) {

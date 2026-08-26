@@ -1018,7 +1018,7 @@ export class LiteGraphGlobal {
    * @param ref_window Window whose document should be searched. Default: global `window`.
    */
   closeAllContextMenus(ref_window: Window = window): void {
-    const elements = [...ref_window.document.querySelectorAll(".litecontextmenu")]
+    const elements = [...ref_window.document.querySelectorAll(":scope .litecontextmenu")]
     if (!elements.length) return
 
     for (const element of elements) {

@@ -16,7 +16,7 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([payload], { title: payload })
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.textContent).toBe(payload)
     expect(entry?.innerHTML).not.toContain("<img")
     expect((window as Window & { __xss?: number }).__xss).toBeUndefined()
@@ -27,7 +27,7 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([{ content: payload, callback: () => {} }], {})
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.textContent).toBe(payload)
     expect(entry?.innerHTML).toBe(payload)
   })
@@ -37,9 +37,9 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([{ content: payload, callback: () => {} }], {})
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.textContent).toBe("")
-    expect(entry?.querySelector("img")).toBeNull()
+    expect(entry?.querySelector(":scope img")).toBeNull()
     expect((window as Window & { __xss?: number }).__xss).toBeUndefined()
   })
 
@@ -52,9 +52,9 @@ describe("ContextMenu XSS", () => {
     ], {})
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.innerHTML).toBe("<span style=\"color: red\">ok</span>")
-    expect(entry?.querySelector("script")).toBeNull()
+    expect(entry?.querySelector(":scope script")).toBeNull()
   })
 
   test("allows styled span elements used by color menus", () => {
@@ -62,7 +62,7 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([{ content: html, callback: () => {} }], {})
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.textContent).toContain("No color")
     expect(entry?.innerHTML).toMatch(/display:\s*block/)
   })
@@ -72,7 +72,7 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([{ content: html, callback: () => {} }], {})
     menus.push(menu)
 
-    const entry = menu.root.querySelector(".litemenu-entry")
+    const entry = menu.root.querySelector(":scope .litemenu-entry")
     expect(entry?.innerHTML).toBe("<span style=\"color: red\">x</span>")
   })
 
@@ -81,7 +81,7 @@ describe("ContextMenu XSS", () => {
     const menu = new ContextMenu([], { title: payload })
     menus.push(menu)
 
-    const title = menu.root.querySelector(".litemenu-title")
+    const title = menu.root.querySelector(":scope .litemenu-title")
     expect(title?.textContent).toBe(payload)
     expect(title?.innerHTML).not.toContain("<b")
   })

@@ -307,7 +307,7 @@ export class ContextMenu<TValue = unknown> {
       element.addEventListener("pointerenter", inner_over)
 
     const setAriaExpanded = () => {
-      const entries = this.root.querySelectorAll("div.litemenu-entry.has_submenu")
+      const entries = this.root.querySelectorAll(":scope div.litemenu-entry.has_submenu")
       if (entries.length > 0) {
         for (const entry of entries) {
           entry.setAttribute("aria-expanded", "false")
