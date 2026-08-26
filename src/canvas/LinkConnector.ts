@@ -312,7 +312,7 @@ export class LinkConnector {
 
     // Floating links
     if (output._floatingLinks?.size) {
-      for (const floatingLink of output._floatingLinks.values()) {
+      for (const floatingLink of output._floatingLinks) {
         try {
           const reroute = LLink.getFirstReroute(network, floatingLink)
           if (!reroute) throw new Error(`Invalid reroute id: [${floatingLink.parentId}] for floating link id: [${floatingLink.id}].`)

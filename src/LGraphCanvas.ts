@@ -4166,7 +4166,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       for (const item of isSelected) this.deselect(item)
     } else {
       // Replace selection
-      for (const item of selectedItems.values()) {
+      for (const item of selectedItems) {
         if (!isSelected.has(item)) this.deselect(item)
       }
       for (const item of notSelected) this.select(item)

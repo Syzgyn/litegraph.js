@@ -104,7 +104,7 @@ const test = baseTest.extend<TestContext>({
       }
 
       // Check that all link references are valid (Can be found in the graph)
-      for (const node of graph.nodes.values()) {
+      for (const node of graph.nodes) {
         for (const input of node.inputs) {
           if (input.link) {
             expect(graph.links.keys()).toContain(input.link)
@@ -791,7 +791,7 @@ describe("LinkConnector Integration", () => {
     connector.reset()
 
     expect(disconnectedNode.outputs[0].links).toEqual(nextLinkIds)
-    expect([...targetReroute.linkIds.values()]).toEqual(nextLinkIds)
+    expect([...targetReroute.linkIds]).toEqual(nextLinkIds)
 
     // Parent reroutes should have lost the links or been removed
     for (const [index, parentId] of parentIds.entries()) {
@@ -914,7 +914,7 @@ describe("LinkConnector Integration", () => {
       expect(newParentChain.map(reroute => reroute.id)).not.toContain(rerouteId)
     }
 
-    expect([...toReroute.linkIds.values()]).toEqual(nextLinkIds)
+    expect([...toReroute.linkIds]).toEqual(nextLinkIds)
 
     for (const rerouteId of shouldBeRemoved) {
       const reroute = graph.reroutes.get(rerouteId)!

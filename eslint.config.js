@@ -85,7 +85,7 @@ export default tseslint.config(
       "unicorn/prefer-scoped-selector": "off",
       "unicorn/no-unreadable-object-destructuring": "off",
       "unicorn/no-unreadable-new-expression": "off",
-      "unicorn/prefer-direct-iteration": "off",
+
       "unicorn/no-array-sort": "off",
       "unicorn/numeric-separators-style": "off",
       "unicorn/prefer-type-literal-last": "off",

@@ -1844,7 +1844,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       // Reconnect input links in parent graph
       let i = 0
-      for (const [, connections] of groupedByOutput.entries()) {
+      for (const [, connections] of groupedByOutput) {
         const [firstResolved, ...others] = connections
         const { output, outputNode, link, subgraphInput } = firstResolved
 
@@ -1885,7 +1885,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
       // Reconnect output links in parent graph
       i = 0
-      for (const [, connections] of outputsGroupedByOutput.entries()) {
+      for (const [, connections] of outputsGroupedByOutput) {
       // Special handling: Subgraph output node
         i++
         for (const connection of connections) {
