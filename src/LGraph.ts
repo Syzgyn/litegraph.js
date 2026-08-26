@@ -726,7 +726,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           if (!link) continue
 
           // already visited link (ignore it)
-          if (visited_links[link.id]) continue
+          if (visited_links[link.id] != null) continue
 
           const target_node = this.getNodeById(link.target_id)
           if (target_node == null) {
@@ -884,7 +884,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
     for (const node of nodes) {
       // @ts-expect-error deprecated
-      if (!node[eventname] || node.mode != mode) continue
+      if (node[eventname] == null || node.mode != mode) continue
       if (params === undefined) {
         // @ts-expect-error deprecated
         node[eventname]()
@@ -1126,7 +1126,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const { list_of_graphcanvas } = this
     if (list_of_graphcanvas) {
       for (const canvas of list_of_graphcanvas) {
-        if (canvas.selected_nodes[node.id])
+        if (canvas.selected_nodes[node.id] != null)
           delete canvas.selected_nodes[node.id]
 
         canvas.deselect(node)

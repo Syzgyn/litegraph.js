@@ -965,14 +965,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         if (!info.widgets_values || !map) return
 
         return Object.fromEntries(
-          info.widgets_values.flatMap((v, i) => (map[i] ? [[map[i], v]] : [])),
+          info.widgets_values.flatMap((v, i) => (map[i] != null ? [[map[i], v]] : [])),
         )
       }
 
       const namedValues = getNamedValues()
       if (namedValues && LiteGraph.namedValuesRestore) {
         for (const widget of this.widgets) {
-          if (widget.serialize === false || !(widget.name in namedValues)) continue
+          if (widget.serialize === false || !(Object.hasOwn(namedValues, widget.name))) continue
 
           widget.value = namedValues[widget.name]
         }
@@ -1966,9 +1966,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     const key = `@${property}`
     // litescene mode using the constructor
     // @ts-expect-error deprecated https://github.com/Comfy-Org/litegraph.js/issues/639
-    if (this.constructor[key]) info = this.constructor[key]
+    if (this.constructor[key] != false) info = this.constructor[key]
 
-    if (this.constructor.widgets_info?.[property])
+    if (this.constructor.widgets_info != null && Object.hasOwn(this.constructor.widgets_info, property))
       info = this.constructor.widgets_info[property]
 
     // litescene mode using the constructor

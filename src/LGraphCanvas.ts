@@ -1688,7 +1688,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
       const kV = Object.values(LiteGraph.NODE_MODES).indexOf(v)
       const fApplyMultiNode = function (node: LGraphNode) {
-        if (kV !== -1 && LiteGraph.NODE_MODES[kV]) {
+        if (kV !== -1 && LiteGraph.NODE_MODES[kV] != undefined) {
           node.changeMode(kV)
         } else {
           console.warn(`unexpected mode: ${v}`)
@@ -3236,7 +3236,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
                   }
                 } else if (
                   inputId != -1 &&
-                  node.inputs[inputId] &&
+                  node.inputs[inputId] != null &&
                   LiteGraph.isValidConnection(firstLink.fromSlot.type, node.inputs[inputId].type)
                 ) {
                   highlightPos = pos
@@ -3260,7 +3260,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
                 // check if I have a slot below de mouse
                 if (
                   outputId != -1 &&
-                  node.outputs[outputId] &&
+                  node.outputs[outputId] !== undefined &&
+                  node.outputs[outputId] !== null &&
                   LiteGraph.isValidConnection(firstLink.fromSlot.type, node.outputs[outputId].type)
                 ) {
                   highlightPos = pos
@@ -3980,7 +3981,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       ...parsed.subgraphs.map(s => s.nodes ?? []),
     ].flat()
     for (const nodeInfo of allNodeInfo) {
-      if (nodeInfo.type in subgraphIdMap)
+      if (Object.hasOwn(subgraphIdMap, nodeInfo.type))
         nodeInfo.type = subgraphIdMap[nodeInfo.type]
     }
 
@@ -5975,7 +5976,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     } = {},
   ): void {
     const linkColour =
-      link != null && this.highlighted_links[link.id]
+      link != null && this.highlighted_links[link.id] != null
         ? "#FFF"
         : color ||
           link?.color ||
@@ -6576,7 +6577,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const slotTypesDefault = isFrom
       ? LiteGraph.slot_types_default_out
       : LiteGraph.slot_types_default_in
-    if (slotTypesDefault?.[fromSlotType]) {
+    if (slotTypesDefault?.[fromSlotType] != null) {
       // TODO: Remove "any" kludge
       let nodeNewType: any = false
       if (typeof slotTypesDefault[fromSlotType] == "object") {
@@ -6760,7 +6761,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const slotTypesDefault = isFrom
       ? LiteGraph.slot_types_default_out
       : LiteGraph.slot_types_default_in
-    if (slotTypesDefault?.[fromSlotType]) {
+    if (slotTypesDefault?.[fromSlotType] != null) {
       if (typeof slotTypesDefault[fromSlotType] == "object") {
         for (const typeX in slotTypesDefault[fromSlotType]) {
           options.push(slotTypesDefault[fromSlotType][typeX])
@@ -7540,7 +7541,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
       input_html += "</select>"
     } else if (type == "boolean" || type == "toggle") {
-      const checked = node.properties[property] ? "checked" : ""
+      const propertyValue = node.properties[property]
+      const checked = propertyValue ? "checked" : ""
       input_html = `<input autofocus type='checkbox' class='value' ${checked}/>`
     } else {
       console.warn(`unknown type: ${type}`)
@@ -7989,7 +7991,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             if (typeof value !== "string") throw new TypeError("Attempting to set mode to non-string value.")
 
             const kV = Object.values(LiteGraph.NODE_MODES).indexOf(value)
-            if (kV !== -1 && LiteGraph.NODE_MODES[kV]) {
+            if (kV !== -1 && LiteGraph.NODE_MODES[kV] != null) {
               node.changeMode(kV)
             } else {
               console.warn(`unexpected mode: ${value}`)
@@ -7999,7 +8001,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           case "Color":
             if (typeof value !== "string") throw new TypeError("Attempting to set colour to non-string value.")
 
-            if (LGraphCanvas.node_colors[strValue]) {
+            if (LGraphCanvas.node_colors[strValue] != null) {
               node.color = LGraphCanvas.node_colors[strValue].color
               node.bgcolor = LGraphCanvas.node_colors[strValue].bgcolor
             } else {

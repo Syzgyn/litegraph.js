@@ -55,6 +55,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
    */
   get(target: Map<number | string, V>, p: string | symbol): any {
     // Workaround does not support link IDs of "values", "entries", "constructor", etc.
+    // eslint-disable-next-line unicorn/no-computed-property-existence-check
     if (p in target) return Reflect.get(target, p, target)
     if (typeof p === "symbol") return
 
