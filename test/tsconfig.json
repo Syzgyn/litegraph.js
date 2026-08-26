@@ -6,7 +6,9 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "typeRoots": ["../node_modules/@types"],
+    "types": ["node"]
   },
   "include": ["**/*"]
 }

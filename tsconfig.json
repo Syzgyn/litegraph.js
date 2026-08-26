@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
@@ -18,21 +18,18 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "downlevelIteration": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "verbatimModuleSyntax": true,
 
     /* AllowJs during migration phase */
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "typeRoots": [],
     "outDir": "./dist",
-    "rootDir": "./",
-    "ignoreDeprecations": "5.0"
+    "rootDir": "./"
   },
   "include": ["src/**/*"]
 }
