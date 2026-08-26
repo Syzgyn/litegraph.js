@@ -90,8 +90,6 @@ export default tseslint.config(
       "unicorn/numeric-separators-style": "off",
       "unicorn/prefer-number-is-safe-integer": "off",
       "unicorn/no-return-array-push": "off",
-      "unicorn/prefer-unicode-code-point-escapes": "off",
-      "unicorn/no-optional-chaining-on-undeclared-variable": "off",
       "unicorn/prefer-type-literal-last": "off",
 
       // Disable rules

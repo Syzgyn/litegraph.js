@@ -5,9 +5,9 @@ import { LiteGraph } from "./litegraph"
 import { LinkDirection, RenderShape, TitleMode } from "./types/globalEnums"
 import { cachedMeasureText } from "./utils/textMeasureCache"
 
-const ELLIPSIS = "\u2026"
-const TWO_DOT_LEADER = "\u2025"
-const ONE_DOT_LEADER = "\u2024"
+const ELLIPSIS = "\u{2026}"
+const TWO_DOT_LEADER = "\u{2025}"
+const ONE_DOT_LEADER = "\u{2024}"
 
 /**
  * Semantic slot type constants used when drawing node inputs and outputs.

@@ -161,7 +161,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
     this.addTitleButton({
       name: "enter_subgraph",
-      text: "\uE93B", // Unicode for pi-window-maximize
+      text: "\u{E93B}", // Unicode for pi-window-maximize
       yOffset: 0, // No vertical offset needed, button is centered
       xOffset: -10,
       fontSize: 16,
