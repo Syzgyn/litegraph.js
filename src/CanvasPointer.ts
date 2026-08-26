@@ -418,7 +418,7 @@ export class CanvasPointer {
     const absoluteDeltaY = Math.abs(event.deltaY)
     const isInLinuxRange = absoluteDeltaY >= 10 && absoluteDeltaY < 60
     const isVerticalOnly = event.deltaX === 0
-    const hasIntegerDelta = Number.isInteger(event.deltaY)
+    const hasIntegerDelta = Number.isSafeInteger(event.deltaY)
 
     return (
       this.detectedDevice === "trackpad" &&

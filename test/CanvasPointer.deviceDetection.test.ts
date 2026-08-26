@@ -1080,7 +1080,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
             deltaY,
             deltaX: 5,
           })
-          expect(Number.isInteger(event.deltaY)).toBe(true)
+          expect(Number.isSafeInteger(event.deltaY)).toBe(true)
         }
       })
 
@@ -1092,7 +1092,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
             deltaY: 5,
             deltaX,
           })
-          expect(Number.isInteger(event.deltaX)).toBe(true)
+          expect(Number.isSafeInteger(event.deltaX)).toBe(true)
         }
       })
 
@@ -1169,7 +1169,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
         // Base 10 multiples
         const base10Values = [10, 20, 30, 40, 50, -10, -20, -30]
         for (const deltaY of base10Values) {
-          expect(Number.isInteger(deltaY)).toBe(true)
+          expect(Number.isSafeInteger(deltaY)).toBe(true)
           // Use Math.abs to avoid JavaScript's -0 vs 0 issue with modulo on negative numbers
           expect(Math.abs(deltaY) % 10).toBe(0)
         }
@@ -1177,7 +1177,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
         // Base 15 multiples
         const base15Values = [15, 30, 45, 60, -15, -30, -45]
         for (const deltaY of base15Values) {
-          expect(Number.isInteger(deltaY)).toBe(true)
+          expect(Number.isSafeInteger(deltaY)).toBe(true)
           // Use Math.abs to avoid JavaScript's -0 vs 0 issue with modulo on negative numbers
           expect(Math.abs(deltaY) % 15).toBe(0)
         }
@@ -1188,7 +1188,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
       test("should recognize that integers are valid float values", () => {
         const integerValues = [0, 1, -1, 10, -10, 100]
         for (const value of integerValues) {
-          expect(Number.isInteger(value)).toBe(true)
+          expect(Number.isSafeInteger(value)).toBe(true)
           expect(typeof value === "number").toBe(true) // Valid as float
         }
       })
@@ -1196,7 +1196,7 @@ describe("CanvasPointer Device Detection - Efficient Timestamp-Based TDD Tests",
       test("should recognize that decimals are NOT valid integer values", () => {
         const decimalValues = [0.1, -0.1, 10.5, -10.5, 99.99]
         for (const value of decimalValues) {
-          expect(Number.isInteger(value)).toBe(false)
+          expect(Number.isSafeInteger(value)).toBe(false)
           expect(typeof value === "number").toBe(true) // Still valid as float
         }
       })

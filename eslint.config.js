@@ -88,8 +88,6 @@ export default tseslint.config(
       "unicorn/prefer-direct-iteration": "off",
       "unicorn/no-array-sort": "off",
       "unicorn/numeric-separators-style": "off",
-      "unicorn/prefer-number-is-safe-integer": "off",
-      "unicorn/no-return-array-push": "off",
       "unicorn/prefer-type-literal-last": "off",
 
       // Disable rules
