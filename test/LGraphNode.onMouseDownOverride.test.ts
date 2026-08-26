@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { LGraphCanvas, LGraphNode } from "@/litegraph"
+import { LGraphNode } from "@/litegraph"
 
 class CustomMouseDownNode extends LGraphNode {
   handled = false
@@ -14,9 +14,8 @@ class CustomMouseDownNode extends LGraphNode {
 describe("LGraphNode onMouseDown subclass override", () => {
   test("subclass onMouseDown is not replaced by the constructor", () => {
     const node = new CustomMouseDownNode("Custom")
-    const canvas = {} as LGraphCanvas
 
-    expect(node.onMouseDown?.({} as never, [0, 0], canvas)).toBe(true)
+    expect(node.onMouseDown?.()).toBe(true)
     expect(node.handled).toBe(true)
   })
 

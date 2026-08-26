@@ -1,3 +1,5 @@
+import type { SubgraphEventMap } from "@/infrastructure/SubgraphEventMap"
+
 import { describe, expect, vi } from "vitest"
 
 import { subgraphTest } from "./fixtures/subgraphFixtures"
@@ -19,7 +21,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       }),
     })
 
-    expect(addedEvents[0].detail.input).toBe(input)
+    expect((addedEvents[0].detail as SubgraphEventMap["input-added"]).input).toBe(input)
   })
 
   subgraphTest("dispatches output-added with correct payload", ({ eventCapture }) => {
@@ -37,7 +39,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       }),
     })
 
-    expect(addedEvents[0].detail.output).toBe(output)
+    expect((addedEvents[0].detail as SubgraphEventMap["output-added"]).output).toBe(output)
   })
 
   subgraphTest("dispatches removing-input with correct payload", ({ eventCapture }) => {
@@ -60,7 +62,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       index: 0,
     })
 
-    expect(removingEvents[0].detail.input).toBe(input)
+    expect((removingEvents[0].detail as SubgraphEventMap["removing-input"]).input).toBe(input)
   })
 
   subgraphTest("dispatches removing-output with correct payload", ({ eventCapture }) => {
@@ -83,7 +85,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       index: 0,
     })
 
-    expect(removingEvents[0].detail.output).toBe(output)
+    expect((removingEvents[0].detail as SubgraphEventMap["removing-output"]).output).toBe(output)
   })
 
   subgraphTest("dispatches renaming-input with correct payload", ({ eventCapture }) => {
@@ -107,7 +109,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       newName: "new_name",
     })
 
-    expect(renamingEvents[0].detail.input).toBe(input)
+    expect((renamingEvents[0].detail as SubgraphEventMap["renaming-input"]).input).toBe(input)
 
     // Verify the label was updated after the event (renameInput sets label, not name)
     expect(input.label).toBe("new_name")
@@ -137,7 +139,7 @@ describe("SubgraphEvents - Event Payload Verification", () => {
       newName: "new_name",
     })
 
-    expect(renamingEvents[0].detail.output).toBe(output)
+    expect((renamingEvents[0].detail as SubgraphEventMap["renaming-output"]).output).toBe(output)
 
     // Verify the label was updated after the event
     expect(output.label).toBe("new_name")

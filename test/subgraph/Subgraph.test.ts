@@ -172,10 +172,10 @@ describe("Subgraph Serialization", () => {
 
     expect(serialized.inputs).toHaveLength(1)
     expect(serialized.outputs).toHaveLength(1)
-    expect(serialized.inputs[0].name).toBe("input")
-    expect(serialized.inputs[0].type).toBe("number")
-    expect(serialized.outputs[0].name).toBe("output")
-    expect(serialized.outputs[0].type).toBe("number")
+    expect(serialized.inputs![0].name).toBe("input")
+    expect(serialized.inputs![0].type).toBe("number")
+    expect(serialized.outputs![0].name).toBe("output")
+    expect(serialized.outputs![0].type).toBe("number")
   })
 
   subgraphTest("should include input and output nodes in serialization", ({ emptySubgraph }) => {

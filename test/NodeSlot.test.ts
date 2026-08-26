@@ -1,6 +1,7 @@
+import type { INodeInputSlot, INodeOutputSlot } from "@/interfaces"
+
 import { describe, expect, it } from "vitest"
 
-import { INodeInputSlot, INodeOutputSlot } from "@/interfaces"
 import { inputAsSerialisable, outputAsSerialisable } from "@/node/slotUtils"
 
 describe("NodeSlot", () => {
@@ -11,6 +12,7 @@ describe("NodeSlot", () => {
         name: "test-id",
         type: "STRING",
         links: [],
+        boundingRect: [0, 0, 120, 60],
       }
       const serialized = outputAsSerialisable(slot)
       expect(serialized).not.toHaveProperty("_data")
@@ -24,12 +26,8 @@ describe("NodeSlot", () => {
         link: null,
         widget: {
           name: "test-widget",
-          type: "combo",
-          value: "test-value-1",
-          options: {
-            values: ["test-value-1", "test-value-2"],
-          },
         },
+        boundingRect: [0, 0, 120, 60],
       }
 
       const serialized = inputAsSerialisable(widgetInputSlot)
@@ -42,6 +40,7 @@ describe("NodeSlot", () => {
         type: "STRING",
         pos: [10, 20],
         link: null,
+        boundingRect: [0, 0, 120, 60],
       }
       const serialized = inputAsSerialisable(normalSlot)
       expect(serialized).toHaveProperty("pos")
@@ -54,12 +53,8 @@ describe("NodeSlot", () => {
         link: null,
         widget: {
           name: "test-widget",
-          type: "combo",
-          value: "test-value-1",
-          options: {
-            values: ["test-value-1", "test-value-2"],
-          },
         },
+        boundingRect: [0, 0, 120, 60],
       }
 
       const serialized = inputAsSerialisable(widgetInputSlot)

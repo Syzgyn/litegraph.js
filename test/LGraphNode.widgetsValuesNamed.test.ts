@@ -8,9 +8,9 @@ class NamedWidgetTestNode extends LGraphNode {
 
   constructor() {
     super(NamedWidgetTestNode.title, NamedWidgetTestNode.type)
-    this.addWidget("number", "first", 1)
-    this.addWidget("number", "second", 2)
-    this.addWidget("number", "third", 4)
+    this.addWidget("number", "first", 1, null)
+    this.addWidget("number", "second", 2, null)
+    this.addWidget("number", "third", 4, null)
   }
 }
 
@@ -44,14 +44,14 @@ describe("widgets_values_named", () => {
     data.widgets_values_named = { first: 10, second: 20, third: 40 }
     data.widgets_values = [99, 99, 99]
 
-    node.widgets[0].value = 0
-    node.widgets[1].value = 0
-    node.widgets[2].value = 0
+    node.widgets![0].value = 0
+    node.widgets![1].value = 0
+    node.widgets![2].value = 0
     node.configure(data)
 
-    expect(node.widgets[0].value).toBe(10)
-    expect(node.widgets[1].value).toBe(20)
-    expect(node.widgets[2].value).toBe(40)
+    expect(node.widgets![0].value).toBe(10)
+    expect(node.widgets![1].value).toBe(20)
+    expect(node.widgets![2].value).toBe(40)
 
     LiteGraph.namedValuesRestore = false
   })
@@ -63,8 +63,8 @@ describe("widgets_values_named", () => {
 
       constructor() {
         super("Fallback", FallbackNode.type)
-        this.addWidget("number", "alpha", 0)
-        this.addWidget("number", "beta", 0)
+        this.addWidget("number", "alpha", 0, null)
+        this.addWidget("number", "beta", 0, null)
       }
     }
 
@@ -83,8 +83,8 @@ describe("widgets_values_named", () => {
       widgets_values: [5, 6],
     })
 
-    expect(node.widgets[0].value).toBe(5)
-    expect(node.widgets[1].value).toBe(6)
+    expect(node.widgets![0].value).toBe(5)
+    expect(node.widgets![1].value).toBe(6)
 
     LiteGraph.namedValuesRestore = false
   })
@@ -101,8 +101,8 @@ describe("widgets_values_named", () => {
 
     node.configure(data)
 
-    expect(node.widgets[0].value).toBe(11)
-    expect(node.widgets[1].value).toBe(22)
-    expect(node.widgets[2].value).toBe(44)
+    expect(node.widgets![0].value).toBe(11)
+    expect(node.widgets![1].value).toBe(22)
+    expect(node.widgets![2].value).toBe(44)
   })
 })

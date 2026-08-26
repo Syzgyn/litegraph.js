@@ -3,7 +3,7 @@ import type { ExportedSubgraphInstance, Positionable } from "@/litegraph"
 import { afterEach, describe, expect, test } from "vitest"
 
 import { LGraphNode, LiteGraph, Subgraph, SubgraphNode } from "@/litegraph"
-import { BaseWidget } from "@/widgets/BaseWidget"
+import { toConcreteWidget } from "@/widgets/widgetMap"
 
 import { createTestSubgraph } from "./fixtures/subgraphHelpers"
 
@@ -51,14 +51,14 @@ function createInteriorNodeWithWidget(
   const input = node.addInput("in", "*")
   node.addOutput("out", "*")
 
-  const widget = new BaseWidget({
+  const widget = toConcreteWidget({
     name: widgetName,
     type: "text",
     value,
     y: 0,
     options: {},
     node,
-  })
+  }, node)
   node.widgets = [widget]
   input.widget = { name: widget.name }
 
@@ -93,6 +93,7 @@ function setupParentSubgraphWithWidgets() {
     outputs: [],
     flags: {},
     mode: 0,
+    order: 0,
   })
   hostNode.serialize_widgets = true
   rootGraph.add(hostNode)
@@ -149,6 +150,7 @@ describe("nested pack promoted widget values", () => {
       outputs: [],
       flags: {},
       mode: 0,
+      order: 0,
     })
     const hostNode2 = new SubgraphNode(rootGraph, parentSubgraph, {
       id: 3,
@@ -159,6 +161,7 @@ describe("nested pack promoted widget values", () => {
       outputs: [],
       flags: {},
       mode: 0,
+      order: 0,
     })
     rootGraph.add(hostNode1)
     rootGraph.add(hostNode2)

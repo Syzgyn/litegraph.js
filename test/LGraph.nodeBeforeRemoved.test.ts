@@ -23,6 +23,7 @@ function addSubgraphNode(rootGraph: LGraph, subgraph: Subgraph): SubgraphNode {
     outputs: [],
     flags: {},
     mode: 0,
+    order: 0,
   }
 
   const subgraphNode = new SubgraphNode(rootGraph, subgraph, instanceData)

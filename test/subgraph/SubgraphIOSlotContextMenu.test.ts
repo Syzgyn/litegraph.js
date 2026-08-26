@@ -1,4 +1,4 @@
-import type { IContextMenuValue } from "@/litegraph"
+import type { CanvasPointer, CanvasPointerEvent, IContextMenuValue, LinkConnector } from "@/litegraph"
 
 import { describe, expect, test, vi } from "vitest"
 
@@ -20,7 +20,18 @@ describe("Subgraph IO slot context menu", () => {
       return {} as InstanceType<typeof LiteGraph.ContextMenu>
     })
 
-    subgraph.inputNode.showSlotContextMenu(slot, {} as never)
+    subgraph.inputNode.arrange()
+    const rect = slot.boundingRect
+    const event = {
+      button: 2,
+      canvasX: rect[0] + rect[2] / 2,
+      canvasY: rect[1] + rect[3] / 2,
+    } as CanvasPointerEvent
+    subgraph.inputNode.onPointerDown(
+      event,
+      {} as CanvasPointer,
+      {} as LinkConnector,
+    )
     menuCallback?.({ content: "Remove Slot", value: "remove" })
 
     expect(setDirtyCanvas).toHaveBeenCalledWith(true, true)
@@ -44,7 +55,18 @@ describe("Subgraph IO slot context menu", () => {
       return {} as InstanceType<typeof LiteGraph.ContextMenu>
     })
 
-    subgraph.inputNode.showSlotContextMenu(slot, {} as never)
+    subgraph.inputNode.arrange()
+    const rect = slot.boundingRect
+    const event = {
+      button: 2,
+      canvasX: rect[0] + rect[2] / 2,
+      canvasY: rect[1] + rect[3] / 2,
+    } as CanvasPointerEvent
+    subgraph.inputNode.onPointerDown(
+      event,
+      {} as CanvasPointer,
+      {} as LinkConnector,
+    )
     menuCallback?.({ content: "Disconnect Links", value: "disconnect" })
 
     expect(setDirtyCanvas).toHaveBeenCalledWith(true, true)

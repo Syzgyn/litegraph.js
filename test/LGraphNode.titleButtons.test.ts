@@ -41,7 +41,7 @@ describe("LGraphNode Title Buttons", () => {
     it("should create buttons with default options", () => {
       const node = new LGraphNode("Test Node")
 
-      const button = node.addTitleButton({})
+      const button = node.addTitleButton({ text: "X" })
 
       expect(button).toBeInstanceOf(LGraphButton)
       expect(button.name).toBeUndefined()
@@ -58,7 +58,6 @@ describe("LGraphNode Title Buttons", () => {
       const button = node.addTitleButton({
         name: "close_button",
         text: "X",
-        visible: true,
       })
 
       // Mock button dimensions
@@ -102,7 +101,6 @@ describe("LGraphNode Title Buttons", () => {
       const button = node.addTitleButton({
         name: "test_button",
         text: "T",
-        visible: true,
       })
 
       button.getWidth = vi.fn().mockReturnValue(20)
@@ -138,13 +136,11 @@ describe("LGraphNode Title Buttons", () => {
       const button1 = node.addTitleButton({
         name: "button1",
         text: "A",
-        visible: true,
       })
 
       const button2 = node.addTitleButton({
         name: "button2",
         text: "B",
-        visible: true,
       })
 
       // Mock button dimensions
@@ -237,7 +233,7 @@ describe("LGraphNode Title Buttons", () => {
   describe("onTitleButtonClick", () => {
     it("should dispatch litegraph:node-title-button-clicked event", () => {
       const node = new LGraphNode("Test Node")
-      const button = new LGraphButton({ name: "test_button" })
+      const button = new LGraphButton({ name: "test_button", text: "X" })
 
       const canvas = {
         dispatch: vi.fn(),

@@ -24,7 +24,7 @@ describe("SubgraphIO - Input Slot Dual-Nature Behavior", () => {
       externalNode.connect(0, subgraphNode, 0)
     }).not.toThrow()
 
-    expect(externalNode.outputs[0].links?.includes(subgraphNode.inputs[0].link)).toBe(true)
+    expect(externalNode.outputs[0].links?.includes(subgraphNode.inputs[0].link!)).toBe(true)
     expect(subgraphNode.inputs[0].link).not.toBe(null)
   })
 
@@ -39,8 +39,8 @@ describe("SubgraphIO - Input Slot Dual-Nature Behavior", () => {
 
     // The empty slot should be configurable
     const emptyInput = simpleSubgraph.inputs.at(-1)
-    expect(emptyInput.name).toBe("")
-    expect(emptyInput.type).toBe("*")
+    expect(emptyInput!.name).toBe("")
+    expect(emptyInput!.type).toBe("*")
   })
 
   subgraphTest("handles slot removal with active connections", ({ subgraphWithNode }) => {
@@ -129,7 +129,7 @@ describe("SubgraphIO - Output Slot Dual-Nature Behavior", () => {
       subgraphNode.connect(0, externalNode, 0)
     }).not.toThrow()
 
-    expect(subgraphNode.outputs[0].links?.includes(externalNode.inputs[0].link)).toBe(true)
+    expect(subgraphNode.outputs[0].links?.includes(externalNode.inputs[0].link!)).toBe(true)
     expect(externalNode.inputs[0].link).not.toBe(null)
   })
 
@@ -144,8 +144,8 @@ describe("SubgraphIO - Output Slot Dual-Nature Behavior", () => {
 
     // The empty slot should be configurable
     const emptyOutput = simpleSubgraph.outputs.at(-1)
-    expect(emptyOutput.name).toBe("")
-    expect(emptyOutput.type).toBe("*")
+    expect(emptyOutput!.name).toBe("")
+    expect(emptyOutput!.type).toBe("*")
   })
 
   subgraphTest("handles slot removal with active connections", ({ subgraphWithNode }) => {
@@ -404,7 +404,7 @@ describe("SubgraphIO - Empty Slot Connection", () => {
 
     // 3. A link should be established inside the subgraph
     expect(internalNode.inputs[0].link).not.toBe(null)
-    const link = subgraph.links.get(internalNode.inputs[0].link!)
+    const link = subgraph.links.get(internalNode.inputs[0].link!)!
     expect(link).toBeDefined()
     expect(link.target_id).toBe(internalNode.id)
     expect(link.target_slot).toBe(0)

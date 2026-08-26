@@ -1,4 +1,5 @@
 import type { ISerialisedGraph, SerialisableGraph } from "@/litegraph"
+import type { ISerialisedNode } from "@/types/serialisation"
 
 export const oldSchemaGraph: ISerialisedGraph = {
   id: "b4e984f1-b421-4d24-b8b4-ff895793af13",
@@ -19,7 +20,7 @@ export const oldSchemaGraph: ISerialisedGraph = {
   nodes: [
     {
       id: 1,
-    },
+    } as ISerialisedNode,
   ],
   links: [],
 }
@@ -64,7 +65,7 @@ export const basicSerialisableGraph: SerialisableGraph = {
     {
       id: 1,
       type: "mustBeSet",
-    },
+    } as ISerialisedNode,
   ],
   links: [],
 }

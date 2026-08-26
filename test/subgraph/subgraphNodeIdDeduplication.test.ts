@@ -76,14 +76,14 @@ describe("deduplicateSubgraphNodeIds (via configure)", () => {
     const idsA = new Set(graph.subgraphs.get(SUBGRAPH_A)!.nodes.map(n => String(n.id)))
     const idsB = new Set(graph.subgraphs.get(SUBGRAPH_B)!.nodes.map(n => String(n.id)))
 
-    const pw102 = graph.getNodeById(102 as NodeId)?.properties?.proxyWidgets
+    const pw102 = graph.getNodeById(102 as NodeId)?.properties?.["proxyWidgets"]
     expect(Array.isArray(pw102)).toBe(true)
     for (const entry of pw102 as unknown[][]) {
       expect(Array.isArray(entry)).toBe(true)
       expect(idsA.has(String(entry[0]))).toBe(true)
     }
 
-    const pw103 = graph.getNodeById(103 as NodeId)?.properties?.proxyWidgets
+    const pw103 = graph.getNodeById(103 as NodeId)?.properties?.["proxyWidgets"]
     expect(Array.isArray(pw103)).toBe(true)
     for (const entry of pw103 as unknown[][]) {
       expect(Array.isArray(entry)).toBe(true)
@@ -98,7 +98,7 @@ describe("deduplicateSubgraphNodeIds (via configure)", () => {
     const idsB = new Set(graph.subgraphs.get(SUBGRAPH_B)!.nodes.map(n => String(n.id)))
 
     const innerNode = graph.subgraphs.get(SUBGRAPH_A)!.nodes.find(n => n.id === (50 as NodeId))
-    const pw = innerNode?.properties?.proxyWidgets
+    const pw = innerNode?.properties?.["proxyWidgets"]
     expect(Array.isArray(pw)).toBe(true)
     for (const entry of pw as unknown[][]) {
       expect(Array.isArray(entry)).toBe(true)

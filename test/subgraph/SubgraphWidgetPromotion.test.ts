@@ -1,10 +1,11 @@
+import type { SubgraphEventMap } from "@/infrastructure/SubgraphEventMap"
 import type { ISlotType } from "@/interfaces"
 import type { TWidgetType } from "@/types/widgets"
 
 import { describe, expect, it } from "vitest"
 
 import { LGraphNode, Subgraph } from "@/litegraph"
-import { BaseWidget } from "@/widgets/BaseWidget"
+import { toConcreteWidget } from "@/widgets/widgetMap"
 
 import { createEventCapture, createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphHelpers"
 
@@ -20,7 +21,7 @@ function createNodeWithWidget(
   const input = node.addInput("value", slotType)
   node.addOutput("out", slotType)
 
-  const widget = new BaseWidget({
+  const widget = toConcreteWidget({
     name: "widget",
     type: widgetType,
     value: widgetValue,
@@ -28,7 +29,7 @@ function createNodeWithWidget(
     options: widgetType === "number" ? { min: 0, max: 100, step: 1 } : {},
     node,
     tooltip,
-  })
+  }, node)
   node.widgets = [widget]
   input.widget = { name: widget.name }
 
@@ -98,7 +99,7 @@ describe("SubgraphWidgetPromotion", () => {
         inputs: [{ name: "input", type: "number" }],
       })
 
-      const eventCapture = createEventCapture(subgraph.events, [
+      const eventCapture = createEventCapture<SubgraphEventMap["widget-promoted"]>(subgraph.events, [
         "widget-promoted",
         "widget-demoted",
       ])
@@ -124,7 +125,7 @@ describe("SubgraphWidgetPromotion", () => {
       const subgraphNode = setupPromotedWidget(subgraph, node)
       expect(subgraphNode.widgets).toHaveLength(1)
 
-      const eventCapture = createEventCapture(subgraph.events, ["widget-demoted"])
+      const eventCapture = createEventCapture<SubgraphEventMap["widget-demoted"]>(subgraph.events, ["widget-demoted"])
 
       // Remove the widget
       subgraphNode.removeWidgetByName("input")
@@ -154,23 +155,23 @@ describe("SubgraphWidgetPromotion", () => {
       const numInput = multiWidgetNode.addInput("num", "number")
       const strInput = multiWidgetNode.addInput("str", "string")
 
-      const widget1 = new BaseWidget({
+      const widget1 = toConcreteWidget({
         name: "widget1",
         type: "number",
         value: 10,
         y: 0,
         options: {},
         node: multiWidgetNode,
-      })
+      }, multiWidgetNode)
 
-      const widget2 = new BaseWidget({
+      const widget2 = toConcreteWidget({
         name: "widget2",
         type: "string",
         value: "hello",
         y: 40,
         options: {},
         node: multiWidgetNode,
-      })
+      }, multiWidgetNode)
 
       multiWidgetNode.widgets = [widget1, widget2]
       numInput.widget = { name: widget1.name }
@@ -288,7 +289,7 @@ describe("SubgraphWidgetPromotion", () => {
       const numInput = multiWidgetNode.addInput("num", "number")
       const strInput = multiWidgetNode.addInput("str", "string")
 
-      const widget1 = new BaseWidget({
+      const widget1 = toConcreteWidget({
         name: "widget1",
         type: "number",
         value: 10,
@@ -296,9 +297,9 @@ describe("SubgraphWidgetPromotion", () => {
         options: {},
         node: multiWidgetNode,
         tooltip: "Number widget tooltip",
-      })
+      }, multiWidgetNode)
 
-      const widget2 = new BaseWidget({
+      const widget2 = toConcreteWidget({
         name: "widget2",
         type: "string",
         value: "hello",
@@ -306,7 +307,7 @@ describe("SubgraphWidgetPromotion", () => {
         options: {},
         node: multiWidgetNode,
         tooltip: "String widget tooltip",
-      })
+      }, multiWidgetNode)
 
       multiWidgetNode.widgets = [widget1, widget2]
       numInput.widget = { name: widget1.name }

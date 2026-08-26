@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { LGraphCanvas } from "@/LGraphCanvas"
-import { LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphNode, LiteGraph } from "@/litegraph"
 
 const xssPayload = "<img src=x onerror=window.__xss=1>"
 
@@ -22,7 +22,7 @@ function createTestCanvas(): { canvas: LGraphCanvas, parent: HTMLDivElement } {
   })
 
   return {
-    canvas: new LGraphCanvas(canvasElement, null, {
+    canvas: new LGraphCanvas(canvasElement, new LGraph(), {
       skip_render: true,
       skip_events: true,
     }),
@@ -62,7 +62,7 @@ describe("LGraphCanvas XSS", () => {
     expect(dialog).toBeDefined()
     dialogs.push(dialog!)
 
-    const name = dialog!.querySelector(".name")
+    const name = dialog!.querySelector(":scope .name")
     expect(name?.innerHTML).not.toContain("onerror")
     expect((window as Window & { __xss?: number }).__xss).toBeUndefined()
   })
@@ -74,10 +74,10 @@ describe("LGraphCanvas XSS", () => {
 
     canvas.showShowNodePanel(node)
 
-    const panel = parent.querySelector("#node-panel")
+    const panel = parent.querySelector(":scope #node-panel")
     expect(panel).not.toBeNull()
 
-    const nodeType = panel?.querySelector(".node_type")
+    const nodeType = panel?.querySelector(":scope .node_type")
     expect(nodeType?.innerHTML).not.toContain("onerror")
     expect((window as Window & { __xss?: number }).__xss).toBeUndefined()
   })
@@ -88,7 +88,7 @@ describe("LGraphCanvas XSS", () => {
     LGraphCanvas.active_canvas = canvas
 
     const node = new LGraphNode("Note")
-    node.properties.safe_key = xssPayload
+    node.properties["safe_key"] = xssPayload
 
     const entries: { content?: string }[] = []
     const prevMenu = {

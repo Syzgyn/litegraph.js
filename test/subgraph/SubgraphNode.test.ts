@@ -7,7 +7,7 @@
 
 import { describe, expect, it, vi } from "vitest"
 
-import { LGraph, Subgraph } from "@/litegraph"
+import { LGraph, Subgraph, SubgraphNode } from "@/litegraph"
 
 import { subgraphTest } from "./fixtures/subgraphFixtures"
 import {
@@ -54,7 +54,7 @@ describe("SubgraphNode Construction", () => {
     const subgraphNode = createTestSubgraphNode(subgraph)
     const parentGraph = subgraphNode.graph
 
-    expect(subgraphNode.rootGraph).toBe(parentGraph.rootGraph)
+    expect(subgraphNode.rootGraph).toBe(parentGraph!.rootGraph)
   })
 
   subgraphTest("should synchronize slots with subgraph definition", ({ subgraphWithNode }) => {
@@ -204,9 +204,9 @@ describe("SubgraphNode Lifecycle", () => {
       size: [180, 100],
       inputs: [],
       outputs: [],
-      properties: {},
       flags: {},
       mode: 0,
+      order: 0,
     })
 
     // Should reflect updated subgraph structure

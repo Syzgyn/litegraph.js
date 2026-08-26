@@ -6,14 +6,14 @@ import { LGraphButton } from "@/LGraphButton"
 describe("LGraphButton", () => {
   describe("Constructor", () => {
     it("should create a button with default options", () => {
-      const button = new LGraphButton({})
+      const button = new LGraphButton({ text: "X" })
       expect(button).toBeInstanceOf(LGraphButton)
       expect(button.name).toBeUndefined()
       expect(button._last_area).toBeInstanceOf(Rectangle)
     })
 
     it("should create a button with custom name", () => {
-      const button = new LGraphButton({ name: "test_button" })
+      const button = new LGraphButton({ name: "test_button", text: "X" })
       expect(button.name).toBe("test_button")
     })
 
@@ -154,8 +154,8 @@ describe("LGraphButton", () => {
       const button = new LGraphButton({
         text: "→",
         fontSize: 20,
-        color: "#FFFFFF",
-        backgroundColor: "#333333",
+        fgColor: "#FFFFFF",
+        bgColor: "#333333",
         xOffset: -10,
         yOffset: 5,
       })

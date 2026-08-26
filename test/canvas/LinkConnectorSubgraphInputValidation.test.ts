@@ -1,3 +1,5 @@
+import type { CanvasPointerEvent } from "@/types/events"
+
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import { LinkConnector } from "@/canvas/LinkConnector"

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { LGraph, LGraphEventMode, LGraphNode } from "@/litegraph"
+import { LGraph, LGraphEventMode, LGraphNode, LLink } from "@/litegraph"
 import { ExecutableNodeDTO } from "@/subgraph/ExecutableNodeDTO"
 
 import {
@@ -83,10 +83,10 @@ describe("ExecutableNodeDTO Creation", () => {
     expect(dto.applyToGraph).toBeDefined()
 
     // Test that wrapper calls original method
-    const args = ["arg1", "arg2"]
-    dto.applyToGraph!(args[0], args[1])
+    const args = ["arg1"] as unknown as LLink[]
+    dto.applyToGraph!(args)
 
-    expect(mockApplyToGraph).toHaveBeenCalledWith(args[0], args[1])
+    expect(mockApplyToGraph).toHaveBeenCalledWith(args)
   })
 
   it("should not create applyToGraph wrapper if method doesn't exist", () => {
@@ -512,7 +512,7 @@ describe("ExecutableNodeDTO Integration", () => {
     // DTO should provide access to original node properties
     expect(dto.node.id).toBe(123)
     expect(dto.node.inputs).toHaveLength(1)
-    expect(dto.node.properties.value).toBe(42)
+    expect(dto.node.properties["value"]).toBe(42)
 
     // But DTO ID should be path-based
     expect(dto.id).toBe("parent:123")

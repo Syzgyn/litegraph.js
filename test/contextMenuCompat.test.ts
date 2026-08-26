@@ -52,7 +52,7 @@ describe("contextMenuCompat", () => {
       // Simulate extension monkey-patching
       const original = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original.call(mockCanvas)
           items.push({ content: "Custom Item", callback: () => {} })
           return items
@@ -83,7 +83,7 @@ describe("contextMenuCompat", () => {
 
       const patchFunction = function (
         this: LGraphCanvas,
-      ): (IContextMenuValue | null)[] {
+      ): IContextMenuValue<string>[] {
         const items = originalGetCanvasMenuOptions.call(mockCanvas)
         items.push({ content: "Custom", callback: () => {} })
         return items
@@ -118,7 +118,7 @@ describe("contextMenuCompat", () => {
       // Monkey-patch to add items
       const original = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original.apply(mockCanvas)
           items.push({ content: "Custom Item 1", callback: () => {} }, { content: "Custom Item 2", callback: () => {} })
           return items
@@ -206,7 +206,7 @@ describe("contextMenuCompat", () => {
       // Monkey-patch to add an item with undefined content
       const original = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original.apply(mockCanvas)
           items.push({ content: undefined, title: "Separator 3" })
           return items
@@ -245,7 +245,7 @@ describe("contextMenuCompat", () => {
       // First extension patches
       const original1 = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original1.apply(mockCanvas)
           items.push({ content: "Extension 1 Item", callback: () => {} })
           return items
@@ -254,7 +254,7 @@ describe("contextMenuCompat", () => {
       // Second extension patches
       const original2 = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original2.apply(mockCanvas)
           items.push({ content: "Extension 2 Item", callback: () => {} })
           return items
@@ -283,7 +283,7 @@ describe("contextMenuCompat", () => {
       // Simulate legacy extension monkey-patching the prototype
       const original = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original.apply(mockCanvas)
           items.push({ content: "Legacy Item 1", callback: () => {} }, { content: "Legacy Item 2", callback: () => {} })
           return items
@@ -331,7 +331,7 @@ describe("contextMenuCompat", () => {
       const originalMethod = LGraphCanvas.prototype.getCanvasMenuOptions
       const wrapperMethod = function (
         this: LGraphCanvas,
-      ): (IContextMenuValue | null)[] {
+      ): IContextMenuValue<string>[] {
         const items = originalMethod.apply(mockCanvas)
         // Add new API items
         items.push({ content: "New API Item 1", callback: () => {} }, { content: "New API Item 2", callback: () => {} })
@@ -368,7 +368,7 @@ describe("contextMenuCompat", () => {
 
       // Register a wrapper (but don't set it as the current method)
       const originalMethod = LGraphCanvas.prototype.getCanvasMenuOptions
-      const wrapperMethod = function (): (IContextMenuValue | null)[] {
+      const wrapperMethod = function (): IContextMenuValue<string>[] {
         return [{ content: "Wrapper Item", callback: () => {} }]
       }
       legacyMenuCompat.registerWrapper(
@@ -381,7 +381,7 @@ describe("contextMenuCompat", () => {
       // Monkey-patch with a different function (legacy extension)
       const original = LGraphCanvas.prototype.getCanvasMenuOptions
       LGraphCanvas.prototype.getCanvasMenuOptions =
-        function (): (IContextMenuValue | null)[] {
+        function (): IContextMenuValue<string>[] {
           const items = original.apply(mockCanvas)
           items.push({ content: "Legacy Item", callback: () => {} })
           return items

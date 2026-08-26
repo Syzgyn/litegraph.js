@@ -6,7 +6,7 @@
  * verify their behavior.
  */
 
-import type { ISlotType, NodeId } from "@/litegraph"
+import type { ISlotType, NodeId, Point, Size } from "@/litegraph"
 import type { ExportedSubgraph, ExportedSubgraphInstance } from "@/types/serialisation"
 import type { UUID } from "@/utils/uuid"
 
@@ -89,10 +89,17 @@ export function createTestSubgraph(options: TestSubgraphOptions = {}): Subgraph 
     // Basic graph properties
     version: 1,
     nodes: [],
-    links: {},
+    links: [],
     groups: [],
     config: {},
     definitions: { subgraphs: [] },
+    state: {
+      lastGroupId: 0,
+      lastNodeId: 0,
+      lastLinkId: 0,
+      lastRerouteId: 0,
+    },
+    revision: 0,
 
     // Subgraph-specific properties
     id: options.id || createUuidv4(),
@@ -122,7 +129,7 @@ export function createTestSubgraph(options: TestSubgraphOptions = {}): Subgraph 
   // Add requested inputs
   if (options.inputs) {
     for (const input of options.inputs) {
-      subgraph.addInput(input.name, input.type)
+      subgraph.addInput(input.name, String(input.type))
     }
   } else if (options.inputCount) {
     for (let i = 0; i < options.inputCount; i++) {
@@ -133,7 +140,7 @@ export function createTestSubgraph(options: TestSubgraphOptions = {}): Subgraph 
   // Add requested outputs
   if (options.outputs) {
     for (const output of options.outputs) {
-      subgraph.addOutput(output.name, output.type)
+      subgraph.addOutput(output.name, String(output.type))
     }
   } else if (options.outputCount) {
     for (let i = 0; i < options.outputCount; i++) {
@@ -183,9 +190,9 @@ export function createTestSubgraphNode(
     size: options.size || [200, 100],
     inputs: [],
     outputs: [],
-    properties: {},
     flags: {},
     mode: 0,
+    order: 0,
   }
 
   return new SubgraphNode(parentGraph, subgraph, instanceData)
@@ -231,11 +238,7 @@ export function createNestedSubgraphs(options: NestedSubgraphOptions = {}) {
       pos: [100 + level * 200, 100],
     })
 
-    if (currentParent instanceof LGraph) {
-      currentParent.add(subgraphNode)
-    } else {
-      currentParent.add(subgraphNode)
-    }
+    currentParent.add(subgraphNode)
 
     subgraphNodes.push(subgraphNode)
 
@@ -340,7 +343,7 @@ export function createTestSubgraphData(overrides: Partial<ExportedSubgraph> = {}
   return {
     version: 1,
     nodes: [],
-    links: {},
+    links: [],
     groups: [],
     config: {},
     definitions: { subgraphs: [] },
@@ -362,6 +365,13 @@ export function createTestSubgraphData(overrides: Partial<ExportedSubgraph> = {}
     inputs: [],
     outputs: [],
     widgets: [],
+    state: {
+      lastGroupId: 0,
+      lastNodeId: 0,
+      lastLinkId: 0,
+      lastRerouteId: 0,
+    },
+    revision: 0,
 
     ...overrides,
   }
@@ -375,53 +385,47 @@ export function createTestSubgraphData(overrides: Partial<ExportedSubgraph> = {}
  */
 export function createComplexSubgraphData(nodeCount: number = 5): ExportedSubgraph {
   const nodes = []
-  const links: Record<string, {
-    id: number
-    origin_id: number
-    origin_slot: number
-    target_id: number
-    target_slot: number
-    type: string
-  }> = {}
+  const links = []
 
   // Create internal nodes
   for (let i = 0; i < nodeCount; i++) {
     nodes.push({
       id: i + 1, // Start from 1 to avoid conflicts with IO nodes
       type: "basic/test",
-      pos: [100 + i * 150, 200],
-      size: [120, 60],
+      pos: [100 + i * 150, 200] as Point,
+      size: [120, 60] as Size,
       inputs: [{ name: "in", type: "*", link: null }],
       outputs: [{ name: "out", type: "*", links: [] }],
       properties: { value: i },
       flags: {},
       mode: 0,
+      order: 0,
     })
   }
 
   // Create some internal links
   for (let i = 0; i < nodeCount - 1; i++) {
     const linkId = i + 1
-    links[linkId] = {
+    links.push({
       id: linkId,
       origin_id: i + 1,
       origin_slot: 0,
       target_id: i + 2,
       target_slot: 0,
       type: "*",
-    }
+    })
   }
 
   return createTestSubgraphData({
     nodes,
     links,
     inputs: [
-      { name: "input1", type: "number", pos: [0, 0] },
-      { name: "input2", type: "string", pos: [0, 1] },
+      { id: createUuidv4(), name: "input1", type: "number", pos: [0, 0] },
+      { id: createUuidv4(), name: "input2", type: "string", pos: [0, 1] },
     ],
     outputs: [
-      { name: "output1", type: "number", pos: [0, 0] },
-      { name: "output2", type: "string", pos: [0, 1] },
+      { id: createUuidv4(), name: "output1", type: "number", pos: [0, 0] },
+      { id: createUuidv4(), name: "output2", type: "string", pos: [0, 1] },
     ],
   })
 }

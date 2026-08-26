@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { LGraphCanvas } from "@/LGraphCanvas"
-import { LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphNode, LiteGraph } from "@/litegraph"
 
 describe("LGraphCanvas Title Button Rendering", () => {
   let canvas: LGraphCanvas
@@ -43,7 +43,7 @@ describe("LGraphCanvas Title Button Rendering", () => {
 
     canvasElement.getContext = vi.fn().mockReturnValue(ctx)
 
-    canvas = new LGraphCanvas(canvasElement, null, {
+    canvas = new LGraphCanvas(canvasElement, new LGraph(), {
       skip_render: true,
       skip_events: true,
     })
@@ -54,12 +54,8 @@ describe("LGraphCanvas Title Button Rendering", () => {
 
     // Mock required methods
     node.drawTitleBarBackground = vi.fn()
-    node.drawTitleBarText = vi.fn()
     node.drawBadges = vi.fn()
-    node.drawToggles = vi.fn()
-    node.drawNodeShape = vi.fn()
     node.drawSlots = vi.fn()
-    node.drawContent = vi.fn()
     node.drawWidgets = vi.fn()
     node.drawCollapsedSlots = vi.fn()
     node.drawTitleBox = vi.fn()
@@ -67,7 +63,6 @@ describe("LGraphCanvas Title Button Rendering", () => {
     node.drawProgressBar = vi.fn()
     node._setConcreteSlots = vi.fn()
     node.arrange = vi.fn()
-    node.isSelectable = vi.fn().mockReturnValue(true)
   })
 
   describe("drawNode title button rendering", () => {
@@ -75,13 +70,11 @@ describe("LGraphCanvas Title Button Rendering", () => {
       const button1 = node.addTitleButton({
         name: "button1",
         text: "A",
-        visible: true,
       })
 
       const button2 = node.addTitleButton({
         name: "button2",
         text: "B",
-        visible: true,
       })
 
       // Mock button methods
@@ -117,7 +110,6 @@ describe("LGraphCanvas Title Button Rendering", () => {
       const visibleButton = node.addTitleButton({
         name: "visible",
         text: "V",
-        visible: true,
       })
 
       const invisibleButton = node.addTitleButton({
@@ -160,7 +152,6 @@ describe("LGraphCanvas Title Button Rendering", () => {
         const button = node.addTitleButton({
           name: `button${i}`,
           text: String(i),
-          visible: true,
         })
         button.getWidth = vi.fn().mockReturnValue(15) // All same width for simplicity
         const spy = vi.spyOn(button, "draw")
@@ -184,14 +175,10 @@ describe("LGraphCanvas Title Button Rendering", () => {
       const button = node.addTitleButton({
         name: "test",
         text: "T",
-        visible: true,
       })
 
       button.getWidth = vi.fn().mockReturnValue(20)
       const drawSpy = vi.spyOn(button, "draw")
-
-      // Set low quality rendering
-      canvas.lowQualityRenderingRequired = true
 
       canvas.drawNode(node, ctx)
 
@@ -204,13 +191,11 @@ describe("LGraphCanvas Title Button Rendering", () => {
       const smallButton = node.addTitleButton({
         name: "small",
         text: "S",
-        visible: true,
       })
 
       const largeButton = node.addTitleButton({
         name: "large",
         text: "LARGE",
-        visible: true,
       })
 
       smallButton.getWidth = vi.fn().mockReturnValue(15)
@@ -239,7 +224,6 @@ describe("LGraphCanvas Title Button Rendering", () => {
       const button = node.addTitleButton({
         name: "test",
         text: "X",
-        visible: true,
       })
 
       button.getWidth = vi.fn().mockReturnValue(20)

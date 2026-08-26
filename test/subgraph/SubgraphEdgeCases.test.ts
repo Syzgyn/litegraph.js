@@ -342,7 +342,7 @@ describe("SubgraphEdgeCases - Performance and Scale", () => {
     const subgraphNode = createTestSubgraphNode(subgraph)
 
     // Simulate concurrent operations
-    const operations = []
+    const operations: (() => void)[] = []
     for (let i = 0; i < 20; i++) {
       operations.push(() => {
         const executableNodes = new Map()

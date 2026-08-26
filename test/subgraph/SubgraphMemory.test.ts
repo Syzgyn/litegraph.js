@@ -67,9 +67,9 @@ describe("SubgraphNode Memory Management", () => {
           size: [200, 100],
           inputs: [],
           outputs: [],
-          properties: {},
           flags: {},
           mode: 0,
+          order: 0,
         })
       }
 
@@ -101,6 +101,8 @@ describe("SubgraphNode Memory Management", () => {
           name: "promoted_widget",
           value: 123,
         }),
+        options: {},
+        y: 0,
       }
 
       // Simulate widget promotion
@@ -137,9 +139,9 @@ describe("SubgraphNode Memory Management", () => {
           size: [200, 100],
           inputs: [],
           outputs: [],
-          properties: {},
           flags: {},
           mode: 0,
+          order: 0,
         })
       }
 
@@ -302,8 +304,8 @@ describe("SubgraphMemory - Widget Reference Management", () => {
     const initialWidgetCount = subgraphNode.widgets?.length || 0
 
     // Add mock widgets
-    const widget1 = { type: "number", value: 1, name: "widget1" }
-    const widget2 = { type: "string", value: "test", name: "widget2" }
+    const widget1 = { type: "number", value: 1, name: "widget1", options: {}, y: 0 }
+    const widget2 = { type: "string", value: "test", name: "widget2", options: {}, y: 0 }
 
     if (subgraphNode.widgets) {
       subgraphNode.widgets.push(widget1, widget2)

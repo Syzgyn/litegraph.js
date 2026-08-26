@@ -54,7 +54,7 @@ describe("LGraphCanvas link hit detection", () => {
     const linkSegment = {
       path,
       _pos: [100, 100],
-    } as LinkSegment
+    } as unknown as LinkSegment
 
     canvas.renderedPaths.add(linkSegment)
     canvas.allow_interaction = true
