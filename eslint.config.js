@@ -20,7 +20,7 @@ const antfuLint = {
 const unicornRecommended = eslintPluginUnicorn.configs.recommended
 
 export default tseslint.config(
-  { ignores: [".*/**", "dist/**", "scripts/**"] },
+  { ignores: [".*/**", "dist/**", "scripts/**", "docs/**"] },
   { files: ["**/*.{js,mjs,ts,mts}"] },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -71,6 +71,28 @@ export default tseslint.config(
       "unicorn/prefer-structured-clone": "off",
       "unicorn/prefer-switch": "off",
       "unicorn/prefer-ternary": "off",
+
+      // Temporarily disabled after updating to Unicorn v66
+      "unicorn/prefer-private-class-fields": "off",
+      "unicorn/consistent-class-member-order": "off",
+      "unicorn/no-this-outside-of-class": "off",
+      "unicorn/no-break-in-nested-loop": "off",
+      "unicorn/prefer-minimal-ternary": "off",
+      "unicorn/no-declarations-before-early-exit": "off",
+      "unicorn/class-reference-in-static-methods": "off",
+      "unicorn/no-computed-property-existence-check": "off",
+      "unicorn/prefer-early-return": "off",
+      "unicorn/prefer-scoped-selector": "off",
+      "unicorn/no-unreadable-object-destructuring": "off",
+      "unicorn/no-unreadable-new-expression": "off",
+      "unicorn/prefer-direct-iteration": "off",
+      "unicorn/no-array-sort": "off",
+      "unicorn/numeric-separators-style": "off",
+      "unicorn/prefer-number-is-safe-integer": "off",
+      "unicorn/no-return-array-push": "off",
+      "unicorn/prefer-unicode-code-point-escapes": "off",
+      "unicorn/no-optional-chaining-on-undeclared-variable": "off",
+      "unicorn/prefer-type-literal-last": "off",
 
       // Disable rules
       "unicorn/consistent-function-scoping": "off",
