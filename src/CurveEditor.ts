@@ -27,8 +27,11 @@ export class CurveEditor {
   must_update: boolean
   /** Pixel inset applied on all sides when mapping normalised points to canvas space. */
   margin: number
-  /** @internal Cached nearest-point index used during {@link onMouseMove}. */
-  _nearest?: number
+  /**
+   * @internal Cached nearest-point index used during {@link onMouseMove}.
+   * TODO: Delete once confirmed it does nothing, or finish implementation
+   */
+  nearestCache?: number
 
   /**
    * @param points Initial control points. The array is mutated in place during editing.
@@ -183,7 +186,7 @@ export class CurveEditor {
       localpos[1] - this.margin,
     ]
     const max_dist = 30 / graphcanvas.ds.scale
-    this._nearest = this.getCloserPoint(curvepos, max_dist)
+    this.nearestCache = this.getCloserPoint(curvepos, max_dist)
     const point = points[s]
     if (point) {
       const is_edge_point = s == 0 || s == points.length - 1

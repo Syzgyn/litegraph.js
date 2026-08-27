@@ -72,17 +72,6 @@ export default tseslint.config(
       "unicorn/prefer-switch": "off",
       "unicorn/prefer-ternary": "off",
 
-      // Temporarily disabled after updating to Unicorn v66
-      "unicorn/prefer-private-class-fields": "off",
-
-      "unicorn/no-this-outside-of-class": "off",
-      "unicorn/no-break-in-nested-loop": "off",
-      "unicorn/prefer-minimal-ternary": "off",
-      "unicorn/no-declarations-before-early-exit": "off",
-      "unicorn/no-array-sort": "off",
-      "unicorn/numeric-separators-style": "off",
-      "unicorn/prefer-type-literal-last": "off",
-
       // Disable rules
       "unicorn/consistent-function-scoping": "off",
       "unicorn/explicit-length-check": "off",
@@ -99,6 +88,14 @@ export default tseslint.config(
       "unicorn/switch-case-braces": "off",
       "unicorn/max-nested-calls": "off",
       "unicorn/prefer-iterator-to-array": "off",
+
+      "unicorn/no-this-outside-of-class": "off",
+      "unicorn/no-break-in-nested-loop": "off",
+      "unicorn/prefer-minimal-ternary": "off",
+      "unicorn/no-declarations-before-early-exit": "off",
+      "unicorn/no-array-sort": "off",
+      "unicorn/numeric-separators-style": "off",
+      "unicorn/prefer-type-literal-last": "off",
 
       // Node rules: dev dependency config, etc.
       "unicorn/prefer-module": "error",

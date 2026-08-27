@@ -1,6 +1,6 @@
 import type { Point, Size } from "@/interfaces"
 
-import { describe, expect, test as baseTest, vi } from "vitest"
+import { describe, expect, test as baseTest } from "vitest"
 
 import { Rectangle } from "@/infrastructure/Rectangle"
 
@@ -473,47 +473,6 @@ describe("Rectangle", () => {
       expect(rect.height).toBe(15)
       expect(rect.y).toBe(15) // y = oldY + (oldHeight - newHeight) = 10 + (20-15) = 15
       expect(rect.bottom).toBe(30) // bottom should remain 30 (15+15)
-    })
-  })
-
-  describe("debug drawing", () => {
-    test("should call canvas context methods", () => {
-      const rect = new Rectangle(10, 20, 30, 40)
-      const mockCtx = {
-        strokeStyle: "black",
-        lineWidth: 1,
-        beginPath: vi.fn(),
-        strokeRect: vi.fn(),
-      } as unknown as CanvasRenderingContext2D
-
-      rect._drawDebug(mockCtx, "blue")
-
-      expect(mockCtx.beginPath).toHaveBeenCalledOnce()
-      expect(mockCtx.strokeRect).toHaveBeenCalledWith(10, 20, 30, 40)
-      expect(mockCtx.strokeStyle).toBe("black") // Restored
-      expect(mockCtx.lineWidth).toBe(1) // Restored
-
-      // Check if it was set during the call
-      // This is a bit tricky as it's restored in finally.
-      // We'd need to spy on the setter or check the calls in order.
-      // For simplicity, we're assuming the implementation is correct if strokeRect was called with correct params.
-      // A more robust test could involve spying on property assignments if vitest supports it easily.
-    })
-
-    test("should use default color if not provided", () => {
-      const rect = new Rectangle(1, 2, 3, 4)
-      const mockCtx = {
-        strokeStyle: "black",
-        lineWidth: 1,
-        beginPath: vi.fn(),
-        strokeRect: vi.fn(),
-      } as unknown as CanvasRenderingContext2D
-      rect._drawDebug(mockCtx)
-      // Check if strokeStyle was "red" at the time of strokeRect
-      // This requires a more complex mock or observing calls.
-      // A simple check is that it ran without error and values were restored.
-      expect(mockCtx.strokeRect).toHaveBeenCalledWith(1, 2, 3, 4)
-      expect(mockCtx.strokeStyle).toBe("black")
     })
   })
 })

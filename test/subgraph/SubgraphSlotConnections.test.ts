@@ -151,7 +151,7 @@ describe("Subgraph slot connections", () => {
       expect(connector.inputLinks[0]).toBe(link)
 
       // Verify the link is marked as dragging
-      expect(link!._dragging).toBe(true)
+      expect(link!.dragging).toBe(true)
     })
   })
 

@@ -232,7 +232,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * @remarks Returns an empty string when {@link computedDisabled} is `true`. Subclasses override
    * for formatted numbers, combo labels, etc.
    */
-  get _displayValue(): string {
+  get displayValue(): string {
     return this.computedDisabled ? "" : String(this.value)
   }
 
@@ -276,7 +276,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   }
 
   /**
-   * Draws {@link displayName} and {@link _displayValue} inline, truncating or scaling text when the
+   * Draws {@link displayName} and {@link displayValue} inline, truncating or scaling text when the
    * combined width exceeds the available capsule interior.
    * @param options Canvas context, node width, and optional horizontal padding.
    * @remarks Uses {@link LiteGraph.truncateWidgetTextEvenly} and
@@ -292,9 +292,9 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     const { margin } = BaseWidget
 
     // Measure label and value
-    const { displayName, _displayValue } = this
+    const { displayName, displayValue } = this
     const labelWidth = cachedMeasureText(ctx, displayName)
-    const valueWidth = cachedMeasureText(ctx, _displayValue)
+    const valueWidth = cachedMeasureText(ctx, displayValue)
 
     const gap = BaseWidget.labelValueGap
     const x = margin * 2 + leftPadding
@@ -339,7 +339,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
       area.setWidthRightAnchored(cappedValueWidth)
     }
     ctx.fillStyle = this.text_color
-    drawTextInArea({ ctx, text: _displayValue, area, align: "right" })
+    drawTextInArea({ ctx, text: displayValue, area, align: "right" })
   }
 
   /**

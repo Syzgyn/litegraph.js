@@ -175,7 +175,7 @@ describe("renameWidget label persistence via input lookup (regression #13861)", 
     renameWidget(node.widgets![0], node, "Positive Prompt")
 
     canvas.copyToClipboard([node])
-    const pasted = canvas._pasteFromClipboard({ position: [50, 50] })!
+    const pasted = canvas.pasteFromClipboard({ position: [50, 50] })!
 
     const pastedNode = [...pasted.nodes.values()][0]
     expect(pastedNode.widgets![0].label).toBe("Positive Prompt")

@@ -9,7 +9,7 @@ describe("LGraphButton", () => {
       const button = new LGraphButton({ text: "X" })
       expect(button).toBeInstanceOf(LGraphButton)
       expect(button.name).toBeUndefined()
-      expect(button._last_area).toBeInstanceOf(Rectangle)
+      expect(button.lastArea).toBeInstanceOf(Rectangle)
     })
 
     it("should create a button with custom name", () => {
@@ -44,7 +44,7 @@ describe("LGraphButton", () => {
       button.draw(ctx, 50, 100)
 
       expect(superDrawSpy).not.toHaveBeenCalled()
-      expect(button._last_area.width).toBe(0) // Rectangle default width
+      expect(button.lastArea.width).toBe(0) // Rectangle default width
     })
 
     it("should draw and update last area when visible", () => {
@@ -75,10 +75,10 @@ describe("LGraphButton", () => {
       button.draw(ctx, x, y)
 
       // Check that last area was updated correctly
-      expect(button._last_area[0]).toBe(x + button.xOffset) // 100 + 5 = 105
-      expect(button._last_area[1]).toBe(y + button.yOffset) // 50 + 10 = 60
-      expect(button._last_area[2]).toBe(80)
-      expect(button._last_area[3]).toBe(button.height)
+      expect(button.lastArea[0]).toBe(x + button.xOffset) // 100 + 5 = 105
+      expect(button.lastArea[1]).toBe(y + button.yOffset) // 50 + 10 = 60
+      expect(button.lastArea[2]).toBe(80)
+      expect(button.lastArea[3]).toBe(button.height)
     })
 
     it("should calculate last area without offsets", () => {
@@ -103,9 +103,9 @@ describe("LGraphButton", () => {
 
       button.draw(ctx, 200, 100)
 
-      expect(button._last_area[0]).toBe(200)
-      expect(button._last_area[1]).toBe(100)
-      expect(button._last_area[2]).toBe(50)
+      expect(button.lastArea[0]).toBe(200)
+      expect(button.lastArea[1]).toBe(100)
+      expect(button.lastArea[2]).toBe(50)
     })
   })
 
@@ -113,10 +113,10 @@ describe("LGraphButton", () => {
     it("should return true when point is inside button area", () => {
       const button = new LGraphButton({ text: "Test" })
       // Set the last area manually
-      button._last_area[0] = 100
-      button._last_area[1] = 50
-      button._last_area[2] = 80
-      button._last_area[3] = 20
+      button.lastArea[0] = 100
+      button.lastArea[1] = 50
+      button.lastArea[2] = 80
+      button.lastArea[3] = 20
 
       // Test various points inside
       expect(button.isPointInside(100, 50)).toBe(true) // Top-left corner
@@ -127,10 +127,10 @@ describe("LGraphButton", () => {
     it("should return false when point is outside button area", () => {
       const button = new LGraphButton({ text: "Test" })
       // Set the last area manually
-      button._last_area[0] = 100
-      button._last_area[1] = 50
-      button._last_area[2] = 80
-      button._last_area[3] = 20
+      button.lastArea[0] = 100
+      button.lastArea[1] = 50
+      button.lastArea[2] = 80
+      button.lastArea[3] = 20
 
       // Test various points outside
       expect(button.isPointInside(99, 50)).toBe(false) // Just left
@@ -142,7 +142,7 @@ describe("LGraphButton", () => {
 
     it("should work with buttons that have not been drawn yet", () => {
       const button = new LGraphButton({ text: "Test" })
-      // _last_area has default values (0, 0, 0, 0)
+      // lastArea has default values (0, 0, 0, 0)
 
       expect(button.isPointInside(10, 10)).toBe(false)
       expect(button.isPointInside(0, 0)).toBe(false)

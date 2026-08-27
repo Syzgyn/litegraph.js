@@ -61,7 +61,7 @@ describe("LinkConnector SubgraphInput connection validation", () => {
       subgraph.add(targetNode)
 
       const link = new LLink(1, "number", sourceNode.id, 0, targetNode.id, 0)
-      subgraph._links.set(link.id, link)
+      subgraph.links.set(link.id, link)
 
       const movingLink = new MovingOutputLink(subgraph, link)
       expect(typeof movingLink.canConnectToSubgraphInput).toBe("function")
@@ -83,11 +83,11 @@ describe("LinkConnector SubgraphInput connection validation", () => {
       subgraph.add(targetNode)
 
       const validLink = new LLink(1, "number", sourceNode.id, 0, targetNode.id, 0)
-      subgraph._links.set(validLink.id, validLink)
+      subgraph.links.set(validLink.id, validLink)
       const validMovingLink = new MovingOutputLink(subgraph, validLink)
 
       const invalidLink = new LLink(2, "string", sourceNode.id, 1, targetNode.id, 1)
-      subgraph._links.set(invalidLink.id, invalidLink)
+      subgraph.links.set(invalidLink.id, invalidLink)
       const invalidMovingLink = new MovingOutputLink(subgraph, invalidLink)
 
       const numberInput = subgraph.inputs[0]
@@ -125,7 +125,7 @@ describe("LinkConnector SubgraphInput connection validation", () => {
       subgraph.add(targetNode)
 
       const link = new LLink(1, "string", sourceNode.id, 0, targetNode.id, 0)
-      subgraph._links.set(link.id, link)
+      subgraph.links.set(link.id, link)
       const movingLink = new MovingOutputLink(subgraph, link)
 
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
@@ -168,8 +168,8 @@ describe("LinkConnector SubgraphInput connection validation", () => {
 
       const validLink = new LLink(1, "number", sourceNode.id, 0, targetNode.id, 0)
       const invalidLink = new LLink(2, "string", sourceNode.id, 1, targetNode.id, 1)
-      subgraph._links.set(validLink.id, validLink)
-      subgraph._links.set(invalidLink.id, invalidLink)
+      subgraph.links.set(validLink.id, validLink)
+      subgraph.links.set(invalidLink.id, invalidLink)
 
       const validMovingLink = new MovingOutputLink(subgraph, validLink)
       const invalidMovingLink = new MovingOutputLink(subgraph, invalidLink)

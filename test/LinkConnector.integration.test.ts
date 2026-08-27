@@ -119,7 +119,7 @@ const test = baseTest.extend<TestContext>({
         }
       }
 
-      for (const link of graph._links.values()) {
+      for (const link of graph.links.values()) {
         expect(graph.getNodeById(link!.origin_id)?.outputs[link!.origin_slot].links).toContain(link.id)
         expect(graph.getNodeById(link!.target_id)?.inputs[link!.target_slot].link).toBe(link.id)
       }
@@ -129,14 +129,14 @@ const test = baseTest.extend<TestContext>({
           expect(link.origin_id).not.toBe(-1)
           expect(link.origin_slot).not.toBe(-1)
           expect(link.target_slot).toBe(-1)
-          const outputFloatingLinks = graph.getNodeById(link.origin_id)?.outputs[link.origin_slot]._floatingLinks
+          const outputFloatingLinks = graph.getNodeById(link.origin_id)?.outputs[link.origin_slot].floatingLinks
           expect(outputFloatingLinks).toBeDefined()
           expect(outputFloatingLinks).toContain(link)
         } else {
           expect(link.origin_id).toBe(-1)
           expect(link.origin_slot).toBe(-1)
           expect(link.target_slot).not.toBe(-1)
-          const inputFloatingLinks = graph.getNodeById(link.target_id)?.inputs[link.target_slot]._floatingLinks
+          const inputFloatingLinks = graph.getNodeById(link.target_id)?.inputs[link.target_slot].floatingLinks
           expect(inputFloatingLinks).toBeDefined()
           expect(inputFloatingLinks).toContain(link)
         }
@@ -290,8 +290,8 @@ describe("LinkConnector Integration", () => {
         expect(input.link).toBeNull()
         expect(output.links?.length).toBeOneOf([0, undefined])
 
-        expect(input._floatingLinks?.size).toBeOneOf([0, undefined])
-        expect(output._floatingLinks?.size).toBeOneOf([0, undefined])
+        expect(input.floatingLinks?.size).toBeOneOf([0, undefined])
+        expect(output.floatingLinks?.size).toBeOneOf([0, undefined])
       }
     })
 
@@ -458,8 +458,8 @@ describe("LinkConnector Integration", () => {
         expect(input.link).toBeNull()
         expect(output.links?.length).toBeOneOf([0, undefined])
 
-        expect(input._floatingLinks?.size).toBeOneOf([0, undefined])
-        expect(output._floatingLinks?.size).toBeOneOf([0, undefined])
+        expect(input.floatingLinks?.size).toBeOneOf([0, undefined])
+        expect(output.floatingLinks?.size).toBeOneOf([0, undefined])
       }
     })
 
@@ -609,10 +609,10 @@ describe("LinkConnector Integration", () => {
       connector.reset()
 
       expect(fromFloatingInput.link).toBeNull()
-      expect(fromFloatingInput._floatingLinks?.size).toBe(0)
+      expect(fromFloatingInput.floatingLinks?.size).toBe(0)
 
       expect(toInput.link).toBeNull()
-      expect(toInput._floatingLinks?.size).toBe(1)
+      expect(toInput.floatingLinks?.size).toBe(1)
     })
 
     test("Allow reroutes to be used as manual switches", ({ graph, connector, floatingReroute, validateIntegrityNoChanges }) => {
@@ -661,7 +661,7 @@ describe("LinkConnector Integration", () => {
 
     const output = manyOutputsNode.outputs[0]
     expect(output.links!.length).toBe(6)
-    expect(output._floatingLinks!.size).toBe(1)
+    expect(output.floatingLinks!.size).toBe(1)
 
     validateIntegrityNoChanges()
 
@@ -676,13 +676,13 @@ describe("LinkConnector Integration", () => {
 
     const newOutput = disconnectedNode.outputs[0]
     expect(newOutput.links!.length).toBe(6)
-    expect(newOutput._floatingLinks!.size).toBe(1)
+    expect(newOutput.floatingLinks!.size).toBe(1)
 
     validateIntegrityNoChanges()
 
     disconnectedNode.disconnectOutput(0)
 
-    expect(newOutput._floatingLinks!.size).toBe(0)
+    expect(newOutput.floatingLinks!.size).toBe(0)
     expect(graph.floatingLinks.size).toBe(6)
 
     // The final reroutes should all be floating
@@ -706,8 +706,8 @@ describe("LinkConnector Integration", () => {
       expect(input.link).toBeNull()
       expect(output.links?.length).toBeOneOf([0, undefined])
 
-      expect(input._floatingLinks?.size).toBeOneOf([0, undefined])
-      expect(output._floatingLinks?.size).toBeOneOf([0, undefined])
+      expect(input.floatingLinks?.size).toBeOneOf([0, undefined])
+      expect(output.floatingLinks?.size).toBeOneOf([0, undefined])
     }
   })
 

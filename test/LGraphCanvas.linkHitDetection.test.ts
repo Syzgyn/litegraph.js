@@ -53,7 +53,7 @@ describe("LGraphCanvas link hit detection", () => {
     const path = {}
     const linkSegment = {
       path,
-      _pos: [100, 100],
+      pathCentre: [100, 100],
     } as unknown as LinkSegment
 
     canvas.renderedPaths.add(linkSegment)

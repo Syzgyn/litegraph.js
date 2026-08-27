@@ -292,19 +292,19 @@ export interface LinkSegment {
   /** The last canvas 2D path that was used to render this segment. */
   path?: Path2D
   /** Centre point of the {@link path}. Calculated during render only — can be inaccurate. */
-  readonly _pos: Float32Array
+  readonly pathCentre: Float32Array
   /**
    * Y-forward angle along the {@link path} from its centre point, in radians.
    * `undefined` if using circles for link centres.
    * Calculated during render only — can be inaccurate.
    */
-  _centreAngle?: number
+  centreAngle?: number
 
   /**
    * Whether the link is currently being moved.
    * @internal
    */
-  _dragging?: boolean
+  dragging?: boolean
 
   /** Output node ID at the origin of this segment. */
   readonly origin_id: NodeId | undefined
@@ -481,7 +481,7 @@ export interface INodeSlot extends HasBoundingRect {
    * A list of floating link IDs that are connected to this slot.
    * This is calculated at runtime; it is **not** serialized.
    */
-  _floatingLinks?: Set<LLink>
+  floatingLinks?: Set<LLink>
   /**
    * Whether the slot has validation errors. It is **not** serialized.
    */
@@ -550,7 +550,7 @@ export interface INodeOutputSlot extends INodeSlot {
   /** IDs of all outgoing links, or `null` if disconnected. */
   links: LinkId[] | null
   /** Cached runtime data produced by this output during execution. */
-  _data?: unknown
+  data?: unknown
   /** Stable index assigned when the slot was created. */
   slot_index?: number
 }

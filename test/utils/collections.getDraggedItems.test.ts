@@ -22,7 +22,7 @@ describe("getDraggedItems", () => {
     graph = new LGraph()
 
     group = new LGraphGroup("TestGroup")
-    group._bounding.set([0, 0, 500, 500])
+    group.boundingRect.set([0, 0, 500, 500])
     graph.add(group)
 
     nodeA = new TestNode()

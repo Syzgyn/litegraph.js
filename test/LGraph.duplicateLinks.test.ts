@@ -51,7 +51,7 @@ describe("_removeDuplicateLinks", () => {
     expect(graph.links.size).toBe(4)
     expect(source.outputs[0].links).toHaveLength(4)
 
-    graph._removeDuplicateLinks()
+    graph.removeDuplicateLinks()
 
     expect(graph.links.size).toBe(1)
     expect(source.outputs[0].links).toHaveLength(1)
@@ -80,7 +80,7 @@ describe("_removeDuplicateLinks", () => {
     graph.links.set(dupLink.id, dupLink)
     source.outputs[0].links!.push(dupLink.id)
 
-    graph._removeDuplicateLinks()
+    graph.removeDuplicateLinks()
 
     expect(graph.links.size).toBe(1)
     expect(target.inputs[0].link).toBe(keptLinkId)
@@ -118,7 +118,7 @@ describe("_removeDuplicateLinks", () => {
 
     expect(graph.links.size).toBe(2)
 
-    graph._removeDuplicateLinks()
+    graph.removeDuplicateLinks()
 
     expect(graph.links.size).toBe(1)
     expect(graph.links.has(validLinkId)).toBe(true)
@@ -149,7 +149,7 @@ describe("_removeDuplicateLinks", () => {
 
     target.inputs[0].link = dupLink.id
 
-    graph._removeDuplicateLinks()
+    graph.removeDuplicateLinks()
 
     expect(graph.links.size).toBe(1)
     const survivingId = graph.links.keys().next().value!
@@ -168,7 +168,7 @@ describe("_removeDuplicateLinks", () => {
     source.connect(0, target, 0)
     const linksBefore = graph.links.size
 
-    graph._removeDuplicateLinks()
+    graph.removeDuplicateLinks()
 
     expect(graph.links.size).toBe(linksBefore)
   })

@@ -122,7 +122,7 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
       // Inputs
       if (node.inputs) {
         for (const input of node.inputs) {
-          addFloatingLinks(input._floatingLinks)
+          addFloatingLinks(input.floatingLinks)
 
           if (input.link == null) continue
 
@@ -150,7 +150,7 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
       // Outputs
       if (node.outputs) {
         for (const output of node.outputs) {
-          addFloatingLinks(output._floatingLinks)
+          addFloatingLinks(output.floatingLinks)
 
           if (!output.links) continue
 
@@ -421,7 +421,7 @@ export function mapSubgraphOutputsAndLinks(
 export function getDirectSubgraphIds(graph: GraphOrSubgraph): Set<UUID> {
   const subgraphIds = new Set<UUID>()
 
-  for (const node of graph._nodes) {
+  for (const node of graph.nodes) {
     if (node.isSubgraphNode()) {
       subgraphIds.add(node.type)
     }

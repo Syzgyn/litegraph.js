@@ -189,7 +189,7 @@ describe("LGraphCanvas ghost placement auto-pan", () => {
     const processMoveSpy = vi.spyOn(canvas, "processMouseMove")
     node.flags.ghost = true
     canvas.startGhostPlacement(node)
-    expect(canvas["_autoPan"]).not.toBeNull()
+    expect(canvas["autoPan"]).not.toBeNull()
 
     document.dispatchEvent(new MouseEvent("pointermove"))
     expect(processMoveSpy).toHaveBeenCalled()
@@ -197,7 +197,7 @@ describe("LGraphCanvas ghost placement auto-pan", () => {
     processMoveSpy.mockClear()
     canvas.finalizeGhostPlacement(false)
 
-    expect(canvas["_autoPan"]).toBeNull()
+    expect(canvas["autoPan"]).toBeNull()
 
     document.dispatchEvent(new MouseEvent("pointermove"))
     expect(processMoveSpy).not.toHaveBeenCalled()
@@ -209,7 +209,7 @@ describe("LGraphCanvas ghost placement auto-pan", () => {
 
     canvas.linkConnector.reset()
 
-    expect(canvas["_autoPan"]).not.toBeNull()
+    expect(canvas["autoPan"]).not.toBeNull()
     vi.advanceTimersByTime(16)
     expect(canvas.ds.offset[0]).not.toBe(0)
   })
@@ -354,14 +354,14 @@ describe("LGraphCanvas ghost placement cancellation via document keydown", () =>
     node.flags.ghost = true
     canvas.startGhostPlacement(node)
     expect(canvas.isDragging).toBe(true)
-    expect(canvas["_autoPan"]).not.toBeNull()
+    expect(canvas["autoPan"]).not.toBeNull()
 
     canvas.state.ghostNodeId = null
 
     canvas.finalizeGhostPlacement(true)
 
     expect(canvas.isDragging).toBe(false)
-    expect(canvas["_autoPan"]).toBeNull()
+    expect(canvas["autoPan"]).toBeNull()
 
     document.dispatchEvent(new MouseEvent("pointermove"))
     expect(processMoveSpy).not.toHaveBeenCalled()
@@ -379,12 +379,12 @@ describe("LGraphCanvas ghost placement cancellation via document keydown", () =>
   test("does not clobber unrelated drag state when called with no ghost in flight", () => {
     const fakeAutoPan = { stop: vi.fn() }
     canvas.isDragging = true
-    canvas["_autoPan"] = fakeAutoPan as unknown as (typeof canvas)["_autoPan"]
+    canvas["autoPan"] = fakeAutoPan as unknown as (typeof canvas)["autoPan"]
 
     canvas.finalizeGhostPlacement(true)
 
     expect(canvas.isDragging).toBe(true)
-    expect(canvas["_autoPan"]).toBe(fakeAutoPan)
+    expect(canvas["autoPan"]).toBe(fakeAutoPan)
     expect(fakeAutoPan.stop).not.toHaveBeenCalled()
   })
 })

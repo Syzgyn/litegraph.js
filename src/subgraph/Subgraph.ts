@@ -150,7 +150,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     slotIndex: number,
   ): void {
     const repaired = linkIds.map(id =>
-      this._links.has(id)
+      this.links.has(id)
         ? id
         : (this.#findLinkBySlot(ioNodeId, slotIndex)?.id ?? id))
     for (const [i, id] of repaired.entries()) {
@@ -162,7 +162,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     nodeId: number,
     slotIndex: number,
   ): LLink | undefined {
-    for (const link of this._links.values()) {
+    for (const link of this.links.values()) {
       if (
         (link.origin_id === nodeId && link.origin_slot === slotIndex) ||
         (link.target_id === nodeId && link.target_slot === slotIndex)

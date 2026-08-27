@@ -18,7 +18,7 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
    * Fixed-precision display string for the current value.
    * @remarks Uses `options.precision` when set, otherwise three decimal places.
    */
-  override get _displayValue() {
+  override get displayValue() {
     if (this.computedDisabled) return ""
     return Number(this.value).toFixed(
       this.options.precision !== undefined

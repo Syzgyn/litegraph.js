@@ -102,7 +102,7 @@ describe("LinkConnector", () => {
       expect(connector.state.connectingTo).toBe("input")
       expect(connector.state.draggingExistingLinks).toBe(true)
       expect(connector.inputLinks).toContain(link)
-      expect(link._dragging).toBe(true)
+      expect(link.dragging).toBe(true)
     })
 
     test("should not move input link if already connecting", ({ connector, network }) => {
@@ -133,7 +133,7 @@ describe("LinkConnector", () => {
       expect(connector.state.draggingExistingLinks).toBe(true)
       expect(connector.state.multi).toBe(true)
       expect(connector.outputLinks).toContain(link)
-      expect(link._dragging).toBe(true)
+      expect(link.dragging).toBe(true)
     })
 
     test("should not move output link if already connecting", ({ connector, network }) => {
@@ -208,12 +208,12 @@ describe("LinkConnector", () => {
       connector.state.draggingExistingLinks = true
 
       const link = new LLink(1, "number", 1, 0, 2, 0)
-      link._dragging = true
+      link.dragging = true
       connector.inputLinks.push(link)
 
       const reroute = new Reroute(1, network)
       reroute.pos = [0, 0]
-      reroute._dragging = true
+      reroute.dragging = true
       connector.hiddenReroutes.add(reroute)
 
       connector.reset()
@@ -227,8 +227,8 @@ describe("LinkConnector", () => {
       expect(connector.inputLinks).toEqual([])
       expect(connector.outputLinks).toEqual([])
       expect(connector.hiddenReroutes.size).toBe(0)
-      expect(link._dragging).toBeUndefined()
-      expect(reroute._dragging).toBeUndefined()
+      expect(link.dragging).toBeUndefined()
+      expect(reroute.dragging).toBeUndefined()
     })
   })
 

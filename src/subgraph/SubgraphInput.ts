@@ -44,12 +44,12 @@ export class SubgraphInput extends SubgraphSlot {
    *
    * Held weakly so promoted widgets can be garbage-collected when disconnected.
    */
-  get _widget() {
+  get linkedWidget() {
     return this.#widgetRef?.deref()
   }
 
   /** Associates a widget with this input slot for promotion to the parent graph. */
-  set _widget(widget) {
+  set linkedWidget(widget) {
     this.#widgetRef = widget ? new WeakRef(widget) : undefined
   }
 
@@ -88,7 +88,7 @@ export class SubgraphInput extends SubgraphSlot {
     if (slot.link != null) {
       subgraph.beforeChange()
       const link = subgraph.getLink(slot.link)
-      this.parent._disconnectNodeInput(node, slot, link)
+      this.parent.disconnectNodeInput(node, slot, link)
     }
 
     const inputWidget = node.getWidgetFromSlot(slot)
@@ -98,7 +98,7 @@ export class SubgraphInput extends SubgraphSlot {
         return
       }
 
-      this._widget ??= inputWidget
+      this.linkedWidget ??= inputWidget
       this.events.dispatch("input-connected", { input: slot, widget: inputWidget })
     } else {
       this.events.dispatch("input-connected", { input: slot })
@@ -115,7 +115,7 @@ export class SubgraphInput extends SubgraphSlot {
     )
 
     // Add to graph links list
-    subgraph._links.set(link.id, link)
+    subgraph.links.set(link.id, link)
 
     // Set link ID in each slot
     this.linkIds.push(link.id)
@@ -126,7 +126,7 @@ export class SubgraphInput extends SubgraphSlot {
     for (const reroute of reroutes) {
       reroute.linkIds.add(link.id)
       if (reroute.floating) delete reroute.floating
-      reroute._dragging = undefined
+      reroute.dragging = undefined
     }
 
     // If this is the terminus of a floating link, remove it

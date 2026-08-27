@@ -207,12 +207,12 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
    * @param input The input slot on {@link node}.
    * @param link The link being removed, if known.
    */
-  _disconnectNodeInput(node: LGraphNode, input: INodeInputSlot, link: LLink | undefined): void {
+  disconnectNodeInput(node: LGraphNode, input: INodeInputSlot, link: LLink | undefined): void {
     const { subgraph } = this
 
     // Break floating links
-    if (input._floatingLinks?.size) {
-      for (const link of input._floatingLinks) {
+    if (input.floatingLinks?.size) {
+      for (const link of input.floatingLinks) {
         subgraph.removeFloatingLink(link)
       }
     }
@@ -241,7 +241,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
     }
 
     if (subgraphInput.linkIds.length === 0) {
-      subgraphInput._widget = undefined
+      subgraphInput.linkedWidget = undefined
     }
     subgraphInput.events.dispatch("input-disconnected", {
       input: subgraphInput,

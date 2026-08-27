@@ -61,7 +61,7 @@ describe("LGraphCanvas Title Button Rendering", () => {
     node.drawTitleBox = vi.fn()
     node.drawTitleText = vi.fn()
     node.drawProgressBar = vi.fn()
-    node._setConcreteSlots = vi.fn()
+    node.setConcreteSlots = vi.fn()
     node.arrange = vi.fn()
   })
 

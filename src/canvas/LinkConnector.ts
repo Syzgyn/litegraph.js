@@ -254,7 +254,7 @@ export class LinkConnector {
     const linkId = input.link
     if (linkId == null) {
       // No link connected, check for a floating link
-      const floatingLink = input._floatingLinks?.values().next().value
+      const floatingLink = input.floatingLinks?.values().next().value
       if (floatingLink?.parentId == null) return
 
       try {
@@ -270,7 +270,7 @@ export class LinkConnector {
         console.warn(`Could not create render link for link id: [${floatingLink.id}].`, floatingLink, error)
       }
 
-      floatingLink._dragging = true
+      floatingLink.dragging = true
       this.floatingLinks.push(floatingLink)
     } else {
       const link = network.links.get(linkId)
@@ -303,7 +303,7 @@ export class LinkConnector {
           return
         }
 
-        link._dragging = true
+        link.dragging = true
         inputLinks.push(link)
       } else {
         // Regular node links
@@ -326,7 +326,7 @@ export class LinkConnector {
           return
         }
 
-        link._dragging = true
+        link.dragging = true
         inputLinks.push(link)
       }
     }
@@ -353,8 +353,8 @@ export class LinkConnector {
     const { state, renderLinks } = this
 
     // Floating links
-    if (output._floatingLinks?.size) {
-      for (const floatingLink of output._floatingLinks) {
+    if (output.floatingLinks?.size) {
+      for (const floatingLink of output.floatingLinks) {
         try {
           const reroute = LLink.getFirstReroute(network, floatingLink)
           if (!reroute) throw new Error(`Invalid reroute id: [${floatingLink.parentId}] for floating link id: [${floatingLink.id}].`)
@@ -379,10 +379,10 @@ export class LinkConnector {
 
         const firstReroute = LLink.getFirstReroute(network, link)
         if (firstReroute) {
-          firstReroute._dragging = true
+          firstReroute.dragging = true
           this.hiddenReroutes.add(firstReroute)
         } else {
-          link._dragging = true
+          link.dragging = true
         }
         this.outputLinks.push(link)
 
@@ -817,7 +817,7 @@ export class LinkConnector {
   /**
    * Handles dropping links onto a reroute.
    *
-   * For input-directed drags, delegates to {@link _connectOutputToReroute} with the single
+   * For input-directed drags, delegates to {@link connectOutputToReroute} with the single
    * render link. For output-directed drags, finds the reroute's source output and calls
    * {@link RenderLink.connectToRerouteOutput} on each compatible link.
    * @param reroute The reroute under the pointer.
@@ -833,7 +833,7 @@ export class LinkConnector {
       if (this.renderLinks.length !== 1) throw new Error(`Attempted to connect ${this.renderLinks.length} input links to a reroute.`)
 
       const renderLink = this.renderLinks[0]
-      this._connectOutputToReroute(reroute, renderLink)
+      this.connectOutputToReroute(reroute, renderLink)
 
       return
     }
@@ -863,7 +863,7 @@ export class LinkConnector {
    * @param reroute The reroute being dropped on.
    * @param renderLink The render link whose free end is being connected.
    */
-  _connectOutputToReroute(reroute: Reroute, renderLink: RenderLinkUnion): void {
+  connectOutputToReroute(reroute: Reroute, renderLink: RenderLinkUnion): void {
     const results = reroute.findTargetInputs()
     if (!results?.length) return
 
@@ -1088,10 +1088,10 @@ export class LinkConnector {
     if (!force && state.connectingTo === undefined) return
     state.connectingTo = undefined
 
-    for (const link of outputLinks) delete link._dragging
-    for (const link of inputLinks) delete link._dragging
-    for (const link of floatingLinks) delete link._dragging
-    for (const reroute of hiddenReroutes) delete reroute._dragging
+    for (const link of outputLinks) delete link.dragging
+    for (const link of inputLinks) delete link.dragging
+    for (const link of floatingLinks) delete link.dragging
+    for (const reroute of hiddenReroutes) delete reroute.dragging
 
     renderLinks.length = 0
     inputLinks.length = 0

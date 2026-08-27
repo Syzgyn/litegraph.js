@@ -103,7 +103,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     }, { signal })
 
     subgraphEvents.addEventListener("removing-input", (e) => {
-      const widget = e.detail.input._widget
+      const widget = e.detail.input.linkedWidget
       if (widget) this.ensureWidgetRemoved(widget)
 
       this.removeInput(e.detail.index)
@@ -165,7 +165,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
         if (input._widget && !hasStaleBoundWidget) return
 
-        const widget = e.detail.widget ?? subgraphInput._widget
+        const widget = e.detail.widget ?? subgraphInput.linkedWidget
         if (!widget) return
 
         if (hasStaleBoundWidget) {
@@ -303,7 +303,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
 
     input.widget = { name: subgraphInput.name }
     input._widget = promotedWidget
-    this._widgetSlotsDirty = true
+    this.widgetSlotsDirty = true
   }
 
   /** The root graph that ultimately owns this instance's subgraph definition. */
@@ -367,7 +367,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     super.configure(info)
   }
 
-  override _internalConfigureAfterSlots() {
+  override internalConfigureAfterSlots() {
     this.#rebindInputSubgraphSlots()
 
     // Prune inputs that don't map to any subgraph slot definition.
@@ -562,7 +562,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     const widget = toConcreteWidget(customWidget, this, false) ?? customWidget
     this.#extraWidgets.push(widget)
     this.widgets.push(widget)
-    this._widgetSlotsDirty = true
+    this.widgetSlotsDirty = true
     return widget
   }
 

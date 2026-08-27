@@ -85,7 +85,7 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
    * Display string for the current selection.
    * @remarks Resolves record-map labels, function-backed values, and numeric index coercion.
    */
-  override get _displayValue() {
+  override get displayValue() {
     if (this.computedDisabled) return ""
     const { values: rawValues } = this.options
     if (rawValues) {

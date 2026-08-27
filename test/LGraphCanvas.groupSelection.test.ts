@@ -80,7 +80,7 @@ describe("LGraphCanvas group selection", () => {
     canvas = createCanvas(graph)
 
     group = new LGraphGroup("TestGroup")
-    group._bounding.set([0, 0, 500, 500])
+    group.boundingRect.set([0, 0, 500, 500])
     graph.add(group)
 
     nodeA = new TestNode()
@@ -112,7 +112,7 @@ describe("LGraphCanvas group selection", () => {
 
     test("recursively selects nested group children", () => {
       const innerGroup = new LGraphGroup("InnerGroup")
-      innerGroup._bounding.set([40, 40, 200, 200])
+      innerGroup.boundingRect.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
       const innerNode = new TestNode()
@@ -132,7 +132,7 @@ describe("LGraphCanvas group selection", () => {
 
     test("selects descendants of already-selected nested groups", () => {
       const innerGroup = new LGraphGroup("InnerGroup")
-      innerGroup._bounding.set([40, 40, 200, 200])
+      innerGroup.boundingRect.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
       const innerNode = new TestNode()
@@ -162,7 +162,7 @@ describe("LGraphCanvas group selection", () => {
         const size = 500 - depth * 20
 
         const nestedGroup = new LGraphGroup(`Depth${depth}`)
-        nestedGroup._bounding.set([offset, offset, size, size])
+        nestedGroup.boundingRect.set([offset, offset, size, size])
         graph.add(nestedGroup)
         groups.push(nestedGroup)
 
@@ -226,7 +226,7 @@ describe("LGraphCanvas group selection", () => {
 
     test("recursively deselects nested group children", () => {
       const innerGroup = new LGraphGroup("InnerGroup")
-      innerGroup._bounding.set([40, 40, 200, 200])
+      innerGroup.boundingRect.set([40, 40, 200, 200])
       graph.add(innerGroup)
 
       const innerNode = new TestNode()
@@ -254,7 +254,7 @@ describe("LGraphCanvas group selection", () => {
         const size = 500 - depth * 20
 
         const nestedGroup = new LGraphGroup(`Depth${depth}`)
-        nestedGroup._bounding.set([offset, offset, size, size])
+        nestedGroup.boundingRect.set([offset, offset, size, size])
         graph.add(nestedGroup)
         groups.push(nestedGroup)
 

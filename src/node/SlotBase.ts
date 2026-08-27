@@ -52,7 +52,7 @@ export abstract class SlotBase implements INodeSlot {
   widget?: IWidgetLocator
 
   /** Links that originate from this slot but are not yet connected to a target (floating links). */
-  _floatingLinks?: Set<LLink>
+  floatingLinks?: Set<LLink>
 
   /** When `true`, an error indicator is drawn around this slot. */
   hasErrors?: boolean

@@ -157,7 +157,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
    * @returns `[width, height]` in canvas units.
    */
   measure(): ReadOnlySize {
-    const width = LGraphCanvas._measureText?.(this.displayName) ?? 0
+    const width = LGraphCanvas.measureText?.(this.displayName) ?? 0
 
     const { defaultHeight } = SubgraphSlot
     this.measurement.setValues(width + defaultHeight, defaultHeight)

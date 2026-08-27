@@ -9,7 +9,7 @@ describe("LGraphCanvas auxclick", () => {
     const event = new MouseEvent("auxclick", { button: 1, bubbles: true })
     const preventDefault = vi.spyOn(event, "preventDefault")
 
-    canvas._preventMiddleAuxClick(event)
+    canvas.preventMiddleAuxClick(event)
 
     expect(preventDefault).toHaveBeenCalled()
   })
@@ -18,7 +18,7 @@ describe("LGraphCanvas auxclick", () => {
     const event = new MouseEvent("auxclick", { button: 0, bubbles: true })
     const preventDefault = vi.spyOn(event, "preventDefault")
 
-    canvas._preventMiddleAuxClick(event)
+    canvas.preventMiddleAuxClick(event)
 
     expect(preventDefault).not.toHaveBeenCalled()
   })

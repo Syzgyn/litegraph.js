@@ -87,15 +87,15 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /** @inheritdoc */
   path?: Path2D
   /** @inheritdoc */
-  _centreAngle?: number
+  centreAngle?: number
   /** @inheritdoc */
-  _pos: Float32Array = this.#malloc.subarray(6, 8)
+  pathCentre: Float32Array = this.#malloc.subarray(6, 8)
 
   /** @inheritdoc */
-  _dragging?: boolean
+  dragging?: boolean
 
   /** Colour of the first link that rendered this reroute */
-  _colour?: CanvasColour
+  colour: CanvasColour = "#18184d"
 
   /**
    * Initialises a new link reroute object.
@@ -184,11 +184,6 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /** The reroute immediately upstream (toward the output) in the chain, if any. */
   public get parent(): Reroute | undefined {
     return this.#network.deref()?.getReroute(this.#parentId)
-  }
-
-  /** Colour of the first link that rendered this reroute */
-  get colour(): CanvasColour {
-    return this._colour ?? "#18184d"
   }
 
   /** Whether the pointer is over either the input or output slot affordance. */
@@ -415,15 +410,15 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     if (!floatingOutLinks) throw new Error("[setFloatingLinkOrigin]: Invalid network.")
     if (!floatingOutLinks.length) return
 
-    output._floatingLinks ??= new Set()
+    output.floatingLinks ??= new Set()
 
     for (const link of floatingOutLinks) {
       // Update cached floating links
-      output._floatingLinks.add(link)
+      output.floatingLinks.add(link)
 
       network?.getNodeById(link.origin_id)
         ?.outputs[link.origin_slot]
-        ?._floatingLinks
+        ?.floatingLinks
         ?.delete(link)
 
       // Update the floating link

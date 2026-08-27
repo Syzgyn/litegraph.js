@@ -23,7 +23,7 @@ export class LGraphButton extends LGraphBadge {
   /** Logical button name, when set via {@link LGraphButtonOptions.name}. */
   name?: string
   /** Last canvas area occupied by {@link draw}; used by {@link isPointInside}. */
-  _last_area: Rectangle = new Rectangle()
+  lastArea: Rectangle = new Rectangle()
 
   /**
    * @param options Button label/icon options and optional {@link name}.
@@ -67,10 +67,10 @@ export class LGraphButton extends LGraphBadge {
     const width = this.getWidth(ctx)
 
     // Update the hit area
-    this._last_area[0] = x + this.xOffset
-    this._last_area[1] = y + this.yOffset
-    this._last_area[2] = width
-    this._last_area[3] = this.height
+    this.lastArea[0] = x + this.xOffset
+    this.lastArea[1] = y + this.yOffset
+    this.lastArea[2] = width
+    this.lastArea[3] = this.height
 
     // Custom drawing for buttons - no background, just icon/text
     const adjustedX = x + this.xOffset
@@ -108,6 +108,6 @@ export class LGraphButton extends LGraphBadge {
    * @returns `true` if the point is inside the button, otherwise `false`.
    */
   isPointInside(x: number, y: number): boolean {
-    return this._last_area.containsPoint([x, y])
+    return this.lastArea.containsPoint([x, y])
   }
 }

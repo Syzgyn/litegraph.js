@@ -162,6 +162,22 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     "extra",
   ])
 
+  /** Subgraph definitions keyed by subgraph UUID (root graph only). */
+  private readonly subgraphsStore: Map<UUID, Subgraph> = new Map()
+
+  /** All nodes in this graph, in insertion order. */
+  private nodesStore: (LGraphNode | SubgraphNode)[] = []
+  /** Fast lookup of nodes by {@link LGraphNode.id}. */
+  private nodes_by_id: Record<NodeId, LGraphNode> = {}
+  /** Nodes sorted in computed execution order. */
+  private nodes_in_order: LGraphNode[] = []
+  /** Subset of {@link nodes_in_order} that define {@link LGraphNode.onExecute}. */
+  private nodes_executable: LGraphNode[] | null = null
+  /** Visual groups on the canvas. */
+  private groupsStore: LGraphGroup[] = []
+  /** Backing store for {@link links}. Keys are stringified link IDs. */
+  private linksStore: Map<LinkId, LLink> = new Map()
+
   /** When `true`, the graph execution loop is driven by `requestAnimationFrame`. */
   #executionRafActive = false
 
@@ -179,10 +195,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   /** Incremented when the graph structure changes; used for change detection. */
   revision: number = 0
 
-  /** Internal version counter bumped on structural edits. */
-  _version: number = -1
-  /** Backing store for {@link links}. Keys are stringified link IDs. */
-  _links: Map<LinkId, LLink> = new Map()
+  /** @internal version counter bumped on structural edits. */
+  version: number = -1
   /**
    * Indexed property access is deprecated.
    * Backwards compatibility with a Proxy has been added, but will eventually be removed.
@@ -209,19 +223,6 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   readonly events = new CustomEventTarget<LGraphEventMap>()
-  /** Subgraph definitions keyed by subgraph UUID (root graph only). */
-  readonly _subgraphs: Map<UUID, Subgraph> = new Map()
-
-  /** All nodes in this graph, in insertion order. */
-  _nodes: (LGraphNode | SubgraphNode)[] = []
-  /** Fast lookup of nodes by {@link LGraphNode.id}. */
-  _nodes_by_id: Record<NodeId, LGraphNode> = {}
-  /** Nodes sorted in computed execution order. */
-  _nodes_in_order: LGraphNode[] = []
-  /** Subset of {@link _nodes_in_order} that define {@link LGraphNode.onExecute}. */
-  _nodes_executable: LGraphNode[] | null = null
-  /** Visual groups on the canvas. */
-  _groups: LGraphGroup[] = []
   /** Number of {@link runStep} iterations completed since {@link start}. */
   iteration: number = 0
   /** Elapsed wall-clock time since {@link starttime}, in seconds. */
@@ -246,7 +247,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   errors_in_execution?: boolean
   /** @deprecated Unused */
   execution_time!: number
-  _last_trigger_time?: number
+  last_trigger_time?: number
   /** Optional filter string applied when searching nodes (application-specific). */
   filter?: string
   /** User configuration; must contain only serialisable primitive values. */
@@ -262,9 +263,6 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   /** Extra metadata persisted with the graph; see {@link LGraphExtra}. */
   extra: LGraphExtra = {}
 
-  /** @deprecated Deserialising a workflow sets this unused property. */
-  version?: number
-
   /**
    * Creates a new graph, optionally configuring it from serialised data.
    * @param o Deserialised graph object passed to {@link configure}, or `undefined` for an empty graph.
@@ -273,7 +271,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     if (LiteGraph.debug) console.log("Graph created")
 
     /** @see MapProxyHandler */
-    const links = this._links
+    const links = this.linksStore
     MapProxyHandler.bindAllMethods(links)
     const handler = new MapProxyHandler<LLink>()
     this.links = new Proxy(links, handler) as Map<LinkId, LLink> & Record<LinkId, LLink>
@@ -285,7 +283,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /** Generates a unique string key for a link's connection tuple. */
-  static _linkTupleKey(link: LLink): string {
+  private static linkTupleKey(link: LLink): string {
     return `${link.origin_id}\0${link.origin_slot}\0${link.target_id}\0${link.target_slot}`
   }
 
@@ -547,8 +545,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     for (const nodeId of nodeIdMap.values()) {
-      const node = this._nodes_by_id[nodeId]
-      node._setConcreteSlots()
+      const node = this.nodes_by_id[nodeId]
+      node.setConcreteSlots()
       node.arrange()
     }
 
@@ -559,11 +557,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const snapshots = new Map<NodeId, Map<string, TWidgetValue>>()
     const allGraphs: LGraph[] = [
       this.rootGraph,
-      ...this.rootGraph._subgraphs.values(),
+      ...this.rootGraph.subgraphsStore.values(),
     ]
 
     for (const graph of allGraphs) {
-      for (const node of graph._nodes) {
+      for (const node of graph.nodesStore) {
         if (!node.isSubgraphNode() || node.type !== this.id) continue
         snapshots.set(
           node.id,
@@ -584,11 +582,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   ): void {
     const allGraphs: LGraph[] = [
       this.rootGraph,
-      ...this.rootGraph._subgraphs.values(),
+      ...this.rootGraph.subgraphsStore.values(),
     ]
 
     for (const graph of allGraphs) {
-      for (const node of graph._nodes) {
+      for (const node of graph.nodesStore) {
         if (!node.isSubgraphNode() || node.type !== this.id) continue
         const values = hostWidgetValues?.get(node.id)
         if (values) node.restorePromotedWidgetValues(values)
@@ -605,15 +603,15 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
   /** @returns All selectable items on the canvas: nodes, groups, and reroutes. */
   * positionableItems(): Generator<LGraphNode | LGraphGroup | Reroute> {
-    for (const node of this._nodes) yield node
-    for (const group of this._groups) yield group
+    for (const node of this.nodesStore) yield node
+    for (const group of this.groupsStore) yield group
     for (const reroute of this.reroutes.values()) yield reroute
     return
   }
 
   /** @returns Whether the graph has no nodes, groups, or reroutes. */
   get empty(): boolean {
-    return this._nodes.length + this._groups.length + this.reroutes.size === 0
+    return this.nodesStore.length + this.groupsStore.length + this.reroutes.size === 0
   }
 
   /** Links with one end disconnected, keyed by link ID. */
@@ -706,32 +704,32 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     // used to detect changes
-    this._version = -1
-    this._subgraphs.clear()
+    this.version = -1
+    this.subgraphsStore.clear()
 
     // safe clear
-    if (this._nodes) {
-      for (const _node of this._nodes) {
+    if (this.nodesStore) {
+      for (const _node of this.nodesStore) {
         fireNodeRemovalLifecycle(_node)
       }
     }
 
     // nodes
-    this._nodes = []
-    this._nodes_by_id = {}
+    this.nodesStore = []
+    this.nodes_by_id = {}
     // nodes sorted in execution order
-    this._nodes_in_order = []
+    this.nodes_in_order = []
     // nodes that contain onExecute sorted in execution order
-    this._nodes_executable = null
+    this.nodes_executable = null
 
-    this._links.clear()
+    this.linksStore.clear()
     this.reroutes.clear()
     this.#floatingLinks.clear()
 
     this.#lastFloatingLinkId = 0
 
     // other scene stuff
-    this._groups = []
+    this.groupsStore = []
 
     // iterations
     this.iteration = 0
@@ -765,17 +763,17 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
   /** Subgraph definitions owned by the {@link rootGraph}. */
   get subgraphs(): Map<UUID, Subgraph> {
-    return this.rootGraph._subgraphs
+    return this.rootGraph.subgraphsStore
   }
 
   /** All nodes in this graph. Same array as internal `_nodes`. */
   get nodes() {
-    return this._nodes
+    return this.nodesStore
   }
 
   /** All {@link LGraphGroup} instances in this graph. */
   get groups() {
-    return this._groups
+    return this.groupsStore
   }
 
   /**
@@ -893,7 +891,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const start = LiteGraph.getTime()
     this.globaltime = 0.001 * (start - this.starttime)
 
-    const nodes = this._nodes_executable || this._nodes
+    const nodes = this.nodes_executable || this.nodesStore
     if (!nodes) return
 
     limit = limit || nodes.length
@@ -960,11 +958,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * nodes with only inputs.
    */
   updateExecutionOrder(): void {
-    this._nodes_in_order = this.computeExecutionOrder(false)
-    this._nodes_executable = []
-    for (const node of this._nodes_in_order) {
+    this.nodes_in_order = this.computeExecutionOrder(false)
+    this.nodes_executable = []
+    for (const node of this.nodes_in_order) {
       if (node.onExecute) {
-        this._nodes_executable.push(node)
+        this.nodes_executable.push(node)
       }
     }
   }
@@ -974,7 +972,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * Computes a topological execution order for all nodes.
    *
    * Starting nodes have no connected inputs. Nodes in cycles are appended after the DAG portion.
-   * Optionally assigns {@link LGraphNode._level} and {@link LGraphNode.order}.
+   * Optionally assigns {@link LGraphNode.level} and {@link LGraphNode.order}.
    * @param only_onExecute When `true`, only nodes with {@link LGraphNode.onExecute} are considered.
    * @param set_level When `true`, writes `_level` on each node based on graph depth.
    * @returns Nodes sorted by priority and dependency order.
@@ -991,7 +989,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const remaining_links: Record<NodeId, number> = {}
 
     // search for the nodes without inputs (starting nodes)
-    for (const node of this._nodes) {
+    for (const node of this.nodesStore) {
       if (only_onExecute && !node.onExecute) {
         continue
       }
@@ -1012,10 +1010,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       if (num == 0) {
         // is a starting node
         S.push(node)
-        if (set_level) node._level = 1
+        if (set_level) node.level = 1
       } else {
         // num of input links
-        if (set_level) node._level = 0
+        if (set_level) node.level = 0
         remaining_links[node.id] = num
       }
     }
@@ -1041,7 +1039,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
         // for every connection
         for (const link_id of output.links) {
-          const link = this._links.get(link_id)
+          const link = this.linksStore.get(link_id)
           if (!link) continue
 
           // already visited link (ignore it)
@@ -1054,9 +1052,9 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           }
 
           if (set_level) {
-            node._level ??= 0
-            if (!target_node._level || target_node._level <= node._level) {
-              target_node._level = node._level + 1
+            node.level ??= 0
+            if (!target_node.level || target_node.level <= node.level) {
+              target_node.level = node.level + 1
             }
           }
 
@@ -1076,7 +1074,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       L.push(M[i])
     }
 
-    if (L.length != this._nodes.length && LiteGraph.debug)
+    if (L.length != this.nodesStore.length && LiteGraph.debug)
       console.warn("something went wrong, nodes missing")
 
     /** Ensure type is set */
@@ -1121,7 +1119,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const nodes = this.computeExecutionOrder(false, true)
     const columns: LGraphNode[][] = []
     for (const node of nodes) {
-      const col = node._level || 1
+      const col = node.level || 1
       columns[col] ||= []
       columns[col].push(node)
     }
@@ -1182,7 +1180,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * Centralized so a future VersionSystem can intercept, batch, or replace it.
    */
   incrementVersion(): void {
-    this._version++
+    this.version++
   }
 
   /**
@@ -1198,7 +1196,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   ): void {
     mode = mode || LGraphEventMode.ALWAYS
 
-    const nodes = this._nodes_in_order || this._nodes
+    const nodes = this.nodes_in_order || this.nodesStore
     if (!nodes) return
 
     for (const node of nodes) {
@@ -1286,7 +1284,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       if (node.id == null || node.id === -1) node.id = ++state.lastGroupId
       if (node.id > state.lastGroupId) state.lastGroupId = node.id
 
-      this._groups.push(node)
+      this.groupsStore.push(node)
       this.setDirtyCanvas(true)
       this.change()
       node.graph = this
@@ -1295,7 +1293,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     // nodes
-    if (node.id != -1 && this._nodes_by_id[node.id] != null) {
+    if (node.id != -1 && this.nodes_by_id[node.id] != null) {
       console.warn(
         "LiteGraph: there is already a node with this ID, changing it",
       )
@@ -1304,7 +1302,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         : ++state.lastNodeId
     }
 
-    if (this._nodes.length >= LiteGraph.MAX_NUMBER_OF_NODES) {
+    if (this.nodesStore.length >= LiteGraph.MAX_NUMBER_OF_NODES) {
       throw "LiteGraph: max number of nodes in a graph reached"
     }
 
@@ -1327,8 +1325,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     node.graph = this
     this.incrementVersion()
 
-    this._nodes.push(node)
-    this._nodes_by_id[node.id] = node
+    this.nodesStore.push(node)
+    this.nodes_by_id[node.id] = node
 
     node.onAdded?.(this)
 
@@ -1365,9 +1363,9 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     if (node instanceof LGraphGroup) {
       this.canvasAction(c => c.deselect(node))
 
-      const index = this._groups.indexOf(node)
+      const index = this.groupsStore.indexOf(node)
       if (index != -1) {
-        this._groups.splice(index, 1)
+        this.groupsStore.splice(index, 1)
       }
       node.graph = undefined
       this.incrementVersion()
@@ -1377,7 +1375,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     // not found
-    if (this._nodes_by_id[node.id] == null) {
+    if (this.nodes_by_id[node.id] == null) {
       console.warn("LiteGraph: node not found", node)
       return
     }
@@ -1416,7 +1414,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     if (node.isSubgraphNode()) {
-      const allGraphs = [this.rootGraph, ...this.rootGraph._subgraphs.values()]
+      const allGraphs = [this.rootGraph, ...this.rootGraph.subgraphsStore.values()]
       const hasRemainingReferences = allGraphs.some(graph =>
         graph.nodes.some(
           candidate =>
@@ -1453,10 +1451,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     // remove from containers
-    const pos = this._nodes.indexOf(node)
-    if (pos != -1) this._nodes.splice(pos, 1)
+    const pos = this.nodesStore.indexOf(node)
+    if (pos != -1) this.nodesStore.splice(pos, 1)
 
-    delete this._nodes_by_id[node.id]
+    delete this.nodes_by_id[node.id]
 
     this.onNodeRemoved?.(node)
 
@@ -1476,7 +1474,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    */
   getNodeById(id: NodeId | null | undefined): LGraphNode | null {
     return id != null
-      ? this._nodes_by_id[id]
+      ? this.nodes_by_id[id]
       : null
   }
 
@@ -1489,7 +1487,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   findNodesByClass(classObject: Function, result?: LGraphNode[]): LGraphNode[] {
     result = result || []
     result.length = 0
-    const { _nodes } = this
+    const { nodesStore: _nodes } = this
     for (const node of _nodes) {
       if (node.constructor === classObject)
         result.push(node)
@@ -1506,7 +1504,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const matchType = type.toLowerCase()
     result = result || []
     result.length = 0
-    const { _nodes } = this
+    const { nodesStore: _nodes } = this
     for (const node of _nodes) {
       if (node.type?.toLowerCase() == matchType)
         result.push(node)
@@ -1520,7 +1518,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @returns the node or null
    */
   findNodeByTitle(title: string): LGraphNode | null {
-    const { _nodes } = this
+    const { nodesStore: _nodes } = this
     for (const node of _nodes) {
       if (node.title == title)
         return node
@@ -1535,7 +1533,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    */
   findNodesByTitle(title: string): LGraphNode[] {
     const result: LGraphNode[] = []
-    const { _nodes } = this
+    const { nodesStore: _nodes } = this
     for (const node of _nodes) {
       if (node.title == title)
         result.push(node)
@@ -1555,7 +1553,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     y: number,
     nodeList?: LGraphNode[],
   ): LGraphNode | null {
-    const nodes = nodeList || this._nodes
+    const nodes = nodeList || this.nodesStore
     let i = nodes.length
     while (--i >= 0) {
       const node = nodes[i]
@@ -1571,7 +1569,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @returns The group or null
    */
   getGroupOnPos(x: number, y: number): LGraphGroup | undefined {
-    return this._groups.findLast(g => g.isPointInside(x, y))
+    return this.groupsStore.findLast(g => g.isPointInside(x, y))
   }
 
   /**
@@ -1581,7 +1579,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * @returns The group or null
    */
   getGroupTitlebarOnPos(x: number, y: number): LGraphGroup | undefined {
-    return this._groups.findLast(g => g.isPointInTitlebar(x, y))
+    return this.groupsStore.findLast(g => g.isPointInTitlebar(x, y))
   }
 
   /**
@@ -1633,7 +1631,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * this replaces the ones using the old version with the new version
    */
   checkNodeTypes() {
-    const { _nodes } = this
+    const { nodesStore: _nodes } = this
     for (const [i, node] of _nodes.entries()) {
       const ctor = LiteGraph.registered_node_types[node.type]
       if (node.constructor == ctor) continue
@@ -1644,7 +1642,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       _nodes[i] = newnode
       newnode.configure(node.serialize())
       newnode.graph = this
-      this._nodes_by_id[newnode.id] = newnode
+      this.nodes_by_id[newnode.id] = newnode
 
       if (node.inputs) newnode.inputs = [...node.inputs]
       if (node.outputs) newnode.outputs = [...node.outputs]
@@ -1702,10 +1700,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * clears the triggered slot animation in all links (stop visual animation)
    */
   clearTriggeredSlots(): void {
-    for (const link_info of this._links.values()) {
+    for (const link_info of this.linksStore.values()) {
       if (!link_info) continue
 
-      if (link_info._last_time) link_info._last_time = 0
+      if (link_info.lastTime) link_info.lastTime = 0
     }
   }
 
@@ -1747,8 +1745,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       ? this.getNodeById(link.target_id)?.inputs?.[link.target_slot]
       : this.getNodeById(link.origin_id)?.outputs?.[link.origin_slot]
     if (slot) {
-      slot._floatingLinks ??= new Set()
-      slot._floatingLinks.add(link)
+      slot.floatingLinks ??= new Set()
+      slot.floatingLinks.add(link)
     } else {
       console.warn(`Adding invalid floating link: target/slot: [${link.target_id}/${link.target_slot}] origin/slot: [${link.origin_id}/${link.origin_slot}]`)
     }
@@ -1771,7 +1769,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       ? this.getNodeById(link.target_id)?.inputs?.[link.target_slot]
       : this.getNodeById(link.origin_id)?.outputs?.[link.origin_slot]
     if (slot) {
-      slot._floatingLinks?.delete(link)
+      slot.floatingLinks?.delete(link)
     }
 
     const reroutes = LLink.getReroutes(this, link)
@@ -1793,7 +1791,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   getLink(id: null | undefined): undefined
   getLink(id: LinkId | null | undefined): LLink | undefined
   getLink(id: LinkId | null | undefined): LLink | undefined {
-    return id == null ? undefined : this._links.get(id)
+    return id == null ? undefined : this.linksStore.get(id)
   }
 
   /**
@@ -1840,7 +1838,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const reroute = new Reroute(rerouteId, this, pos, before.parentId, linkIds, floatingLinkIds)
     this.reroutes.set(rerouteId, reroute)
     for (const linkId of linkIds) {
-      const link = this._links.get(linkId)
+      const link = this.linksStore.get(linkId)
       if (!link) continue
       if (link.parentId === before.parentId) link.parentId = rerouteId
 
@@ -1886,7 +1884,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     for (const linkId of linkIds) {
-      const link = this._links.get(linkId)
+      const link = this.linksStore.get(linkId)
       if (link && link.parentId === id) link.parentId = parentId
     }
 
@@ -1924,7 +1922,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * Destroys a link
    */
   removeLink(link_id: LinkId): void {
-    const link = this._links.get(link_id)
+    const link = this.linksStore.get(link_id)
     if (!link) return
 
     const node = this.getNodeById(link.target_id)
@@ -1939,11 +1937,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    * referenced by input.link and removes orphaned duplicates from
    * output.links and the graph's _links map.
    */
-  _removeDuplicateLinks(): void {
+  removeDuplicateLinks(): void {
     // Group all link IDs by their connection tuple.
     const groups = new Map<string, LinkId[]>()
-    for (const [id, link] of this._links) {
-      const key = LGraph._linkTupleKey(link)
+    for (const [id, link] of this.linksStore) {
+      const key = LGraph.linkTupleKey(link)
       let group = groups.get(key)
       if (!group) {
         group = []
@@ -1955,7 +1953,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     for (const [, ids] of groups) {
       if (ids.length <= 1) continue
 
-      const sampleLink = this._links.get(ids[0])!
+      const sampleLink = this.linksStore.get(ids[0])!
       const node = this.getNodeById(sampleLink.target_id)
 
       // Find which link ID is actually referenced by any input on the target
@@ -1976,7 +1974,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       for (const id of ids) {
         if (id === keepId) continue
 
-        const link = this._links.get(id)
+        const link = this.linksStore.get(id)
         if (!link) continue
 
         // Remove from origin node's output.links array
@@ -1989,7 +1987,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
           }
         }
 
-        this._links.delete(id)
+        this.linksStore.delete(id)
       }
 
       // Ensure input.link points to the surviving link
@@ -2146,14 +2144,14 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       })
       if (!subgraphNode) throw new Error("Failed to create subgraph node")
 
-      subgraphNode._setConcreteSlots()
+      subgraphNode.setConcreteSlots()
       subgraphNode.arrange()
 
       // Resize to inputs/outputs
       subgraphNode.setSize(subgraphNode.computeSize())
 
       // Center the subgraph node
-      alignToContainer(subgraphNode._posSize, Alignment.Centre | Alignment.Middle, boundingRect)
+      alignToContainer(subgraphNode.posSize, Alignment.Centre | Alignment.Middle, boundingRect)
 
       // Add the subgraph node to the graph
       this.add(subgraphNode)
@@ -2299,7 +2297,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
    */
   serialize(option?: { sortNodes: boolean }): ISerialisedGraph {
     const { config, state, groups, nodes, reroutes, extra, floatingLinks, definitions } = this.asSerialisable(option)
-    const linkArray = [...this._links.values()]
+    const linkArray = [...this.linksStore.values()]
     const links = linkArray.map(x => x.serialize())
 
     if (reroutes?.length) {
@@ -2339,13 +2337,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
 
     const nodeList = !LiteGraph.use_uuids && options?.sortNodes
       // @ts-expect-error If LiteGraph.use_uuids is false, ids are numbers.
-      ? [...this._nodes].sort((a, b) => a.id - b.id)
-      : this._nodes
+      ? [...this.nodesStore].sort((a, b) => a.id - b.id)
+      : this.nodesStore
 
     const nodes = nodeList.map(node => node.serialize())
-    const groups = this._groups.map(x => x.serialize())
+    const groups = this.groupsStore.map(x => x.serialize())
 
-    const links = this._links.size ? [...this._links.values()].map(x => x.asSerialisable()) : undefined
+    const links = this.linksStore.size ? [...this.linksStore.values()].map(x => x.asSerialisable()) : undefined
     const floatingLinks = this.floatingLinks.size ? [...this.floatingLinks.values()].map(x => x.asSerialisable()) : undefined
     const reroutes = this.reroutes.size ? [...this.reroutes.values()].map(x => x.asSerialisable()) : undefined
 
@@ -2368,9 +2366,9 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       extra,
     }
 
-    if (this.isRootGraph && this._subgraphs.size) {
-      const usedSubgraphIds = findUsedSubgraphIds(this, this._subgraphs)
-      const usedSubgraphs = [...this._subgraphs.values()]
+    if (this.isRootGraph && this.subgraphsStore.size) {
+      const usedSubgraphIds = findUsedSubgraphIds(this, this.subgraphsStore)
+      const usedSubgraphs = [...this.subgraphsStore.values()]
         .filter(subgraph => usedSubgraphIds.has(subgraph.id))
         .map(x => x.asSerialisable())
 
@@ -2433,7 +2431,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         if (Array.isArray(data.links)) {
           for (const linkData of data.links) {
             const link = LLink.createFromArray(linkData)
-            this._links.set(link.id, link)
+            this.linksStore.set(link.id, link)
           }
         }
         // #region `extra` embeds for v0.4
@@ -2441,7 +2439,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         // LLink parentIds
         if (Array.isArray(extra?.linkExtensions)) {
           for (const linkEx of extra.linkExtensions) {
-            const link = this._links.get(linkEx.id)
+            const link = this.linksStore.get(linkEx.id)
             if (link) link.parentId = linkEx.parentId
           }
         }
@@ -2467,7 +2465,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         if (Array.isArray(data.links)) {
           for (const linkData of data.links) {
             const link = LLink.create(linkData)
-            this._links.set(link.id, link)
+            this.linksStore.set(link.id, link)
           }
         }
 
@@ -2496,7 +2494,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       let effectiveNodesData = nodesData
       if (subgraphs) {
         const reservedNodeIds = new Set<number>()
-        for (const node of this._nodes) {
+        for (const node of this.nodesStore) {
           if (typeof node.id === "number") reservedNodeIds.add(node.id)
         }
         for (const sg of this.subgraphs.values()) {
@@ -2527,7 +2525,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       const nodeDataMap = new Map<NodeId, ISerialisedNode>()
 
       // create nodes
-      this._nodes = []
+      this.nodesStore = []
       if (effectiveNodesData) {
         for (const n_info of effectiveNodesData) {
           // stored info
@@ -2576,7 +2574,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       // Drop broken reroutes
       for (const reroute of this.reroutes.values()) {
         // Drop broken links, and ignore reroutes with no valid links
-        if (!reroute.validateLinks(this._links, this.floatingLinks)) {
+        if (!reroute.validateLinks(this.linksStore, this.floatingLinks)) {
           this.reroutes.delete(reroute.id)
         }
       }
@@ -2585,10 +2583,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       // (origin_id, origin_slot, target_id, target_slot) tuple.
       // This repairs corrupted data where extra link objects were created
       // without proper cleanup of the previous connection.
-      this._removeDuplicateLinks()
+      this.removeDuplicateLinks()
 
       // groups
-      this._groups.length = 0
+      this.groupsStore.length = 0
       const groupData = data.groups
       if (groupData) {
         for (const data of groupData) {

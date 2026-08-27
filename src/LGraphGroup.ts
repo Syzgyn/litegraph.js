@@ -61,6 +61,22 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
    */
   static darkBgLuminanceThreshold = 80
 
+  /** Background colour last used to compute {@link titleTextColor} */
+  private lastTitleBgColor?: string
+  /** Title text colour, cached until the background colour changes */
+  private titleTextColor: string = LGraphGroup.defaultColour
+  private bounding: Float32Array = new Float32Array([
+    10,
+    10,
+    LGraphGroup.minWidth,
+    LGraphGroup.minHeight,
+  ])
+
+  private posStore: Point = this.bounding.subarray(0, 2)
+  private sizeStore: Size = this.bounding.subarray(2, 4)
+  /** Nodes, reroutes, and nested groups whose bounds are contained by this group. */
+  private childrenStore: Set<Positionable> = new Set()
+
   /** Unique identifier within the owning {@link LGraph}. Assigned on {@link LGraph.add} if unset. */
   id: number
   /** CSS colour string for the group background and title bar. */
@@ -71,30 +87,13 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   font?: string
   /** Font size in pixels for the title bar text. */
   font_size: number = LiteGraph.GROUP_TEXT_SIZE
-  _bounding: Float32Array = new Float32Array([
-    10,
-    10,
-    LGraphGroup.minWidth,
-    LGraphGroup.minHeight,
-  ])
 
-  _pos: Point = this._bounding.subarray(0, 2)
-  _size: Size = this._bounding.subarray(2, 4)
-  /** @deprecated See {@link _children} */
-  _nodes: LGraphNode[] = []
-  /** Nodes, reroutes, and nested groups whose bounds are contained by this group. */
-  _children: Set<Positionable> = new Set()
   /** The {@link LGraph} that owns this group, set by {@link LGraph.add}. */
   graph?: LGraph
   /** Persistent flags such as the `pinned` flag on {@link flags}. */
   flags: IGraphGroupFlags = {}
   /** Whether the group is currently selected on the canvas. */
   selected?: boolean
-
-  /** Background colour last used to compute {@link _titleTextColor} */
-  _lastTitleBgColor?: string
-  /** Title text colour, cached until the background colour changes */
-  _titleTextColor: string = LGraphGroup.defaultColour
 
   /** @inheritdoc — delegated to {@link LGraphNode.prototype.isPointInside}. */
   isPointInside = LGraphNode.prototype.isPointInside
@@ -132,35 +131,30 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
 
   /** Position of the group, as x,y co-ordinates in graph space */
   get pos() {
-    return this._pos
+    return this.posStore
   }
 
   set pos(v) {
     if (!v || v.length < 2) return
 
-    this._pos[0] = v[0]
-    this._pos[1] = v[1]
+    this.posStore[0] = v[0]
+    this.posStore[1] = v[1]
   }
 
   /** Size of the group, as width,height in graph units */
   get size() {
-    return this._size
+    return this.sizeStore
   }
 
   set size(v) {
     if (!v || v.length < 2) return
 
-    this._size[0] = Math.max(LGraphGroup.minWidth, v[0])
-    this._size[1] = Math.max(LGraphGroup.minHeight, v[1])
+    this.sizeStore[0] = Math.max(LGraphGroup.minWidth, v[0])
+    this.sizeStore[1] = Math.max(LGraphGroup.minHeight, v[1])
   }
 
   get boundingRect() {
-    return this._bounding
-  }
-
-  /** @deprecated Prefer {@link children}. Nodes whose centre lies inside this group. */
-  get nodes() {
-    return this._nodes
+    return this.bounding
   }
 
   /** Height of the title bar area in graph units. */
@@ -170,7 +164,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
 
   /** All positionable items tracked as children of this group. */
   get children(): ReadonlySet<Positionable> {
-    return this._children
+    return this.childrenStore
   }
 
   /** Whether the `pinned` flag is set on {@link flags}. */
@@ -202,7 +196,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   configure(o: ISerialisedGroup): void {
     this.id = o.id
     this.title = o.title
-    this._bounding.set(o.bounding)
+    this.bounding.set(o.bounding)
     this.color = o.color
     this.flags = o.flags || this.flags
   }
@@ -212,7 +206,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
    * @returns A plain object suitable for {@link JSON.stringify} or {@link LGraph.configure}.
    */
   serialize(): ISerialisedGroup {
-    const b = this._bounding
+    const b = this.bounding
     return {
       id: this.id,
       title: this.title,
@@ -234,13 +228,13 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
       LGraphGroup
     const font_size = LiteGraph.GROUP_TEXT_SIZE
 
-    const [x, y] = this._pos
-    const [width, height] = this._size
+    const [x, y] = this.posStore
+    const [width, height] = this.sizeStore
     const color = this.color || defaultColour
 
-    if (this._lastTitleBgColor !== color) {
-      this._lastTitleBgColor = color
-      this._titleTextColor =
+    if (this.lastTitleBgColor !== color) {
+      this.lastTitleBgColor = color
+      this.titleTextColor =
         luminance(hexToRgb(color)) < darkBgLuminanceThreshold
           ? readableTextColor(color)
           : color
@@ -274,8 +268,8 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     ctx.font = `${font_size}px ${LiteGraph.GROUP_FONT}`
     ctx.textAlign = "left"
     ctx.textBaseline = "middle"
-    if (ctx.fillStyle !== this._titleTextColor)
-      ctx.fillStyle = this._titleTextColor
+    if (ctx.fillStyle !== this.titleTextColor)
+      ctx.fillStyle = this.titleTextColor
     ctx.fillText(
       this.title + (this.pinned ? "📌" : ""),
       x + font_size / 2,
@@ -284,7 +278,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     ctx.textBaseline = "alphabetic"
 
     if (LiteGraph.highlight_selected_group && this.selected) {
-      strokeShape(ctx, this._bounding, {
+      strokeShape(ctx, this.bounding, {
         title_height: this.titleHeight,
         padding,
       })
@@ -300,8 +294,8 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   resize(width: number, height: number): boolean {
     if (this.pinned) return false
 
-    this._size[0] = Math.max(LGraphGroup.minWidth, width)
-    this._size[1] = Math.max(LGraphGroup.minHeight, height)
+    this.sizeStore[0] = Math.max(LGraphGroup.minWidth, width)
+    this.sizeStore[1] = Math.max(LGraphGroup.minHeight, height)
     return true
   }
 
@@ -314,11 +308,11 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   move(deltaX: number, deltaY: number, skipChildren: boolean = false): void {
     if (this.pinned) return
 
-    this._pos[0] += deltaX
-    this._pos[1] += deltaY
+    this.posStore[0] += deltaX
+    this.posStore[1] += deltaY
     if (skipChildren === true) return
 
-    for (const item of this._children) {
+    for (const item of this.childrenStore) {
       item.move(deltaX, deltaY)
     }
   }
@@ -329,7 +323,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   }
 
   /**
-   * Rebuilds {@link _children} and {@link _nodes} from the current graph contents.
+   * Rebuilds {@link childrenStore} from the current graph contents.
    *
    * A node is included when its bounding centre lies inside this group. Reroutes are included
    * when their position is inside the group bounds. Nested groups are included when wholly
@@ -346,28 +340,26 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     visited.add(this.id)
 
     const { nodes, reroutes, groups } = this.graph
-    const children = this._children
-    this._nodes.length = 0
+    const children = this.childrenStore
     children.clear()
 
     // Move nodes we overlap the centre point of
     for (const node of nodes) {
-      if (containsCentre(this._bounding, node.boundingRect)) {
-        this._nodes.push(node)
+      if (containsCentre(this.bounding, node.boundingRect)) {
         children.add(node)
       }
     }
 
     // Move reroutes we overlap the centre point of
     for (const reroute of reroutes.values()) {
-      if (isPointInRect(reroute.pos, this._bounding))
+      if (isPointInRect(reroute.pos, this.bounding))
         children.add(reroute)
     }
 
     // Move groups we wholly contain
     const containedGroups: LGraphGroup[] = []
     for (const group of groups) {
-      if (group !== this && containsRect(this._bounding, group._bounding)) {
+      if (group !== this && containsRect(this.bounding, group.bounding)) {
         children.add(group)
         containedGroups.push(group)
       }
@@ -403,20 +395,20 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     const snapTo = LiteGraph.alwaysSnapToGrid
       ? this.graph?.getSnapToGridSize()
       : undefined
-    if (snapTo) expandRectToGrid(this._bounding, snapTo)
+    if (snapTo) expandRectToGrid(this.bounding, snapTo)
   }
 
   /**
    * Expands the group to include additional nodes.
    *
-   * Combines existing {@link children}, legacy {@link _nodes}, and the provided nodes, then
+   * Combines existing {@link children} and the provided nodes, then
    * calls {@link resizeTo}.
    * @param nodes Nodes to include in the new bounds.
    * @param padding Extra margin passed to {@link resizeTo}. Default: `10`.
    */
   addNodes(nodes: LGraphNode[], padding: number = 10): void {
-    if (!this._nodes && nodes.length === 0) return
-    this.resizeTo([...this.children, ...this._nodes, ...nodes], padding)
+    if (this.children.size === 0 && nodes.length === 0) return
+    this.resizeTo([...this.children, ...nodes], padding)
   }
 
   /**

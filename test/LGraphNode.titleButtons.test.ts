@@ -64,14 +64,14 @@ describe("LGraphNode Title Buttons", () => {
       button.getWidth = vi.fn().mockReturnValue(20)
       button.height = 16
 
-      // Simulate button being drawn to populate _last_area
+      // Simulate button being drawn to populate lastArea
       // Button is drawn at node-relative coordinates
       // Button x: node.size[0] - 5 - button_width = 180 - 5 - 20 = 155
       // Button y: -LiteGraph.NODE_TITLE_HEIGHT = -30
-      button._last_area[0] = 155
-      button._last_area[1] = -30
-      button._last_area[2] = 20
-      button._last_area[3] = 16
+      button.lastArea[0] = 155
+      button.lastArea[1] = -30
+      button.lastArea[2] = 20
+      button.lastArea[3] = 16
 
       const canvas = {
         ctx: {} as CanvasRenderingContext2D,
@@ -107,10 +107,10 @@ describe("LGraphNode Title Buttons", () => {
       button.height = 16
 
       // Simulate button being drawn at node-relative coordinates
-      button._last_area[0] = 155 // 180 - 5 - 20
-      button._last_area[1] = -30 // -NODE_TITLE_HEIGHT
-      button._last_area[2] = 20
-      button._last_area[3] = 16
+      button.lastArea[0] = 155 // 180 - 5 - 20
+      button.lastArea[1] = -30 // -NODE_TITLE_HEIGHT
+      button.lastArea[2] = 20
+      button.lastArea[3] = 16
 
       const canvas = {
         ctx: {} as CanvasRenderingContext2D,
@@ -150,16 +150,16 @@ describe("LGraphNode Title Buttons", () => {
 
       // Simulate buttons being drawn at node-relative coordinates
       // First button (rightmost): 200 - 5 - 20 = 175
-      button1._last_area[0] = 175
-      button1._last_area[1] = -30 // -NODE_TITLE_HEIGHT
-      button1._last_area[2] = 20
-      button1._last_area[3] = 16
+      button1.lastArea[0] = 175
+      button1.lastArea[1] = -30 // -NODE_TITLE_HEIGHT
+      button1.lastArea[2] = 20
+      button1.lastArea[3] = 16
 
       // Second button: 175 - 5 - 20 = 150
-      button2._last_area[0] = 150
-      button2._last_area[1] = -30 // -NODE_TITLE_HEIGHT
-      button2._last_area[2] = 20
-      button2._last_area[3] = 16
+      button2.lastArea[0] = 150
+      button2.lastArea[1] = -30 // -NODE_TITLE_HEIGHT
+      button2.lastArea[2] = 20
+      button2.lastArea[3] = 16
 
       const canvas = {
         ctx: {} as CanvasRenderingContext2D,
@@ -203,10 +203,10 @@ describe("LGraphNode Title Buttons", () => {
 
       // Simulate buttons being drawn at node-relative coordinates
       // Only visible button gets drawn area
-      button2._last_area[0] = 155 // 180 - 5 - 20
-      button2._last_area[1] = -30 // -NODE_TITLE_HEIGHT
-      button2._last_area[2] = 20
-      button2._last_area[3] = 16
+      button2.lastArea[0] = 155 // 180 - 5 - 20
+      button2.lastArea[1] = -30 // -NODE_TITLE_HEIGHT
+      button2.lastArea[2] = 20
+      button2.lastArea[3] = 16
 
       const canvas = {
         ctx: {} as CanvasRenderingContext2D,

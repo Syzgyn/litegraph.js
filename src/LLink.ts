@@ -105,7 +105,7 @@ type BasicReadonlyNetwork = Pick<ReadonlyLinkNetwork, "getNodeById" | "links" | 
  */
 export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /** When `true`, renders debug overlays for link geometry during canvas draw. */
-  static _drawDebug = false
+  static drawDebugEnabled = false
 
   #color?: CanvasColour | null
 
@@ -126,19 +126,17 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /** Runtime payload propagated along the link during execution. */
   data?: number | string | boolean | { toToolTip?(): string }
-  /** @deprecated Internal mirror of {@link data}. */
-  _data?: unknown
   /** Centre point of the link segment, calculated during render only — may be inaccurate. */
-  _pos: Float32Array
+  pathCentre: Float32Array
   /** @todo Clean up - never implemented in comfy. Used to animate triggered slots. */
-  _last_time?: number
+  lastTime?: number
   /** The last canvas 2D path that was used to render this link. */
   path?: Path2D
   /** @inheritdoc LinkSegment._centreAngle */
-  _centreAngle?: number
+  centreAngle?: number
 
   /** @inheritdoc LinkSegment._dragging */
-  _dragging?: boolean
+  dragging?: boolean
   /**
    * Custom colour override for this link only.
    *
@@ -170,10 +168,8 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     this.target_id = target_id
     this.target_slot = target_slot
     this.parentId = parentId
-
-    this._data = null
     // center
-    this._pos = new Float32Array(2)
+    this.pathCentre = new Float32Array(2)
   }
 
   /** @deprecated Use {@link LLink.create}. Parses legacy 0.4 tuple format. */

@@ -105,10 +105,10 @@ describe("SubgraphNode Title Button", () => {
       // Simulate button being drawn at node-relative coordinates
       // Button x: 200 - 5 - 25 = 170
       // Button y: -30 (title height)
-      enterButton._last_area[0] = 170
-      enterButton._last_area[1] = -30
-      enterButton._last_area[2] = 25
-      enterButton._last_area[3] = 20
+      enterButton.lastArea[0] = 170
+      enterButton.lastArea[1] = -30
+      enterButton.lastArea[2] = 25
+      enterButton.lastArea[3] = 20
 
       const canvas = {
         ctx: {
@@ -168,10 +168,10 @@ describe("SubgraphNode Title Button", () => {
       enterButton.height = 20
 
       // Set button area as if it was drawn
-      enterButton._last_area[0] = 170
-      enterButton._last_area[1] = -30
-      enterButton._last_area[2] = 25
-      enterButton._last_area[3] = 20
+      enterButton.lastArea[0] = 170
+      enterButton.lastArea[1] = -30
+      enterButton.lastArea[2] = 25
+      enterButton.lastArea[3] = 20
 
       const canvas = {
         ctx: {

@@ -49,7 +49,7 @@ function createTestLink(
     targetNode.id,
     inputSlot,
   )
-  graph._links.set(linkId, link)
+  graph.links.set(linkId, link)
   sourceNode.outputs[outputSlot].links ??= []
   sourceNode.outputs[outputSlot].links!.push(linkId)
   targetNode.inputs[inputSlot].link = linkId
@@ -138,7 +138,7 @@ describe("drawConnections widget-input slot positioning", () => {
 
     createTestLink(graph, sourceNode, 0, targetNode, 0)
 
-    targetNode._setConcreteSlots()
+    targetNode.setConcreteSlots()
     targetNode.arrange()
     expect(input.pos).toBeDefined()
 

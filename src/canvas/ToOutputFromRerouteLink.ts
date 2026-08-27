@@ -11,7 +11,7 @@ import { ToOutputRenderLink } from "./ToOutputRenderLink"
  *
  * When the user drops onto an output slot, this class does not connect directly. Instead it
  * creates a {@link ToInputRenderLink} from that output and delegates to
- * {@link LinkConnector._connectOutputToReroute}, which routes the connection through the reroute
+ * {@link LinkConnector.connectOutputToReroute}, which routes the connection through the reroute
  * chain's input side.
  * @remarks
  * This indirection exists because output-to-reroute connections require special reroute-chain
@@ -19,7 +19,7 @@ import { ToOutputRenderLink } from "./ToOutputRenderLink"
  * path. {@link canConnectToReroute} always returns `false` to prevent nested reroute drops.
  * @internal
  * @see {@link LinkConnector.dragFromRerouteToOutput}
- * @see {@link LinkConnector._connectOutputToReroute}
+ * @see {@link LinkConnector.connectOutputToReroute}
  */
 export class ToOutputFromRerouteLink extends ToOutputRenderLink {
   /**
@@ -52,12 +52,12 @@ export class ToOutputFromRerouteLink extends ToOutputRenderLink {
    *
    * Instead of calling {@link ToOutputRenderLink.connectToOutput}, creates a
    * {@link ToInputRenderLink} from the target output and delegates to
-   * {@link LinkConnector._connectOutputToReroute}.
+   * {@link LinkConnector.connectOutputToReroute}.
    * @param node The node that owns the target output slot.
    * @param output The output slot being dropped on.
    */
   override connectToOutput(node: LGraphNode, output: INodeOutputSlot) {
     const nuRenderLink = new ToInputRenderLink(this.network, node, output)
-    this.linkConnector._connectOutputToReroute(this.fromReroute, nuRenderLink)
+    this.linkConnector.connectOutputToReroute(this.fromReroute, nuRenderLink)
   }
 }

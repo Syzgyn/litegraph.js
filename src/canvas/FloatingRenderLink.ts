@@ -204,9 +204,9 @@ export class FloatingRenderLink implements RenderLink {
 
     node.disconnectInput(node.inputs.indexOf(input))
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    input._floatingLinks ??= new Set()
-    input._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    input.floatingLinks ??= new Set()
+    input.floatingLinks.add(floatingLink)
   }
 
   /**
@@ -222,9 +222,9 @@ export class FloatingRenderLink implements RenderLink {
     floatingLink.origin_id = node.id
     floatingLink.origin_slot = node.outputs.indexOf(output)
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    output._floatingLinks ??= new Set()
-    output._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    output.floatingLinks ??= new Set()
+    output.floatingLinks.add(floatingLink)
   }
 
   /**
@@ -239,9 +239,9 @@ export class FloatingRenderLink implements RenderLink {
     floatingLink.origin_id = SUBGRAPH_INPUT_ID
     floatingLink.origin_slot = input.parent.slots.indexOf(input)
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    input._floatingLinks ??= new Set()
-    input._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    input.floatingLinks ??= new Set()
+    input.floatingLinks.add(floatingLink)
   }
 
   /**
@@ -256,9 +256,9 @@ export class FloatingRenderLink implements RenderLink {
     floatingLink.origin_id = SUBGRAPH_OUTPUT_ID
     floatingLink.origin_slot = output.parent.slots.indexOf(output)
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    output._floatingLinks ??= new Set()
-    output._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    output.floatingLinks ??= new Set()
+    output.floatingLinks.add(floatingLink)
   }
 
   /**
@@ -276,9 +276,9 @@ export class FloatingRenderLink implements RenderLink {
     floatingLink.target_id = inputNode.id
     floatingLink.target_slot = inputNode.inputs.indexOf(input)
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    input._floatingLinks ??= new Set()
-    input._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    input.floatingLinks ??= new Set()
+    input.floatingLinks.add(floatingLink)
 
     events.dispatch("input-moved", this)
   }
@@ -300,9 +300,9 @@ export class FloatingRenderLink implements RenderLink {
     floatingLink.origin_id = outputNode.id
     floatingLink.origin_slot = outputNode.outputs.indexOf(output)
 
-    this.fromSlot._floatingLinks?.delete(floatingLink)
-    output._floatingLinks ??= new Set()
-    output._floatingLinks.add(floatingLink)
+    this.fromSlot.floatingLinks?.delete(floatingLink)
+    output.floatingLinks ??= new Set()
+    output.floatingLinks.add(floatingLink)
 
     events.dispatch("output-moved", this)
   }

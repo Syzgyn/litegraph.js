@@ -72,7 +72,7 @@ export class SubgraphOutput extends SubgraphSlot {
     )
 
     // Add to graph links list
-    subgraph._links.set(link.id, link)
+    subgraph.links.set(link.id, link)
 
     // Set link ID in each slot
     this.linkIds[0] = link.id
@@ -84,7 +84,7 @@ export class SubgraphOutput extends SubgraphSlot {
     for (const reroute of reroutes) {
       reroute.linkIds.add(link.id)
       if (reroute.floating) delete reroute.floating
-      reroute._dragging = undefined
+      reroute.dragging = undefined
     }
 
     // If this is the terminus of a floating link, remove it

@@ -95,9 +95,9 @@ export type ISerialisableNodeInput = Omit<INodeInputSlot, "boundingRect" | "widg
 /**
  * Serialisable representation of a node output slot.
  *
- * Omits runtime-only properties (`INodeOutputSlot.boundingRect`, `INodeOutputSlot._data`).
+ * Omits runtime-only properties (`INodeOutputSlot.boundingRect`, `INodeOutputSlot.data`).
  */
-export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "_data"> & {
+export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "data"> & {
   /** Reference to an associated widget, used by some downstream workarounds. */
   widget?: { name: string }
 }

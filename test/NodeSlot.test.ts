@@ -6,16 +6,16 @@ import { inputAsSerialisable, outputAsSerialisable } from "@/node/slotUtils"
 
 describe("NodeSlot", () => {
   describe("inputAsSerialisable", () => {
-    it("removes _data from serialized slot", () => {
+    it("removes data from serialized slot", () => {
       const slot: INodeOutputSlot = {
-        _data: "test data",
+        data: "test data",
         name: "test-id",
         type: "STRING",
         links: [],
         boundingRect: [0, 0, 120, 60],
       }
       const serialized = outputAsSerialisable(slot)
-      expect(serialized).not.toHaveProperty("_data")
+      expect(serialized).not.toHaveProperty("data")
     })
 
     it("removes pos from widget input slots", () => {

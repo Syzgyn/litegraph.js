@@ -21,7 +21,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   #node: LGraphNode
 
   /** Arbitrary runtime data attached to this slot. Not serialised. */
-  _data?: unknown
+  data?: unknown
 
   /**
    * IDs of all {@link LLink} instances connected from this slot, or `null` when none are connected.
@@ -40,7 +40,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   constructor(slot: OptionalProps<INodeOutputSlot, "boundingRect">, node: LGraphNode) {
     super(slot, node)
     this.links = slot.links
-    this._data = slot._data
+    this.data = slot.data
     this.slot_index = slot.slot_index
     this.#node = node
   }
@@ -58,7 +58,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
    */
   get collapsedPos(): ReadOnlyPoint {
     return [
-      this.#node._collapsed_width ?? LiteGraph.NODE_COLLAPSED_WIDTH,
+      this.#node.collapsed_width ?? LiteGraph.NODE_COLLAPSED_WIDTH,
       LiteGraph.NODE_TITLE_HEIGHT * -0.5,
     ]
   }
