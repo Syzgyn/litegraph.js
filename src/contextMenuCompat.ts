@@ -12,17 +12,17 @@ type ContextMenuValueProvider = (
 ) => (IContextMenuValue | null)[]
 
 class LegacyMenuCompat {
-  private originalMethods = new Map<string, ContextMenuValueProvider>()
-  private hasWarned = new Set<string>()
-  private currentExtension: string | null = null
-  private isExtracting = false
-  private readonly wrapperMethods = new Map<string, ContextMenuValueProvider>()
-  private readonly preWrapperMethods = new Map<
+  #originalMethods = new Map<string, ContextMenuValueProvider>()
+  #hasWarned = new Set<string>()
+  #currentExtension: string | null = null
+  #isExtracting = false
+  readonly #wrapperMethods = new Map<string, ContextMenuValueProvider>()
+  readonly #preWrapperMethods = new Map<
     string,
     ContextMenuValueProvider
   >()
 
-  private readonly wrapperInstalled = new Map<string, boolean>()
+  readonly #wrapperInstalled = new Map<string, boolean>()
 
   /**
    * Set the name of the extension that is currently being set up.
@@ -30,7 +30,7 @@ class LegacyMenuCompat {
    * @param extensionName The name of the extension
    */
   setCurrentExtension(extensionName: string | null) {
-    this.currentExtension = extensionName
+    this.#currentExtension = extensionName
   }
 
   /**
@@ -46,16 +46,16 @@ class LegacyMenuCompat {
     preWrapperFn: LGraphCanvas[K],
     prototype?: LGraphCanvas,
   ) {
-    this.wrapperMethods.set(
+    this.#wrapperMethods.set(
       methodName as string,
       wrapperFn as unknown as ContextMenuValueProvider,
     )
-    this.preWrapperMethods.set(
+    this.#preWrapperMethods.set(
       methodName as string,
       preWrapperFn as unknown as ContextMenuValueProvider,
     )
     const isInstalled = prototype && prototype[methodName] === wrapperFn
-    this.wrapperInstalled.set(methodName as string, !!isInstalled)
+    this.#wrapperInstalled.set(methodName as string, !!isInstalled)
   }
 
   /**
@@ -70,7 +70,7 @@ class LegacyMenuCompat {
     if (!ENABLE_LEGACY_SUPPORT) return
 
     const originalMethod = prototype[methodName]
-    this.originalMethods.set(
+    this.#originalMethods.set(
       methodName as string,
       originalMethod as unknown as ContextMenuValueProvider,
     )
@@ -82,11 +82,11 @@ class LegacyMenuCompat {
       set: (newImpl: LGraphCanvas[K]) => {
         if (!newImpl) return
         const fnKey = `${methodName as string}:${newImpl.toString().slice(0, 100)}`
-        if (!this.hasWarned.has(fnKey) && this.currentExtension) {
-          this.hasWarned.add(fnKey)
+        if (!this.#hasWarned.has(fnKey) && this.#currentExtension) {
+          this.#hasWarned.add(fnKey)
 
           console.warn(
-            `%c[DEPRECATED]%c Monkey-patching ${methodName as string} is deprecated. (Extension: "${this.currentExtension}")\n` +
+            `%c[DEPRECATED]%c Monkey-patching ${methodName as string} is deprecated. (Extension: "${this.#currentExtension}")\n` +
             `Please use the new context menu API instead.\n\n` +
             `See: https://docs.comfy.org/custom-nodes/js/context-menu-migration`,
             "color: orange; font-weight: bold",
@@ -118,13 +118,13 @@ class LegacyMenuCompat {
     ...args: unknown[]
   ): (IContextMenuValue | null)[] {
     if (!ENABLE_LEGACY_SUPPORT) return []
-    if (this.isExtracting) return []
+    if (this.#isExtracting) return []
 
-    const originalMethod = this.originalMethods.get(methodName)
+    const originalMethod = this.#originalMethods.get(methodName)
     if (!originalMethod) return []
 
     try {
-      this.isExtracting = true
+      this.#isExtracting = true
 
       const originalItems = originalMethod.apply(context, args) as
         | (IContextMenuValue | null)[] |
@@ -134,11 +134,11 @@ class LegacyMenuCompat {
       const currentMethod = context.constructor.prototype[methodName]
       if (!currentMethod || currentMethod === originalMethod) return []
 
-      const registeredWrapper = this.wrapperMethods.get(methodName)
+      const registeredWrapper = this.#wrapperMethods.get(methodName)
       if (registeredWrapper && currentMethod === registeredWrapper) return []
 
-      const preWrapperMethod = this.preWrapperMethods.get(methodName)
-      const wrapperWasInstalled = this.wrapperInstalled.get(methodName)
+      const preWrapperMethod = this.#preWrapperMethods.get(methodName)
+      const wrapperWasInstalled = this.#wrapperInstalled.get(methodName)
 
       const shouldSkipWrapper =
         preWrapperMethod &&
@@ -204,7 +204,7 @@ class LegacyMenuCompat {
       console.error("[Context Menu Compat] Failed to extract legacy items:", error)
       return []
     } finally {
-      this.isExtracting = false
+      this.#isExtracting = false
     }
   }
 }

@@ -264,11 +264,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   #boundingRect: Rectangle = new Rectangle()
 
   /** {@link pos} and {@link size} values are backed by this {@link Rect}. */
-  private posSizeStore: Float32Array = new Float32Array(4)
-  private posStore: Point = this.posSizeStore.subarray(0, 2)
-  private sizeStore: Size = this.posSizeStore.subarray(2, 4)
+  #posSizeStore: Float32Array = new Float32Array(4)
+  #posStore: Point = this.#posSizeStore.subarray(0, 2)
+  #sizeStore: Size = this.#posSizeStore.subarray(2, 4)
   /** Override for {@link renderingShape}; unset uses constructor or global default. */
-  private shapeStore?: RenderShape
+  #shapeStore?: RenderShape
 
   /** The title text of the node. */
   title: string
@@ -787,43 +787,43 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   get posSize() {
-    return this.posSizeStore
+    return this.#posSizeStore
   }
 
   /** Anchor position in graph space; may differ from the top-left of {@link boundingRect}. */
   public get pos() {
-    return this.posStore
+    return this.#posStore
   }
 
   /** Node position does not necessarily correlate to the top-left corner. */
   public set pos(value) {
     if (!value || value.length < 2) return
 
-    this.posStore[0] = value[0]
-    this.posStore[1] = value[1]
+    this.#posStore[0] = value[0]
+    this.#posStore[1] = value[1]
   }
 
   /** Body width and height in graph units (excluding title bar). */
   public get size() {
-    return this.sizeStore
+    return this.#sizeStore
   }
 
   public set size(value) {
     if (!value || value.length < 2) return
 
-    this.sizeStore[0] = value[0]
-    this.sizeStore[1] = value[1]
+    this.#sizeStore[0] = value[0]
+    this.#sizeStore[1] = value[1]
   }
 
   /**
    * The size of the node used for rendering.
    */
   get renderingSize(): Size {
-    return this.flags.collapsed ? [this.collapsed_width ?? 0, 0] : this.sizeStore
+    return this.flags.collapsed ? [this.collapsed_width ?? 0, 0] : this.#sizeStore
   }
 
   get shape(): RenderShape | undefined {
-    return this.shapeStore
+    return this.#shapeStore
   }
 
   /**
@@ -833,22 +833,22 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   set shape(v: RenderShape | "default" | "box" | "round" | "circle" | "card") {
     switch (v) {
       case "default":
-        delete this.shapeStore
+        this.#shapeStore = undefined
         break
       case "box":
-        this.shapeStore = RenderShape.BOX
+        this.#shapeStore = RenderShape.BOX
         break
       case "round":
-        this.shapeStore = RenderShape.ROUND
+        this.#shapeStore = RenderShape.ROUND
         break
       case "circle":
-        this.shapeStore = RenderShape.CIRCLE
+        this.#shapeStore = RenderShape.CIRCLE
         break
       case "card":
-        this.shapeStore = RenderShape.CARD
+        this.#shapeStore = RenderShape.CARD
         break
       default:
-        this.shapeStore = v
+        this.#shapeStore = v
     }
   }
 
@@ -857,7 +857,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @see {@link RenderShape}
    */
   get renderingShape(): RenderShape {
-    return this.shapeStore || this.constructor.shape || LiteGraph.NODE_DEFAULT_SHAPE
+    return this.#shapeStore || this.constructor.shape || LiteGraph.NODE_DEFAULT_SHAPE
   }
 
   /** @deprecated Alias for {@link selected}. */

@@ -310,13 +310,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   // Whether the canvas was previously being dragged prior to pressing space key.
   // null if space key is not pressed.
-  private _previously_dragging_canvas: boolean | null = null
+  #previously_dragging_canvas: boolean | null = null
 
   #setCursor!: ReturnType<typeof createCursorCache>
 
   // Cached LOD threshold values for performance
-  private _lowQualityZoomThreshold: number = 0
-  private _isLowQuality: boolean = false
+  #lowQualityZoomThreshold: number = 0
+  #isLowQuality: boolean = false
 
   /**
    * Once per frame check of snap to grid value.
@@ -331,7 +331,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** The start position of the drag zoom. */
   #dragZoomStart: null | { pos: Point, scale: number } = null
   /** Minimum font size in pixels before switching to low quality rendering. */
-  private _min_font_size_for_lod: number = 8
+  #min_font_size_for_lod: number = 8
   /**
    * The IDs of the nodes that are currently visible on the canvas. More
    * performant than {@link visible_nodes} for visibility checks.
@@ -345,25 +345,39 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * (e.g. Cmd/Ctrl-drag moves a group without its contents). Updated on every
    * drag move and seeded from the pointer-down event when a drag starts.
    */
-  private lastDragModifiers: Pick<MouseEvent, "ctrlKey" | "metaKey"> = {
+  #lastDragModifiers: Pick<MouseEvent, "ctrlKey" | "metaKey"> = {
     ctrlKey: false,
     metaKey: false,
   }
 
-  private ghostPointerHandler: ((e: PointerEvent) => void) | null = null
-  private ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
+  #ghostPointerHandler: ((e: PointerEvent) => void) | null = null
+  #ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
   /** Whether pointer and keyboard events are currently bound to {@link canvas}. */
-  private events_binded?: boolean
+  #events_binded?: boolean
   /** Canvas position of the slot highlight indicator shown during link dragging. */
-  private highlight_pos?: Point
+  #highlight_pos?: Point
   /** Input slot currently highlighted as a valid drop target during link dragging. */
-  private highlight_input?: INodeInputSlot
+  #highlight_input?: INodeInputSlot
   /** Cached {@link HTMLImageElement} for the tiled background pattern. */
-  private bg_img?: HTMLImageElement
+  #bg_img?: HTMLImageElement
   /** Cached {@link CanvasPattern} created from {@link bg_img}. */
-  private pattern?: CanvasPattern
+  #pattern?: CanvasPattern
   /** Cached {@link CanvasPattern} created from {@link bg_img}. */
   // private pattern_img?: HTMLImageElement
+  /** Bound pointer-down handler registered on {@link canvas}. */
+  #mousedown_callback?: (e: PointerEvent) => void
+  /** Bound wheel handler registered on {@link canvas}. */
+  #mousewheel_callback?: (e: WheelEvent) => void
+  /** Bound pointer-move handler registered on {@link canvas}. */
+  #mousemove_callback?: (e: PointerEvent) => void
+  /** Bound pointer-up handler registered on {@link canvas}. */
+  #mouseup_callback?: (e: PointerEvent) => void
+  /** Bound pointer-out handler registered on {@link canvas}. */
+  #mouseout_callback?: (e: PointerEvent) => void
+  /** Bound pointer-cancel handler registered on {@link canvas}. */
+  #mousecancel_callback?: (e: PointerEvent) => void
+  /** Bound keyboard handler registered on {@link canvas} and its document. */
+  #key_callback?: (e: KeyboardEvent) => void
   autoPan: AutoPanController | null = null
 
   /** If true, enable drag zoom. Ctrl+Shift+Drag Up/Down: zoom canvas. */
@@ -701,8 +715,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // Set up zoom change handler for efficient LOD updates
     this.ds.onChanged = (scale: number, _offset: Point) => {
       // Only check LOD threshold if it's enabled
-      if (this._lowQualityZoomThreshold > 0) {
-        this._isLowQuality = scale < this._lowQualityZoomThreshold
+      if (this.#lowQualityZoomThreshold > 0) {
+        this.#isLowQuality = scale < this.#lowQualityZoomThreshold
       }
     }
 
@@ -876,7 +890,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     this.autoresize = options.autoresize
 
-    this.updateLowQualityThreshold()
+    this.#updateLowQualityThreshold()
   }
 
   /** Context-menu callback that creates a new {@link LGraphGroup} at the pointer position. */
@@ -1605,7 +1619,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (item.pos[1] < offsetY) offsetY = item.pos[1]
     }
 
-    canvas.deserializeItems(canvas.serializeItems(nodes), {
+    canvas.#deserializeItems(canvas.#serializeItems(nodes), {
       position: [offsetX + 5, offsetY + 5],
     })
   }
@@ -1614,11 +1628,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Updates the low quality zoom threshold based on current settings.
    * Called when min_font_size_for_lod or DPR changes.
    */
-  private updateLowQualityThreshold(): void {
-    if (this._min_font_size_for_lod === 0) {
+  #updateLowQualityThreshold(): void {
+    if (this.#min_font_size_for_lod === 0) {
       // LOD disabled
-      this._lowQualityZoomThreshold = 0
-      this._isLowQuality = false
+      this.#lowQualityZoomThreshold = 0
+      this.#isLowQuality = false
       return
     }
 
@@ -1626,11 +1640,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const dprAdjustment = Math.sqrt(window.devicePixelRatio || 1)
 
     // Calculate the zoom level where text becomes unreadable
-    this._lowQualityZoomThreshold =
-      this._min_font_size_for_lod / (baseFontSize * dprAdjustment)
+    this.#lowQualityZoomThreshold =
+      this.#min_font_size_for_lod / (baseFontSize * dprAdjustment)
 
     // Update current state based on current zoom
-    this._isLowQuality = this.ds.scale < this._lowQualityZoomThreshold
+    this.#isLowQuality = this.ds.scale < this.#lowQualityZoomThreshold
   }
 
   #updateCursorStyle() {
@@ -1757,7 +1771,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     // clone node ALT dragging
     if (LiteGraph.alt_drag_do_clone_nodes && e.altKey && !e.ctrlKey && node && this.allow_interaction) {
-      const items = this.deserializeItems(this.serializeItems([node]), {
+      const items = this.#deserializeItems(this.#serializeItems([node]), {
         position: node.pos,
       })
       const cloned = items?.created[0] as LGraphNode | undefined
@@ -2451,7 +2465,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (reroute.containsPoint(this.graph_mouse)) {
           if (linkConnector.isRerouteValidDrop(reroute)) {
             linkConnector.overReroute = reroute
-            this.highlight_pos = reroute.pos
+            this.#highlight_pos = reroute.pos
           }
 
           return underPointer | CanvasItem.RerouteSlot
@@ -2459,7 +2473,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
     }
 
-    this.highlight_pos &&= undefined
+    this.#highlight_pos &&= undefined
     linkConnector.overReroute &&= undefined
     return underPointer
   }
@@ -2491,7 +2505,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // that reaches the canvas edge before the first move still honours the
     // "move group without contents" modifier.
     if (pointer.eDown) {
-      this.lastDragModifiers = {
+      this.#lastDragModifiers = {
         ctrlKey: pointer.eDown.ctrlKey,
         metaKey: pointer.eDown.metaKey,
       }
@@ -2507,7 +2521,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       maxPanSpeed: this.auto_pan_speed,
       onPan: (panX, panY) => {
         const selected = this.selectedItems
-        const allItems = getDraggedItems(selected, this.lastDragModifiers)
+        const allItems = getDraggedItems(selected, this.#lastDragModifiers)
 
         for (const item of allItems) {
           item.move(panX, panY, true)
@@ -2651,7 +2665,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** Get the target snap / highlight point in graph space */
   #getHighlightPosition(): ReadOnlyPoint {
     return LiteGraph.snaps_for_comfy
-      ? this.linkConnector.state.snapLinksPos ?? this.highlight_pos ?? this.graph_mouse
+      ? this.linkConnector.state.snapLinksPos ?? this.#highlight_pos ?? this.graph_mouse
       : this.graph_mouse
   }
 
@@ -2665,11 +2679,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     highlightPos: ReadOnlyPoint,
   ): void {
     const linkConnectorSnap = !!this.linkConnector.state.snapLinksPos
-    if (!this.highlight_pos && !linkConnectorSnap) return
+    if (!this.#highlight_pos && !linkConnectorSnap) return
 
     ctx.fillStyle = "#ffcc00"
     ctx.beginPath()
-    const shape = this.highlight_input?.shape
+    const shape = this.#highlight_input?.shape
 
     if (shape === RenderShape.ARROW) {
       ctx.moveTo(highlightPos[0] + 8, highlightPos[1] + 0.5)
@@ -3007,7 +3021,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * When called without parameters, it copies {@link selectedItems}.
    * @param items The items to copy.  If nullish, all selected items are copied.
    */
-  private serializeItems(items?: Iterable<Positionable>): ClipboardItems {
+  #serializeItems(items?: Iterable<Positionable>): ClipboardItems {
     const serialisable: Required<ClipboardItems> = {
       nodes: [],
       groups: [],
@@ -3071,7 +3085,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     return serialisable
   }
 
-  private deserializeItems(
+  #deserializeItems(
     parsed: ClipboardItems,
     options: IPasteFromClipboardOptions = {},
   ): ClipboardPasteResult | undefined {
@@ -3247,44 +3261,29 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /** Captures an event and prevents default - returns false. */
-  private doNothing(e: Event): boolean {
+  #doNothing(e: Event): boolean {
     // console.log("pointerevents: _doNothing "+e.type);
     e.preventDefault()
     return false
   }
 
   /** Captures an event and prevents default - returns true. */
-  private doReturnTrue(e: Event): boolean {
+  #doReturnTrue(e: Event): boolean {
     e.preventDefault()
     return true
   }
 
-  /** Bound pointer-down handler registered on {@link canvas}. */
-  private mousedown_callback?(e: PointerEvent): void
-  /** Bound wheel handler registered on {@link canvas}. */
-  private mousewheel_callback?(e: WheelEvent): void
-  /** Bound pointer-move handler registered on {@link canvas}. */
-  private mousemove_callback?(e: PointerEvent): void
-  /** Bound pointer-up handler registered on {@link canvas}. */
-  private mouseup_callback?(e: PointerEvent): void
-  /** Bound pointer-out handler registered on {@link canvas}. */
-  private mouseout_callback?(e: PointerEvent): void
-  /** Bound pointer-cancel handler registered on {@link canvas}. */
-  private mousecancel_callback?(e: PointerEvent): void
-  /** Bound keyboard handler registered on {@link canvas} and its document. */
-  private key_callback?(e: KeyboardEvent): void
-
   get min_font_size_for_lod(): number {
-    return this._min_font_size_for_lod
+    return this.#min_font_size_for_lod
   }
 
   set min_font_size_for_lod(value: number) {
-    if (this._min_font_size_for_lod === value) {
+    if (this.#min_font_size_for_lod === value) {
       return
     }
 
-    this._min_font_size_for_lod = value
-    this.updateLowQualityThreshold()
+    this.#min_font_size_for_lod = value
+    this.#updateLowQualityThreshold()
   }
 
   /** The subgraph currently being edited inline, if the canvas has navigated into a subgraph. */
@@ -3362,7 +3361,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Render low quality when zoomed out based on minimum readable font size.
    */
   get low_quality(): boolean {
-    return this._isLowQuality
+    return this.#isLowQuality
   }
 
   /** Override to supply entries for the canvas background context menu. */
@@ -3587,7 +3586,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * binds mouse, keyboard, touch and drag events to the canvas
    */
   bindEvents(): void {
-    if (this.events_binded) {
+    if (this.#events_binded) {
       console.warn("LGraphCanvas: events already bound")
       return
     }
@@ -3596,44 +3595,44 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // hack used when moving canvas between windows
     const { document } = this.getCanvasWindow()
 
-    this.mousedown_callback = this.processMouseDown.bind(this)
-    this.mousewheel_callback = this.processMouseWheel.bind(this)
-    this.mousemove_callback = this.processMouseMove.bind(this)
-    this.mouseup_callback = this.processMouseUp.bind(this)
-    this.mouseout_callback = this.processMouseOut.bind(this)
-    this.mousecancel_callback = this.processMouseCancel.bind(this)
+    this.#mousedown_callback = this.processMouseDown.bind(this)
+    this.#mousewheel_callback = this.processMouseWheel.bind(this)
+    this.#mousemove_callback = this.processMouseMove.bind(this)
+    this.#mouseup_callback = this.processMouseUp.bind(this)
+    this.#mouseout_callback = this.processMouseOut.bind(this)
+    this.#mousecancel_callback = this.processMouseCancel.bind(this)
 
-    canvas.addEventListener("pointerdown", this.mousedown_callback, { capture: true })
-    canvas.addEventListener("wheel", this.mousewheel_callback, { capture: false })
+    canvas.addEventListener("pointerdown", this.#mousedown_callback, { capture: true })
+    canvas.addEventListener("wheel", this.#mousewheel_callback, { capture: false })
 
-    canvas.addEventListener("pointerup", this.mouseup_callback, { capture: true })
-    canvas.addEventListener("pointermove", this.mousemove_callback)
-    canvas.addEventListener("pointerout", this.mouseout_callback)
-    canvas.addEventListener("pointercancel", this.mousecancel_callback, { capture: true })
+    canvas.addEventListener("pointerup", this.#mouseup_callback, { capture: true })
+    canvas.addEventListener("pointermove", this.#mousemove_callback)
+    canvas.addEventListener("pointerout", this.#mouseout_callback)
+    canvas.addEventListener("pointercancel", this.#mousecancel_callback, { capture: true })
 
-    canvas.addEventListener("contextmenu", this.doNothing)
+    canvas.addEventListener("contextmenu", this.#doNothing)
     // Prevent middle-click paste (PRIMARY clipboard on Linux) - fixes #4464
     canvas.addEventListener("auxclick", this.preventMiddleAuxClick)
 
     // Keyboard
-    this.key_callback = this.processKey.bind(this)
+    this.#key_callback = this.processKey.bind(this)
 
-    canvas.addEventListener("keydown", this.key_callback, { capture: true })
+    canvas.addEventListener("keydown", this.#key_callback, { capture: true })
     // keyup event must be bound on the document
-    document.addEventListener("keyup", this.key_callback, { capture: true })
+    document.addEventListener("keyup", this.#key_callback, { capture: true })
 
-    canvas.addEventListener("dragover", this.doNothing, { capture: false })
-    canvas.addEventListener("dragend", this.doNothing, { capture: false })
-    canvas.addEventListener("dragenter", this.doReturnTrue, { capture: false })
+    canvas.addEventListener("dragover", this.#doNothing, { capture: false })
+    canvas.addEventListener("dragend", this.#doNothing, { capture: false })
+    canvas.addEventListener("dragenter", this.#doReturnTrue, { capture: false })
 
-    this.events_binded = true
+    this.#events_binded = true
   }
 
   /**
    * unbinds mouse events from the canvas
    */
   unbindEvents(): void {
-    if (!this.events_binded) {
+    if (!this.#events_binded) {
       console.warn("LGraphCanvas: no events bound")
       return
     }
@@ -3643,23 +3642,23 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const { canvas } = this
 
     // Assertions: removing nullish is fine.
-    canvas.removeEventListener("pointercancel", this.mousecancel_callback!)
-    canvas.removeEventListener("pointerout", this.mouseout_callback!)
-    canvas.removeEventListener("pointermove", this.mousemove_callback!)
-    canvas.removeEventListener("pointerup", this.mouseup_callback!)
-    canvas.removeEventListener("pointerdown", this.mousedown_callback!)
-    canvas.removeEventListener("wheel", this.mousewheel_callback!)
-    canvas.removeEventListener("keydown", this.key_callback!)
-    document.removeEventListener("keyup", this.key_callback!)
-    canvas.removeEventListener("contextmenu", this.doNothing)
+    canvas.removeEventListener("pointercancel", this.#mousecancel_callback!)
+    canvas.removeEventListener("pointerout", this.#mouseout_callback!)
+    canvas.removeEventListener("pointermove", this.#mousemove_callback!)
+    canvas.removeEventListener("pointerup", this.#mouseup_callback!)
+    canvas.removeEventListener("pointerdown", this.#mousedown_callback!)
+    canvas.removeEventListener("wheel", this.#mousewheel_callback!)
+    canvas.removeEventListener("keydown", this.#key_callback!)
+    document.removeEventListener("keyup", this.#key_callback!)
+    canvas.removeEventListener("contextmenu", this.#doNothing)
     canvas.removeEventListener("auxclick", this.preventMiddleAuxClick)
-    canvas.removeEventListener("dragenter", this.doReturnTrue)
+    canvas.removeEventListener("dragenter", this.#doReturnTrue)
 
-    this.mousedown_callback = undefined
-    this.mousewheel_callback = undefined
-    this.key_callback = undefined
+    this.#mousedown_callback = undefined
+    this.#mousewheel_callback = undefined
+    this.#key_callback = undefined
 
-    this.events_binded = false
+    this.#events_binded = false
   }
 
   /**
@@ -3771,8 +3770,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         // mouse leave
         if (!pointer.eDown) pointer.resizeDirection = undefined
         otherNode.mouseOver = undefined
-        this.highlight_input = undefined
-        this.highlight_pos = undefined
+        this.#highlight_input = undefined
+        this.#highlight_pos = undefined
         this.linkConnector.overWidget = undefined
 
         // Hover transitions
@@ -4107,8 +4106,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
                 }
               }
             }
-            this.highlight_pos = highlightPos
-            this.highlight_input = highlightInput
+            this.#highlight_pos = highlightPos
+            this.#highlight_input = highlightInput
           }
 
           this.dirty_canvas = true
@@ -4167,7 +4166,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.autoPan?.updatePointer(e.clientX, e.clientY)
 
         const selected = this.selectedItems
-        this.lastDragModifiers = { ctrlKey: e.ctrlKey, metaKey: e.metaKey }
+        this.#lastDragModifiers = { ctrlKey: e.ctrlKey, metaKey: e.metaKey }
         const allItems = getDraggedItems(selected, e)
 
         const deltaX = delta[0] / this.ds.scale
@@ -4224,16 +4223,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     this.#startNodeAutoPan()
 
-    this.ghostPointerHandler = (e: PointerEvent) => {
+    this.#ghostPointerHandler = (e: PointerEvent) => {
       this.processMouseMove(e)
     }
-    document.addEventListener("pointermove", this.ghostPointerHandler)
+    document.addEventListener("pointermove", this.#ghostPointerHandler)
     document.documentElement.addEventListener(
       "pointerleave",
-      this.ghostPointerHandler,
+      this.#ghostPointerHandler,
     )
 
-    this.ghostKeyHandler = (e: KeyboardEvent) => {
+    this.#ghostKeyHandler = (e: KeyboardEvent) => {
       if (e.key !== "Escape" && e.key !== "Delete" && e.key !== "Backspace") {
         return
       }
@@ -4241,7 +4240,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       e.stopPropagation()
       e.preventDefault()
     }
-    document.addEventListener("keydown", this.ghostKeyHandler, { capture: true })
+    document.addEventListener("keydown", this.#ghostKeyHandler, { capture: true })
   }
 
   /**
@@ -4253,20 +4252,20 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    */
   finalizeGhostPlacement(cancelled: boolean): void {
     const ownedGhostState =
-      this.ghostPointerHandler != null || this.ghostKeyHandler != null
+      this.#ghostPointerHandler != null || this.#ghostKeyHandler != null
 
-    if (this.ghostPointerHandler) {
-      document.removeEventListener("pointermove", this.ghostPointerHandler)
+    if (this.#ghostPointerHandler) {
+      document.removeEventListener("pointermove", this.#ghostPointerHandler)
       document.documentElement.removeEventListener(
         "pointerleave",
-        this.ghostPointerHandler,
+        this.#ghostPointerHandler,
       )
-      this.ghostPointerHandler = null
+      this.#ghostPointerHandler = null
     }
 
-    if (this.ghostKeyHandler) {
-      document.removeEventListener("keydown", this.ghostKeyHandler, true)
-      this.ghostKeyHandler = null
+    if (this.#ghostKeyHandler) {
+      document.removeEventListener("keydown", this.#ghostKeyHandler, true)
+      this.#ghostKeyHandler = null
     }
 
     if (ownedGhostState) {
@@ -4469,8 +4468,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (e.key === " ") {
         // space
         this.read_only = true
-        if (this._previously_dragging_canvas === null) {
-          this._previously_dragging_canvas = this.dragging_canvas
+        if (this.#previously_dragging_canvas === null) {
+          this.#previously_dragging_canvas = this.dragging_canvas
         }
         this.dragging_canvas = this.pointer.isDown
         block_default = true
@@ -4519,8 +4518,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (e.key === " ") {
         // space
         this.read_only = false
-        this.dragging_canvas = (this._previously_dragging_canvas ?? false) && this.pointer.isDown
-        this._previously_dragging_canvas = null
+        this.dragging_canvas = (this.#previously_dragging_canvas ?? false) && this.pointer.isDown
+        this.#previously_dragging_canvas = null
       }
 
       for (const node of Object.values(this.selected_nodes)) {
@@ -4545,7 +4544,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   copyToClipboard(items?: Iterable<Positionable>): void {
     localStorage.setItem(
       "litegrapheditor_clipboard",
-      JSON.stringify(this.serializeItems(items)),
+      JSON.stringify(this.#serializeItems(items)),
     )
   }
 
@@ -4580,7 +4579,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     try {
       const data = localStorage.getItem("litegrapheditor_clipboard")
       if (!data) return
-      return this.deserializeItems(JSON.parse(data), options)
+      return this.#deserializeItems(JSON.parse(data), options)
     } finally {
       this.emitAfterChange()
     }
@@ -5409,21 +5408,21 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           ctx.globalAlpha = this.editor_alpha
         }
         ctx.imageSmoothingEnabled = false
-        if (!this.bg_img || this.bg_img.name != this.background_image) {
-          this.bg_img = new Image()
-          this.bg_img.name = this.background_image
-          this.bg_img.src = this.background_image
+        if (!this.#bg_img || this.#bg_img.name != this.background_image) {
+          this.#bg_img = new Image()
+          this.#bg_img.name = this.background_image
+          this.#bg_img.src = this.background_image
           const that = this
-          this.bg_img.addEventListener("load", function () {
+          this.#bg_img.addEventListener("load", function () {
             that.draw(true, true)
           })
         }
 
-        let pattern = this.pattern
-        if (pattern == null && this.bg_img.width > 0) {
-          pattern = ctx.createPattern(this.bg_img, "repeat") ?? undefined
-          // this.pattern_img = this.bg_img
-          this.pattern = pattern
+        let pattern = this.#pattern
+        if (pattern == null && this.#bg_img.width > 0) {
+          pattern = ctx.createPattern(this.#bg_img, "repeat") ?? undefined
+          // this.#pattern_img = this.#bg_img
+          this.#pattern = pattern
         }
 
         // NOTE: This ridiculous kludge provides a significant performance increase when rendering many large (> canvas width) paths in HTML canvas.
@@ -5970,7 +5969,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           offsetToSlot: true,
         })
       }
-      reroute.draw(ctx, this.pattern)
+      reroute.draw(ctx, this.#pattern)
 
       // Never draw slots when the pointer is down
       if (!this.pointer.isDown) reroute.drawSlots(ctx)
@@ -6245,7 +6244,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
       if (disabled) {
         const { fillStyle, globalAlpha } = ctx
-        ctx.fillStyle = this.pattern ?? "#797979"
+        ctx.fillStyle = this.#pattern ?? "#797979"
         ctx.globalAlpha = 0.75
         ctx.fill()
         ctx.globalAlpha = globalAlpha

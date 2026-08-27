@@ -43,62 +43,62 @@ export function calculateEdgePanSpeed(
 }
 
 export class AutoPanController {
-  private pointerX = 0
-  private pointerY = 0
-  private readonly canvas: HTMLCanvasElement
-  private readonly ds: DragAndScale
-  private readonly maxPanSpeed: number
-  private readonly onPan: (dx: number, dy: number) => void
-  private rafId: number | undefined
+  #pointerX = 0
+  #pointerY = 0
+  readonly #canvas: HTMLCanvasElement
+  readonly #ds: DragAndScale
+  readonly #maxPanSpeed: number
+  readonly #onPan: (dx: number, dy: number) => void
+  #rafId: number | undefined
 
   constructor(options: AutoPanOptions) {
-    this.canvas = options.canvas
-    this.ds = options.ds
-    this.maxPanSpeed = options.maxPanSpeed
-    this.onPan = options.onPan
+    this.#canvas = options.canvas
+    this.#ds = options.ds
+    this.#maxPanSpeed = options.maxPanSpeed
+    this.#onPan = options.onPan
   }
 
-  private tick(): void {
-    const rect = this.canvas.getBoundingClientRect()
-    const scale = this.ds.scale
+  #tick(): void {
+    const rect = this.#canvas.getBoundingClientRect()
+    const scale = this.#ds.scale
 
     const panX = calculateEdgePanSpeed(
-      this.pointerX,
+      this.#pointerX,
       rect.left,
       rect.right,
       scale,
-      this.maxPanSpeed,
+      this.#maxPanSpeed,
     )
     const panY = calculateEdgePanSpeed(
-      this.pointerY,
+      this.#pointerY,
       rect.top,
       rect.bottom,
       scale,
-      this.maxPanSpeed,
+      this.#maxPanSpeed,
     )
 
     if (panX !== 0 || panY !== 0) {
-      this.ds.offset[0] -= panX
-      this.ds.offset[1] -= panY
-      this.onPan(panX, panY)
+      this.#ds.offset[0] -= panX
+      this.#ds.offset[1] -= panY
+      this.#onPan(panX, panY)
     }
 
-    this.rafId = requestAnimationFrame(() => this.tick())
+    this.#rafId = requestAnimationFrame(() => this.#tick())
   }
 
   updatePointer(screenX: number, screenY: number): void {
-    this.pointerX = screenX
-    this.pointerY = screenY
+    this.#pointerX = screenX
+    this.#pointerY = screenY
   }
 
   start(): void {
-    if (this.rafId != null) return
-    this.tick()
+    if (this.#rafId != null) return
+    this.#tick()
   }
 
   stop(): void {
-    if (this.rafId == null) return
-    cancelAnimationFrame(this.rafId)
-    this.rafId = undefined
+    if (this.#rafId == null) return
+    cancelAnimationFrame(this.#rafId)
+    this.#rafId = undefined
   }
 }
