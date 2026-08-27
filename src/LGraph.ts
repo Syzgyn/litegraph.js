@@ -43,7 +43,7 @@ import { type GraphOrSubgraph, Subgraph } from "./subgraph/Subgraph"
 import { deduplicateSubgraphNodeIds, topologicalSortSubgraphs } from "./subgraph/subgraphDeduplication"
 import { SubgraphInput } from "./subgraph/SubgraphInput"
 import { SubgraphOutput } from "./subgraph/SubgraphOutput"
-import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, splitPositionables, walkSegment } from "./subgraph/subgraphUtils"
+import { findUsedSubgraphIds, getBoundaryLinks, groupResolvedByOutput, mapSubgraphInputsAndLinks, mapSubgraphOutputsAndLinks, multiClone, registerSubgraphNodeType, splitPositionables, walkSegment } from "./subgraph/subgraphUtils"
 import { Alignment, LGraphEventMode } from "./types/globalEnums"
 import { getAllNestedItems } from "./utils/collections"
 import { toConcreteWidget } from "./widgets/widgetMap"
@@ -2012,8 +2012,8 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const subgraph = new Subgraph(this.rootGraph, data)
     this.subgraphs.set(id, subgraph)
 
-    // FE: Create node defs
     this.rootGraph.events.dispatch("subgraph-created", { subgraph, data })
+    registerSubgraphNodeType(subgraph)
     return subgraph
   }
 

@@ -1,8 +1,8 @@
-import type { ISlotType } from "@/litegraph"
+import type { ISlotType, Positionable } from "@/litegraph"
 
 import { afterEach, assert, describe, expect, test } from "vitest"
 
-import { LGraph, LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphNode, LiteGraph, SubgraphNode } from "@/litegraph"
 
 import { createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphHelpers"
 
@@ -44,6 +44,26 @@ afterEach(() => {
 })
 
 describe("SubgraphConversion", () => {
+  describe("convertToSubgraph", () => {
+    test("creates a subgraph node without manual type registration", () => {
+      const graph = new LGraph()
+      const node = createInteriorNode(graph, [], ["number"], "Packed Node")
+
+      const { subgraph, node: subgraphNode } = graph.convertToSubgraph(
+        new Set<Positionable>([node]),
+      )
+
+      expect(subgraphNode).toBeInstanceOf(SubgraphNode)
+      expect(subgraphNode.type).toBe(subgraph.id)
+      expect(graph.nodes).toEqual([subgraphNode])
+      expect(graph.subgraphs.get(subgraph.id)).toBe(subgraph)
+      expect(subgraph.nodes.length).toBe(1)
+      expect(LiteGraph.registered_node_types[subgraph.id]).toBeDefined()
+
+      LiteGraph.unregisterNodeType(subgraph.id)
+    })
+  })
+
   describe("Subgraph Unpacking Functionality", () => {
     test("keeps interior nodes and links", () => {
       const subgraph = createTestSubgraph()

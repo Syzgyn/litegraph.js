@@ -1,9 +1,9 @@
-import type { GraphOrSubgraph } from "./Subgraph"
+import type { GraphOrSubgraph, Subgraph } from "./Subgraph"
 import type { SubgraphInput } from "./SubgraphInput"
 import type { SubgraphOutput } from "./SubgraphOutput"
 import type { INodeInputSlot, INodeOutputSlot, Positionable } from "@/interfaces"
 import type { LGraph } from "@/LGraph"
-import type { ISerialisedNode, SerialisableLLink, SubgraphIO } from "@/types/serialisation"
+import type { ExportedSubgraphInstance, ISerialisedNode, SerialisableLLink, SubgraphIO } from "@/types/serialisation"
 import type { UUID } from "@/utils/uuid"
 
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
@@ -15,6 +15,7 @@ import { Reroute, type RerouteId } from "@/Reroute"
 import { nextUniqueName } from "@/strings"
 
 import { SubgraphInputNode } from "./SubgraphInputNode"
+import { SubgraphNode } from "./SubgraphNode"
 import { SubgraphOutputNode } from "./SubgraphOutputNode"
 
 /**
@@ -526,4 +527,36 @@ export function walkSegment(
     id = hop.next
   }
   return { segment, complete: true }
+}
+
+/**
+ * Registers a {@link SubgraphNode} constructor under the subgraph definition's UUID so
+ * {@link LiteGraph.createNode} can instantiate it.
+ *
+ * Skips registration when a host app (e.g. ComfyUI) has already registered a custom class
+ * via the {@link LGraphEventMap} `"subgraph-created"` event.
+ */
+export function registerSubgraphNodeType(subgraph: Subgraph): void {
+  if (Object.hasOwn(LiteGraph.registered_node_types, subgraph.id)) return
+
+  const instanceData: ExportedSubgraphInstance = {
+    id: -1,
+    type: subgraph.id,
+    pos: [0, 0],
+    size: [100, 100],
+    inputs: [],
+    outputs: [],
+    flags: {},
+    order: 0,
+    mode: 0,
+  }
+
+  const NodeClass = class extends SubgraphNode {
+    constructor() {
+      super(subgraph.rootGraph, subgraph, instanceData)
+    }
+  }
+
+  Object.defineProperty(NodeClass, "title", { value: subgraph.name, configurable: true })
+  LiteGraph.registerNodeType(subgraph.id, NodeClass)
 }
