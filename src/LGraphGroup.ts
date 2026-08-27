@@ -86,7 +86,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /** @deprecated Unused; title rendering uses `LiteGraph.GROUP_FONT`. */
   font?: string
   /** Font size in pixels for the title bar text. */
-  font_size: number = LiteGraph.GROUP_TEXT_SIZE
+  fontSize: number = LiteGraph.GROUP_TEXT_SIZE
 
   /** The `LGraph` that owns this group, set by `LGraph.add`. */
   graph?: LGraph
@@ -109,8 +109,8 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     this.id = id ?? -1
     this.title = title || "Group"
 
-    const { pale_blue } = LGraphCanvas.node_colors
-    this.color = pale_blue ? pale_blue.groupcolor : "#AAA"
+    const { paleBlue } = LGraphCanvas.nodeColors
+    this.color = paleBlue ? paleBlue.groupColor : "#AAA"
   }
 
   /** @inheritdoc */
@@ -118,14 +118,14 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     if (colorOption == null) {
       delete this.color
     } else {
-      this.color = colorOption.groupcolor
+      this.color = colorOption.groupColor
     }
   }
 
   /** @inheritdoc */
   getColorOption(): ColorOption | null {
-    return Object.values(LGraphCanvas.node_colors).find(
-      colorOption => colorOption.groupcolor === this.color,
+    return Object.values(LGraphCanvas.nodeColors).find(
+      colorOption => colorOption.groupColor === this.color,
     ) ?? null
   }
 
@@ -226,7 +226,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   draw(graphCanvas: LGraphCanvas, ctx: CanvasRenderingContext2D): void {
     const { padding, resizeLength, defaultColour, darkBgLuminanceThreshold } =
       LGraphGroup
-    const font_size = LiteGraph.GROUP_TEXT_SIZE
+    const fontSize = LiteGraph.GROUP_TEXT_SIZE
 
     const [x, y] = this.#posStore
     const [width, height] = this.#sizeStore
@@ -241,7 +241,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     }
 
     // Titlebar
-    ctx.globalAlpha = 0.25 * graphCanvas.editor_alpha
+    ctx.globalAlpha = 0.25 * graphCanvas.editorAlpha
     ctx.fillStyle = color
     ctx.strokeStyle = color
     ctx.beginPath()
@@ -254,7 +254,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     ctx.beginPath()
     ctx.rect(x + 0.5, y + 0.5, width, height)
     ctx.fill()
-    ctx.globalAlpha = graphCanvas.editor_alpha
+    ctx.globalAlpha = graphCanvas.editorAlpha
     ctx.stroke()
 
     // Resize marker
@@ -265,21 +265,21 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     ctx.fill()
 
     // Title
-    ctx.font = `${font_size}px ${LiteGraph.GROUP_FONT}`
+    ctx.font = `${fontSize}px ${LiteGraph.GROUP_FONT}`
     ctx.textAlign = "left"
     ctx.textBaseline = "middle"
     if (ctx.fillStyle !== this.#titleTextColor)
       ctx.fillStyle = this.#titleTextColor
     ctx.fillText(
       this.title + (this.pinned ? "📌" : ""),
-      x + font_size / 2,
+      x + fontSize / 2,
       y + LiteGraph.NODE_TITLE_HEIGHT / 2 + 1,
     )
     ctx.textBaseline = "alphabetic"
 
-    if (LiteGraph.highlight_selected_group && this.selected) {
+    if (LiteGraph.highlightSelectedGroup && this.selected) {
       strokeShape(ctx, this.#bounding, {
-        title_height: this.titleHeight,
+        titleHeight: this.titleHeight,
         padding,
       })
     }
@@ -429,12 +429,12 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
       { content: "Title", callback: LGraphCanvas.onShowPropertyEditor },
       {
         content: "Color",
-        has_submenu: true,
+        hasSubmenu: true,
         callback: LGraphCanvas.onMenuNodeColors,
       },
       {
         content: "Font size",
-        property: "font_size",
+        property: "fontSize",
         type: "Number",
         callback: LGraphCanvas.onShowPropertyEditor,
       },

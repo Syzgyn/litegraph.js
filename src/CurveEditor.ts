@@ -24,7 +24,7 @@ export class CurveEditor {
   /** Last widget size passed to `draw`, required for hit testing in mouse handlers. */
   size: Rect | null
   /** When `true`, downstream code should recompute any cached curve samples. */
-  must_update: boolean
+  mustUpdate: boolean
   /** Pixel inset applied on all sides when mapping normalised points to canvas space. */
   margin: number
   /**
@@ -42,7 +42,7 @@ export class CurveEditor {
     this.nearest = -1
     // stores last size used
     this.size = null
-    this.must_update = true
+    this.mustUpdate = true
     this.margin = 5
   }
 
@@ -66,8 +66,8 @@ export class CurveEditor {
       const r = pn[0] - p[0]
       if (Math.abs(r) < 0.000_01) return p[1]
 
-      const local_f = (f - p[0]) / r
-      return p[1] * (1.0 - local_f) + pn[1] * local_f
+      const localF = (f - p[0]) / r
+      return p[1] * (1.0 - localF) + pn[1] * localF
     }
     return 0
   }
@@ -77,16 +77,16 @@ export class CurveEditor {
    * @param ctx Canvas context to draw into.
    * @param size Widget area as `[width, height]` in pixels.
    * @param _graphcanvas Optional canvas reference (unused by this method; retained for API compat).
-   * @param background_color When set, draws a dark grid background behind the curve.
-   * @param line_color Stroke colour for the curve path. Defaults to `"#666"`.
+   * @param backgroundColor When set, draws a dark grid background behind the curve.
+   * @param lineColor Stroke colour for the curve path. Defaults to `"#666"`.
    * @param inactive When `true`, draws at reduced opacity and omits interactive handles.
    */
   draw(
     ctx: CanvasRenderingContext2D,
     size: Rect,
     _graphcanvas?: LGraphCanvas,
-    background_color?: string,
-    line_color?: string,
+    backgroundColor?: string,
+    lineColor?: string,
     inactive = false,
   ): void {
     const points = this.points
@@ -96,12 +96,12 @@ export class CurveEditor {
     const w = size[0] - this.margin * 2
     const h = size[1] - this.margin * 2
 
-    line_color = line_color || "#666"
+    lineColor = lineColor || "#666"
 
     ctx.save()
     ctx.translate(this.margin, this.margin)
 
-    if (background_color) {
+    if (backgroundColor) {
       ctx.fillStyle = "#111"
       ctx.fillRect(0, 0, w, h)
       ctx.fillStyle = "#222"
@@ -109,7 +109,7 @@ export class CurveEditor {
       ctx.strokeStyle = "#333"
       ctx.strokeRect(0, 0, w, h)
     }
-    ctx.strokeStyle = line_color
+    ctx.strokeStyle = lineColor
     if (inactive) ctx.globalAlpha = 0.5
     ctx.beginPath()
     for (const p of points) {
@@ -149,9 +149,9 @@ export class CurveEditor {
     const x = localpos[0] - this.margin
     const y = localpos[1] - this.margin
     const pos: Point = [x, y]
-    const max_dist = 30 / graphcanvas.ds.scale
+    const maxDist = 30 / graphcanvas.ds.scale
     // search closer one
-    this.selected = this.getCloserPoint(pos, max_dist)
+    this.selected = this.getCloserPoint(pos, maxDist)
     // create one
     if (this.selected == -1) {
       const point: Point = [x / w, 1 - y / h]
@@ -160,7 +160,7 @@ export class CurveEditor {
         return a[0] - b[0]
       })
       this.selected = points.indexOf(point)
-      this.must_update = true
+      this.mustUpdate = true
     }
     if (this.selected != -1) return true
   }
@@ -185,13 +185,13 @@ export class CurveEditor {
       localpos[0] - this.margin,
       localpos[1] - this.margin,
     ]
-    const max_dist = 30 / graphcanvas.ds.scale
-    this.nearestCache = this.getCloserPoint(curvepos, max_dist)
+    const maxDist = 30 / graphcanvas.ds.scale
+    this.nearestCache = this.getCloserPoint(curvepos, maxDist)
     const point = points[s]
     if (point) {
-      const is_edge_point = s == 0 || s == points.length - 1
+      const isEdgePoint = s == 0 || s == points.length - 1
       if (
-        !is_edge_point &&
+        !isEdgePoint &&
         (localpos[0] < -10 ||
           localpos[0] > this.size[0] + 10 ||
           localpos[1] < -10 ||
@@ -202,14 +202,14 @@ export class CurveEditor {
         return
       }
       // not edges
-      if (!is_edge_point) point[0] = clamp(x, 0, 1)
+      if (!isEdgePoint) point[0] = clamp(x, 0, 1)
       else point[0] = s == 0 ? 0 : 1
       point[1] = 1.0 - clamp(y, 0, 1)
       points.sort(function (a, b) {
         return a[0] - b[0]
       })
       this.selected = points.indexOf(point)
-      this.must_update = true
+      this.mustUpdate = true
     }
   }
 
@@ -226,20 +226,20 @@ export class CurveEditor {
   /**
    * Finds the index of the control point closest to `pos` within `max_dist`.
    * @param pos Pointer position in editor-local pixel space (after subtracting `margin`).
-   * @param max_dist Maximum distance in pixels for a point to be considered. Defaults to `30`.
+   * @param maxDist Maximum distance in pixels for a point to be considered. Defaults to `30`.
    * @returns Index of the closest point, or `-1` when none are within range.
    */
-  getCloserPoint(pos: Point, max_dist: number): number {
+  getCloserPoint(pos: Point, maxDist?: number): number {
     const points = this.points
     if (!points) return -1
 
-    max_dist = max_dist || 30
+    maxDist = maxDist || 30
     if (this.size == null) throw new Error("CurveEditor.size was null or undefined.")
     const w = this.size[0] - this.margin * 2
     const h = this.size[1] - this.margin * 2
     const num = points.length
     const p2: Point = [0, 0]
-    let min_dist = 1_000_000
+    let minDist = 1_000_000
     let closest = -1
 
     for (let i = 0; i < num; ++i) {
@@ -247,10 +247,10 @@ export class CurveEditor {
       p2[0] = p[0] * w
       p2[1] = (1.0 - p[1]) * h
       const dist = distance(pos, p2)
-      if (dist > min_dist || dist > max_dist) continue
+      if (dist > minDist || dist > maxDist) continue
 
       closest = i
-      min_dist = dist
+      minDist = dist
     }
     return closest
   }

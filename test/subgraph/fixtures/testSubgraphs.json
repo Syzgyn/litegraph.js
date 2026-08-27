@@ -143,18 +143,18 @@
     "links": {
       "1": {
         "id": 1,
-        "origin_id": 1,
-        "origin_slot": 0,
-        "target_id": 2,
-        "target_slot": 0,
+        "originId": 1,
+        "originSlot": 0,
+        "targetId": 2,
+        "targetSlot": 0,
         "type": "number"
       },
       "2": {
         "id": 2,
-        "origin_id": 2,
-        "origin_slot": 0,
-        "target_id": -20,
-        "target_slot": 0,
+        "originId": 2,
+        "originSlot": 0,
+        "targetId": -20,
+        "targetSlot": 0,
         "type": "number"
       }
     },

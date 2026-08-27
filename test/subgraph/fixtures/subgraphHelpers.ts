@@ -408,10 +408,10 @@ export function createComplexSubgraphData(nodeCount: number = 5): ExportedSubgra
     const linkId = i + 1
     links.push({
       id: linkId,
-      origin_id: i + 1,
-      origin_slot: 0,
-      target_id: i + 2,
-      target_slot: 0,
+      originId: i + 1,
+      originSlot: 0,
+      targetId: i + 2,
+      targetSlot: 0,
       type: "*",
     })
   }

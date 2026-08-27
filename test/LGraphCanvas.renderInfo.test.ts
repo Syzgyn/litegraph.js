@@ -24,8 +24,8 @@ describe("LGraphCanvas.renderInfo", () => {
 
     const graph = new LGraph()
     lgCanvas = new LGraphCanvas(canvasElement, graph, {
-      skip_render: true,
-      skip_events: true,
+      skipRender: true,
+      skipEvents: true,
     })
   })
 

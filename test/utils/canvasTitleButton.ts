@@ -7,9 +7,9 @@ export function handleTitleButtonClick(
   pos: Point,
   canvas: LGraphCanvas,
 ): boolean {
-  if (!node.title_buttons?.length || node.flags.collapsed) return false
+  if (!node.titleButtons?.length || node.flags.collapsed) return false
 
-  for (const button of node.title_buttons) {
+  for (const button of node.titleButtons) {
     if (button.visible && button.isPointInside(pos[0], pos[1])) {
       node.onTitleButtonClick(button, canvas)
       return true

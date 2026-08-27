@@ -33,8 +33,8 @@ function createCanvasHarness() {
 
   const graph = new LGraph()
   const canvas = new LGraphCanvas(canvasElement, graph, {
-    skip_render: true,
-    skip_events: true,
+    skipRender: true,
+    skipEvents: true,
   })
 
   return { canvas, canvasElement, ctx, graph }
@@ -57,7 +57,7 @@ describe("LGraphCanvas link hit detection", () => {
     } as unknown as LinkSegment
 
     canvas.renderedPaths.add(linkSegment)
-    canvas.allow_interaction = true
+    canvas.allowInteraction = true
 
     vi.spyOn(graph, "createReroute").mockReturnValue({ id: 1, pos: [120, 130] } as never)
 

@@ -137,14 +137,14 @@ export interface ISerialisedNode {
   /** Whether advanced widgets are expanded in the UI. */
   showAdvanced?: boolean
   /**
-   * Note: Some custom nodes overrides the `widgets_values` property to an
+   * Note: Some custom nodes overrides the `widgetsValues` property to an
    * object that has `length` property and index access. It is not safe to call
    * any array methods on it.
    * See example in https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite/blob/8629188458dc6cb832f871ece3bd273507e8a766/web/js/VHS.core.js#L59-L84
    */
-  widgets_values?: TWidgetValue[]
+  widgetsValues?: TWidgetValue[]
   /** Widget values keyed by widget name; used when `LiteGraphGlobal.namedValuesRestore` is enabled. */
-  widgets_values_named?: Record<string, TWidgetValue>
+  widgetsValuesNamed?: Record<string, TWidgetValue>
 }
 
 /** Properties shared between a serialised node and a subgraph instance on the parent graph. */
@@ -172,9 +172,9 @@ export interface ExportedSubgraphInstance extends NodeSubgraphSharedProps {
  */
 export interface ISerialisedGraph extends BaseExportedGraph {
   /** Highest node ID assigned in this graph. Used to allocate new IDs on deserialise. */
-  last_node_id: NodeId
+  lastNodeId: NodeId
   /** Highest link ID assigned in this graph. Used to allocate new IDs on deserialise. */
-  last_link_id: number
+  lastLinkId: number
   /** All nodes in this graph. */
   nodes: ISerialisedNode[]
   /** All links in this graph, stored as compact arrays. */
@@ -209,7 +209,7 @@ export interface ExportedSubgraph extends SerialisableGraph {
 }
 
 /** Properties shared by subgraph boundary I/O slots and regular node slots. */
-type SubgraphIOShared = Omit<INodeSlot, "boundingRect" | "nameLocked" | "locked" | "removable" | "_floatingLinks">
+type SubgraphIOShared = Omit<INodeSlot, "boundingRect" | "nameLocked" | "locked" | "removable" | "floatingLinks">
 
 /**
  * A subgraph input or output boundary slot.
@@ -245,7 +245,7 @@ export interface ISerialisedGroup {
   /** Background colour override. */
   color?: string
   /** Font size for the group title. */
-  font_size?: number
+  fontSize?: number
   /** Group behaviour flags. */
   flags?: IGraphGroupFlags
 }
@@ -305,13 +305,13 @@ export interface SerialisableLLink {
   /** Link ID */
   id: LinkId
   /** Output node ID */
-  origin_id: NodeId
+  originId: NodeId
   /** Output slot index */
-  origin_slot: number
+  originSlot: number
   /** Input node ID */
-  target_id: NodeId
+  targetId: NodeId
   /** Input slot index */
-  target_slot: number
+  targetSlot: number
   /** Data type of the link */
   type: ISlotType
   /** ID of the last reroute (from input to output) that this link passes through, otherwise `undefined` */

@@ -28,7 +28,7 @@ export class LegacyWidget<TWidget extends IBaseWidget = IBaseWidget> extends Bas
   draw?(
     ctx: CanvasRenderingContext2D,
     node: LGraphNode,
-    widget_width: number,
+    widgetWidth: number,
     y: number,
     H: number,
     lowQuality?: boolean,

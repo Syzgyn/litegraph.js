@@ -21,7 +21,7 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
    * Accumulated pointer movement since `onClick`; used to threshold discrete step changes
    * during drag.
    */
-  current_drag_offset = 0
+  currentDragOffset = 0
 
   /**
    * Reports flexible min/max dimensions so layout can allocate a tall knob region.
@@ -64,26 +64,26 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     const { y } = this
     const { margin } = BaseWidget
 
-    const { gradient_stops = "rgb(14, 182, 201); rgb(0, 216, 72)" } = this.options
-    const effective_height = this.computedHeight || this.height
+    const { gradientStops = "rgb(14, 182, 201); rgb(0, 216, 72)" } = this.options
+    const effectiveHeight = this.computedHeight || this.height
     // Draw background
-    const size_modifier =
+    const sizeModifier =
       Math.min(this.computedHeight || this.height, this.width || 20) / 20 // TODO: replace magic numbers
-    const arc_center = { x: width / 2, y: effective_height / 2 + y }
+    const arcCenter = { x: width / 2, y: effectiveHeight / 2 + y }
     ctx.lineWidth =
-      (Math.min(width, effective_height) - margin * size_modifier) / 6
-    const arc_size =
-      (Math.min(width, effective_height) -
-        margin * size_modifier -
+      (Math.min(width, effectiveHeight) - margin * sizeModifier) / 6
+    const arcSize =
+      (Math.min(width, effectiveHeight) -
+        margin * sizeModifier -
         ctx.lineWidth) / 2
     {
       const gradient = ctx.createRadialGradient(
-        arc_center.x,
-        arc_center.y,
-        arc_size + ctx.lineWidth,
+        arcCenter.x,
+        arcCenter.y,
+        arcSize + ctx.lineWidth,
         0,
         0,
-        arc_size + ctx.lineWidth,
+        arcSize + ctx.lineWidth,
       )
       gradient.addColorStop(0, "rgb(29, 29, 29)")
       gradient.addColorStop(1, "rgb(116, 116, 116)")
@@ -93,9 +93,9 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
 
     {
       ctx.arc(
-        arc_center.x,
-        arc_center.y,
-        arc_size + ctx.lineWidth / 2,
+        arcCenter.x,
+        arcCenter.y,
+        arcSize + ctx.lineWidth / 2,
         0,
         Math.PI * 2,
         false,
@@ -106,29 +106,29 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
 
     // Draw knob's background
     const arc = {
-      start_angle: Math.PI * 0.6,
-      end_angle: Math.PI * 2.4,
+      startAngle: Math.PI * 0.6,
+      endAngle: Math.PI * 2.4,
     }
     ctx.beginPath()
     {
       const gradient = ctx.createRadialGradient(
-        arc_center.x,
-        arc_center.y,
-        arc_size + ctx.lineWidth,
+        arcCenter.x,
+        arcCenter.y,
+        arcSize + ctx.lineWidth,
         0,
         0,
-        arc_size + ctx.lineWidth,
+        arcSize + ctx.lineWidth,
       )
       gradient.addColorStop(0, "rgb(99, 99, 99)")
       gradient.addColorStop(1, "rgb(36, 36, 36)")
       ctx.strokeStyle = gradient
     }
     ctx.arc(
-      arc_center.x,
-      arc_center.y,
-      arc_size,
-      arc.start_angle,
-      arc.end_angle,
+      arcCenter.x,
+      arcCenter.y,
+      arcSize,
+      arc.startAngle,
+      arc.endAngle,
       false,
     )
     ctx.stroke()
@@ -141,24 +141,24 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     // Draw value
     ctx.beginPath()
     const gradient = ctx.createConicGradient(
-      arc.start_angle,
-      arc_center.x,
-      arc_center.y,
+      arc.startAngle,
+      arcCenter.x,
+      arcCenter.y,
     )
-    const gs = gradient_stops.split(";")
+    const gs = gradientStops.split(";")
     for (const [index, stop] of gs.entries()) {
       gradient.addColorStop(index, stop.trim())
     }
 
     ctx.strokeStyle = gradient
-    const value_end_angle =
-      (arc.end_angle - arc.start_angle) * nvalue + arc.start_angle
+    const valueEndAngle =
+      (arc.endAngle - arc.startAngle) * nvalue + arc.startAngle
     ctx.arc(
-      arc_center.x,
-      arc_center.y,
-      arc_size,
-      arc.start_angle,
-      value_end_angle,
+      arcCenter.x,
+      arcCenter.y,
+      arcSize,
+      arc.startAngle,
+      valueEndAngle,
       false,
     )
     ctx.stroke()
@@ -166,14 +166,14 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
 
     // Draw outline if not disabled
     if (showText && !this.computedDisabled) {
-      ctx.strokeStyle = this.outline_color
+      ctx.strokeStyle = this.outlineColor
       // Draw value
       ctx.beginPath()
-      ctx.strokeStyle = this.outline_color
+      ctx.strokeStyle = this.outlineColor
       ctx.arc(
-        arc_center.x,
-        arc_center.y,
-        arc_size + ctx.lineWidth / 2,
+        arcCenter.x,
+        arcCenter.y,
+        arcSize + ctx.lineWidth / 2,
         0,
         Math.PI * 2,
         false,
@@ -189,12 +189,12 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     // Draw text
     if (showText) {
       ctx.textAlign = "center"
-      ctx.fillStyle = this.text_color
+      ctx.fillStyle = this.textColor
       const fixedValue = Number(this.value).toFixed(this.options.precision ?? 3)
       ctx.fillText(
         `${this.label || this.name}\n${fixedValue}`,
         width * 0.5,
-        y + effective_height * 0.5,
+        y + effectiveHeight * 0.5,
       )
     }
 
@@ -206,50 +206,50 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
    * Resets accumulated drag offset when the user begins a new drag gesture.
    */
   onClick(): void {
-    this.current_drag_offset = 0
+    this.currentDragOffset = 0
   }
 
   /**
    * Adjusts the value based on horizontal or vertical drag delta.
-   * @param options Pointer deltas and shift key state; no-op when `options.read_only` is set.
+   * @param options Pointer deltas and shift key state; no-op when `options.readOnly` is set.
    * @remarks Vertical drag is inverted so upward motion increases the value. Shift uses ~10%
    * range steps when larger than the base step.
    */
   override onDrag(options: WidgetEventOptions): void {
-    if (this.options.read_only) return
+    if (this.options.readOnly) return
     const { e } = options
     const step = getWidgetStep(this.options)
     // Shift to move by 10% increments
     const range = (this.options.max - this.options.min)
-    const range_10_percent = range / 10
-    const range_1_percent = range / 100
-    const step_for = {
-      delta_x: step,
-      shift: range_10_percent > step ? range_10_percent - (range_10_percent % step) : step,
-      delta_y: range_1_percent > step ? range_1_percent - (range_1_percent % step) : step, // 1% increments
+    const range10Percent = range / 10
+    const range1Percent = range / 100
+    const stepFor = {
+      deltaX: step,
+      shift: range10Percent > step ? range10Percent - (range10Percent % step) : step,
+      deltaY: range1Percent > step ? range1Percent - (range1Percent % step) : step, // 1% increments
     }
 
-    const use_y = Math.abs(e.movementY) > Math.abs(e.movementX)
-    const delta = use_y ? -e.movementY : e.movementX // Y is inverted so that UP increases the value
-    const drag_threshold = 15
+    const useY = Math.abs(e.movementY) > Math.abs(e.movementX)
+    const delta = useY ? -e.movementY : e.movementX // Y is inverted so that UP increases the value
+    const dragThreshold = 15
     // Calculate new value based on drag movement
-    this.current_drag_offset += delta
+    this.currentDragOffset += delta
     let adjustment = 0
-    if (this.current_drag_offset > drag_threshold) {
+    if (this.currentDragOffset > dragThreshold) {
       adjustment += 1
-      this.current_drag_offset -= drag_threshold
-    } else if (this.current_drag_offset < -drag_threshold) {
+      this.currentDragOffset -= dragThreshold
+    } else if (this.currentDragOffset < -dragThreshold) {
       adjustment -= 1
-      this.current_drag_offset += drag_threshold
+      this.currentDragOffset += dragThreshold
     }
 
-    const step_with_shift_modifier = e.shiftKey
-      ? step_for.shift
-      : (use_y
-        ? step_for.delta_y
+    const stepWithShiftModifier = e.shiftKey
+      ? stepFor.shift
+      : (useY
+        ? stepFor.deltaY
         : step)
 
-    const deltaValue = adjustment * step_with_shift_modifier
+    const deltaValue = adjustment * stepWithShiftModifier
     const newValue = clamp(
       this.value + deltaValue,
       this.options.min,

@@ -140,7 +140,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     this.configure(instanceData)
 
     this.addTitleButton({
-      name: "enter_subgraph",
+      name: "enterSubgraph",
       text: "\u{E93B}", // Unicode for pi-window-maximize
       yOffset: 0, // No vertical offset needed, button is centered
       xOffset: -10,
@@ -275,11 +275,11 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
       set name(value) {
         console.warn("Promoted widget: setting name is not allowed", this, value)
       },
-      get localized_name() {
-        return subgraphInput.localized_name
+      get localizedName() {
+        return subgraphInput.localizedName
       },
-      set localized_name(value) {
-        console.warn("Promoted widget: setting localized_name is not allowed", this, value)
+      set localizedName(value) {
+        console.warn("Promoted widget: setting localizedName is not allowed", this, value)
       },
       get label() {
         return subgraphInput.label
@@ -332,7 +332,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
    * @param canvas The active graph canvas.
    */
   override onTitleButtonClick(button: LGraphButton, canvas: LGraphCanvas): void {
-    if (button.name === "enter_subgraph") {
+    if (button.name === "enterSubgraph") {
       canvas.openSubgraph(this.subgraph)
     } else {
       super.onTitleButtonClick(button, canvas)
@@ -351,7 +351,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     this.inputs.length = 0
     this.inputs.push(
       ...this.subgraph.inputNode.slots.map((slot) => {
-        const input = new NodeInputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, shape: this.getSlotShape(slot), type: slot.type, link: null }, this) as INodeInputSlot & Partial<ISubgraphInput>
+        const input = new NodeInputSlot({ name: slot.name, localizedName: slot.localizedName, label: slot.label, shape: this.getSlotShape(slot), type: slot.type, link: null }, this) as INodeInputSlot & Partial<ISubgraphInput>
         input._subgraphSlot = slot
         return input
       }),
@@ -360,7 +360,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     this.outputs.length = 0
     this.outputs.push(
       ...this.subgraph.outputNode.slots.map(
-        slot => new NodeOutputSlot({ name: slot.name, localized_name: slot.localized_name, label: slot.label, type: slot.type, links: null }, this),
+        slot => new NodeOutputSlot({ name: slot.name, localizedName: slot.localizedName, label: slot.label, type: slot.type, links: null }, this),
       ),
     )
 
@@ -456,7 +456,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
    * Returns a synthetic link representing the internal connection for an output slot.
    *
    * Used when resolving links that appear to originate from this virtual node's outputs.
-   * The returned link's `origin_id` is prefixed with this instance's ID.
+   * The returned link's `originId` is prefixed with this instance's ID.
    * @param slot The output slot index on this subgraph node.
    * @returns A cloned inner link with adjusted origin metadata, or `null` when unconnected.
    */
@@ -469,8 +469,8 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     }
 
     const newLink = LLink.create(innerLink)
-    newLink.origin_id = `${this.id}:${innerLink.origin_id}`
-    newLink.origin_slot = innerLink.origin_slot
+    newLink.originId = `${this.id}:${innerLink.originId}`
+    newLink.originSlot = innerLink.originSlot
 
     return newLink
   }

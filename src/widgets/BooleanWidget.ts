@@ -51,7 +51,7 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
    */
   drawLabel(ctx: CanvasRenderingContext2D, x: number): void {
     // Draw label
-    ctx.fillStyle = this.secondary_text_color
+    ctx.fillStyle = this.secondaryTextColor
     const { displayName } = this
     if (displayName) ctx.fillText(displayName, x, this.labelBaseline)
   }
@@ -63,7 +63,7 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
    */
   drawValue(ctx: CanvasRenderingContext2D, x: number): void {
     // Draw value
-    ctx.fillStyle = this.value ? this.text_color : this.secondary_text_color
+    ctx.fillStyle = this.value ? this.textColor : this.secondaryTextColor
     ctx.textAlign = "right"
     const value = this.value ? this.options.on || "true" : this.options.off || "false"
     ctx.fillText(value, x, this.labelBaseline)

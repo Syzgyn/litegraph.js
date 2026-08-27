@@ -109,10 +109,10 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
   /**
    * The label text rendered beside this slot on the canvas.
    *
-   * Resolves in order: `label`, `localized_name`, then `name`.
+   * Resolves in order: `label`, `localizedName`, then `name`.
    */
   get renderingLabel(): string {
-    return this.label || this.localized_name || this.name || ""
+    return this.label || this.localizedName || this.name || ""
   }
 
   /**
@@ -143,9 +143,9 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
       : LiteGraph.NODE_TEXT_COLOR
 
     const pos = this.#centreOffset
-    const slot_type = this.type
-    const slot_shape = (
-      slot_type === SlotType.Array ? SlotShape.Grid : this.shape
+    const slotType = this.type
+    const slotShape = (
+      slotType === SlotType.Array ? SlotShape.Grid : this.shape
     ) as SlotShape
 
     ctx.beginPath()
@@ -153,14 +153,14 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
 
     ctx.fillStyle = this.renderingColor(colorContext)
     ctx.lineWidth = 1
-    if (slot_type === SlotType.Event || slot_shape === SlotShape.Box) {
+    if (slotType === SlotType.Event || slotShape === SlotShape.Box) {
       ctx.rect(pos[0] - 6 + 0.5, pos[1] - 5 + 0.5, 14, 10)
-    } else if (slot_shape === SlotShape.Arrow) {
+    } else if (slotShape === SlotShape.Arrow) {
       ctx.moveTo(pos[0] + 8, pos[1] + 0.5)
       ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5)
       ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5)
       ctx.closePath()
-    } else if (slot_shape === SlotShape.Grid) {
+    } else if (slotShape === SlotShape.Grid) {
       const gridSize = 3
       const cellSize = 2
       const spacing = 3
@@ -182,7 +182,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
         ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8)
       } else {
         let radius: number
-        if (slot_shape === SlotShape.HollowCircle) {
+        if (slotShape === SlotShape.HollowCircle) {
           doFill = false
           doStroke = true
           ctx.lineWidth = 3

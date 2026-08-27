@@ -25,10 +25,10 @@ export type LinkId = number
  */
 export type SerialisedLLinkArray = [
   id: LinkId,
-  origin_id: NodeId,
-  origin_slot: number,
-  target_id: NodeId,
-  target_slot: number,
+  originId: NodeId,
+  originSlot: number,
+  targetId: NodeId,
+  targetSlot: number,
   type: ISlotType,
 ]
 
@@ -93,7 +93,7 @@ type BasicReadonlyNetwork = Pick<ReadonlyLinkNetwork, "getNodeById" | "links" | 
 /**
  * Represents a directed connection from an output slot to an input slot in a graph.
  *
- * Links store only primitive IDs (`origin_id`, `target_id`, slot indices) and resolve
+ * Links store only primitive IDs (`originId`, `targetId`, slot indices) and resolve
  * live node/slot references through their owning `LinkNetwork`. They may pass through zero or
  * more `Reroute` points via `parentId`.
  * @remarks
@@ -116,13 +116,13 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /** Connection type string used for colour and compatibility checks. */
   type: ISlotType
   /** ID of the node that owns the output (origin) slot. */
-  origin_id: NodeId
-  /** Index of the output slot on `origin_id`. */
-  origin_slot: number
+  originId: NodeId
+  /** Index of the output slot on `originId`. */
+  originSlot: number
   /** ID of the node that owns the input (target) slot. */
-  target_id: NodeId
-  /** Index of the input slot on `target_id`. */
-  target_slot: number
+  targetId: NodeId
+  /** Index of the input slot on `targetId`. */
+  targetSlot: number
 
   /** Runtime payload propagated along the link during execution. */
   data?: number | string | boolean | { toToolTip?(): string }
@@ -132,10 +132,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   lastTime?: number
   /** The last canvas 2D path that was used to render this link. */
   path?: Path2D
-  /** @inheritdoc LinkSegment._centreAngle */
+  /** @inheritdoc LinkSegment.centreAngle */
   centreAngle?: number
 
-  /** @inheritdoc LinkSegment._dragging */
+  /** @inheritdoc LinkSegment.dragging */
   dragging?: boolean
   /**
    * Custom colour override for this link only.
@@ -146,27 +146,27 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /**
    * @param id Unique link ID within the graph.
    * @param type Slot type string shared by both ends.
-   * @param origin_id Output node ID.
-   * @param origin_slot Output slot index on the origin node.
-   * @param target_id Input node ID.
-   * @param target_slot Input slot index on the target node.
+   * @param originId Output node ID.
+   * @param originSlot Output slot index on the origin node.
+   * @param targetId Input node ID.
+   * @param targetSlot Input slot index on the target node.
    * @param parentId Optional first reroute in the link path after the output slot.
    */
   constructor(
     id: LinkId,
     type: ISlotType,
-    origin_id: NodeId,
-    origin_slot: number,
-    target_id: NodeId,
-    target_slot: number,
+    originId: NodeId,
+    originSlot: number,
+    targetId: NodeId,
+    targetSlot: number,
     parentId?: RerouteId,
   ) {
     this.id = id
     this.type = type
-    this.origin_id = origin_id
-    this.origin_slot = origin_slot
-    this.target_id = target_id
-    this.target_slot = target_slot
+    this.originId = originId
+    this.originSlot = originSlot
+    this.targetId = targetId
+    this.targetSlot = targetSlot
     this.parentId = parentId
     // center
     this.pathCentre = new Float32Array(2)
@@ -186,10 +186,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     return new LLink(
       data.id,
       data.type,
-      data.origin_id,
-      data.origin_slot,
-      data.target_id,
-      data.target_slot,
+      data.originId,
+      data.originSlot,
+      data.targetId,
+      data.targetSlot,
       data.parentId,
     )
   }
@@ -248,7 +248,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * @returns The origin node of the link, or `undefined` if the link is not found or the origin node is not found
    */
   static getOriginNode(network: BasicReadonlyNetwork, linkId: LinkId): LGraphNode | undefined {
-    const id = network.links.get(linkId)?.origin_id
+    const id = network.links.get(linkId)?.originId
     return network.getNodeById(id) ?? undefined
   }
 
@@ -259,7 +259,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * @returns The target node of the link, or `undefined` if the link is not found or the target node is not found
    */
   static getTargetNode(network: BasicReadonlyNetwork, linkId: LinkId): LGraphNode | undefined {
-    const id = network.links.get(linkId)?.target_id
+    const id = network.links.get(linkId)?.targetId
     return network.getNodeById(id) ?? undefined
   }
 
@@ -301,14 +301,14 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     this.#color = value === "" ? null : value
   }
 
-  /** `true` when the output end is disconnected (`origin_id` and `origin_slot` are `-1`). */
+  /** `true` when the output end is disconnected (`originId` and `originSlot` are `-1`). */
   public get isFloatingOutput(): boolean {
-    return this.origin_id === -1 && this.origin_slot === -1
+    return this.originId === -1 && this.originSlot === -1
   }
 
-  /** `true` when the input end is disconnected (`target_id` and `target_slot` are `-1`). */
+  /** `true` when the input end is disconnected (`targetId` and `targetSlot` are `-1`). */
   public get isFloatingInput(): boolean {
-    return this.target_id === -1 && this.target_slot === -1
+    return this.targetId === -1 && this.targetSlot === -1
   }
 
   /**
@@ -322,12 +322,12 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /** `true` if this link is connected to a subgraph input node (the actual origin is in a different graph). */
   get originIsIoNode(): boolean {
-    return this.origin_id === SUBGRAPH_INPUT_ID
+    return this.originId === SUBGRAPH_INPUT_ID
   }
 
   /** `true` if this link is connected to a subgraph output node (the actual target is in a different graph). */
   get targetIsIoNode(): boolean {
-    return this.target_id === SUBGRAPH_OUTPUT_ID
+    return this.targetId === SUBGRAPH_OUTPUT_ID
   }
 
   /**
@@ -339,16 +339,16 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * it is recommended to use simpler methods where appropriate.
    */
   resolve(network: BasicReadonlyNetwork): ResolvedConnection {
-    const inputNode = this.target_id === -1 ? undefined : network.getNodeById(this.target_id) ?? undefined
-    const input = inputNode?.inputs[this.target_slot]
-    const subgraphInput = this.originIsIoNode ? network.inputNode?.slots[this.origin_slot] : undefined
+    const inputNode = this.targetId === -1 ? undefined : network.getNodeById(this.targetId) ?? undefined
+    const input = inputNode?.inputs[this.targetSlot]
+    const subgraphInput = this.originIsIoNode ? network.inputNode?.slots[this.originSlot] : undefined
     if (subgraphInput) {
       return { inputNode, input, subgraphInput, link: this }
     }
 
-    const outputNode = this.origin_id === -1 ? undefined : network.getNodeById(this.origin_id) ?? undefined
-    const output = outputNode?.outputs[this.origin_slot]
-    const subgraphOutput = this.targetIsIoNode ? network.outputNode?.slots[this.target_slot] : undefined
+    const outputNode = this.originId === -1 ? undefined : network.getNodeById(this.originId) ?? undefined
+    const output = outputNode?.outputs[this.originSlot]
+    const subgraphOutput = this.targetIsIoNode ? network.outputNode?.slots[this.targetSlot] : undefined
     if (subgraphOutput) {
       return { outputNode, output, subgraphInput: undefined, subgraphOutput, link: this }
     }
@@ -365,18 +365,18 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   configure(o: LLink | SerialisedLLinkArray) {
     if (Array.isArray(o)) {
       this.id = o[0]
-      this.origin_id = o[1]
-      this.origin_slot = o[2]
-      this.target_id = o[3]
-      this.target_slot = o[4]
+      this.originId = o[1]
+      this.originSlot = o[2]
+      this.targetId = o[3]
+      this.targetSlot = o[4]
       this.type = o[5]
     } else {
       this.id = o.id
       this.type = o.type
-      this.origin_id = o.origin_id
-      this.origin_slot = o.origin_slot
-      this.target_id = o.target_id
-      this.target_slot = o.target_slot
+      this.originId = o.originId
+      this.originSlot = o.originSlot
+      this.targetId = o.targetId
+      this.targetSlot = o.targetSlot
       this.parentId = o.parentId
     }
   }
@@ -388,7 +388,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * @returns `true` if the origin matches, otherwise `false`.
    */
   hasOrigin(nodeId: NodeId, outputIndex: number): boolean {
-    return this.origin_id === nodeId && this.origin_slot === outputIndex
+    return this.originId === nodeId && this.originSlot === outputIndex
   }
 
   /**
@@ -398,7 +398,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * @returns `true` if the target matches, otherwise `false`.
    */
   hasTarget(nodeId: NodeId, inputIndex: number): boolean {
-    return this.target_id === nodeId && this.target_slot === inputIndex
+    return this.targetId === nodeId && this.targetSlot === inputIndex
   }
 
   /**
@@ -413,11 +413,11 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     exported.parentId = parentId
 
     if (slotType === "input") {
-      exported.origin_id = -1
-      exported.origin_slot = -1
+      exported.originId = -1
+      exported.originSlot = -1
     } else {
-      exported.target_id = -1
-      exported.target_slot = -1
+      exported.targetId = -1
+      exported.targetSlot = -1
     }
 
     return LLink.create(exported)
@@ -445,13 +445,13 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
       newLink.id = -1
 
       if (keepReroutes === "input") {
-        newLink.origin_id = -1
-        newLink.origin_slot = -1
+        newLink.originId = -1
+        newLink.originSlot = -1
 
         lastReroute.floating = { slotType: "input" }
       } else {
-        newLink.target_id = -1
-        newLink.target_slot = -1
+        newLink.targetId = -1
+        newLink.targetSlot = -1
 
         lastReroute.floating = { slotType: "output" }
       }
@@ -468,7 +468,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     network.links.delete(this.id)
 
     if (this.originIsIoNode && network instanceof Subgraph) {
-      const subgraphInput = network.inputs.at(this.origin_slot)
+      const subgraphInput = network.inputs.at(this.originSlot)
       if (!subgraphInput) throw new Error("Invalid link - subgraph input not found")
 
       subgraphInput.events.dispatch("input-disconnected", { input: subgraphInput })
@@ -482,10 +482,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   serialize(): SerialisedLLinkArray {
     return [
       this.id,
-      this.origin_id,
-      this.origin_slot,
-      this.target_id,
-      this.target_slot,
+      this.originId,
+      this.originSlot,
+      this.targetId,
+      this.targetSlot,
       this.type,
     ]
   }
@@ -497,10 +497,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   asSerialisable(): SerialisableLLink {
     const copy: SerialisableLLink = {
       id: this.id,
-      origin_id: this.origin_id,
-      origin_slot: this.origin_slot,
-      target_id: this.target_id,
-      target_slot: this.target_slot,
+      originId: this.originId,
+      originSlot: this.originSlot,
+      targetId: this.targetId,
+      targetSlot: this.targetSlot,
       type: this.type,
     }
     if (this.parentId !== undefined) copy.parentId = this.parentId

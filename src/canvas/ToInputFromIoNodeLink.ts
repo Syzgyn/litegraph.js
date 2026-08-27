@@ -88,8 +88,8 @@ export class ToInputFromIoNodeLink implements RenderLink {
     this.disconnectOnDrop = true
 
     if (!existingLink) return
-    const toNode = network.getNodeById(existingLink.target_id)
-    this.disconnectOrigin = toNode?.getInputPos(existingLink.target_slot)
+    const toNode = network.getNodeById(existingLink.targetId)
+    this.disconnectOrigin = toNode?.getInputPos(existingLink.targetSlot)
   }
 
   /**
@@ -124,8 +124,8 @@ export class ToInputFromIoNodeLink implements RenderLink {
     const { fromSlot, fromReroute, existingLink } = this
     if (
       existingLink &&
-      node.id === existingLink.target_id &&
-      node.inputs[existingLink.target_slot] === input
+      node.id === existingLink.targetId &&
+      node.inputs[existingLink.targetSlot] === input
     ) {
       return
     }

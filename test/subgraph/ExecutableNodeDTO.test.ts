@@ -210,8 +210,8 @@ describe("ExecutableNodeDTO Output Resolution", () => {
 
     expect(resolved).toBeDefined()
     expect(resolved?.node).toBe(dto)
-    expect(resolved?.origin_id).toBe(dto.id)
-    expect(resolved?.origin_slot).toBe(0)
+    expect(resolved?.originId).toBe(dto.id)
+    expect(resolved?.originSlot).toBe(0)
   })
 
   it("should resolve cross-boundary outputs in subgraphs", () => {
@@ -242,7 +242,7 @@ describe("ExecutableNodeDTO Output Resolution", () => {
     const resolved = dto.resolveOutput(0, "string", new Set())
     expect(resolved).toBeDefined()
     expect(resolved?.node).toBe(dto)
-    expect(resolved?.origin_slot).toBe(0)
+    expect(resolved?.originSlot).toBe(0)
   })
 })
 
@@ -367,7 +367,7 @@ describe("ALWAYS mode node output resolution", () => {
     const resolved = dto.resolveOutput(0, "IMAGE", new Set())
     expect(resolved).toBeDefined()
     expect(resolved?.node).toBe(dto)
-    expect(resolved?.origin_slot).toBe(0)
+    expect(resolved?.originSlot).toBe(0)
   })
 })
 

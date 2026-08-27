@@ -20,7 +20,7 @@ function valueFromPointer(
  * `options.min` and `options.max`.
  *
  * Click and drag map pointer X position to a value along the bar. Optional
- * `IWidgetGradientSliderOptions.gradient_stops` may be supplied for consumers that render
+ * `IWidgetGradientSliderOptions.gradientStops` may be supplied for consumers that render
  * gradient styling outside the canvas.
  * @see `IGradientSliderWidget`
  */
@@ -42,7 +42,7 @@ export class GradientSliderWidget extends BaseWidget<IGradientSliderWidget> impl
     const { height, y } = this
     const { margin } = BaseWidget
 
-    ctx.fillStyle = this.background_color
+    ctx.fillStyle = this.backgroundColor
     ctx.fillRect(margin, y, width - margin * 2, height)
 
     const range = this.options.max - this.options.min
@@ -53,13 +53,13 @@ export class GradientSliderWidget extends BaseWidget<IGradientSliderWidget> impl
     ctx.fillRect(margin, y, nvalue * (width - margin * 2), height)
 
     if (showText && !this.computedDisabled) {
-      ctx.strokeStyle = this.outline_color
+      ctx.strokeStyle = this.outlineColor
       ctx.strokeRect(margin, y, width - margin * 2, height)
     }
 
     if (showText) {
       ctx.textAlign = "center"
-      ctx.fillStyle = this.text_color
+      ctx.fillStyle = this.textColor
       const fixedValue = Number(this.value).toFixed(this.options.precision ?? 3)
       ctx.fillText(
         `${this.label || this.name}  ${fixedValue}`,
@@ -73,10 +73,10 @@ export class GradientSliderWidget extends BaseWidget<IGradientSliderWidget> impl
 
   /**
    * Sets the value from click X position along the slider track.
-   * @param options No-op when `options.read_only` is set.
+   * @param options No-op when `options.readOnly` is set.
    */
   override onClick(options: WidgetEventOptions) {
-    if (this.options.read_only) return
+    if (this.options.readOnly) return
 
     const newValue = valueFromPointer(this, options)
     if (newValue !== this.value)
@@ -85,11 +85,11 @@ export class GradientSliderWidget extends BaseWidget<IGradientSliderWidget> impl
 
   /**
    * Continuously updates the value while dragging along the slider track.
-   * @param options No-op when `options.read_only` is set.
+   * @param options No-op when `options.readOnly` is set.
    * @returns `false` when read-only (legacy drag-handler contract).
    */
   override onDrag(options: WidgetEventOptions) {
-    if (this.options.read_only) return false
+    if (this.options.readOnly) return false
 
     const newValue = valueFromPointer(this, options)
     if (newValue !== this.value)

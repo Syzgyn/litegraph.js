@@ -71,18 +71,18 @@ export function distributeNodes(nodes: LGraphNode[], horizontal?: boolean): void
  * Aligns all nodes along the edge of a node.
  * @param nodes The nodes to align
  * @param direction The edge to align nodes on
- * @param align_to The node to align all other nodes to.  If undefined, the farthest node will be used.
+ * @param alignTo The node to align all other nodes to.  If undefined, the farthest node will be used.
  */
 export function alignNodes(
   nodes: LGraphNode[],
   direction: Direction,
-  align_to?: LGraphNode,
+  alignTo?: LGraphNode,
 ): void {
   if (!nodes) return
 
-  const boundary = align_to === undefined
+  const boundary = alignTo === undefined
     ? getBoundaryNodes(nodes)
-    : { top: align_to, right: align_to, bottom: align_to, left: align_to }
+    : { top: alignTo, right: alignTo, bottom: alignTo, left: alignTo }
 
   if (boundary === null) return
 

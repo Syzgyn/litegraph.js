@@ -10,7 +10,7 @@ class LabelledWidgetNode extends LGraphNode {
 
   constructor() {
     super("LabelledWidget")
-    this.serialize_widgets = true
+    this.serializeWidgets = true
     this.addWidget("text", "text", "a cat", null)
     const input = this.addInput("text", "STRING")
     input.widget = { name: "text" }

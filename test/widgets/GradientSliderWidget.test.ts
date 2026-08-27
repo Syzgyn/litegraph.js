@@ -79,8 +79,8 @@ describe("GradientSliderWidget", () => {
     expect(widget.value).toBe(1)
   })
 
-  test("onClick is a no-op when read_only", ({ widget, node, canvas }) => {
-    widget.options.read_only = true
+  test("onClick is a no-op when read only", ({ widget, node, canvas }) => {
+    widget.options.readOnly = true
     const setValue = vi.spyOn(widget, "setValue")
 
     widget.onClick({ e: createEvent(100), node, canvas })

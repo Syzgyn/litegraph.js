@@ -8,7 +8,7 @@ import { createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphH
 
 describe("SubgraphNode Title Button", () => {
   describe("Constructor", () => {
-    it("should automatically add enter_subgraph button", () => {
+    it("should automatically add enterSubgraph button", () => {
       const subgraph = createTestSubgraph({
         name: "Test Subgraph",
         inputs: [{ name: "input", type: "number" }],
@@ -16,41 +16,41 @@ describe("SubgraphNode Title Button", () => {
 
       const subgraphNode = createTestSubgraphNode(subgraph)
 
-      expect(subgraphNode.title_buttons).toHaveLength(1)
+      expect(subgraphNode.titleButtons).toHaveLength(1)
 
-      const button = subgraphNode.title_buttons[0]
+      const button = subgraphNode.titleButtons[0]
       expect(button).toBeInstanceOf(LGraphButton)
-      expect(button.name).toBe("enter_subgraph")
+      expect(button.name).toBe("enterSubgraph")
       expect(button.text).toBe("\u{E93B}") // pi-window-maximize
       expect(button.xOffset).toBe(-10)
       expect(button.yOffset).toBe(0)
       expect(button.fontSize).toBe(16)
     })
 
-    it("should preserve enter_subgraph button when adding more buttons", () => {
+    it("should preserve enterSubgraph button when adding more buttons", () => {
       const subgraph = createTestSubgraph()
       const subgraphNode = createTestSubgraphNode(subgraph)
 
       // Add another button
       const customButton = subgraphNode.addTitleButton({
-        name: "custom_button",
+        name: "customButton",
         text: "C",
       })
 
-      expect(subgraphNode.title_buttons).toHaveLength(2)
-      expect(subgraphNode.title_buttons[0].name).toBe("enter_subgraph")
-      expect(subgraphNode.title_buttons[1]).toBe(customButton)
+      expect(subgraphNode.titleButtons).toHaveLength(2)
+      expect(subgraphNode.titleButtons[0].name).toBe("enterSubgraph")
+      expect(subgraphNode.titleButtons[1]).toBe(customButton)
     })
   })
 
   describe("onTitleButtonClick", () => {
-    it("should open subgraph when enter_subgraph button is clicked", () => {
+    it("should open subgraph when enterSubgraph button is clicked", () => {
       const subgraph = createTestSubgraph({
         name: "Test Subgraph",
       })
 
       const subgraphNode = createTestSubgraphNode(subgraph)
-      const enterButton = subgraphNode.title_buttons[0]
+      const enterButton = subgraphNode.titleButtons[0]
 
       const canvas = {
         openSubgraph: vi.fn(),
@@ -68,7 +68,7 @@ describe("SubgraphNode Title Button", () => {
       const subgraphNode = createTestSubgraphNode(subgraph)
 
       const customButton = subgraphNode.addTitleButton({
-        name: "custom_button",
+        name: "customButton",
         text: "X",
       })
 
@@ -88,7 +88,7 @@ describe("SubgraphNode Title Button", () => {
   })
 
   describe("Integration with node click handling", () => {
-    it("should handle clicks on enter_subgraph button", () => {
+    it("should handle clicks on enterSubgraph button", () => {
       const subgraph = createTestSubgraph({
         name: "Nested Subgraph",
         nodeCount: 3,
@@ -98,7 +98,7 @@ describe("SubgraphNode Title Button", () => {
       subgraphNode.pos = [100, 100]
       subgraphNode.size = [200, 100]
 
-      const enterButton = subgraphNode.title_buttons[0]
+      const enterButton = subgraphNode.titleButtons[0]
       enterButton.getWidth = vi.fn().mockReturnValue(25)
       enterButton.height = 20
 
@@ -163,7 +163,7 @@ describe("SubgraphNode Title Button", () => {
       subgraphNode.size = [200, 100]
       subgraphNode.flags.collapsed = true
 
-      const enterButton = subgraphNode.title_buttons[0]
+      const enterButton = subgraphNode.titleButtons[0]
       enterButton.getWidth = vi.fn().mockReturnValue(25)
       enterButton.height = 20
 
@@ -200,7 +200,7 @@ describe("SubgraphNode Title Button", () => {
       const subgraph = createTestSubgraph()
       const subgraphNode = createTestSubgraphNode(subgraph)
 
-      const enterButton = subgraphNode.title_buttons[0]
+      const enterButton = subgraphNode.titleButtons[0]
 
       // Check visual properties
       expect(enterButton.text).toBe("\u{E93B}") // pi-window-maximize

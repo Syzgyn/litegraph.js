@@ -406,10 +406,10 @@ describe("SubgraphIO - Empty Slot Connection", () => {
     expect(internalNode.inputs[0].link).not.toBe(null)
     const link = subgraph.links.get(internalNode.inputs[0].link!)!
     expect(link).toBeDefined()
-    expect(link.target_id).toBe(internalNode.id)
-    expect(link.target_slot).toBe(0)
-    expect(link.origin_id).toBe(subgraph.inputNode.id)
-    expect(link.origin_slot).toBe(1) // Should be the second slot
+    expect(link.targetId).toBe(internalNode.id)
+    expect(link.targetSlot).toBe(0)
+    expect(link.originId).toBe(subgraph.inputNode.id)
+    expect(link.originSlot).toBe(1) // Should be the second slot
   })
 
   subgraphTest("creates distinct named inputs when promoting same widget name from multiple node instances", ({ subgraphWithNode, expect }) => {

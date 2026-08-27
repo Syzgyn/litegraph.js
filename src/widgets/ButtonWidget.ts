@@ -44,7 +44,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
     const { margin } = BaseWidget
 
     // Draw button background
-    ctx.fillStyle = this.background_color
+    ctx.fillStyle = this.backgroundColor
     if (this.clicked) {
       ctx.fillStyle = "#AAA"
       this.clicked = false
@@ -53,7 +53,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
 
     // Draw button outline if not disabled
     if (showText && !this.computedDisabled) {
-      ctx.strokeStyle = this.outline_color
+      ctx.strokeStyle = this.outlineColor
       ctx.strokeRect(margin, y, width - margin * 2, height)
     }
 
@@ -71,7 +71,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
    */
   drawLabel(ctx: CanvasRenderingContext2D, x: number): void {
     ctx.textAlign = "center"
-    ctx.fillStyle = this.text_color
+    ctx.fillStyle = this.textColor
     ctx.fillText(this.displayName, x, this.y + this.height * 0.7)
   }
 
@@ -80,7 +80,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
    * @param options Pointer event, node, and canvas for the callback.
    */
   override onClick({ e, node, canvas }: WidgetEventOptions) {
-    const pos = canvas.graph_mouse
+    const pos = canvas.graphMouse
 
     // Set clicked state and mark canvas as dirty
     this.clicked = true

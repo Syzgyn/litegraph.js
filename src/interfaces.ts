@@ -147,15 +147,15 @@ export interface Positionable extends Parent<Positionable>, HasBoundingRect {
 
 /**
  * A colour preset used to customise the appearance of `LGraphNode` or `LGraphGroup`.
- * @see `LGraphCanvas.node_colors`
+ * @see `LGraphCanvas.nodeColors`
  */
 export interface ColorOption {
   /** Primary foreground / title-bar colour. */
   color: string
   /** Node body background colour. */
-  bgcolor: string
+  bgColor: string
   /** Group border / header colour when applied to a group. */
-  groupcolor: string
+  groupColor: string
 }
 
 /**
@@ -313,9 +313,9 @@ export interface LinkSegment {
   dragging?: boolean
 
   /** Output node ID at the origin of this segment. */
-  readonly origin_id: NodeId | undefined
+  readonly originId: NodeId | undefined
   /** Output slot index at the origin of this segment. */
-  readonly origin_slot: number | undefined
+  readonly originSlot: number | undefined
 }
 
 /**
@@ -338,7 +338,7 @@ export interface IFoundSlot extends IInputOrOutput {
   /** Index of the slot on its parent node. */
   slot: number
   /** Centre point of the rendered slot connection circle in graph coordinates. */
-  link_pos: Point
+  linkPos: Point
 }
 
 /** A 2D point represented as `[x, y]` coordinates or a typed array. */
@@ -455,10 +455,10 @@ export interface INodeSlot extends HasBoundingRect {
    * Takes higher priority than `name` if set.
    * Will be included in the serialized data.
    */
-  localized_name?: string
+  localizedName?: string
   /**
    * The name of the slot to display in the UI, modified by the user.
-   * Takes higher priority than `localized_name` if set.
+   * Takes higher priority than `localizedName` if set.
    * Will be included in the serialized data.
    */
   label?: string
@@ -472,9 +472,9 @@ export interface INodeSlot extends HasBoundingRect {
   /** Visual shape of the slot connection point. */
   shape?: RenderShape
   /** Colour when the slot is disconnected. */
-  color_off?: CanvasColour
+  colorOff?: CanvasColour
   /** Colour when the slot is connected. */
-  color_on?: CanvasColour
+  colorOn?: CanvasColour
   /** When `true`, the slot cannot be connected or disconnected. */
   locked?: boolean
   /** When `true`, the slot name cannot be renamed. */
@@ -501,9 +501,9 @@ export interface INodeSlot extends HasBoundingRect {
  */
 export interface INodeFlags {
   /** When `true`, repeated output values are not re-emitted each execution tick. */
-  skip_repeated_outputs?: boolean
+  skipRepeatedOutputs?: boolean
   /** When `false`, disables widget and slot interaction on this node. */
-  allow_interaction?: boolean
+  allowInteraction?: boolean
   /** When `true`, the node cannot be moved by pointer interaction. */
   pinned?: boolean
   /** When `true`, the node is rendered in collapsed (compact) form. */
@@ -558,13 +558,13 @@ export interface INodeOutputSlot extends INodeSlot {
   /** Cached runtime data produced by this output during execution. */
   data?: unknown
   /** Stable index assigned when the slot was created. */
-  slot_index?: number
+  slotIndex?: number
 }
 
 /**
  * Describes an in-progress or moving link during pointer interaction.
  *
- * Used by `LGraphCanvas.connecting_links` and the `LinkConnector` system.
+ * Used by `LGraphCanvas.connectingLinks` and the `LinkConnector` system.
  */
 export interface ConnectingLink extends IInputOrOutput {
   /** The node at the fixed end of the connection being dragged. */
@@ -595,7 +595,7 @@ interface IContextMenuBase {
  */
 export interface IContextMenuOptions<TValue = unknown, TExtra = unknown> extends IContextMenuBase {
   /** When `true`, item-level callbacks are not invoked automatically. */
-  ignore_item_callbacks?: boolean
+  ignoreItemCallbacks?: boolean
   /** Parent menu, when this menu is a submenu. */
   parentMenu?: ContextMenu<TValue>
   /** DOM event that triggered the menu. */
@@ -603,7 +603,7 @@ export interface IContextMenuOptions<TValue = unknown, TExtra = unknown> extends
   /** Arbitrary extra data for menu callbacks. */
   extra?: TExtra
   /** @deprecated Context menu scrolling is now controlled by the browser */
-  scroll_speed?: number
+  scrollSpeed?: number
   /** Absolute left position for the menu element. */
   left?: number
   /** Absolute top position for the menu element. */
@@ -619,7 +619,7 @@ export interface IContextMenuOptions<TValue = unknown, TExtra = unknown> extends
     value?: string | IContextMenuValue<TValue>,
     options?: unknown,
     event?: MouseEvent,
-    previous_menu?: ContextMenu<TValue>,
+    previousMenu?: ContextMenu<TValue>,
     extra?: unknown,
   ): void | boolean
 }
@@ -636,7 +636,7 @@ export interface IContextMenuValue<TValue = unknown, TExtra = unknown, TCallback
   /** Display text shown in the menu. */
   content: string | undefined
   /** When `true`, a submenu arrow is shown and `submenu` is opened on click. */
-  has_submenu?: boolean
+  hasSubmenu?: boolean
   /** When `true`, the entry is greyed out and not selectable. */
   disabled?: boolean
   /** Submenu configuration opened when this entry is clicked. */
@@ -653,7 +653,7 @@ export interface IContextMenuValue<TValue = unknown, TExtra = unknown, TCallback
     value?: TCallbackValue,
     options?: unknown,
     event?: MouseEvent,
-    previous_menu?: ContextMenu<TValue>,
+    previousMenu?: ContextMenu<TValue>,
     extra?: TExtra,
   ): void | boolean
 }
@@ -675,7 +675,7 @@ export interface ContextMenuDivElement<TValue = unknown> extends HTMLDivElement 
   /** The menu entry value or full entry object. */
   value?: string | IContextMenuValue<TValue>
   /** Legacy onclick callback — always `never` in current API. */
-  onclick_callback?: never
+  onclickCallback?: never
 }
 
 /**

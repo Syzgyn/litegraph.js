@@ -58,7 +58,7 @@ describe("SubgraphConversion", () => {
       expect(graph.nodes).toEqual([subgraphNode])
       expect(graph.subgraphs.get(subgraph.id)).toBe(subgraph)
       expect(subgraph.nodes.length).toBe(1)
-      expect(LiteGraph.registered_node_types[subgraph.id]).toBeDefined()
+      expect(LiteGraph.registeredNodeTypes[subgraph.id]).toBeDefined()
 
       LiteGraph.unregisterNodeType(subgraph.id)
     })

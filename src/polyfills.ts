@@ -24,66 +24,66 @@ export function loadPolyfills() {
       w: number,
       h: number,
       radius: number | number[],
-      radius_low: number | number[],
+      radiusLow: number | number[],
     ) {
       if (radius === 0) {
         this.rect(x, y, w, h)
         return
       }
 
-      let top_left_radius
-      let top_right_radius
-      let bottom_left_radius
-      let bottom_right_radius
+      let topLeftRadius
+      let topRightRadius
+      let bottomLeftRadius
+      let bottomRightRadius
 
-      if (radius_low === undefined) radius_low = radius
+      if (radiusLow === undefined) radiusLow = radius
 
       // make it compatible with official one
       if (Array.isArray(radius)) {
         if (radius.length == 1) {
-          top_left_radius = top_right_radius = bottom_left_radius = bottom_right_radius = radius[0]
+          topLeftRadius = topRightRadius = bottomLeftRadius = bottomRightRadius = radius[0]
         } else if (radius.length == 2) {
-          top_left_radius = bottom_right_radius = radius[0]
-          top_right_radius = bottom_left_radius = radius[1]
+          topLeftRadius = bottomRightRadius = radius[0]
+          topRightRadius = bottomLeftRadius = radius[1]
         } else if (radius.length == 4) {
-          top_left_radius = radius[0]
-          top_right_radius = radius[1]
-          bottom_left_radius = radius[2]
-          bottom_right_radius = radius[3]
+          topLeftRadius = radius[0]
+          topRightRadius = radius[1]
+          bottomLeftRadius = radius[2]
+          bottomRightRadius = radius[3]
         } else {
           return
         }
       } else {
         // old using numbers
-        top_left_radius = radius || 0
-        top_right_radius = radius || 0
+        topLeftRadius = radius || 0
+        topRightRadius = radius || 0
 
-        const low = !Array.isArray(radius_low) && radius_low ? radius_low : 0
-        bottom_left_radius = low
-        bottom_right_radius = low
+        const low = !Array.isArray(radiusLow) && radiusLow ? radiusLow : 0
+        bottomLeftRadius = low
+        bottomRightRadius = low
       }
 
       // top right
-      this.moveTo(x + top_left_radius, y)
-      this.lineTo(x + w - top_right_radius, y)
-      this.quadraticCurveTo(x + w, y, x + w, y + top_right_radius)
+      this.moveTo(x + topLeftRadius, y)
+      this.lineTo(x + w - topRightRadius, y)
+      this.quadraticCurveTo(x + w, y, x + w, y + topRightRadius)
 
       // bottom right
-      this.lineTo(x + w, y + h - bottom_right_radius)
+      this.lineTo(x + w, y + h - bottomRightRadius)
       this.quadraticCurveTo(
         x + w,
         y + h,
-        x + w - bottom_right_radius,
+        x + w - bottomRightRadius,
         y + h,
       )
 
       // bottom left
-      this.lineTo(x + bottom_right_radius, y + h)
-      this.quadraticCurveTo(x, y + h, x, y + h - bottom_left_radius)
+      this.lineTo(x + bottomRightRadius, y + h)
+      this.quadraticCurveTo(x, y + h, x, y + h - bottomLeftRadius)
 
       // top left
-      this.lineTo(x, y + bottom_left_radius)
-      this.quadraticCurveTo(x, y, x + top_left_radius, y)
+      this.lineTo(x, y + bottomLeftRadius)
+      this.quadraticCurveTo(x, y, x + topLeftRadius, y)
     }
   }
 

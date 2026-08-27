@@ -62,14 +62,14 @@ export interface IDrawBoundingOptions {
   /** The shape to render */
   shape?: RenderShape
   /** The radius of the rounded corners for `RenderShape.ROUND` and `RenderShape.CARD` */
-  round_radius?: number
+  roundRadius?: number
   /**
    * Shape will extend above the Y-axis 0 by this amount
    * @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly
    */
-  title_height?: number
+  titleHeight?: number
   /** @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly */
-  title_mode?: TitleMode
+  titleMode?: TitleMode
   /** The color that should be drawn */
   color?: CanvasColour
   /** The distance between the edge of the `area` and the middle of the line */
@@ -105,9 +105,9 @@ export function strokeShape(
   area: Rect,
   {
     shape = RenderShape.BOX,
-    round_radius,
-    title_height,
-    title_mode = TitleMode.NORMAL_TITLE,
+    roundRadius,
+    titleHeight,
+    titleMode = TitleMode.NORMAL_TITLE,
     color,
     padding = 6,
     collapsed = false,
@@ -115,12 +115,12 @@ export function strokeShape(
   }: IDrawBoundingOptions = {},
 ): void {
   // These param defaults are not compile-time static, and must be re-evaluated at runtime
-  round_radius ??= LiteGraph.ROUND_RADIUS
+  roundRadius ??= LiteGraph.ROUND_RADIUS
   color ??= LiteGraph.NODE_BOX_OUTLINE_COLOR
 
   // Adjust area if title is transparent
-  if (title_mode === TitleMode.TRANSPARENT_TITLE) {
-    const height = title_height ?? LiteGraph.NODE_TITLE_HEIGHT
+  if (titleMode === TitleMode.TRANSPARENT_TITLE) {
+    const height = titleHeight ?? LiteGraph.NODE_TITLE_HEIGHT
     area[1] -= height
     area[3] += height
   }
@@ -146,7 +146,7 @@ export function strokeShape(
     }
     case RenderShape.ROUND:
     case RenderShape.CARD: {
-      const radius = round_radius + padding
+      const radius = roundRadius + padding
       const isCollapsed = shape === RenderShape.CARD && collapsed
       const cornerRadii =
         isCollapsed || shape === RenderShape.ROUND

@@ -50,17 +50,17 @@ export class DragAndScale {
   }
 
   /** Maximum allowed zoom level. Default: `10`. */
-  max_scale: number
+  maxScale: number
   /** Minimum allowed zoom level. Default: `0.1`. */
-  min_scale: number
+  minScale: number
   /** When `false`, pan/zoom handlers should ignore input. */
   enabled: boolean
   /** Last known pointer position in canvas pixels. */
-  last_mouse: Point
+  lastMouse: Point
   /** Canvas element whose size drives visible-area calculations. */
   element: HTMLCanvasElement
   /** Graph-space rectangle currently visible in the viewport. Updated by `computeVisibleArea`. */
-  visible_area: Rectangle
+  visibleArea: Rectangle
   /** Whether a pan drag is currently in progress. */
   dragging?: boolean
   /** Optional sub-rectangle of the canvas used as the viewport (in canvas pixels). */
@@ -74,11 +74,11 @@ export class DragAndScale {
       offset: [0, 0],
       scale: 1,
     }
-    this.max_scale = 10
-    this.min_scale = 0.1
+    this.maxScale = 10
+    this.minScale = 0.1
     this.enabled = true
-    this.last_mouse = [0, 0]
-    this.visible_area = new Rectangle()
+    this.lastMouse = [0, 0]
+    this.visibleArea = new Rectangle()
 
     this.element = element
   }
@@ -127,7 +127,7 @@ export class DragAndScale {
    * @param viewport Optional canvas sub-rectangle in pixels; when omitted, uses the full canvas.
    */
   computeVisibleArea(viewport: Rect | undefined): void {
-    const { scale, offset, visible_area } = this
+    const { scale, offset, visibleArea } = this
 
     if (this.#stateHasChanged()) {
       this.onChanged?.(scale, offset)
@@ -135,7 +135,7 @@ export class DragAndScale {
     }
 
     if (!this.element) {
-      visible_area[0] = visible_area[1] = visible_area[2] = visible_area[3] = 0
+      visibleArea[0] = visibleArea[1] = visibleArea[2] = visibleArea[3] = 0
       return
     }
     const rect = this.element.getBoundingClientRect()
@@ -151,9 +151,9 @@ export class DragAndScale {
     }
     const endx = startx + width / scale
     const endy = starty + height / scale
-    visible_area[0] = startx
-    visible_area[1] = starty
-    visible_area.resizeBottomRight(endx, endy)
+    visibleArea[0] = startx
+    visibleArea[1] = starty
+    visibleArea.resizeBottomRight(endx, endy)
   }
 
   /**
@@ -207,37 +207,37 @@ export class DragAndScale {
    * Sets zoom `scale`, clamped to `min_scale`–`max_scale`, keeping
    * `zooming_center` fixed on screen when provided.
    * @param value Target scale factor.
-   * @param zooming_center Canvas pixel point that should remain stationary during zoom.
+   * @param zoomingCenter Canvas pixel point that should remain stationary during zoom.
    * @param roundToScaleOne When `true`, snaps scale to exactly `1` when within `0.01`.
    */
-  changeScale(value: number, zooming_center?: Point, roundToScaleOne = true): void {
-    if (value < this.min_scale) {
-      value = this.min_scale
-    } else if (value > this.max_scale) {
-      value = this.max_scale
+  changeScale(value: number, zoomingCenter?: Point, roundToScaleOne = true): void {
+    if (value < this.minScale) {
+      value = this.minScale
+    } else if (value > this.maxScale) {
+      value = this.maxScale
     }
     if (value == this.scale) return
 
     const rect = this.element.getBoundingClientRect()
     if (!rect) return
 
-    zooming_center = zooming_center ?? [rect.width * 0.5, rect.height * 0.5]
+    zoomingCenter = zoomingCenter ?? [rect.width * 0.5, rect.height * 0.5]
 
     const normalizedCenter: Point = [
-      zooming_center[0] - rect.x,
-      zooming_center[1] - rect.y,
+      zoomingCenter[0] - rect.x,
+      zoomingCenter[1] - rect.y,
     ]
     const center = this.convertCanvasToOffset(normalizedCenter)
     this.scale = value
     if (roundToScaleOne && Math.abs(this.scale - 1) < 0.01) this.scale = 1
-    const new_center = this.convertCanvasToOffset(normalizedCenter)
-    const delta_offset = [
-      new_center[0] - center[0],
-      new_center[1] - center[1],
+    const newCenter = this.convertCanvasToOffset(normalizedCenter)
+    const deltaOffset = [
+      newCenter[0] - center[0],
+      newCenter[1] - center[1],
     ]
 
-    this.offset[0] += delta_offset[0]
-    this.offset[1] += delta_offset[1]
+    this.offset[0] += deltaOffset[0]
+    this.offset[1] += deltaOffset[1]
 
     this.onredraw?.(this)
   }
@@ -245,10 +245,10 @@ export class DragAndScale {
   /**
    * Multiplies current scale by `value` (relative zoom in/out).
    * @param value Scale multiplier applied to `scale`.
-   * @param zooming_center Canvas pixel point that should remain stationary during zoom.
+   * @param zoomingCenter Canvas pixel point that should remain stationary during zoom.
    */
-  changeDeltaScale(value: number, zooming_center?: Point): void {
-    this.changeScale(this.scale * value, zooming_center)
+  changeDeltaScale(value: number, zoomingCenter?: Point): void {
+    this.changeScale(this.scale * value, zoomingCenter)
   }
 
   /**
@@ -266,7 +266,7 @@ export class DragAndScale {
 
       // Choose the smaller scale to ensure the node fits into the viewport
       // Ensure we don't go over the max scale
-      targetScale = Math.min(targetScaleX, targetScaleY, this.max_scale)
+      targetScale = Math.min(targetScaleX, targetScaleY, this.maxScale)
     }
 
     const scaledWidth = cw / targetScale
@@ -323,7 +323,7 @@ export class DragAndScale {
 
       // Choose the smaller scale to ensure the node fits into the viewport
       // Ensure we don't go over the max scale
-      targetScale = Math.min(targetScaleX, targetScaleY, this.max_scale)
+      targetScale = Math.min(targetScaleX, targetScaleY, this.maxScale)
     }
     const scaledWidth = cw / targetScale
     const scaledHeight = ch / targetScale

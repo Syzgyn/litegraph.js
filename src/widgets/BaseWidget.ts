@@ -97,7 +97,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   /** Vertical offset of this widget within the node's widget stack, in canvas pixels. */
   y: number = 0
   /** Previous `y` value, used during layout reflow. */
-  last_y?: number
+  lastY?: number
   /** Cached width for hit-testing and drawing; typically mirrors node width. */
   width?: number
   /** When `true`, the widget is non-interactive and drawn in a disabled style. */
@@ -106,7 +106,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   computedDisabled?: boolean
   /** When `true`, the widget is not drawn and does not receive pointer events. */
   hidden?: boolean
-  /** When `true`, the widget uses the advanced outline colour (`outline_color`). */
+  /** When `true`, the widget uses the advanced outline colour (`outlineColor`). */
   advanced?: boolean
   /** Optional hover tooltip text shown by the canvas. */
   tooltip?: string
@@ -134,7 +134,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     // TODO: Resolve this workaround. Ref: https://github.com/Comfy-Org/litegraph.js/issues/1022
     // @ts-expect-error Prevent naming conflicts with custom nodes.
     // eslint-disable-next-line unused-imports/no-unused-vars
-    const { node: _, outline_color, background_color, height, text_color, secondary_text_color, disabledTextColor, displayName, displayValue, labelBaseline, ...safeValues } = widget
+    const { node: _, outlineColor, backgroundColor, height, textColor, secondaryTextColor, disabledTextColor, displayName, displayValue, labelBaseline, ...safeValues } = widget
 
     Object.assign(this, safeValues)
   }
@@ -192,12 +192,12 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   }
 
   /** Stroke colour for the widget capsule outline; advanced widgets use a distinct palette entry. */
-  get outline_color() {
+  get outlineColor() {
     return this.advanced ? LiteGraph.WIDGET_ADVANCED_OUTLINE_COLOR : LiteGraph.WIDGET_OUTLINE_COLOR
   }
 
   /** Fill colour for the widget capsule background. */
-  get background_color() {
+  get backgroundColor() {
     return LiteGraph.WIDGET_BGCOLOR
   }
 
@@ -207,12 +207,12 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   }
 
   /** Primary text colour for values and active labels. */
-  get text_color() {
+  get textColor() {
     return LiteGraph.WIDGET_TEXT_COLOR
   }
 
   /** Secondary text colour for labels and de-emphasised values. */
-  get secondary_text_color() {
+  get secondaryTextColor() {
     return LiteGraph.WIDGET_SECONDARY_TEXT_COLOR
   }
 
@@ -262,8 +262,8 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     const { margin } = BaseWidget
 
     ctx.textAlign = "left"
-    ctx.strokeStyle = this.outline_color
-    ctx.fillStyle = this.background_color
+    ctx.strokeStyle = this.outlineColor
+    ctx.fillStyle = this.backgroundColor
     ctx.beginPath()
 
     if (showText) {
@@ -304,7 +304,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
 
     const area = new Rectangle(x, y, totalWidth, height * 0.7)
 
-    ctx.fillStyle = this.secondary_text_color
+    ctx.fillStyle = this.secondaryTextColor
 
     if (requiredWidth <= totalWidth) {
       // Draw label & value normally
@@ -338,7 +338,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
       area.right = x + totalWidth
       area.setWidthRightAnchored(cappedValueWidth)
     }
-    ctx.fillStyle = this.text_color
+    ctx.fillStyle = this.textColor
     drawTextInArea({ ctx, text: displayValue, area, align: "right" })
   }
 
@@ -375,7 +375,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     ) {
       node.setProperty(this.options.property, v)
     }
-    const pos = canvas.graph_mouse
+    const pos = canvas.graphMouse
     this.callback?.(this.value, canvas, node, pos, e)
 
     node.onWidgetChanged?.(this.name ?? "", v, oldValue, this)

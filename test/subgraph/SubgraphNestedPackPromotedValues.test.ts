@@ -95,7 +95,7 @@ function setupParentSubgraphWithWidgets() {
     mode: 0,
     order: 0,
   })
-  hostNode.serialize_widgets = true
+  hostNode.serializeWidgets = true
   rootGraph.add(hostNode)
 
   return { rootGraph, parentSubgraph, interiorNode, hostNode }
@@ -122,7 +122,7 @@ describe("nested pack promoted widget values", () => {
 
     expect(hostNode.widgets).toHaveLength(1)
     expect(hostNode.widgets[0].value).toBe("hello world")
-    expect(hostNode.serialize().widgets_values?.[0]).toBe("hello world")
+    expect(hostNode.serialize().widgetsValues?.[0]).toBe("hello world")
   })
 
   test("preserves promotions that reference non-moved nodes", () => {

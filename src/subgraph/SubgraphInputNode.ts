@@ -147,18 +147,18 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
    *
    * When `slot` is `-1`, creates a new subgraph input matching the target slot before connecting.
    * @param slot Index of the subgraph input, or `-1` for the empty slot.
-   * @param target_node The node inside the subgraph to connect to.
-   * @param target_slotType Required slot type on the target node.
+   * @param targetNode The node inside the subgraph to connect to.
+   * @param targetSlotType Required slot type on the target node.
    * @param optsIn Optional reroute attachment point.
    * @returns The created link, or `undefined` when no compatible input exists.
    */
   connectByType(
     slot: number,
-    target_node: LGraphNode,
-    target_slotType: ISlotType,
+    targetNode: LGraphNode,
+    targetSlotType: ISlotType,
     optsIn?: { afterRerouteId?: RerouteId },
   ): LLink | undefined {
-    const inputSlot = target_node.findInputByType(target_slotType)
+    const inputSlot = targetNode.findInputByType(targetSlotType)
     if (!inputSlot) return
 
     if (slot === -1) {
@@ -175,7 +175,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
       slot = newSlotIndex
     }
 
-    return this.slots[slot].connect(inputSlot.slot, target_node, optsIn?.afterRerouteId)
+    return this.slots[slot].connect(inputSlot.slot, targetNode, optsIn?.afterRerouteId)
   }
 
   /**
@@ -222,7 +222,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
 
     if (!link) return
 
-    const subgraphInputIndex = link.origin_slot
+    const subgraphInputIndex = link.originSlot
     link.disconnect(subgraph, "output")
     subgraph.incrementVersion()
 

@@ -224,13 +224,13 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   }
 
   /** @inheritdoc */
-  get origin_id(): NodeId | undefined {
-    return this.firstLink?.origin_id
+  get originId(): NodeId | undefined {
+    return this.firstLink?.originId
   }
 
   /** @inheritdoc */
-  get origin_slot(): number | undefined {
-    return this.firstLink?.origin_slot
+  get originSlot(): number | undefined {
+    return this.firstLink?.originSlot
   }
 
   /**
@@ -326,12 +326,12 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     const link = this.firstLink ?? this.firstFloatingLink
     if (!link) return
 
-    const node = this.#network.deref()?.getNodeById(link.origin_id)
+    const node = this.#network.deref()?.getNodeById(link.originId)
     if (!node) return
 
     return {
       node,
-      output: node.outputs[link.origin_slot],
+      output: node.outputs[link.originSlot],
     }
   }
 
@@ -363,8 +363,8 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
         const link = links.get(linkId)
         if (!link) continue
 
-        const node = network.getNodeById(link.target_id)
-        const input = node?.inputs[link.target_slot]
+        const node = network.getNodeById(link.targetId)
+        const input = node?.inputs[link.targetSlot]
         if (!input) continue
 
         results.push({ node, input, link })
@@ -381,7 +381,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
     const floatingLinks = this.#network.deref()?.floatingLinks
     if (!floatingLinks) return
 
-    const idProp = from === "input" ? "origin_id" : "target_id"
+    const idProp = from === "input" ? "originId" : "targetId"
     const out: LLink[] = []
 
     for (const linkId of this.floatingLinkIds) {
@@ -416,14 +416,14 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
       // Update cached floating links
       output.floatingLinks.add(link)
 
-      network?.getNodeById(link.origin_id)
-        ?.outputs[link.origin_slot]
+      network?.getNodeById(link.originId)
+        ?.outputs[link.originSlot]
         ?.floatingLinks
         ?.delete(link)
 
       // Update the floating link
-      link.origin_id = node.id
-      link.origin_slot = index
+      link.originId = node.id
+      link.originSlot = index
     }
   }
 
@@ -828,9 +828,9 @@ function getNextPos(network: ReadonlyLinkNetwork, link: LLink | undefined, id: R
   if (linkPos) return linkPos
 
   // Floating link with no input to find
-  if (link.target_id === -1 || link.target_slot === -1) return
+  if (link.targetId === -1 || link.targetSlot === -1) return
 
-  return network.getNodeById(link.target_id)?.getInputPos(link.target_slot)
+  return network.getNodeById(link.targetId)?.getInputPos(link.targetSlot)
 }
 
 /** Returns the direction from one point to another in radians. */

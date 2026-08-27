@@ -56,8 +56,8 @@ describe("deduplicateSubgraphNodeIds (via configure)", () => {
     const idsB = nodeIdSet(graph, SUBGRAPH_B)
 
     for (const link of graph.subgraphs.get(SUBGRAPH_B)!.links.values()) {
-      expect(idsB.has(link.origin_id)).toBe(true)
-      expect(idsB.has(link.target_id)).toBe(true)
+      expect(idsB.has(link.originId)).toBe(true)
+      expect(idsB.has(link.targetId)).toBe(true)
     }
   })
 

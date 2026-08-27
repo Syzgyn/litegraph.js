@@ -26,7 +26,7 @@ export function getNodeInputOnPos(node: LGraphNode, x: number, y: number): undef
 
     // TODO: Find a cheap way to measure text, and do it on node label change instead of here
     // Input icon width + text approximation
-    const nameLength = input.label?.length ?? input.localized_name?.length ?? input.name?.length
+    const nameLength = input.label?.length ?? input.localizedName?.length ?? input.name?.length
     const width = 20 + (nameLength || 3) * 7
 
     if (isInRectangle(
@@ -77,25 +77,25 @@ export function getNodeOutputOnPos(node: LGraphNode, x: number, y: number): unde
  * Returns the input slot index if the given position (in graph space) is on top of a node input slot.
  *
  * Legacy helper originally on the prototype of `LGraphCanvas`. Delegates to
- * `getNodeInputOnPos` and optionally writes the slot's canvas position into `slot_pos`.
+ * `getNodeInputOnPos` and optionally writes the slot's canvas position into `slotPos`.
  * @param node The node whose input slots to test.
- * @param canvasx Canvas-space X coordinate.
- * @param canvasy Canvas-space Y coordinate.
- * @param slot_pos When provided, receives the canvas position of the hit slot.
+ * @param canvasX Canvas-space X coordinate.
+ * @param canvasY Canvas-space Y coordinate.
+ * @param slotPos When provided, receives the canvas position of the hit slot.
  * @returns The input slot index, or `-1` when the pointer is not over any input slot.
  */
 export function isOverNodeInput(
   node: LGraphNode,
-  canvasx: number,
-  canvasy: number,
-  slot_pos?: Point,
+  canvasX: number,
+  canvasY: number,
+  slotPos?: Point,
 ): number {
-  const result = getNodeInputOnPos(node, canvasx, canvasy)
+  const result = getNodeInputOnPos(node, canvasX, canvasY)
   if (!result) return -1
 
-  if (slot_pos) {
-    slot_pos[0] = result.pos[0]
-    slot_pos[1] = result.pos[1]
+  if (slotPos) {
+    slotPos[0] = result.pos[0]
+    slotPos[1] = result.pos[1]
   }
   return result.index
 }
@@ -104,25 +104,25 @@ export function isOverNodeInput(
  * Returns the output slot index if the given position (in graph space) is on top of a node output slot.
  *
  * Legacy helper originally on the prototype of `LGraphCanvas`. Delegates to
- * `getNodeOutputOnPos` and optionally writes the slot's canvas position into `slot_pos`.
+ * `getNodeOutputOnPos` and optionally writes the slot's canvas position into `slotPos`.
  * @param node The node whose output slots to test.
- * @param canvasx Canvas-space X coordinate.
- * @param canvasy Canvas-space Y coordinate.
- * @param slot_pos When provided, receives the canvas position of the hit slot.
+ * @param canvasX Canvas-space X coordinate.
+ * @param canvasY Canvas-space Y coordinate.
+ * @param slotPos When provided, receives the canvas position of the hit slot.
  * @returns The output slot index, or `-1` when the pointer is not over any output slot.
  */
 export function isOverNodeOutput(
   node: LGraphNode,
-  canvasx: number,
-  canvasy: number,
-  slot_pos?: Point,
+  canvasX: number,
+  canvasY: number,
+  slotPos?: Point,
 ): number {
-  const result = getNodeOutputOnPos(node, canvasx, canvasy)
+  const result = getNodeOutputOnPos(node, canvasX, canvasY)
   if (!result) return -1
 
-  if (slot_pos) {
-    slot_pos[0] = result.pos[0]
-    slot_pos[1] = result.pos[1]
+  if (slotPos) {
+    slotPos[0] = result.pos[0]
+    slotPos[1] = result.pos[1]
   }
   return result.index
 }

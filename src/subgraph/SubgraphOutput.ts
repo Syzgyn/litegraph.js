@@ -172,7 +172,7 @@ export class SubgraphOutput extends SubgraphSlot {
         output.links = output.links?.filter(id => id !== linkId) ?? null
       outputNode?.onConnectionsChange?.(
         NodeSlotType.OUTPUT,
-        link.origin_slot,
+        link.originSlot,
         false,
         link,
         this,

@@ -297,7 +297,7 @@ describe("Subgraph Integration", () => {
 
     // Verify link integrity
     const link = Array.from(subgraph.links.values())[0]
-    expect(link.origin_id).toBe(node1.id)
-    expect(link.target_id).toBe(node2.id)
+    expect(link.originId).toBe(node1.id)
+    expect(link.targetId).toBe(node2.id)
   })
 })

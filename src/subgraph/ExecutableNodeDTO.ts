@@ -32,15 +32,15 @@ export type ExecutableLGraphNode = Omit<ExecutableNodeDTO, "graph" | "node" | "s
 
 /**
  * The end result of resolving a DTO input.
- * When a widget value is returned, `widgetInfo` is present and `origin_slot` is `-1`.
+ * When a widget value is returned, `widgetInfo` is present and `originSlot` is `-1`.
  */
 type ResolvedInput = {
   /** DTO for the node that the link originates from. */
   node: ExecutableLGraphNode
   /** Full unique execution ID of the node that the link originates from. In the case of a widget value, this is the ID of the subgraph node. */
-  origin_id: ExecutionId
+  originId: ExecutionId
   /** The slot index of the output on the node that the link originates from. `-1` when widget value is set. */
-  origin_slot: number
+  originSlot: number
   /** Boxed widget value (e.g. for widgets). If this box is `undefined`, then an input link is connected, and widget values from the subgraph node are ignored. */
   widgetInfo?: { value: unknown }
 }
@@ -174,7 +174,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
     const innerNodeDto = this.nodesByExecutionId.get(innerNodeExecutionId)
     if (!innerNodeDto) throw new Error(`No inner node DTO found for id [${innerNodeExecutionId}]`)
 
-    return innerNodeDto.resolveOutput(innerResolved.link.origin_slot, type, visited)
+    return innerNodeDto.resolveOutput(innerResolved.link.originSlot, type, visited)
   }
 
   /**
@@ -276,8 +276,8 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
 
     // Link goes up and out of this subgraph
     if (subgraphNode && link.originIsIoNode) {
-      const subgraphNodeInput = subgraphNode.inputs.at(link.origin_slot)
-      if (!subgraphNodeInput) throw new SlotIndexError(`No input found for slot [${link.origin_slot}] ${input.name}`)
+      const subgraphNodeInput = subgraphNode.inputs.at(link.originSlot)
+      if (!subgraphNodeInput) throw new SlotIndexError(`No input found for slot [${link.originSlot}] ${input.name}`)
 
       // Nothing connected
       const linkId = subgraphNodeInput.link
@@ -288,31 +288,31 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
         // Special case: SubgraphNode widget.
         return {
           node: this,
-          origin_id: this.id,
-          origin_slot: -1,
+          originId: this.id,
+          originSlot: -1,
           widgetInfo: { value: widget.value },
         }
       }
 
       const outerLink = subgraphNode.graph!.getLink(linkId)
-      if (!outerLink) throw new InvalidLinkError(`No outer link found for slot [${link.origin_slot}] ${input.name}`)
+      if (!outerLink) throw new InvalidLinkError(`No outer link found for slot [${link.originSlot}] ${input.name}`)
 
       const subgraphNodeExecutionId = this.subgraphNodePath.join(":")
       const subgraphNodeDto = this.nodesByExecutionId.get(subgraphNodeExecutionId)
       if (!subgraphNodeDto) throw new Error(`No subgraph node DTO found for id [${subgraphNodeExecutionId}]`)
 
-      return subgraphNodeDto.resolveInput(outerLink.target_slot, visited)
+      return subgraphNodeDto.resolveInput(outerLink.targetSlot, visited)
     }
 
     // Not part of a subgraph; use the original link
-    const outputNode = this.graph.getNodeById(link.origin_id)
+    const outputNode = this.graph.getNodeById(link.originId)
     if (!outputNode) throw new InvalidLinkError(`No input node found for id [${this.id}] slot [${slot}] ${input.name}`)
 
     const outputNodeExecutionId = [...this.subgraphNodePath, outputNode.id].join(":")
     const outputNodeDto = this.nodesByExecutionId.get(outputNodeExecutionId)
     if (!outputNodeDto) throw new Error(`No output node DTO found for id [${outputNodeExecutionId}]`)
 
-    return outputNodeDto.resolveOutput(link.origin_slot, type ?? input.type, visited)
+    return outputNodeDto.resolveOutput(link.originSlot, type ?? input.type, visited)
   }
 
   /**
@@ -366,14 +366,14 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
       // Fallback check for nodes performing link redirection
       const virtualLink = this.node.getInputLink(slot)
       if (virtualLink) {
-        const outputNode = this.graph.getNodeById(virtualLink.origin_id)
+        const outputNode = this.graph.getNodeById(virtualLink.originId)
         if (!outputNode) throw new InvalidLinkError(`Virtual node failed to resolve parent [${this.id}] slot [${slot}]`)
 
         const outputNodeExecutionId = [...this.subgraphNodePath, outputNode.id].join(":")
         const outputNodeDto = this.nodesByExecutionId.get(outputNodeExecutionId)
         if (!outputNodeDto) throw new Error(`No output node DTO found for id [${outputNode.id}]`)
 
-        return outputNodeDto.resolveOutput(virtualLink.origin_slot, type, visited)
+        return outputNodeDto.resolveOutput(virtualLink.originSlot, type, visited)
       }
 
       // Virtual nodes without a matching input should be discarded.
@@ -382,8 +382,8 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
 
     return {
       node: this,
-      origin_id: this.id,
-      origin_slot: slot,
+      originId: this.id,
+      originSlot: slot,
     }
   }
 }

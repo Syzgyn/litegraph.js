@@ -75,8 +75,8 @@ const test = baseTest.extend<HistoryFixtures>({
     canvasElement.getContext = vi.fn().mockReturnValue(createMockContext())
 
     const canvas = new LGraphCanvas(canvasElement, graph, {
-      skip_events: true,
-      skip_render: true,
+      skipEvents: true,
+      skipRender: true,
     })
     await use(canvas)
   },

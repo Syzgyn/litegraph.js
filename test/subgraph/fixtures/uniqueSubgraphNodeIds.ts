@@ -47,7 +47,7 @@ export const uniqueSubgraphNodeIds = {
           { id: 11, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 1, mode: 0 },
           { id: 12, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 2, mode: 0 },
         ],
-        links: [{ id: 1, origin_id: 10, origin_slot: 0, target_id: 11, target_slot: 0, type: "number" }],
+        links: [{ id: 1, originId: 10, originSlot: 0, targetId: 11, targetSlot: 0, type: "number" }],
         groups: [],
       },
       {
@@ -67,7 +67,7 @@ export const uniqueSubgraphNodeIds = {
           { id: 21, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 1, mode: 0 },
           { id: 22, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 2, mode: 0 },
         ],
-        links: [{ id: 2, origin_id: 20, origin_slot: 0, target_id: 22, target_slot: 0, type: "string" }],
+        links: [{ id: 2, originId: 20, originSlot: 0, targetId: 22, targetSlot: 0, type: "string" }],
         groups: [],
       },
     ],

@@ -38,8 +38,8 @@ describe("LGraphCanvas.resize", () => {
     })
 
     return new LGraphCanvas(canvasElement, new LGraph(), {
-      skip_render: true,
-      skip_events: true,
+      skipRender: true,
+      skipEvents: true,
     })
   }
 

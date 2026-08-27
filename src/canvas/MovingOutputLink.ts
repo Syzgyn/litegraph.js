@@ -115,7 +115,7 @@ export class MovingOutputLink extends MovingLinkBase {
    * @param reroute The reroute under the pointer.
    */
   canConnectToReroute(reroute: Reroute): boolean {
-    return reroute.origin_id !== this.outputNode.id
+    return reroute.originId !== this.outputNode.id
   }
 
   canConnectToSubgraphInput(input: SubgraphInput): boolean {

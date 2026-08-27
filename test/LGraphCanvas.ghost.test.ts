@@ -54,8 +54,8 @@ function createGhostTestHarness() {
 
   const graph = new LGraph()
   const canvas = new LGraphCanvas(canvasElement, graph, {
-    skip_render: true,
-    skip_events: true,
+    skipRender: true,
+    skipEvents: true,
   })
 
   const node = new LGraphNode("test")
@@ -114,7 +114,7 @@ describe("LGraphCanvas ghost placement", () => {
     expect(canvas.state.ghostNodeId).toBe(node.id)
     expect(canvas.isDragging).toBe(true)
     expect(node.flags.ghost).toBe(true)
-    expect(canvas.selected_nodes[node.id]).toBe(node)
+    expect(canvas.selectedNodes[node.id]).toBe(node)
   })
 
   test("finalizeGhostPlacement places node and clears ghost flag", () => {

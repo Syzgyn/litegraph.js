@@ -57,7 +57,7 @@ function createCanvas(graph: LGraph): LGraphCanvas {
     height: 600,
   })
 
-  return new LGraphCanvas(el, graph, { skip_render: true })
+  return new LGraphCanvas(el, graph, { skipRender: true })
 }
 
 class TestNode extends LGraphNode {

@@ -7,7 +7,7 @@ class ClipTextEncodeLikeNode extends LGraphNode {
 
   constructor() {
     super("CLIPTextEncodeLike")
-    this.serialize_widgets = true
+    this.serializeWidgets = true
     this.addWidget("text", "text", "a cat", null)
     const input = this.addInput("text", "STRING")
     input.widget = { name: "text" }
@@ -111,7 +111,7 @@ describe("renameWidget label persistence via input lookup (regression #13861)", 
       toJSON: () => {},
     })
     document.body.append(canvasElement)
-    return new LGraphCanvas(canvasElement, graph, { skip_render: true, skip_events: true })
+    return new LGraphCanvas(canvasElement, graph, { skipRender: true, skipEvents: true })
   }
 
   test("renameWidget writes the label onto the normal-node backing input", () => {

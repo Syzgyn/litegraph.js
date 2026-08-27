@@ -94,7 +94,7 @@ export class ToOutputFromIoNodeLink implements RenderLink {
    * @param reroute The reroute under the pointer.
    */
   canConnectToReroute(reroute: Reroute): boolean {
-    if (reroute.origin_id === this.node.id) return false
+    if (reroute.originId === this.node.id) return false
     return true
   }
 

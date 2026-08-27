@@ -140,7 +140,7 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
             } else {
               internalLinks.push(link)
             }
-          } else if (link.origin_id === SUBGRAPH_INPUT_ID) {
+          } else if (link.originId === SUBGRAPH_INPUT_ID) {
             // Subgraph input node - always boundary
             boundaryInputLinks.push(link)
           }
@@ -158,7 +158,7 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
           for (const { link, inputNode } of many) {
             if (
               // Subgraph output node
-              link.target_id === SUBGRAPH_OUTPUT_ID ||
+              link.targetId === SUBGRAPH_OUTPUT_ID ||
               // Input end of this link is outside the items set
               (inputNode && !items.has(inputNode))
             ) {
@@ -318,8 +318,8 @@ export function mapSubgraphInputsAndLinks(
 
       const linkData = link.asSerialisable()
       link.parentId = mapReroutes(link, reroutes)
-      linkData.origin_id = SUBGRAPH_INPUT_ID
-      linkData.origin_slot = inputs.length
+      linkData.originId = SUBGRAPH_INPUT_ID
+      linkData.originSlot = inputs.length
       links.push(linkData)
       inputLinks.push(linkData)
     }
@@ -329,20 +329,20 @@ export function mapSubgraphInputsAndLinks(
     if (!input) continue
 
     // Subgraph input slot
-    const { color_off, color_on, dir, hasErrors, label, localized_name, name, shape, type } = input
+    const { colorOff, colorOn, dir, hasErrors, label, localizedName, name, shape, type } = input
     const uniqueName = nextUniqueName(name, inputs.map(input => input.name))
-    const uniqueLocalizedName = localized_name ? nextUniqueName(localized_name, inputs.map(input => input.localized_name ?? "")) : undefined
+    const uniqueLocalizedName = localizedName ? nextUniqueName(localizedName, inputs.map(input => input.localizedName ?? "")) : undefined
 
     const inputData: SubgraphIO = {
       id: createUuidv4(),
       type: String(type),
       linkIds: inputLinks.map(link => link.id),
       name: uniqueName,
-      color_off,
-      color_on,
+      colorOff,
+      colorOn,
       dir,
       label,
-      localized_name: uniqueLocalizedName,
+      localizedName: uniqueLocalizedName,
       hasErrors,
       shape,
     }
@@ -379,8 +379,8 @@ export function mapSubgraphOutputsAndLinks(
 
       const linkData = link.asSerialisable()
       linkData.parentId = mapReroutes(link, reroutes)
-      linkData.target_id = SUBGRAPH_OUTPUT_ID
-      linkData.target_slot = outputs.length
+      linkData.targetId = SUBGRAPH_OUTPUT_ID
+      linkData.targetSlot = outputs.length
       links.push(linkData)
       outputLinks.push(linkData)
     }
@@ -390,20 +390,20 @@ export function mapSubgraphOutputsAndLinks(
     if (!output) continue
 
     // Subgraph output slot
-    const { color_off, color_on, dir, hasErrors, label, localized_name, name, shape, type } = output
+    const { colorOff, colorOn, dir, hasErrors, label, localizedName, name, shape, type } = output
     const uniqueName = nextUniqueName(name, outputs.map(output => output.name))
-    const uniqueLocalizedName = localized_name ? nextUniqueName(localized_name, outputs.map(output => output.localized_name ?? "")) : undefined
+    const uniqueLocalizedName = localizedName ? nextUniqueName(localizedName, outputs.map(output => output.localizedName ?? "")) : undefined
 
     const outputData = {
       id: createUuidv4(),
       type: String(type),
       linkIds: outputLinks.map(link => link.id),
       name: uniqueName,
-      color_off,
-      color_on,
+      colorOff,
+      colorOn,
       dir,
       label,
-      localized_name: uniqueLocalizedName,
+      localizedName: uniqueLocalizedName,
       hasErrors,
       shape,
     } satisfies SubgraphIO

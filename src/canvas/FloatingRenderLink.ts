@@ -103,10 +103,10 @@ export class FloatingRenderLink implements RenderLink {
     readonly dragDirection: LinkDirection = LinkDirection.CENTER,
   ) {
     const {
-      origin_id: outputNodeId,
-      target_id: inputNodeId,
-      origin_slot: outputIndex,
-      target_slot: inputIndex,
+      originId: outputNodeId,
+      targetId: inputNodeId,
+      originSlot: outputIndex,
+      targetSlot: inputIndex,
     } = link
 
     if (outputNodeId !== -1) {
@@ -178,9 +178,9 @@ export class FloatingRenderLink implements RenderLink {
    */
   canConnectToReroute(reroute: Reroute): boolean {
     if (this.toType === "input") {
-      if (reroute.origin_id === this.inputNode?.id) return false
+      if (reroute.originId === this.inputNode?.id) return false
     } else {
-      if (reroute.origin_id === this.outputNode?.id) return false
+      if (reroute.originId === this.outputNode?.id) return false
     }
     return true
   }
@@ -199,8 +199,8 @@ export class FloatingRenderLink implements RenderLink {
    */
   connectToInput(node: LGraphNode, input: INodeInputSlot, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
     const floatingLink = this.link
-    floatingLink.target_id = node.id
-    floatingLink.target_slot = node.inputs.indexOf(input)
+    floatingLink.targetId = node.id
+    floatingLink.targetSlot = node.inputs.indexOf(input)
 
     node.disconnectInput(node.inputs.indexOf(input))
 
@@ -219,8 +219,8 @@ export class FloatingRenderLink implements RenderLink {
    */
   connectToOutput(node: LGraphNode, output: INodeOutputSlot, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
     const floatingLink = this.link
-    floatingLink.origin_id = node.id
-    floatingLink.origin_slot = node.outputs.indexOf(output)
+    floatingLink.originId = node.id
+    floatingLink.originSlot = node.outputs.indexOf(output)
 
     this.fromSlot.floatingLinks?.delete(floatingLink)
     output.floatingLinks ??= new Set()
@@ -236,8 +236,8 @@ export class FloatingRenderLink implements RenderLink {
    */
   connectToSubgraphInput(input: SubgraphInput, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
     const floatingLink = this.link
-    floatingLink.origin_id = SUBGRAPH_INPUT_ID
-    floatingLink.origin_slot = input.parent.slots.indexOf(input)
+    floatingLink.originId = SUBGRAPH_INPUT_ID
+    floatingLink.originSlot = input.parent.slots.indexOf(input)
 
     this.fromSlot.floatingLinks?.delete(floatingLink)
     input.floatingLinks ??= new Set()
@@ -253,8 +253,8 @@ export class FloatingRenderLink implements RenderLink {
    */
   connectToSubgraphOutput(output: SubgraphOutput, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
     const floatingLink = this.link
-    floatingLink.origin_id = SUBGRAPH_OUTPUT_ID
-    floatingLink.origin_slot = output.parent.slots.indexOf(output)
+    floatingLink.originId = SUBGRAPH_OUTPUT_ID
+    floatingLink.originSlot = output.parent.slots.indexOf(output)
 
     this.fromSlot.floatingLinks?.delete(floatingLink)
     output.floatingLinks ??= new Set()
@@ -273,8 +273,8 @@ export class FloatingRenderLink implements RenderLink {
     events: CustomEventTarget<LinkConnectorEventMap>,
   ) {
     const floatingLink = this.link
-    floatingLink.target_id = inputNode.id
-    floatingLink.target_slot = inputNode.inputs.indexOf(input)
+    floatingLink.targetId = inputNode.id
+    floatingLink.targetSlot = inputNode.inputs.indexOf(input)
 
     this.fromSlot.floatingLinks?.delete(floatingLink)
     input.floatingLinks ??= new Set()
@@ -297,8 +297,8 @@ export class FloatingRenderLink implements RenderLink {
     events: CustomEventTarget<LinkConnectorEventMap>,
   ) {
     const floatingLink = this.link
-    floatingLink.origin_id = outputNode.id
-    floatingLink.origin_slot = outputNode.outputs.indexOf(output)
+    floatingLink.originId = outputNode.id
+    floatingLink.originSlot = outputNode.outputs.indexOf(output)
 
     this.fromSlot.floatingLinks?.delete(floatingLink)
     output.floatingLinks ??= new Set()

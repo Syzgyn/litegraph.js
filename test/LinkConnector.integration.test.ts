@@ -76,7 +76,7 @@ const test = baseTest.extend<TestContext>({
   validateLinkIntegrity: async ({ graph, expect }, use) => {
     await use(() => {
       for (const reroute of graph.reroutes.values()) {
-        if (reroute.origin_id === undefined) {
+        if (reroute.originId === undefined) {
           expect(reroute.linkIds.size).toBe(0)
           expect(reroute.floatingLinkIds.size).toBeGreaterThan(0)
         }
@@ -84,21 +84,21 @@ const test = baseTest.extend<TestContext>({
         for (const linkId of reroute.linkIds) {
           const link = graph.links.get(linkId)
           expect(link).toBeDefined()
-          expect(link!.origin_id).toEqual(reroute.origin_id)
-          expect(link!.origin_slot).toEqual(reroute.origin_slot)
+          expect(link!.originId).toEqual(reroute.originId)
+          expect(link!.originSlot).toEqual(reroute.originSlot)
         }
         for (const linkId of reroute.floatingLinkIds) {
           const link = graph.floatingLinks.get(linkId)
           expect(link).toBeDefined()
 
-          if (link!.target_id === -1) {
-            expect(link!.origin_id).not.toBe(-1)
-            expect(link!.origin_slot).not.toBe(-1)
-            expect(link!.target_slot).toBe(-1)
+          if (link!.targetId === -1) {
+            expect(link!.originId).not.toBe(-1)
+            expect(link!.originSlot).not.toBe(-1)
+            expect(link!.targetSlot).toBe(-1)
           } else {
-            expect(link!.origin_id).toBe(-1)
-            expect(link!.origin_slot).toBe(-1)
-            expect(link!.target_slot).not.toBe(-1)
+            expect(link!.originId).toBe(-1)
+            expect(link!.originSlot).toBe(-1)
+            expect(link!.targetSlot).not.toBe(-1)
           }
         }
       }
@@ -108,35 +108,35 @@ const test = baseTest.extend<TestContext>({
         for (const input of node.inputs) {
           if (input.link) {
             expect(graph.links.keys()).toContain(input.link)
-            expect(graph.links.get(input.link)?.target_id).toBe(node.id)
+            expect(graph.links.get(input.link)?.targetId).toBe(node.id)
           }
         }
         for (const output of node.outputs) {
           for (const linkId of output.links ?? []) {
             expect(graph.links.keys()).toContain(linkId)
-            expect(graph.links.get(linkId)?.origin_id).toBe(node.id)
+            expect(graph.links.get(linkId)?.originId).toBe(node.id)
           }
         }
       }
 
       for (const link of graph.links.values()) {
-        expect(graph.getNodeById(link!.origin_id)?.outputs[link!.origin_slot].links).toContain(link.id)
-        expect(graph.getNodeById(link!.target_id)?.inputs[link!.target_slot].link).toBe(link.id)
+        expect(graph.getNodeById(link!.originId)?.outputs[link!.originSlot].links).toContain(link.id)
+        expect(graph.getNodeById(link!.targetId)?.inputs[link!.targetSlot].link).toBe(link.id)
       }
 
       for (const link of graph.floatingLinks.values()) {
-        if (link.target_id === -1) {
-          expect(link.origin_id).not.toBe(-1)
-          expect(link.origin_slot).not.toBe(-1)
-          expect(link.target_slot).toBe(-1)
-          const outputFloatingLinks = graph.getNodeById(link.origin_id)?.outputs[link.origin_slot].floatingLinks
+        if (link.targetId === -1) {
+          expect(link.originId).not.toBe(-1)
+          expect(link.originSlot).not.toBe(-1)
+          expect(link.targetSlot).toBe(-1)
+          const outputFloatingLinks = graph.getNodeById(link.originId)?.outputs[link.originSlot].floatingLinks
           expect(outputFloatingLinks).toBeDefined()
           expect(outputFloatingLinks).toContain(link)
         } else {
-          expect(link.origin_id).toBe(-1)
-          expect(link.origin_slot).toBe(-1)
-          expect(link.target_slot).not.toBe(-1)
-          const inputFloatingLinks = graph.getNodeById(link.target_id)?.inputs[link.target_slot].floatingLinks
+          expect(link.originId).toBe(-1)
+          expect(link.originSlot).toBe(-1)
+          expect(link.targetSlot).not.toBe(-1)
+          const inputFloatingLinks = graph.getNodeById(link.targetId)?.inputs[link.targetSlot].floatingLinks
           expect(inputFloatingLinks).toBeDefined()
           expect(inputFloatingLinks).toContain(link)
         }
@@ -148,7 +148,7 @@ const test = baseTest.extend<TestContext>({
     await use((linkIds, expectedExtraLinks = 0) => {
       const array = new Array(linkIds.size + expectedExtraLinks)
       const indexes = [...array.keys()]
-      return indexes.map(index => graph.last_link_id + index + 1)
+      return indexes.map(index => graph.lastLinkId + index + 1)
     })
   },
 
@@ -189,7 +189,7 @@ describe("LinkConnector Integration", () => {
 
   describe("Moving input links", () => {
     test("Should move input links", ({ graph, connector }) => {
-      const nextLinkId = graph.last_link_id + 1
+      const nextLinkId = graph.lastLinkId + 1
 
       const hasInputNode = graph.getNodeById(2)!
       const disconnectedNode = graph.getNodeById(9)!
@@ -223,7 +223,7 @@ describe("LinkConnector Integration", () => {
     })
 
     test("Should connect from floating reroutes", ({ graph, connector, reroutesBeforeTest }) => {
-      const nextLinkId = graph.last_link_id + 1
+      const nextLinkId = graph.lastLinkId + 1
 
       const floatingLink = graph.floatingLinks.values().next().value!
       expect(floatingLink).toBeInstanceOf(LLink)
@@ -338,7 +338,7 @@ describe("LinkConnector Integration", () => {
 
   describe("Moving output links", () => {
     test("Should move output links", ({ graph, connector }) => {
-      const nextLinkIds = [graph.last_link_id + 1, graph.last_link_id + 2]
+      const nextLinkIds = [graph.lastLinkId + 1, graph.lastLinkId + 2]
 
       const hasOutputNode = graph.getNodeById(1)!
       const disconnectedNode = graph.getNodeById(9)!
@@ -374,7 +374,7 @@ describe("LinkConnector Integration", () => {
     })
 
     test("Should connect to floating reroutes from outputs", ({ graph, connector, reroutesBeforeTest }) => {
-      const nextLinkIds = [graph.last_link_id + 1, graph.last_link_id + 2]
+      const nextLinkIds = [graph.lastLinkId + 1, graph.lastLinkId + 2]
 
       const floatingOutNode = graph.getNodeById(1)!
       floatingOutNode.disconnectOutput(0)
@@ -945,15 +945,15 @@ describe("LinkConnector Integration", () => {
     for (const reroute of graph.reroutes.values()) {
       for (const linkId of reroute.linkIds) {
         const link = graph.links.get(linkId)
-        expect(link?.origin_id).toEqual(reroute.origin_id)
-        expect(link?.origin_slot).toEqual(reroute.origin_slot)
+        expect(link?.originId).toEqual(reroute.originId)
+        expect(link?.originSlot).toEqual(reroute.originSlot)
       }
       for (const linkId of reroute.floatingLinkIds) {
-        if (reroute.origin_id === undefined) continue
+        if (reroute.originId === undefined) continue
 
         const link = graph.floatingLinks.get(linkId)
-        expect(link?.origin_id).toEqual(reroute.origin_id)
-        expect(link?.origin_slot).toEqual(reroute.origin_slot)
+        expect(link?.originId).toEqual(reroute.originId)
+        expect(link?.originSlot).toEqual(reroute.originSlot)
       }
     }
   })
@@ -1019,7 +1019,7 @@ describe("LinkConnector Integration", () => {
 
     // No links should have the same origin_id and target_id
     for (const link of graph.links.values()) {
-      expect(link.origin_id).not.toEqual(link.target_id)
+      expect(link.originId).not.toEqual(link.targetId)
     }
   })
 
@@ -1043,7 +1043,7 @@ describe("LinkConnector Integration", () => {
 
     // No links should have the same origin_id and target_id
     for (const link of graph.links.values()) {
-      expect(link.origin_id).not.toEqual(link.target_id)
+      expect(link.originId).not.toEqual(link.targetId)
     }
   })
 
@@ -1066,9 +1066,9 @@ describe("LinkConnector Integration", () => {
     expect(listener).not.toHaveBeenCalled()
     validateIntegrityNoChanges()
 
-    // No links should have the same origin_id and target_id
+    // No links should have the same originId and targetId
     for (const link of graph.links.values()) {
-      expect(link.origin_id).not.toEqual(link.target_id)
+      expect(link.originId).not.toEqual(link.targetId)
     }
   })
 })

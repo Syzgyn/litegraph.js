@@ -167,7 +167,7 @@ export class LinkConnector {
   overReroute?: Reroute
 
   /**
-   * @param setConnectingLinks Callback that synchronises the legacy `connecting_links` array
+   * @param setConnectingLinks Callback that synchronises the legacy `connectingLinks` array
    * on `LGraphCanvas`. Invoked whenever a drag operation starts to populate the
    * extension-compatible representation.
    */
@@ -197,7 +197,7 @@ export class LinkConnector {
     }
   }
 
-  /** Sets connecting_links, used by some extensions still. */
+  /** Sets connectingLinks, used by some extensions still. */
   #setLegacyLinks(fromSlotIsInput: boolean): void {
     const links = this.renderLinks.map((link) => {
       const input = fromSlotIsInput ? link.fromSlot as INodeInputSlot : null
@@ -277,12 +277,12 @@ export class LinkConnector {
       if (!link) return
 
       // Special handling for links from subgraph input nodes
-      if (link.origin_id === SUBGRAPH_INPUT_ID) {
+      if (link.originId === SUBGRAPH_INPUT_ID) {
         // For subgraph input links, we need to handle them differently
         // since they don't have a regular output node
-        const subgraphInput = network.inputNode?.slots[link.origin_slot]
+        const subgraphInput = network.inputNode?.slots[link.originSlot]
         if (!subgraphInput) {
-          console.warn(`Could not find subgraph input for slot [${link.origin_slot}]`)
+          console.warn(`Could not find subgraph input for slot [${link.originSlot}]`)
           return
         }
 
@@ -387,13 +387,13 @@ export class LinkConnector {
         this.outputLinks.push(link)
 
         try {
-          if (link.target_id === SUBGRAPH_OUTPUT_ID) {
+          if (link.targetId === SUBGRAPH_OUTPUT_ID) {
             if (!(network instanceof Subgraph)) {
               console.warn("Subgraph output link found in non-subgraph network.")
               continue
             }
 
-            const output = network.outputs.at(link.target_slot)
+            const output = network.outputs.at(link.targetSlot)
             if (!output) throw new Error("No subgraph output found for link.")
 
             const renderLink = new ToOutputFromIoNodeLink(network, network.outputNode, output)
@@ -528,13 +528,13 @@ export class LinkConnector {
       return
     }
 
-    if (link.origin_id === SUBGRAPH_INPUT_ID) {
+    if (link.originId === SUBGRAPH_INPUT_ID) {
       if (!(network instanceof Subgraph)) {
         console.warn("Subgraph input link found in non-subgraph network.")
         return
       }
 
-      const input = network.inputs.at(link.origin_slot)
+      const input = network.inputs.at(link.originSlot)
       if (!input) throw new Error("No subgraph input found for link.")
 
       const renderLink = new ToInputFromIoNodeLink(network, network.inputNode, input, reroute)
@@ -547,13 +547,13 @@ export class LinkConnector {
       return
     }
 
-    const outputNode = network.getNodeById(link.origin_id)
+    const outputNode = network.getNodeById(link.originId)
     if (!outputNode) {
       console.warn("No output node found for link.", link)
       return
     }
 
-    const outputSlot = outputNode.outputs.at(link.origin_slot)
+    const outputSlot = outputNode.outputs.at(link.originSlot)
     if (!outputSlot) {
       console.warn("No output slot found for link.", link)
       return
@@ -588,13 +588,13 @@ export class LinkConnector {
       return
     }
 
-    if (link.target_id === SUBGRAPH_OUTPUT_ID) {
+    if (link.targetId === SUBGRAPH_OUTPUT_ID) {
       if (!(network instanceof Subgraph)) {
         console.warn("Subgraph output link found in non-subgraph network.")
         return
       }
 
-      const output = network.outputs.at(link.target_slot)
+      const output = network.outputs.at(link.targetSlot)
       if (!output) throw new Error("No subgraph output found for link.")
 
       const renderLink = new ToOutputFromIoNodeLink(network, network.outputNode, output, reroute)
@@ -607,13 +607,13 @@ export class LinkConnector {
       return
     }
 
-    const inputNode = network.getNodeById(link.target_id)
+    const inputNode = network.getNodeById(link.targetId)
     if (!inputNode) {
       console.warn("No input node found for link.", link)
       return
     }
 
-    const inputSlot = inputNode.inputs.at(link.target_slot)
+    const inputSlot = inputNode.inputs.at(link.targetSlot)
     if (!inputSlot) {
       console.warn("No input slot found for link.", link)
       return
@@ -641,12 +641,12 @@ export class LinkConnector {
     if (this.isConnecting) throw new Error("Already dragging links.")
 
     const { state } = this
-    if (linkSegment.origin_id == null || linkSegment.origin_slot == null) return
+    if (linkSegment.originId == null || linkSegment.originSlot == null) return
 
-    const node = network.getNodeById(linkSegment.origin_id)
+    const node = network.getNodeById(linkSegment.originId)
     if (!node) return
 
-    const slot = node.outputs.at(linkSegment.origin_slot)
+    const slot = node.outputs.at(linkSegment.originSlot)
     if (!slot) return
 
     const reroute = network.getReroute(linkSegment.parentId)

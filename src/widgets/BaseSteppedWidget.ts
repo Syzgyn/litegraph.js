@@ -39,13 +39,13 @@ export abstract class BaseSteppedWidget<TWidget extends IBaseWidget = IBaseWidge
    * `disabledTextColor`.
    */
   drawArrowButtons(ctx: CanvasRenderingContext2D, width: number) {
-    const { height, text_color, disabledTextColor, y } = this
+    const { height, textColor: textColor, disabledTextColor, y } = this
     const { arrowMargin, arrowWidth, margin } = BaseWidget
     const arrowTipX = margin + arrowMargin
     const arrowInnerX = arrowTipX + arrowWidth
 
     // Draw left arrow
-    ctx.fillStyle = this.canDecrement() ? text_color : disabledTextColor
+    ctx.fillStyle = this.canDecrement() ? textColor : disabledTextColor
     ctx.beginPath()
     ctx.moveTo(arrowInnerX, y + 5)
     ctx.lineTo(arrowTipX, y + height * 0.5)
@@ -53,7 +53,7 @@ export abstract class BaseSteppedWidget<TWidget extends IBaseWidget = IBaseWidge
     ctx.fill()
 
     // Draw right arrow
-    ctx.fillStyle = this.canIncrement() ? text_color : disabledTextColor
+    ctx.fillStyle = this.canIncrement() ? textColor : disabledTextColor
     ctx.beginPath()
     ctx.moveTo(width - arrowInnerX, y + 5)
     ctx.lineTo(width - arrowTipX, y + height * 0.5)

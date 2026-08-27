@@ -145,6 +145,7 @@ export default tseslint.config(
       "no-prototype-builtins": "off",
       "no-var": "error",
       "no-fallthrough": "off",
+      "camelcase": "error",
 
       "no-empty-pattern": ["error", { allowObjectPatternsAsParameters: true }],
 

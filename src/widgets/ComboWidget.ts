@@ -36,7 +36,7 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
     const indexedValues = toArray(values)
 
     // avoids double click event
-    options.canvas.last_mouseclick = 0
+    options.canvas.lastMouseClick = 0
 
     const foundIndex = typeof values === "object"
       ? indexedValues.indexOf(String(this.value)) + delta
@@ -140,18 +140,18 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
 
     // Otherwise, show dropdown menu
     const values = this.#getValues(node)
-    const values_list = toArray(values)
+    const valuesList = toArray(values)
 
     // Handle center click - show dropdown menu
-    const text_values = values != values_list ? Object.values(values) : values
-    new LiteGraph.ContextMenu(text_values, {
+    const textValues = values != valuesList ? Object.values(values) : values
+    new LiteGraph.ContextMenu(textValues, {
       scale: Math.max(1, canvas.ds.scale),
       event: e,
       className: "dark",
       callback: (value: string) => {
         this.setValue(
-          values != values_list
-            ? text_values.indexOf(value)
+          values != valuesList
+            ? textValues.indexOf(value)
             : value,
           { e, node, canvas },
         )

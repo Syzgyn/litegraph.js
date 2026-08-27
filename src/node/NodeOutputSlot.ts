@@ -31,7 +31,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   links: LinkId[] | null
 
   /** Legacy index used by some custom nodes to identify this slot. */
-  slot_index?: number
+  slotIndex?: number
 
   /**
    * @param slot Serialised or partial slot properties used to initialise this instance.
@@ -41,7 +41,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
     super(slot, node)
     this.links = slot.links
     this.data = slot.data
-    this.slot_index = slot.slot_index
+    this.slotIndex = slot.slotIndex
     this.#node = node
   }
 
@@ -58,7 +58,7 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
    */
   get collapsedPos(): ReadOnlyPoint {
     return [
-      this.#node.collapsed_width ?? LiteGraph.NODE_COLLAPSED_WIDTH,
+      this.#node.collapsedWidth ?? LiteGraph.NODE_COLLAPSED_WIDTH,
       LiteGraph.NODE_TITLE_HEIGHT * -0.5,
     ]
   }

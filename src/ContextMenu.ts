@@ -74,7 +74,7 @@ export class ContextMenu<TValue = unknown> {
   /** Root DOM element containing all menu entries. */
   root: ContextMenuDivElement<TValue>
   /** Currently open child submenu, if any. */
-  current_submenu?: ContextMenu<TValue>
+  currentSubmenu?: ContextMenu<TValue>
   /** When `true`, prevents the menu from auto-closing after item selection (submenu open). */
   lock?: boolean
 
@@ -88,7 +88,7 @@ export class ContextMenu<TValue = unknown> {
    * @param options [optional] Some options:\
    * - title: title to show on top of the menu
    * - callback: function to call when an option is clicked, it receives the item information
-   * - ignore_item_callbacks: ignores the callback inside the item, it just calls the options.callback
+   * - ignoreItemCallbacks: ignores the callback inside the item, it just calls the options.callback
    * - event: you can pass a MouseEvent, this way the ContextMenu appears in that position
    */
   constructor(values: readonly (string | IContextMenuValue<TValue> | null)[], options: IContextMenuOptions<TValue>) {
@@ -104,7 +104,7 @@ export class ContextMenu<TValue = unknown> {
       } else {
         this.parentMenu = parent
         this.parentMenu.lock = true
-        this.parentMenu.current_submenu = this
+        this.parentMenu.currentSubmenu = this
       }
       if (parent.options?.className === "dark") {
         options.className = "dark"
@@ -194,12 +194,12 @@ export class ContextMenu<TValue = unknown> {
 
     // insert before checking position
     const ownerDocument = (options.event?.target as Node | null | undefined)?.ownerDocument
-    const root_document = ownerDocument || document
+    const rootDocument = ownerDocument || document
 
-    if (root_document.fullscreenElement)
-      root_document.fullscreenElement.append(root)
+    if (rootDocument.fullscreenElement)
+      rootDocument.fullscreenElement.append(root)
     else
-      root_document.body.append(root)
+      rootDocument.body.append(root)
 
     // compute best position
     let left = options.left || 0
@@ -214,21 +214,21 @@ export class ContextMenu<TValue = unknown> {
         left = rect.left + rect.width
       }
 
-      const body_rect = document.body.getBoundingClientRect()
-      const root_rect = root.getBoundingClientRect()
-      if (body_rect.height == 0)
+      const bodyRect = document.body.getBoundingClientRect()
+      const rootRect = root.getBoundingClientRect()
+      if (bodyRect.height == 0)
         console.error("document.body height is 0. That is dangerous, set html,body { height: 100%; }")
 
-      if (body_rect.width && left > body_rect.width - root_rect.width - 10)
-        left = body_rect.width - root_rect.width - 10
-      if (body_rect.height && top > body_rect.height - root_rect.height - 10)
-        top = body_rect.height - root_rect.height - 10
+      if (bodyRect.width && left > bodyRect.width - rootRect.width - 10)
+        left = bodyRect.width - rootRect.width - 10
+      if (bodyRect.height && top > bodyRect.height - rootRect.height - 10)
+        top = bodyRect.height - rootRect.height - 10
     }
 
     root.style.left = `${left}px`
     root.style.top = `${top}px`
 
-    if (LiteGraph.context_menu_scaling && options.scale) {
+    if (LiteGraph.contextMenuScaling && options.scale) {
       root.style.transform = `scale(${Math.round(options.scale * 4) * 0.25})`
     }
   }
@@ -238,18 +238,18 @@ export class ContextMenu<TValue = unknown> {
    * Dispatches a synthetic custom event on a menu element.
    * @deprecated Legacy helper for mouse-leave handling; prefer standard DOM APIs.
    * @param element Target menu element.
-   * @param event_name Custom event name to dispatch.
+   * @param eventName Custom event name to dispatch.
    * @param params Event detail payload.
    * @returns The created `CustomEvent`.
    */
   // this code is used to trigger events easily (used in the context menu mouseleave
   static trigger(
     element: HTMLDivElement,
-    event_name: string,
+    eventName: string,
     params: MouseEvent,
   ): CustomEvent {
     const evt = document.createEvent("CustomEvent")
-    evt.initCustomEvent(event_name, true, true, params)
+    evt.initCustomEvent(eventName, true, true, params)
     if (element.dispatchEvent) element.dispatchEvent(evt)
     // else nothing seems bound here so nothing to do
     return evt
@@ -290,7 +290,7 @@ export class ContextMenu<TValue = unknown> {
     if (visited.has(this)) return false
     visited.add(this)
 
-    return this.current_submenu?.containsNode(node, visited) || this.root.contains(node)
+    return this.currentSubmenu?.containsNode(node, visited) || this.root.contains(node)
   }
 
   /**
@@ -332,8 +332,8 @@ export class ContextMenu<TValue = unknown> {
           element.classList.add("disabled")
           element.setAttribute("aria-disabled", "true")
         }
-        if (value.submenu || value.has_submenu) {
-          element.classList.add("has_submenu")
+        if (value.submenu || value.hasSubmenu) {
+          element.classList.add("has-submenu")
           element.setAttribute("aria-haspopup", "true")
           element.setAttribute("aria-expanded", "false")
         }
@@ -344,19 +344,19 @@ export class ContextMenu<TValue = unknown> {
 
       if (typeof value === "function") {
         element.dataset["value"] = String(name)
-        element.onclick_callback = value
+        element.onclickCallback = value
       } else {
         element.dataset["value"] = String(value)
       }
     }
 
     this.root.append(element)
-    if (!disabled) element.addEventListener("click", inner_onclick)
+    if (!disabled) element.addEventListener("click", innerOnclick)
     if (!disabled && options.autoopen)
-      element.addEventListener("pointerenter", inner_over)
+      element.addEventListener("pointerenter", innerOver)
 
     const setAriaExpanded = () => {
-      const entries = this.root.querySelectorAll(":scope div.litemenu-entry.has_submenu")
+      const entries = this.root.querySelectorAll(":scope div.litemenu-entry.has-submenu")
       if (entries.length > 0) {
         for (const entry of entries) {
           entry.setAttribute("aria-expanded", "false")
@@ -365,24 +365,24 @@ export class ContextMenu<TValue = unknown> {
       element.setAttribute("aria-expanded", "true")
     }
 
-    function inner_over(this: ContextMenuDivElement<TValue>, e: MouseEvent) {
+    function innerOver(this: ContextMenuDivElement<TValue>, e: MouseEvent) {
       const value = this.value
-      if (!value || !(value as IContextMenuValue).has_submenu) return
+      if (!value || !(value as IContextMenuValue).hasSubmenu) return
 
       // if it is a submenu, autoopen like the item was clicked
-      inner_onclick.call(this, e)
+      innerOnclick.call(this, e)
       setAriaExpanded()
     }
 
     // menu option clicked
     const that = this
-    function inner_onclick(this: ContextMenuDivElement<TValue>, e: MouseEvent) {
+    function innerOnclick(this: ContextMenuDivElement<TValue>, e: MouseEvent) {
       const value = this.value
-      let close_parent = true
+      let closeParent = true
 
-      that.current_submenu?.close(e)
+      that.currentSubmenu?.close(e)
       if (
-        (value as IContextMenuValue)?.has_submenu ||
+        (value as IContextMenuValue)?.hasSubmenu ||
         (value as IContextMenuValue)?.submenu
       ) {
         setAriaExpanded()
@@ -398,14 +398,14 @@ export class ContextMenu<TValue = unknown> {
           that,
           options.node,
         )
-        if (r === true) close_parent = false
+        if (r === true) closeParent = false
       }
 
       // special cases
       if (typeof value === "object") {
         if (
           value.callback &&
-          !options.ignore_item_callbacks &&
+          !options.ignoreItemCallbacks &&
           value.disabled !== true
         ) {
           // item callback
@@ -417,7 +417,7 @@ export class ContextMenu<TValue = unknown> {
             that,
             options.extra,
           )
-          if (r === true) close_parent = false
+          if (r === true) closeParent = false
         }
         if (value.submenu) {
           if (!value.submenu.options) throw "ContextMenu submenu needs options"
@@ -426,16 +426,16 @@ export class ContextMenu<TValue = unknown> {
             callback: value.submenu.callback,
             event: e,
             parentMenu: that,
-            ignore_item_callbacks: value.submenu.ignore_item_callbacks,
+            ignoreItemCallbacks: value.submenu.ignoreItemCallbacks,
             title: value.submenu.title,
             extra: value.submenu.extra,
             autoopen: options.autoopen,
           })
-          close_parent = false
+          closeParent = false
         }
       }
 
-      if (close_parent && !that.lock) that.close()
+      if (closeParent && !that.lock) that.close()
     }
 
     return element
@@ -444,28 +444,28 @@ export class ContextMenu<TValue = unknown> {
   /**
    * Removes this menu from the DOM and aborts its event listeners.
    *
-   * When this menu is a submenu, unlocks the parent unless `ignore_parent_menu` is set.
+   * When this menu is a submenu, unlocks the parent unless `ignoreParentMenu` is set.
    * Recursively closes any open child submenu.
    * @param e Optional mouse event used to synthesise a leave event on the parent menu.
-   * @param ignore_parent_menu When `true`, does not modify or close the parent menu.
+   * @param ignoreParentMenu When `true`, does not modify or close the parent menu.
    */
-  close(e?: MouseEvent, ignore_parent_menu?: boolean): void {
+  close(e?: MouseEvent, ignoreParentMenu?: boolean): void {
     this.controller.abort()
     this.root.remove()
-    if (this.parentMenu && !ignore_parent_menu) {
+    if (this.parentMenu && !ignoreParentMenu) {
       this.parentMenu.lock = false
-      this.parentMenu.current_submenu = undefined
+      this.parentMenu.currentSubmenu = undefined
       if (e === undefined) {
         this.parentMenu.close()
       } else if (e && !ContextMenu.isCursorOverElement(e, this.parentMenu.root)) {
         ContextMenu.trigger(
           this.parentMenu.root,
-          `${LiteGraph.pointerevents_method}leave`,
+          `${LiteGraph.pointerEventsMethod}leave`,
           e,
         )
       }
     }
-    this.current_submenu?.close(e, true)
+    this.currentSubmenu?.close(e, true)
   }
 
   /**

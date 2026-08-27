@@ -56,11 +56,11 @@ export class ColorWidget extends BaseWidget<IColorWidget> implements IColorWidge
     ctx.fillStyle = this.value || "#000000"
     ctx.fill()
 
-    ctx.fillStyle = this.secondary_text_color
+    ctx.fillStyle = this.secondaryTextColor
     ctx.textAlign = "left"
     ctx.fillText(this.displayName, margin * 2 + 5, y + height * 0.7)
 
-    ctx.fillStyle = this.text_color
+    ctx.fillStyle = this.textColor
     ctx.textAlign = "right"
     ctx.fillText(this.value || "#000000", swatchX - 8, y + height * 0.7)
 

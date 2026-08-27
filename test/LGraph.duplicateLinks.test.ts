@@ -39,10 +39,10 @@ describe("_removeDuplicateLinks", () => {
       const dupLink = new LLink(
         ++graph.state.lastLinkId,
         existingLink.type,
-        existingLink.origin_id,
-        existingLink.origin_slot,
-        existingLink.target_id,
-        existingLink.target_slot,
+        existingLink.originId,
+        existingLink.originSlot,
+        existingLink.targetId,
+        existingLink.targetSlot,
       )
       graph.links.set(dupLink.id, dupLink)
       source.outputs[0].links!.push(dupLink.id)
@@ -193,10 +193,10 @@ describe("_removeDuplicateLinks", () => {
       const dup = new LLink(
         ++subgraph.state.lastLinkId,
         existingLink.type,
-        existingLink.origin_id,
-        existingLink.origin_slot,
-        existingLink.target_id,
-        existingLink.target_slot,
+        existingLink.originId,
+        existingLink.originSlot,
+        existingLink.targetId,
+        existingLink.targetSlot,
       )
       subgraph.links.set(dup.id, dup)
       source.outputs[0].links!.push(dup.id)

@@ -100,9 +100,9 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
     return this.linkIds.length > 0
   }
 
-  /** Resolved display label, preferring `label`, then `localized_name`, then `name`. */
+  /** Resolved display label, preferring `label`, then `localizedName`, then `name`. */
   get displayName() {
-    return this.label ?? this.localized_name ?? this.name
+    return this.label ?? this.localizedName ?? this.name
   }
 
   /**
@@ -139,11 +139,11 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   /**
    * Decrements slot indices on connected links after a slot above this one is removed.
    * @param inputsOrOutputs Whether this slot lives on the input or output IO node, determining
-   * which link property (`origin_slot` vs `target_slot`) to adjust.
+   * which link property (`originSlot` vs `targetSlot`) to adjust.
    */
   decrementSlots(inputsOrOutputs: "inputs" | "outputs"): void {
     const { links } = this.parent.subgraph
-    const linkProperty = inputsOrOutputs === "inputs" ? "origin_slot" : "target_slot"
+    const linkProperty = inputsOrOutputs === "inputs" ? "originSlot" : "targetSlot"
 
     for (const linkId of this.linkIds) {
       const link = links.get(linkId)
@@ -252,8 +252,8 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
    * @returns A `SubgraphIO` plain object including link IDs and styling.
    */
   asSerialisable(): SubgraphIO {
-    const { id, name, type, linkIds, localized_name, label, dir, shape, color_off, color_on, pos } = this
-    return { id, name, type, linkIds, localized_name, label, dir, shape, color_off, color_on, pos }
+    const { id, name, type, linkIds, localizedName, label, dir, shape, colorOff, colorOn, pos } = this
+    return { id, name, type, linkIds, localizedName, label, dir, shape, colorOff, colorOn, pos }
   }
 
   /** Canvas-space position for rendering this slot's text label. */

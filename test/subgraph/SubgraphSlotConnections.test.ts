@@ -122,8 +122,8 @@ describe("Subgraph slot connections", () => {
       // Connect the subgraph input to the internal node's input
       const link = subgraph.inputNode.slots[0].connect(internalNode.inputs[0], internalNode)
       expect(link).toBeDefined()
-      expect(link!.origin_id).toBe(SUBGRAPH_INPUT_ID)
-      expect(link!.target_id).toBe(internalNode.id)
+      expect(link!.originId).toBe(SUBGRAPH_INPUT_ID)
+      expect(link!.targetId).toBe(internalNode.id)
 
       // Verify the input slot has the link
       expect(internalNode.inputs[0].link).toBe(link!.id)

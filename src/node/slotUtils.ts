@@ -13,8 +13,8 @@ type CommonIoSlotProps = SharedIntersection<ISerialisableNodeInput, ISerialisabl
  * @returns A plain object containing only the common serialisable slot fields.
  */
 export function shallowCloneCommonProps(slot: CommonIoSlotProps): CommonIoSlotProps {
-  const { color_off, color_on, dir, label, localized_name, locked, name, nameLocked, removable, shape, type } = slot
-  return { color_off, color_on, dir, label, localized_name, locked, name, nameLocked, removable, shape, type }
+  const { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, type } = slot
+  return { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, type }
 }
 
 /**
@@ -44,7 +44,7 @@ export function inputAsSerialisable(slot: INodeInputSlot): ISerialisableNodeInpu
  * @returns A plain object suitable for JSON serialisation.
  */
 export function outputAsSerialisable(slot: INodeOutputSlot & { widget?: IWidget }): ISerialisableNodeOutput {
-  const { pos, slot_index, links, widget } = slot
+  const { pos, slotIndex, links, widget } = slot
   // Output widgets do not exist in Litegraph; this is a temporary downstream workaround.
   const outputWidget = widget
     ? { widget: { name: widget.name } }
@@ -54,7 +54,7 @@ export function outputAsSerialisable(slot: INodeOutputSlot & { widget?: IWidget 
     ...shallowCloneCommonProps(slot),
     ...outputWidget,
     pos,
-    slot_index,
+    slotIndex,
     links: links ? [...links] : links,
   }
 }

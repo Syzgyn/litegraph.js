@@ -26,7 +26,7 @@ function createMockContext() {
   } as unknown as CanvasRenderingContext2D
 }
 
-const graphCanvas = { editor_alpha: 1 } as Partial<LGraphCanvas> as LGraphCanvas
+const graphCanvas = { editorAlpha: 1 } as Partial<LGraphCanvas> as LGraphCanvas
 
 describe("LGraphGroup", () => {
   test("serializes to the existing format", () => {

@@ -44,8 +44,8 @@ describe("LGraphCanvas Title Button Rendering", () => {
     canvasElement.getContext = vi.fn().mockReturnValue(ctx)
 
     canvas = new LGraphCanvas(canvasElement, new LGraph(), {
-      skip_render: true,
-      skip_events: true,
+      skipRender: true,
+      skipEvents: true,
     })
 
     node = new LGraphNode("Test Node")
@@ -137,7 +137,7 @@ describe("LGraphCanvas Title Button Rendering", () => {
 
     it("should handle nodes without title buttons", () => {
       // Node has no title buttons
-      expect(node.title_buttons).toHaveLength(0)
+      expect(node.titleButtons).toHaveLength(0)
 
       // Should draw without errors
       expect(() => canvas.drawNode(node, ctx)).not.toThrow()

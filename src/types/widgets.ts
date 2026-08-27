@@ -16,13 +16,13 @@ export interface IWidgetOptions<TValues = unknown[]> {
   /** Minimum allowed value for numeric widgets. */
   min?: number
   /** Fill colour for the slider track. */
-  slider_color?: CanvasColour
+  sliderColor?: CanvasColour
   /** Fill colour for the slider/knob marker indicator. */
-  marker_color?: CanvasColour
+  markerColor?: CanvasColour
   /** Number of decimal places to display for numeric widgets. */
   precision?: number
   /** When `true`, the widget cannot be edited by the user. */
-  read_only?: boolean
+  readOnly?: boolean
   /**
    * @deprecated Use `IWidgetOptions.step2` instead.
    * The legacy step is scaled up by 10x in the legacy frontend logic.
@@ -52,8 +52,8 @@ export interface IWidgetSliderOptions extends IWidgetOptions<number[]> {
   min: number
   max: number
   step2: number
-  slider_color?: CanvasColour
-  marker_color?: CanvasColour
+  sliderColor?: CanvasColour
+  markerColor?: CanvasColour
 }
 
 /** Configuration options for gradient slider widgets. Requires min, max, and step values. */
@@ -61,7 +61,7 @@ export interface IWidgetGradientSliderOptions extends IWidgetOptions<number[]> {
   min: number
   max: number
   step2: number
-  gradient_stops?: ColorStop[]
+  gradientStops?: ColorStop[]
 }
 
 /** Configuration options for knob widgets. Requires min, max, and step values. */
@@ -69,10 +69,10 @@ export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
   min: number
   max: number
   step2: number
-  slider_color?: CanvasColour // TODO: Replace with knob color
-  marker_color?: CanvasColour
+  sliderColor?: CanvasColour // TODO: Replace with knob color
+  markerColor?: CanvasColour
   /** CSS gradient stops string for the knob's colour arc. */
-  gradient_stops?: string
+  gradientStops?: string
 }
 
 /**
@@ -243,7 +243,7 @@ export interface IBaseWidget<
    * @deprecated There is no longer dynamic y adjustment on rendering anymore.
    * Use `IBaseWidget.y` instead.
    */
-  last_y?: number
+  lastY?: number
 
   /** Explicit width override for this widget. */
   width?: number
@@ -292,7 +292,7 @@ export interface IBaseWidget<
    * Draw the widget.
    * @param ctx The canvas context to draw on.
    * @param node The node this widget belongs to.
-   * @param widget_width The width of the widget.
+   * @param widgetWidth The width of the widget.
    * @param y The y position of the widget.
    * @param H The height of the widget.
    * @param lowQuality Whether to draw the widget in low quality.
@@ -300,7 +300,7 @@ export interface IBaseWidget<
   draw?(
     ctx: CanvasRenderingContext2D,
     node: LGraphNode,
-    widget_width: number,
+    widgetWidth: number,
     y: number,
     H: number,
     lowQuality?: boolean,

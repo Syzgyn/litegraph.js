@@ -103,11 +103,11 @@ function patchSerialisedLinks(
   remappedIds: Map<NodeId, NodeId>,
 ): void {
   for (const link of links) {
-    const newOrigin = remappedIds.get(link.origin_id)
-    if (newOrigin !== undefined) link.origin_id = newOrigin
+    const newOrigin = remappedIds.get(link.originId)
+    if (newOrigin !== undefined) link.originId = newOrigin
 
-    const newTarget = remappedIds.get(link.target_id)
-    if (newTarget !== undefined) link.target_id = newTarget
+    const newTarget = remappedIds.get(link.targetId)
+    if (newTarget !== undefined) link.targetId = newTarget
   }
 }
 

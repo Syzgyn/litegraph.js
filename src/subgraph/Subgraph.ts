@@ -165,8 +165,8 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
   ): LLink | undefined {
     for (const link of this.links.values()) {
       if (
-        (link.origin_id === nodeId && link.origin_slot === slotIndex) ||
-        (link.target_id === nodeId && link.target_slot === slotIndex)
+        (link.originId === nodeId && link.originSlot === slotIndex) ||
+        (link.targetId === nodeId && link.targetSlot === slotIndex)
       ) {
         return link
       }
@@ -193,11 +193,11 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
   /**
    * Reconfigures this subgraph from serialised data.
    * @param data The serialised graph and subgraph metadata.
-   * @param keep_old When `true`, merges with existing state instead of replacing it.
+   * @param KeepOld When `true`, merges with existing state instead of replacing it.
    * @returns The result of the base `LGraph.configure` call.
    */
-  override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, keep_old?: boolean): boolean | undefined {
-    const r = super.configure(data, keep_old)
+  override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, KeepOld?: boolean): boolean | undefined {
+    const r = super.configure(data, KeepOld)
 
     this.#configureSubgraph(data)
     return r
@@ -392,7 +392,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    */
   registerNodeType(): void {
     const subgraph = this
-    if (Object.hasOwn(LiteGraph.registered_node_types, subgraph.id)) return
+    if (Object.hasOwn(LiteGraph.registeredNodeTypes, subgraph.id)) return
 
     const instanceData: ExportedSubgraphInstance = {
       id: -1,

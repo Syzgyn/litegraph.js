@@ -82,7 +82,7 @@ describe("node:before-removed event", () => {
     const graph = new LGraph()
     const node = new LGraphNode("test")
     graph.add(node)
-    node.ignore_remove = true
+    node.ignoreRemove = true
 
     const fired = vi.fn()
     graph.events.addEventListener("node:before-removed", fired)

@@ -23,8 +23,8 @@ function createTestCanvas(): { canvas: LGraphCanvas, parent: HTMLDivElement } {
 
   return {
     canvas: new LGraphCanvas(canvasElement, new LGraph(), {
-      skip_render: true,
-      skip_events: true,
+      skipRender: true,
+      skipEvents: true,
     }),
     parent,
   }
@@ -77,7 +77,7 @@ describe("LGraphCanvas XSS", () => {
     const panel = parent.querySelector(":scope #node-panel")
     expect(panel).not.toBeNull()
 
-    const nodeType = panel?.querySelector(":scope .node_type")
+    const nodeType = panel?.querySelector(":scope .node-type")
     expect(nodeType?.innerHTML).not.toContain("onerror")
     expect((window as Window & { __xss?: number }).__xss).toBeUndefined()
   })
@@ -85,7 +85,7 @@ describe("LGraphCanvas XSS", () => {
   test("onShowMenuNodeProperties sanitizes malicious property values", () => {
     const { canvas, parent } = createTestCanvas()
     parents.push(parent)
-    LGraphCanvas.active_canvas = canvas
+    LGraphCanvas.activeCanvas = canvas
 
     const node = new LGraphNode("Note")
     node.properties["safe_key"] = xssPayload

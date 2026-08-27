@@ -1,8 +1,8 @@
 {
   "id": "26a34f13-1767-4847-b25f-a21dedf6840d",
   "revision": 0,
-  "last_node_id": 3,
-  "last_link_id": 2,
+  "lastNodeId": 3,
+  "lastLinkId": 2,
   "nodes": [
     {
       "id": 2,
@@ -42,7 +42,7 @@
       "properties": {
         "Node name for S&R": "VAEDecode"
       },
-      "widgets_values": []
+      "widgetsValues": []
     },
     {
       "id": 3,
@@ -67,7 +67,7 @@
       ],
       "outputs": [],
       "properties": {},
-      "widgets_values": [
+      "widgetsValues": [
         "ComfyUI"
       ]
     }

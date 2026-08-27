@@ -67,7 +67,7 @@ export interface IContextMenuItem {
   /** When `true`, the item is rendered disabled and ignores clicks. */
   disabled?: boolean
   /** When `true`, indicates a submenu is available (legacy flag). */
-  has_submenu?: boolean
+  hasSubmenu?: boolean
   /** Nested submenu definition opened when this item is selected. */
   submenu?: {
     options: IContextMenuItem[]
@@ -99,15 +99,15 @@ export type ContextMenuEventListener = (
  */
 export interface LinkReleaseContext {
   /** Node that would receive the link on release, when dropping onto an input. */
-  node_to?: LGraphNode
+  nodeTo?: LGraphNode
   /** Node that originates the released link, when dragging from an output. */
-  node_from?: LGraphNode
-  /** Slot on `node_from` from which the link was dragged. */
-  slot_from: INodeSlot
+  nodeFrom?: LGraphNode
+  /** Slot on `nodeFrom` from which the link was dragged. */
+  slotFrom: INodeSlot
   /** When set, filters candidate input slot types during release handling. */
-  type_filter_in?: string
+  typeFilterIn?: string
   /** When set, filters candidate output slot types during release handling. */
-  type_filter_out?: string
+  typeFilterOut?: string
 }
 
 /**
@@ -142,25 +142,25 @@ export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {
   /** Default node size `[width, height]`. */
   size?: Size
   /** Minimum node body height in pixels. */
-  min_height?: number
+  minHeight?: number
   /** Y offset where the first slot row is drawn. */
-  slot_start_y?: number
+  slotStartY?: number
   /** Legacy widget metadata map keyed by widget name. */
-  widgets_info?: any
+  widgetsInfo?: any
   /** Whether the node can be collapsed to a compact representation. */
   collapsable?: boolean
   /** Default node accent colour. */
   color?: string
   /** Default node background colour. */
-  bgcolor?: string
+  bgColor?: string
   /** Default node render shape. */
   shape?: RenderShape
   /** How the node title bar is rendered. */
-  title_mode?: TitleMode
+  titleMode?: TitleMode
   /** Title bar background colour override. */
-  title_color?: string
+  titleColor?: string
   /** Title text colour override. */
-  title_text_color?: string
+  titleTextColor?: string
   /** When `true`, bypassing the node preserves all link connections. */
   keepAllLinksOnBypass: boolean
   /** Width of the resize handle hit area in pixels. */

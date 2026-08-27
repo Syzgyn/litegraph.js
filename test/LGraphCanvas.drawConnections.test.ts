@@ -78,7 +78,7 @@ describe("drawConnections widget-input slot positioning", () => {
     })
 
     graph = new LGraph()
-    canvas = new LGraphCanvas(canvasElement, graph, { skip_render: true })
+    canvas = new LGraphCanvas(canvasElement, graph, { skipRender: true })
 
     const sourceNode = new LGraphNode("Source")
     sourceNode.pos = [0, 100]
@@ -120,7 +120,7 @@ describe("drawConnections widget-input slot positioning", () => {
     })
 
     graph = new LGraph()
-    canvas = new LGraphCanvas(canvasElement, graph, { skip_render: true })
+    canvas = new LGraphCanvas(canvasElement, graph, { skipRender: true })
 
     const sourceNode = new LGraphNode("Source")
     sourceNode.pos = [0, 100]
@@ -162,7 +162,7 @@ describe("drawConnections widget-input slot positioning", () => {
     })
 
     graph = new LGraph()
-    canvas = new LGraphCanvas(canvasElement, graph, { skip_render: true })
+    canvas = new LGraphCanvas(canvasElement, graph, { skipRender: true })
 
     const sourceNode = new LGraphNode("Source")
     sourceNode.pos = [0, 100]

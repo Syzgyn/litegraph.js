@@ -21,8 +21,8 @@ describe("LGraphNode Title Buttons", () => {
       expect(button.name).toBe("test_button")
       expect(button.text).toBe("X")
       expect(button.fgColor).toBe("#FF0000")
-      expect(node.title_buttons).toHaveLength(1)
-      expect(node.title_buttons[0]).toBe(button)
+      expect(node.titleButtons).toHaveLength(1)
+      expect(node.titleButtons[0]).toBe(button)
     })
 
     it("should add multiple title buttons", () => {
@@ -32,10 +32,10 @@ describe("LGraphNode Title Buttons", () => {
       const button2 = node.addTitleButton({ name: "button2", text: "B" })
       const button3 = node.addTitleButton({ name: "button3", text: "C" })
 
-      expect(node.title_buttons).toHaveLength(3)
-      expect(node.title_buttons[0]).toBe(button1)
-      expect(node.title_buttons[1]).toBe(button2)
-      expect(node.title_buttons[2]).toBe(button3)
+      expect(node.titleButtons).toHaveLength(3)
+      expect(node.titleButtons[0]).toBe(button1)
+      expect(node.titleButtons[1]).toBe(button2)
+      expect(node.titleButtons[2]).toBe(button3)
     })
 
     it("should create buttons with default options", () => {
@@ -45,7 +45,7 @@ describe("LGraphNode Title Buttons", () => {
 
       expect(button).toBeInstanceOf(LGraphButton)
       expect(button.name).toBeUndefined()
-      expect(node.title_buttons).toHaveLength(1)
+      expect(node.titleButtons).toHaveLength(1)
     })
   })
 

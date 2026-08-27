@@ -114,21 +114,21 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
   /**
    * Connects an internal node output to a subgraph output slot by type.
    * @param slot Index of the subgraph output slot.
-   * @param target_node The node inside the subgraph to connect from.
-   * @param target_slotType Required slot type on the target node's output.
+   * @param targetNode The node inside the subgraph to connect from.
+   * @param targetSlotType Required slot type on the target node's output.
    * @param optsIn Optional reroute attachment point.
    * @returns The created link, or `undefined` when no compatible output exists.
    */
   connectByTypeOutput(
     slot: number,
-    target_node: LGraphNode,
-    target_slotType: ISlotType,
+    targetNode: LGraphNode,
+    targetSlotType: ISlotType,
     optsIn?: { afterRerouteId?: RerouteId },
   ): LLink | undefined {
-    const outputSlot = target_node.findOutputByType(target_slotType)
+    const outputSlot = targetNode.findOutputByType(targetSlotType)
     if (!outputSlot) return
 
-    return this.slots[slot].connect(outputSlot.slot, target_node, optsIn?.afterRerouteId)
+    return this.slots[slot].connect(outputSlot.slot, targetNode, optsIn?.afterRerouteId)
   }
 
   /**

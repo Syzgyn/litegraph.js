@@ -139,7 +139,7 @@
   cursor: default !important;
 }
 
-.litegraph .litemenu-entry.has_submenu {
+.litegraph .litemenu-entry.has-submenu {
   border-right: 2px solid cyan;
 }
 
@@ -157,14 +157,14 @@
   transition: all 0.2s;
 }
 
-.litegraph .litemenu-entry .property_name {
+.litegraph .litemenu-entry .property-name {
   display: inline-block;
   text-align: left;
   min-width: 80px;
   min-height: 1.2em;
 }
 
-.litegraph .litemenu-entry .property_value {
+.litegraph .litemenu-entry .property-value {
   display: inline-block;
   background-color: rgba(0, 0, 0, 0.5);
   text-align: right;
@@ -212,14 +212,14 @@
   padding-top: 2px;
 }
 
-.litegraph.lite-search-item.not_in_filter {
+.litegraph.lite-search-item.not-in-filter {
   /*background-color: rgba(50, 50, 50, 0.5);*/
   /*color: #999;*/
   color: #b99;
   font-style: italic;
 }
 
-.litegraph.lite-search-item.generic_type {
+.litegraph.lite-search-item.generic-type {
   /*background-color: rgba(50, 50, 50, 0.5);*/
   /*color: #DD9;*/
   color: #999;
@@ -301,6 +301,7 @@
 .litegraph .dialog .dialog-header {
   height: 40px;
 }
+
 .litegraph .dialog .dialog-footer {
   height: 50px;
   padding: 10px;
@@ -334,20 +335,20 @@
   flex-direction: row;
 }
 
-.litegraph .dialog .dialog-content .connections .connections_side {
+.litegraph .dialog .dialog-content .connections .connections-side {
   width: calc(50% - 5px);
   min-height: 100px;
   background-color: black;
   display: flex;
 }
 
-.litegraph .dialog .node_type {
+.litegraph .dialog .node-type {
   font-size: 1.2em;
   display: block;
   margin: 10px;
 }
 
-.litegraph .dialog .node_desc {
+.litegraph .dialog .node-desc {
   opacity: 0.5;
   display: block;
   margin: 10px;
@@ -372,7 +373,7 @@
   background: #545454;
 }
 
-.litegraph .dialog .property_name {
+.litegraph .dialog .property-name {
   color: #737373;
   display: inline-block;
   text-align: left;
@@ -383,11 +384,11 @@
   margin-right: 6px;
 }
 
-.litegraph .dialog .property:hover .property_name {
+.litegraph .dialog .property:hover .property-name {
   color: white;
 }
 
-.litegraph .dialog .property_value {
+.litegraph .dialog .property-value {
   display: inline-block;
   text-align: right;
   color: #aaa;
@@ -404,21 +405,22 @@
   border-radius: 3px;
 }
 
-.litegraph .dialog .property_value:hover {
+.litegraph .dialog .property-value:hover {
   color: white;
 }
 
-.litegraph .dialog .property.boolean .property_value {
+.litegraph .dialog .property.boolean .property-value {
   padding-right: 30px;
   color: #a88;
   /*width: auto;
     float: right;*/
 }
 
-.litegraph .dialog .property.boolean.bool-on .property_name {
+.litegraph .dialog .property.boolean.bool-on .property-name {
   color: #8a8;
 }
-.litegraph .dialog .property.boolean.bool-on .property_value {
+
+.litegraph .dialog .property.boolean.bool-on .property-value {
   color: #8a8;
 }
 
@@ -441,7 +443,7 @@
   color: black;
 }
 
-.litegraph .bullet_icon {
+.litegraph .bullet-icon {
   margin-left: 10px;
   border-radius: 10px;
   width: 12px;
@@ -454,7 +456,7 @@
   -moz-transition: background-color 0.1s ease 0s;
 }
 
-.litegraph .bullet_icon:hover {
+.litegraph .bullet-icon:hover {
   background-color: #698;
   cursor: pointer;
 }
@@ -511,15 +513,15 @@
   -webkit-width: calc(100% - 20px);
 }
 
-.graphmenu-entry .property_name {
+.graphmenu-entry .property-name {
   display: inline-block;
   text-align: left;
   min-width: 80px;
   min-height: 1.2em;
 }
 
-.graphmenu-entry .property_value,
-.litemenu-entry .property_value {
+.graphmenu-entry .property-value,
+.litemenu-entry .property-value {
   display: inline-block;
   background-color: rgba(0, 0, 0, 0.5);
   text-align: right;
@@ -600,9 +602,11 @@
 .litegraph .dialog {
   min-height: 0;
 }
+
 .litegraph .dialog .dialog-content {
   display: block;
 }
+
 .litegraph .graphdialog {
   display: flex;
   align-items: center;
@@ -610,22 +614,26 @@
   padding: 4px 10px;
   position: fixed;
 }
+
 .litegraph .graphdialog .name {
   padding: 0;
   min-height: 0;
   font-size: 16px;
   vertical-align: middle;
 }
+
 .litegraph .graphdialog .value {
   font-size: 16px;
   min-height: 0;
   margin: 0 10px;
   padding: 2px 5px;
 }
+
 .litegraph .graphdialog input[type="checkbox"] {
   width: 16px;
   height: 16px;
 }
+
 .litegraph .graphdialog button {
   padding: 4px 18px;
   border-radius: 20px;

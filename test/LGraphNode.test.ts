@@ -68,7 +68,7 @@ describe("LGraphNode", () => {
       order: node.order,
       mode: node.mode,
       inputs: node.inputs?.map(i => ({ name: i.name, type: i.type, link: i.link })),
-      outputs: node.outputs?.map(o => ({ name: o.name, type: o.type, links: o.links, slot_index: o.slot_index })),
+      outputs: node.outputs?.map(o => ({ name: o.name, type: o.type, links: o.links, slotIndex: o.slotIndex })),
     }
     node.configure(configureData)
     expect(node.pos).toEqual(new Float32Array([50, 60]))
@@ -468,7 +468,7 @@ describe("LGraphNode", () => {
   describe("widget serialization", () => {
     test("should only serialize widgets with serialize flag not set to false", () => {
       const node = new LGraphNode("TestNode")
-      node.serialize_widgets = true
+      node.serializeWidgets = true
 
       // Add widgets with different serialization settings
       node.addWidget("number", "serializable1", 1, null)
@@ -488,13 +488,13 @@ describe("LGraphNode", () => {
       const serialized = node.serialize()
 
       // Check that only serializable widgets' values are included
-      expect(serialized.widgets_values).toEqual([10, 20])
-      expect(serialized.widgets_values).toHaveLength(2)
+      expect(serialized.widgetsValues).toEqual([10, 20])
+      expect(serialized.widgetsValues).toHaveLength(2)
     })
 
     test("should only configure widgets with serialize flag not set to false", () => {
       const node = new LGraphNode("TestNode")
-      node.serialize_widgets = true
+      node.serializeWidgets = true
 
       node.addWidget("number", "non-serializable", 1, null)
       node.addWidget("number", "serializable1", 2, null)
@@ -507,7 +507,7 @@ describe("LGraphNode", () => {
         pos: [100, 100],
         size: [100, 100],
         properties: {},
-        widgets_values: [100],
+        widgetsValues: [100],
       }))
 
       expect(node.widgets![0].value).toBe(1)
@@ -540,7 +540,7 @@ describe("LGraphNode", () => {
       const inputSlot2 = { name: "test_in_2", type: "number", link: null, boundingRect: new Float32Array([0, 0, 0, 0]) }
       node.inputs = [inputSlot, inputSlot2]
       const slotIndex = 0
-      const nodeOffsetY = (node.constructor as any).slot_start_y || 0
+      const nodeOffsetY = (node.constructor as any).slotStartY || 0
       const expectedY = 200 + (slotIndex + 0.7) * LiteGraph.NODE_SLOT_HEIGHT + nodeOffsetY
       const expectedX = 100 + LiteGraph.NODE_SLOT_HEIGHT * 0.5
       expect(node.getInputSlotPos(inputSlot)).toEqual([expectedX, expectedY])
@@ -549,8 +549,8 @@ describe("LGraphNode", () => {
       expect(node.getInputSlotPos(inputSlot2)).toEqual([expectedX, expectedY2])
     })
 
-    test("should return default vertical position including slot_start_y when defined", () => {
-      (node.constructor as any).slot_start_y = 25
+    test("should return default vertical position including slotStartY when defined", () => {
+      (node.constructor as any).slotStartY = 25
       node.flags.collapsed = false
       node.inputs = [inputSlot]
       const slotIndex = 0
@@ -558,7 +558,7 @@ describe("LGraphNode", () => {
       const expectedY = 200 + (slotIndex + 0.7) * LiteGraph.NODE_SLOT_HEIGHT + nodeOffsetY
       const expectedX = 100 + LiteGraph.NODE_SLOT_HEIGHT * 0.5
       expect(node.getInputSlotPos(inputSlot)).toEqual([expectedX, expectedY])
-      delete (node.constructor as any).slot_start_y
+      delete (node.constructor as any).slotStartY
     })
   })
 
@@ -576,7 +576,7 @@ describe("LGraphNode", () => {
       node.getInputPos(0)
       expect(spy).toHaveBeenCalledWith(input0)
       const slotIndex = 0
-      const nodeOffsetY = (node.constructor as any).slot_start_y || 0
+      const nodeOffsetY = (node.constructor as any).slotStartY || 0
       const expectedDefaultY = 200 + (slotIndex + 0.7) * LiteGraph.NODE_SLOT_HEIGHT + nodeOffsetY
       const expectedDefaultX = 100 + LiteGraph.NODE_SLOT_HEIGHT * 0.5
       expect(node.getInputPos(0)).toEqual([expectedDefaultX, expectedDefaultY])

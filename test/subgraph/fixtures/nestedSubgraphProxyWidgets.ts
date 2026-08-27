@@ -57,7 +57,7 @@ export const nestedSubgraphProxyWidgets = {
             properties: { proxyWidgets: [["8", "prompt"]] },
           },
         ],
-        links: [{ id: 1, origin_id: 3, origin_slot: 0, target_id: 8, target_slot: 0, type: "number" }],
+        links: [{ id: 1, originId: 3, originSlot: 0, targetId: 8, targetSlot: 0, type: "number" }],
         groups: [],
       },
       {
@@ -77,7 +77,7 @@ export const nestedSubgraphProxyWidgets = {
           { id: 8, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 1, mode: 0 },
           { id: 37, type: "dummy", pos: [0, 0], size: [100, 50], flags: {}, order: 2, mode: 0 },
         ],
-        links: [{ id: 2, origin_id: 3, origin_slot: 0, target_id: 37, target_slot: 0, type: "string" }],
+        links: [{ id: 2, originId: 3, originSlot: 0, targetId: 37, targetSlot: 0, type: "string" }],
         groups: [],
       },
     ],

@@ -19,7 +19,7 @@ export abstract class SlotBase implements INodeSlot {
   name: string
 
   /** Localised display name, shown in the UI when `label` is not set. */
-  localized_name?: string
+  localizedName?: string
 
   /** Optional user-facing label override for rendering. */
   label?: string
@@ -37,10 +37,10 @@ export abstract class SlotBase implements INodeSlot {
   shape?: RenderShape
 
   /** Fill colour when the slot has no active connections. */
-  color_off?: CanvasColour
+  colorOff?: CanvasColour
 
   /** Fill colour when the slot has at least one active connection. */
-  color_on?: CanvasColour
+  colorOn?: CanvasColour
 
   /** When `true`, the slot cannot accept new connections. */
   locked?: boolean
@@ -80,14 +80,14 @@ export abstract class SlotBase implements INodeSlot {
   /**
    * Resolves the fill colour to use when rendering this slot.
    *
-   * Returns `color_on` or `color_off` when set; otherwise delegates to
+   * Returns `colorOn` or `colorOff` when set; otherwise delegates to
    * `DefaultConnectionColors` based on `isConnected`.
    * @param colorContext Theme colours for connected and disconnected slot states.
    * @returns The canvas colour string to use for this slot's fill.
    */
   renderingColor(colorContext: DefaultConnectionColors): CanvasColour {
     return this.isConnected
-      ? this.color_on || colorContext.getConnectedColor(this.type)
-      : this.color_off || colorContext.getDisconnectedColor(this.type)
+      ? this.colorOn || colorContext.getConnectedColor(this.type)
+      : this.colorOff || colorContext.getDisconnectedColor(this.type)
   }
 }

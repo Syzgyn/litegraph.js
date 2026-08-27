@@ -97,10 +97,10 @@ export abstract class MovingLinkBase implements RenderLink {
     readonly dragDirection: LinkDirection = LinkDirection.CENTER,
   ) {
     const {
-      origin_id: outputNodeId,
-      target_id: inputNodeId,
-      origin_slot: outputIndex,
-      target_slot: inputIndex,
+      originId: outputNodeId,
+      targetId: inputNodeId,
+      originSlot: outputIndex,
+      targetSlot: inputIndex,
     } = link
 
     // Store output info
