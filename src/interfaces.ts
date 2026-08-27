@@ -65,6 +65,12 @@ export type SharedIntersection<T1, T2> = {
  */
 export type CanvasColour = string | CanvasGradient | CanvasPattern
 
+/** A single stop in a multi-stop colour gradient used by gradient slider widgets. */
+export interface ColorStop {
+  readonly offset: number
+  readonly color: readonly [r: number, g: number, b: number]
+}
+
 /**
  * Any object that has a {@link boundingRect}.
  */

@@ -3,8 +3,10 @@ import type {
   IBaseWidget,
   IBooleanWidget,
   IButtonWidget,
+  IColorWidget,
   IComboWidget,
   ICustomWidget,
+  IGradientSliderWidget,
   IKnobWidget,
   INumericWidget,
   ISliderWidget,
@@ -18,7 +20,9 @@ import { toClass } from "@/utils/type"
 import { BaseWidget } from "./BaseWidget"
 import { BooleanWidget } from "./BooleanWidget"
 import { ButtonWidget } from "./ButtonWidget"
+import { ColorWidget } from "./ColorWidget"
 import { ComboWidget } from "./ComboWidget"
+import { GradientSliderWidget } from "./GradientSliderWidget"
 import { KnobWidget } from "./KnobWidget"
 import { LegacyWidget } from "./LegacyWidget"
 import { NumberWidget } from "./NumberWidget"
@@ -38,6 +42,8 @@ export type WidgetTypeMap = {
   toggle: BooleanWidget
   /** {@link SliderWidget} */
   slider: SliderWidget
+  /** {@link GradientSliderWidget} */
+  gradientslider: GradientSliderWidget
   /** {@link KnobWidget} */
   knob: KnobWidget
   /** {@link ComboWidget} */
@@ -48,6 +54,8 @@ export type WidgetTypeMap = {
   string: TextWidget
   /** {@link TextWidget} (`type: "text"`) */
   text: TextWidget
+  /** {@link ColorWidget} */
+  color: ColorWidget
   /** {@link LegacyWidget} for unrecognized custom POJOs */
   custom: LegacyWidget
   [key: string]: BaseWidget
@@ -85,11 +93,13 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
     case "button": return toClass(ButtonWidget, narrowedWidget, node)
     case "toggle": return toClass(BooleanWidget, narrowedWidget, node)
     case "slider": return toClass(SliderWidget, narrowedWidget, node)
+    case "gradientslider": return toClass(GradientSliderWidget, narrowedWidget, node)
     case "knob": return toClass(KnobWidget, narrowedWidget, node)
     case "combo": return toClass(ComboWidget, narrowedWidget, node)
     case "number": return toClass(NumberWidget, narrowedWidget, node)
     case "string": return toClass(TextWidget, narrowedWidget, node)
     case "text": return toClass(TextWidget, narrowedWidget, node)
+    case "color": return toClass(ColorWidget, narrowedWidget, node)
     default: {
       if (wrapLegacyWidgets) return toClass(LegacyWidget, widget, node)
     }
@@ -120,6 +130,22 @@ export function isBooleanWidget(widget: IBaseWidget): widget is IBooleanWidget {
  */
 export function isSliderWidget(widget: IBaseWidget): widget is ISliderWidget {
   return widget.type === "slider"
+}
+
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IGradientSliderWidget}.
+ * @param widget Widget to test.
+ */
+export function isGradientSliderWidget(widget: IBaseWidget): widget is IGradientSliderWidget {
+  return widget.type === "gradientslider"
+}
+
+/**
+ * Type guard: narrows {@link IBaseWidget} to {@link IColorWidget}.
+ * @param widget Widget to test.
+ */
+export function isColorWidget(widget: IBaseWidget): widget is IColorWidget {
+  return widget.type === "color"
 }
 
 /**
