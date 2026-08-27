@@ -1,11 +1,12 @@
 import type { SubgraphEventMap } from "@/infrastructure/SubgraphEventMap"
 import type { DefaultConnectionColors, INodeInputSlot, INodeOutputSlot } from "@/interfaces"
 import type { LGraphCanvas } from "@/LGraphCanvas"
-import type { ExportedSubgraph, ExposedWidget, ISerialisedGraph, Serialisable, SerialisableGraph } from "@/types/serialisation"
+import type { ExportedSubgraph, ExportedSubgraphInstance, ExposedWidget, ISerialisedGraph, Serialisable, SerialisableGraph } from "@/types/serialisation"
 
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 import { CustomEventTarget } from "@/infrastructure/CustomEventTarget"
 import { type BaseLGraph, LGraph } from "@/LGraph"
+import { LiteGraph, SubgraphNode } from "@/litegraph"
 import { type LinkId, LLink } from "@/LLink"
 import { createUuidv4 } from "@/utils/uuid"
 
@@ -380,5 +381,38 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
         : undefined,
       extra: this.extra,
     }
+  }
+
+  /**
+   * Registers a `SubgraphNode` constructor under the subgraph definition's UUID so
+   * `LiteGraph.createNode` can instantiate it.
+   *
+   * Skips registration when a host app (e.g. ComfyUI) has already registered a custom class
+   * via the `LGraphEventMap` `"subgraph-created"` event.
+   */
+  registerNodeType(): void {
+    const subgraph = this
+    if (Object.hasOwn(LiteGraph.registered_node_types, subgraph.id)) return
+
+    const instanceData: ExportedSubgraphInstance = {
+      id: -1,
+      type: subgraph.id,
+      pos: [0, 0],
+      size: [100, 100],
+      inputs: [],
+      outputs: [],
+      flags: {},
+      order: 0,
+      mode: 0,
+    }
+
+    const NodeClass = class extends SubgraphNode {
+      constructor() {
+        super(subgraph.rootGraph, subgraph, instanceData)
+      }
+    }
+
+    Object.defineProperty(NodeClass, "title", { value: subgraph.name, configurable: true })
+    LiteGraph.registerNodeType(subgraph.id, NodeClass)
   }
 }

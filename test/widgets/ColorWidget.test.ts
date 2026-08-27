@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import type { LGraphCanvas, LGraphNode } from "@/litegraph"
+import type { LGraphCanvas } from "@/litegraph"
 import type { CanvasPointerEvent } from "@/types/events"
 import type { IColorWidget } from "@/types/widgets"
 
