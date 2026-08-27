@@ -376,10 +376,15 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   #mouseoutCallback?: (e: PointerEvent) => void
   /** Bound pointer-cancel handler registered on `canvas`. */
   #mousecancelCallback?: (e: PointerEvent) => void
+  /** Bound subgraph-opened handler registered on `canvas`. */
+  #subgraphOpenedCallback?: (e: CustomEvent) => void
   /** Bound keyboard handler registered on `canvas` and its document. */
   #keyCallback?: (e: KeyboardEvent) => void
   /** @deprecated Panels */
   #blockClick?: boolean
+  /** Stack of parent graphs for navigation. */
+  #navStack: (LGraph | Subgraph)[] = []
+
   autoPan: AutoPanController | null = null
 
   /** If true, enable drag zoom. Ctrl+Shift+Drag Up/Down: zoom canvas. */
@@ -3623,6 +3628,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#mouseupCallback = this.processMouseUp.bind(this)
     this.#mouseoutCallback = this.processMouseOut.bind(this)
     this.#mousecancelCallback = this.processMouseCancel.bind(this)
+    this.#subgraphOpenedCallback = this.processSubgraphOpened.bind(this)
 
     canvas.addEventListener("pointerdown", this.#mousedownCallback, { capture: true })
     canvas.addEventListener("wheel", this.#mousewheelCallback, { capture: false })
@@ -3646,6 +3652,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     canvas.addEventListener("dragover", this.#doNothing, { capture: false })
     canvas.addEventListener("dragend", this.#doNothing, { capture: false })
     canvas.addEventListener("dragenter", this.#doReturnTrue, { capture: false })
+
+    canvas.addEventListener("subgraph-opened", e => this.#subgraphOpenedCallback?.(e as CustomEvent))
 
     this.#eventsBinded = true
   }
@@ -4471,6 +4479,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     return
   }
 
+  goBack() {
+    console.log("going back")
+    const parent = this.#navStack.pop()
+    if (parent) this.setGraph(parent)
+  }
+
   /**
    * process a key event
    */
@@ -4505,6 +4519,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.nodePanel?.close()
         this.optionsPanel?.close()
         if (this.nodePanel || this.optionsPanel) blockDefault = true
+        if (this.subgraph) this.goBack()
       } else if (e.key === "a" && e.ctrlKey) {
         // select all Control A
         this.selectItems()
@@ -4556,6 +4571,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       e.preventDefault()
       e.stopImmediatePropagation()
     }
+  }
+
+  /**
+   * Called when a subgraph is opened.
+   * @param e The event object.
+   */
+  processSubgraphOpened(e: CustomEvent) {
+    // Subgraph nav stack, to allow for going back to the parent graph
+    const { closingGraph } = e.detail
+    this.#navStack.push(closingGraph)
   }
 
   /**
