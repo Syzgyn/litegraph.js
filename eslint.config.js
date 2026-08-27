@@ -89,6 +89,7 @@ export default tseslint.config(
       "unicorn/max-nested-calls": "off",
       "unicorn/prefer-iterator-to-array": "off",
 
+      "unicorn/class-reference-in-static-methods": "off",
       "unicorn/no-this-outside-of-class": "off",
       "unicorn/no-break-in-nested-loop": "off",
       "unicorn/prefer-minimal-ternary": "off",
