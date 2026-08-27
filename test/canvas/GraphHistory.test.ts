@@ -331,7 +331,7 @@ describe("GraphHistory", () => {
     expect(graph.nodes[0].pos[0]).not.toBe(150)
   })
 
-  test("undo and redo restore widget values", ({ graph, history }) => {
+  test("undo and redo preserve widget values", ({ graph, history }) => {
     const node = LiteGraph.createNode("test/WidgetNode")!
     graph.add(node)
     history.reset()
@@ -340,16 +340,36 @@ describe("GraphHistory", () => {
     node.widgets![0].value = 42
     history.capture()
 
-    node.widgets![0].value = 99
+    node.pos[0] = 200
+    history.capture()
+
+    history.undo()
+    expect(graph.getNodeById(nodeId)!.pos[0]).not.toBe(200)
+    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
+
+    history.redo()
+    expect(graph.getNodeById(nodeId)!.pos[0]).toBe(200)
+    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
+  })
+
+  test("undo delete then redo preserves widget values", ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/WidgetNode")!
+    graph.add(node)
+    history.reset()
+
+    const nodeId = node.id
+    node.widgets![0].value = 42
+
+    graph.remove(node)
     history.capture()
 
     history.undo()
     expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
 
-    history.undo()
-    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(10)
-
     history.redo()
+    expect(graph.getNodeById(nodeId)).toBeUndefined()
+
+    history.undo()
     expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
   })
 

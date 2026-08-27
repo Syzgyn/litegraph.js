@@ -1,10 +1,14 @@
 import type { LGraph } from "@/LGraph"
 import type { LGraphCanvas } from "@/LGraphCanvas"
-import type { LGraphNode } from "@/LGraphNode"
+import type { NodeId } from "@/LGraphNode"
 import type { SerialisableGraph } from "@/types/serialisation"
+import type { TWidgetValue } from "@/types/widgets"
 import type { UUID } from "@/utils/uuid"
 
 import { forEachNode } from "@/utils/graphTraversal"
+
+/** Live widget values keyed by node id, retained across undo/redo restores. */
+type WidgetValueStore = Map<NodeId, Map<string, TWidgetValue>>
 
 export interface GraphHistoryEntry {
   graph: SerialisableGraph
@@ -30,12 +34,47 @@ function nodeCount(entry: GraphHistoryEntry): number {
   return entry.graph.nodes?.length ?? 0
 }
 
+function recordWidgetValues(graph: LGraph, store: WidgetValueStore): void {
+  forEachNode(graph, (node) => {
+    if (!node.widgets?.length) return
+
+    const values = new Map<string, TWidgetValue>()
+    for (const widget of node.widgets) {
+      if (!widget.name || widget.serialize === false) continue
+      const { value } = widget
+      values.set(
+        widget.name,
+        value != null && typeof value === "object" ? structuredClone(value) : value,
+      )
+    }
+    if (values.size) store.set(node.id, values)
+  })
+}
+
+function applyWidgetValues(graph: LGraph, store: WidgetValueStore): void {
+  forEachNode(graph, (node) => {
+    const values = store.get(node.id)
+    if (!values || !node.widgets?.length) return
+
+    for (const widget of node.widgets) {
+      if (!widget.name || !values.has(widget.name)) continue
+
+      const value = values.get(widget.name)!
+      if (widget.options?.property) node.setProperty(widget.options.property, value)
+      else widget.value = value
+    }
+  })
+}
+
 /**
  * Undo/redo history for a {@link LGraphCanvas}, using graph serialisation snapshots.
  *
  * Listens for {@link LGraphCanvas} change events and pointer release to capture state,
  * resets its baseline when the root graph is configured or replaced, and handles
  * Ctrl/Cmd+Z (undo) and Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z (redo).
+ *
+ * Widget values are kept outside the undo stack: undo/redo restores graph topology
+ * and layout from snapshots but always reapplies the latest live widget values.
  * @example
  * ```ts
  * const history = new GraphHistory(canvas)
@@ -52,6 +91,7 @@ export class GraphHistory implements Disposable {
   #restoring = false
   #captureScheduled = false
   #settling = false
+  #widgetValues: WidgetValueStore = new Map()
   #prevGraphBeforeChange?: LGraph["onBeforeChange"]
   #prevGraphAfterChange?: LGraph["onAfterChange"]
 
@@ -81,6 +121,7 @@ export class GraphHistory implements Disposable {
   }
 
   #onBeforeChange = (): void => {
+    if (!this.#restoring) recordWidgetValues(this.#rootGraph, this.#widgetValues)
     this.#syncBaselineIfStale()
     this.changeCount++
   }
@@ -141,27 +182,20 @@ export class GraphHistory implements Disposable {
   }
 
   #createEntry(): GraphHistoryEntry {
-    const widgetFlags = new Map<LGraphNode, boolean | undefined>()
-    forEachNode(this.#rootGraph, (node) => {
-      widgetFlags.set(node, node.serialize_widgets)
-      node.serialize_widgets = true
-    })
-
-    try {
-      return {
-        graph: structuredClone(this.#rootGraph.asSerialisable()),
-        subgraphId: this.#canvas.subgraph?.id,
-      }
-    } finally {
-      for (const [node, prev] of widgetFlags) node.serialize_widgets = prev
+    return {
+      graph: structuredClone(this.#rootGraph.asSerialisable()),
+      subgraphId: this.#canvas.subgraph?.id,
     }
   }
 
   #restore(entry: GraphHistoryEntry): void {
+    recordWidgetValues(this.#rootGraph, this.#widgetValues)
+
     this.#restoring = true
     this.changeCount = 0
     try {
       this.#rootGraph.configure(entry.graph)
+      applyWidgetValues(this.#rootGraph, this.#widgetValues)
       this.#restoreNavigation(entry.subgraphId)
       this.activeState = structuredClone(entry)
     } finally {
@@ -322,6 +356,7 @@ export class GraphHistory implements Disposable {
     this.undoQueue.length = 0
     this.redoQueue.length = 0
     this.changeCount = 0
+    recordWidgetValues(this.#rootGraph, this.#widgetValues)
   }
 
   dispose(): void {
