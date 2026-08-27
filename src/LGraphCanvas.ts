@@ -42,7 +42,7 @@ import type { UUID } from "./utils/uuid"
 import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
-import { LinkConnector } from "@/canvas/LinkConnector"
+import { LinkConnector, type RenderLinkUnion } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { forEachNode } from "@/utils/graphTraversal"
 import { isMiddleButtonEvent } from "@/utils/pointerUtils"
@@ -2842,6 +2842,28 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     ctx.globalAlpha = globalAlpha
   }
 
+  #renderDisconnectCircles(ctx: CanvasRenderingContext2D, highlightPos: ReadOnlyPoint, renderLinks: RenderLinkUnion[]) {
+    for (const link of renderLinks) {
+      if (!("disconnectOnDrop" in link) || !link.disconnectOnDrop) continue
+      if (!("disconnectOrigin" in link) || !link.disconnectOrigin) continue
+
+      const [originX, originY] = link.disconnectOrigin
+      const radius = 35
+      const distSquared = (originX - highlightPos[0]) ** 2 + (originY - highlightPos[1]) ** 2
+
+      ctx.save()
+      ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR
+      ctx.lineWidth = 2
+      const path = new Path2D()
+      path.moveTo(originX + radius, originY)
+      path.arc(originX, originY, radius, 0, Math.PI * 2)
+      ctx.stroke(path)
+      ctx.restore()
+
+      link.disconnectOnDrop = distSquared < radius ** 2
+    }
+  }
+
   #renderAllLinkSegments(
     ctx: CanvasRenderingContext2D,
     link: LLink,
@@ -5253,25 +5275,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         // Gradient half-border over target node
         this.#renderSnapHighlight(ctx, highlightPos)
 
-        for (const link of renderLinks) {
-          if (!("disconnectOnDrop" in link) || !link.disconnectOnDrop) continue
-          if (!("disconnectOrigin" in link) || !link.disconnectOrigin) continue
+        // for (const link of renderLinks) {
+        //   if (!("disconnectOnDrop" in link) || !link.disconnectOnDrop) continue
+        //   if (!("disconnectOrigin" in link) || !link.disconnectOrigin) continue
 
-          const [originX, originY] = link.disconnectOrigin
-          const radius = 35
-          const distSquared = (originX - highlightPos[0]) ** 2 + (originY - highlightPos[1]) ** 2
+        //   const [originX, originY] = link.disconnectOrigin
+        //   const radius = 35
+        //   const distSquared = (originX - highlightPos[0]) ** 2 + (originY - highlightPos[1]) ** 2
 
-          ctx.save()
-          ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR
-          ctx.lineWidth = 2
-          const path = new Path2D()
-          path.moveTo(originX + radius, originY)
-          path.arc(originX, originY, radius, 0, Math.PI * 2)
-          ctx.stroke(path)
-          ctx.restore()
+        //   ctx.save()
+        //   ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR
+        //   ctx.lineWidth = 2
+        //   const path = new Path2D()
+        //   path.moveTo(originX + radius, originY)
+        //   path.arc(originX, originY, radius, 0, Math.PI * 2)
+        //   ctx.stroke(path)
+        //   ctx.restore()
 
-          link.disconnectOnDrop = distSquared < radius ** 2
-        }
+        //   link.disconnectOnDrop = distSquared < radius ** 2
+        // }
       }
 
       // Area-selection rectangle
@@ -5467,6 +5489,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         ctx.shadowColor = "rgba(0,0,0,0)"
       }
 
+      // render disconnect circles
+      const { linkConnector } = this
+      if (linkConnector.isConnecting) {
+        const { renderLinks } = linkConnector
+        const highlightPos = this.#getHighlightPosition()
+
+        this.#renderDisconnectCircles(ctx, highlightPos, renderLinks)
+      }
       // draw connections
       this.drawConnections(ctx)
 

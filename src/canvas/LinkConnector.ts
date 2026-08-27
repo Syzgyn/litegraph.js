@@ -57,7 +57,7 @@ export interface LinkConnectorState {
 }
 
 /** Discriminated union to simplify type narrowing. */
-type RenderLinkUnion =
+export type RenderLinkUnion =
   | MovingInputLink |
   MovingOutputLink |
   FloatingRenderLink |

@@ -1,0 +1,56 @@
+---
+description: Upstream lineage and repository layout for litegraph.js
+alwaysApply: true
+---
+
+# Repository context
+
+## Upstream lineage
+
+This library is a fork of [Comfy-Org/litegraph.js](https://github.com/Comfy-Org/litegraph.js), which is **archived**. Active development continues inside [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend) at `src/lib/litegraph/`.
+
+Treat **ComfyUI_frontend** as the alternative upstream for bug fixes and features. Many PRs from that subtree have already been ported here — check before reimplementing:
+
+- `docs/PORTED.md` — table of ported PRs with local file mappings
+- `docs/upstream-comparison.md` — gap analysis vs upstream
+
+To port an upstream PR, use the **comfy-port** skill (`.cursor/skills/comfy-port/SKILL.md`). Do not `git cherry-pick` or merge `comfyui/main` — paths and dependencies differ.
+
+### Path mapping (upstream → this repo)
+
+| Upstream | This repo |
+|----------|-----------|
+| `src/lib/litegraph/src/**` | `src/**` |
+| `src/lib/litegraph/src/**/*.test.ts` | `test/**` |
+| `@/lib/litegraph/src/...` | `@/...` |
+
+This repo is **standalone**: zero runtime dependencies, no Pinia/Vue/Comfy stores. Reimplement upstream intent in `LGraph`, `LGraphNode`, `BaseWidget`, etc. when upstream uses Comfy-only deps.
+
+## Repository layout
+
+```
+src/                    TypeScript source (@/ alias)
+  litegraph.ts          Public barrel — import from here or package root
+  LGraph.ts             Graph model, serialisation, execution
+  LGraphCanvas.ts       Canvas editor, input, rendering, UI
+  LGraphNode.ts         Node instances, slots, widgets
+  LLink.ts, Reroute.ts  Links and reroute nodes
+  LiteGraphGlobal.ts    Singleton config and node-type registry
+  ContextMenu.ts        DOM context menus
+  canvas/               Link drag/drop (LinkConnector), render links, auto-pan
+  subgraph/             Subgraph, SubgraphNode, I/O nodes, deduplication
+  widgets/              Widget classes (Number, Combo, Slider, …) + widgetMap
+  node/                 Input/output slots, slot utils
+  infrastructure/       Rectangle, CustomEventTarget, typed event maps, errors
+  types/                Shared types, enums, serialisation shapes
+  utils/                Helpers (widget, uuid, mathParser, text, collections, …)
+test/                   Vitest tests — mirror `src/` domains (`test/subgraph/`, …)
+docs/                   PORTED.md, upstream-comparison.md, generated API (TypeDoc)
+dist/                   Build output (Vite)
+```
+
+### Conventions
+
+- **Imports**: use `@/…` in source/tests; subgraph tests import from `@/litegraph` barrel only (avoids circular deps — see `CLAUDE.md`).
+- **Public API**: export new surface from `src/litegraph.ts` only when it should be public.
+- **Tests**: vitest in `test/`; follow `.cursor/rules/unit-test.mdc`.
