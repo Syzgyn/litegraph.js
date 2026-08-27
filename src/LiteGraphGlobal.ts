@@ -1,5 +1,6 @@
 import type { Dictionary, ISlotType, Rect, WhenNullish } from "./interfaces"
 
+import { GraphHistory } from "./canvas/GraphHistory"
 import { InputIndicators } from "./canvas/InputIndicators"
 import { ContextMenu } from "./ContextMenu"
 import { CurveEditor } from "./CurveEditor"
@@ -431,6 +432,7 @@ export class LiteGraphGlobal {
     get Rectangle() { return Rectangle },
 
     // Debug / helpers
+    get GraphHistory() { return GraphHistory },
     get InputIndicators() { return InputIndicators },
   }
 

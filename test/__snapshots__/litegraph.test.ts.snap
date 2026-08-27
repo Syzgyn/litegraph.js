@@ -13,6 +13,7 @@ LiteGraphGlobal {
   "CIRCLE_SHAPE": 3,
   "CONNECTING_LINK_COLOR": "#AFA",
   "Classes": {
+    "GraphHistory": [Function],
     "InputIndicators": [Function],
     "Rectangle": [Function],
     "SubgraphIONodeBase": [Function],

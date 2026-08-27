@@ -171,6 +171,7 @@ export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {
 
 // End backwards compat
 
+export { GraphHistory, type GraphHistoryEntry } from "./canvas/GraphHistory"
 export { InputIndicators } from "./canvas/InputIndicators"
 export { LinkConnector } from "./canvas/LinkConnector"
 export { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
