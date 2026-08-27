@@ -13,7 +13,15 @@ class TestNode extends LGraphNode {
   }
 }
 
+class WidgetNode extends LGraphNode {
+  constructor() {
+    super("test/WidgetNode")
+    this.addWidget("number", "count", 10, null)
+  }
+}
+
 LiteGraph.registerNodeType("test/HistoryNode", TestNode)
+LiteGraph.registerNodeType("test/WidgetNode", WidgetNode)
 
 function createMockContext(): CanvasRenderingContext2D {
   return {
@@ -321,6 +329,28 @@ describe("GraphHistory", () => {
 
     expect(graph.nodes).toHaveLength(1)
     expect(graph.nodes[0].pos[0]).not.toBe(150)
+  })
+
+  test("undo and redo restore widget values", ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/WidgetNode")!
+    graph.add(node)
+    history.reset()
+
+    const nodeId = node.id
+    node.widgets![0].value = 42
+    history.capture()
+
+    node.widgets![0].value = 99
+    history.capture()
+
+    history.undo()
+    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
+
+    history.undo()
+    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(10)
+
+    history.redo()
+    expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
   })
 
   test("dispose stops keyboard undo", ({ graph, history, canvas }) => {

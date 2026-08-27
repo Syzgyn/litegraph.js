@@ -1,7 +1,10 @@
 import type { LGraph } from "@/LGraph"
 import type { LGraphCanvas } from "@/LGraphCanvas"
+import type { LGraphNode } from "@/LGraphNode"
 import type { SerialisableGraph } from "@/types/serialisation"
 import type { UUID } from "@/utils/uuid"
+
+import { forEachNode } from "@/utils/graphTraversal"
 
 export interface GraphHistoryEntry {
   graph: SerialisableGraph
@@ -138,9 +141,19 @@ export class GraphHistory implements Disposable {
   }
 
   #createEntry(): GraphHistoryEntry {
-    return {
-      graph: structuredClone(this.#rootGraph.asSerialisable()),
-      subgraphId: this.#canvas.subgraph?.id,
+    const widgetFlags = new Map<LGraphNode, boolean | undefined>()
+    forEachNode(this.#rootGraph, (node) => {
+      widgetFlags.set(node, node.serialize_widgets)
+      node.serialize_widgets = true
+    })
+
+    try {
+      return {
+        graph: structuredClone(this.#rootGraph.asSerialisable()),
+        subgraphId: this.#canvas.subgraph?.id,
+      }
+    } finally {
+      for (const [node, prev] of widgetFlags) node.serialize_widgets = prev
     }
   }
 
