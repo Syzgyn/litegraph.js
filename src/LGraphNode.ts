@@ -64,10 +64,10 @@ import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
 
 // #region Types
 
-/** Unique identifier for a node within a graph. Numeric or UUID string depending on {@link LiteGraph.use_uuids}. */
+/** Unique identifier for a node within a graph. Numeric or UUID string depending on `LiteGraph.use_uuids`. */
 export type NodeId = number | string
 
-/** Value type for {@link LGraphNode.properties} entries. */
+/** Value type for `LGraphNode.properties` entries. */
 export type NodeProperty = string | number | boolean | object
 
 /** Schema describing a custom node property shown in the properties panel. */
@@ -80,7 +80,7 @@ export interface INodePropertyInfo {
   default_value: NodeProperty | undefined
 }
 
-/** Transient hit-test state populated by {@link LGraphCanvas} during pointer moves. */
+/** Transient hit-test state populated by `LGraphCanvas` during pointer moves. */
 export interface IMouseOverData {
   /** Index of the input slot under the pointer, if any. */
   inputId?: number
@@ -90,7 +90,7 @@ export interface IMouseOverData {
   overWidget?: IBaseWidget
 }
 
-/** Options controlling type-based auto-connection in {@link connectByType} and related helpers. */
+/** Options controlling type-based auto-connection in `connectByType` and related helpers. */
 export interface ConnectByTypeOptions {
   /** @deprecated Events */
   createEventInCase?: boolean
@@ -98,7 +98,7 @@ export interface ConnectByTypeOptions {
   wildcardToTyped?: boolean
   /** Allow our typed slot to connect to wildcard slots on remote node. Default: true */
   typedToWildcard?: boolean
-  /** The {@link Reroute.id} that the connection is being dragged from. */
+  /** The `Reroute.id` that the connection is being dragged from. */
   afterRerouteId?: RerouteId
 }
 
@@ -111,7 +111,7 @@ export interface IGenericLinkOrLinks {
   link?: INodeInputSlot["link"]
 }
 
-/** Options for {@link findInputSlotFree} and {@link findOutputSlotFree}. */
+/** Options for `findInputSlotFree` and `findOutputSlotFree`. */
 export interface FindFreeSlotOptions {
   /** Slots matching these types will be ignored.  Default: [] */
   typesNotAccepted?: ISlotType[]
@@ -198,35 +198,35 @@ supported callbacks:
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- merges static constructor metadata onto the class
 export interface LGraphNode {
-  /** Static constructor reference used by {@link LiteGraph.registerNodeType}. */
+  /** Static constructor reference used by `LiteGraph.registerNodeType`. */
   constructor: LGraphNodeConstructor
 }
 
 // #endregion Types
 
 /**
- * Base class for every node rendered and executed on an {@link LGraph}.
+ * Base class for every node rendered and executed on an `LGraph`.
  *
- * Nodes expose typed {@link inputs} and {@link outputs}, optional {@link widgets}, and a rich set
- * of lifecycle/rendering callbacks. Subclass via {@link LiteGraph.registerNodeType} or extend
+ * Nodes expose typed `inputs` and `outputs`, optional `widgets`, and a rich set
+ * of lifecycle/rendering callbacks. Subclass via `LiteGraph.registerNodeType` or extend
  * directly for custom behaviour.
  * @remarks
- * Override optional callbacks such as {@link onExecute}, {@link onDrawForeground}, and
- * {@link onConnectionsChange} to implement node logic. Position and size are
- * {@link Positionable} and participate in canvas hit-testing via {@link boundingRect}.
+ * Override optional callbacks such as `onExecute`, `onDrawForeground`, and
+ * `onConnectionsChange` to implement node logic. Position and size are
+ * `Positionable` and participate in canvas hit-testing via `boundingRect`.
  * @param title Display title shown in the node header.
- * @param type Registered node type string used by {@link LiteGraph.createNode}.
- * @see {@link LGraph.add}
- * @see {@link LGraphNode.connect}
+ * @param type Registered node type string used by `LiteGraph.createNode`.
+ * @see `LGraph.add`
+ * @see `LGraphNode.connect`
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable {
   // Static properties used by dynamic child classes
   /** Default title for nodes of this type when instance title is unset. */
   static title?: string
-  /** Maximum lines retained in {@link console} trace output. */
+  /** Maximum lines retained in `console` trace output. */
   static MAX_CONSOLE?: number
-  /** Registered type name; used by {@link LiteGraph.createNode}. */
+  /** Registered type name; used by `LiteGraph.createNode`. */
   static type?: string
   /** Palette category for the node search menu. */
   static category?: string
@@ -242,14 +242,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Pixel size of corner resize handles.
-   * @see {@link findResizeDirection}
+   * @see `findResizeDirection`
    */
   static resizeHandleSize = 15
   /** Pixel size of edge resize hit areas. */
   static resizeEdgeSize = 5
 
   /**
-   * Default setting for {@link LGraphNode.connectInputToOutput}.
+   * Default setting for `LGraphNode.connectInputToOutput`.
    * @see `keepAllLinksOnBypass` on `INodeFlags`
    */
   static keepAllLinksOnBypass: boolean = false
@@ -257,23 +257,23 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   #concreteInputs: NodeInputSlot[] = []
   #concreteOutputs: NodeOutputSlot[] = []
 
-  /** @inheritdoc {@link renderArea} */
+  /** @inheritdoc `renderArea` */
   #renderArea: Float32Array = new Float32Array(4)
 
-  /** @inheritdoc {@link boundingRect} */
+  /** @inheritdoc `boundingRect` */
   #boundingRect: Rectangle = new Rectangle()
 
-  /** {@link pos} and {@link size} values are backed by this {@link Rect}. */
+  /** `pos` and `size` values are backed by this `Rect`. */
   #posSizeStore: Float32Array = new Float32Array(4)
   #posStore: Point = this.#posSizeStore.subarray(0, 2)
   #sizeStore: Size = this.#posSizeStore.subarray(2, 4)
-  /** Override for {@link renderingShape}; unset uses constructor or global default. */
+  /** Override for `renderingShape`; unset uses constructor or global default. */
   #shapeStore?: RenderShape
 
   /** The title text of the node. */
   title: string
 
-  /** Owning graph or subgraph; `null` before {@link LGraph.add}. */
+  /** Owning graph or subgraph; `null` before `LGraph.add`. */
   graph: LGraph | Subgraph | null = null
   /** Unique ID within the owning graph. */
   id: NodeId
@@ -287,13 +287,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   properties: Dictionary<NodeProperty | undefined> = {}
   /** Metadata describing custom properties for the properties panel. */
   properties_info: INodePropertyInfo[] = []
-  /** Behaviour flags (collapsed, pinned, bypass, etc.); see {@link INodeFlags}. */
+  /** Behaviour flags (collapsed, pinned, bypass, etc.); see `INodeFlags`. */
   flags: INodeFlags = {}
   /** Interactive widgets rendered inside the node body. */
   widgets?: IBaseWidget[]
   /**
    * The amount of space available for widgets to grow into.
-   * @see {@link layoutWidgets}
+   * @see `layoutWidgets`
    */
   freeWidgetSpace?: number
 
@@ -307,28 +307,28 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Execution order, automatically computed during run
-   * @see {@link LGraph.computeExecutionOrder}
+   * @see `LGraph.computeExecutionOrder`
    */
   order: number = 0
-  /** Controls when {@link onExecute} runs; see {@link LGraphEventMode}. */
+  /** Controls when `onExecute` runs; see `LGraphEventMode`. */
   mode: LGraphEventMode = LGraphEventMode.ALWAYS
   /** Last serialised snapshot, preserved for error placeholder nodes. */
   last_serialization?: ISerialisedNode
-  /** When `true`, {@link widgets} values are included in {@link serialize}. */
+  /** When `true`, `widgets` values are included in `serialize`. */
   serialize_widgets?: boolean
   /**
    * The overridden fg color used to render the node.
-   * @see {@link renderingColor}
+   * @see `renderingColor`
    */
   color?: string
   /**
    * The overridden bg color used to render the node.
-   * @see {@link renderingBgColor}
+   * @see `renderingBgColor`
    */
   bgcolor?: string
   /**
    * The overridden box color used to render the node.
-   * @see {@link renderingBoxColor}
+   * @see `renderingBoxColor`
    */
   boxcolor?: string
 
@@ -360,12 +360,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   badges: (LGraphBadge | (() => LGraphBadge))[] = []
   /** Clickable buttons rendered in the title bar. */
   title_buttons: LGraphButton[] = []
-  /** Corner alignment for {@link badges}. */
+  /** Corner alignment for `badges`. */
   badgePosition: BadgePosition = BadgePosition.TopLeft
   collapsed_width?: number
   /** Rolling debug log displayed on the node when enabled. */
   console?: string[]
-  /** Topological depth assigned by {@link LGraph.computeExecutionOrder}. */
+  /** Topological depth assigned by `LGraph.computeExecutionOrder`. */
   level?: number
   /** Current pointer hover state for slots and widgets. */
   mouseOver?: IMouseOverData
@@ -376,7 +376,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   clonable?: boolean
   /** When `true`, content drawn outside the node body is clipped. */
   clip_area?: boolean
-  /** When `true`, {@link LGraph.remove} refuses to delete this node. */
+  /** When `true`, `LGraph.remove` refuses to delete this node. */
   ignore_remove?: boolean
   /** Set when deserialisation failed and a placeholder node was created. */
   has_errors?: boolean
@@ -452,7 +452,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Finds a matching slot from those provided, returning the slot itself or its index in {@link slots}.
+   * Finds a matching slot from those provided, returning the slot itself or its index in `slots`.
    * @param slots Slots to search (this.inputs or this.outputs)
    * @param type Type of slot to look for
    * @param returnObj If true, returns the slot itself.  Otherwise, the index.
@@ -690,7 +690,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return `normal ${LiteGraph.NODE_SUBTEXT_SIZE}px ${LiteGraph.NODE_FONT}`
   }
 
-  /** Type string shown in the node header; defaults to {@link type}. */
+  /** Type string shown in the node header; defaults to `type`. */
   get displayType(): string {
     return this.type
   }
@@ -739,16 +739,16 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         colorOption.color === this.color && colorOption.bgcolor === this.bgcolor,
     ) ?? null
   }
-  /** Called from {@link removeOutput} after an output slot is spliced out. */
+  /** Called from `removeOutput` after an output slot is spliced out. */
   onOutputRemoved?(this: LGraphNode, slot: number): void
-  /** Called from {@link removeInput} after an input slot is spliced out. */
+  /** Called from `removeInput` after an input slot is spliced out. */
   onInputRemoved?(this: LGraphNode, slot: number, input: INodeInputSlot): void
   /**
    * The width of the node when collapsed.
-   * Updated by {@link LGraphCanvas.drawNode}
+   * Updated by `LGraphCanvas.drawNode`
    */
   /**
-   * Called once at the start of every frame.  Caller may change the values in {@link out}, which will be reflected in {@link boundingRect}.
+   * Called once at the start of every frame.  Caller may change the values in `out`, which will be reflected in `boundingRect`.
    * WARNING: Making changes to boundingRect via onBounding is poorly supported, and will likely result in strange behaviour.
    */
   onBounding?(this: LGraphNode, out: Rect): void
@@ -756,7 +756,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /** ComfyUI extension hook for applying virtual node side effects. */
   applyToGraph?(extraLinks?: LLink[]): void
 
-  /** Type guard; overridden by {@link SubgraphNode} to return `true`. */
+  /** Type guard; overridden by `SubgraphNode` to return `true`. */
   isSubgraphNode(): this is SubgraphNode {
     return false
   }
@@ -770,7 +770,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Cached node position & area as `x, y, width, height`.  Includes changes made by {@link onBounding}, if present.
+   * Cached node position & area as `x, y, width, height`.  Includes changes made by `onBounding`, if present.
    *
    * Determines the node hitbox and other rendering effects.  Calculated once at the start of every frame.
    */
@@ -778,7 +778,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return this.#boundingRect
   }
 
-  /** The offset from {@link pos} to the top-left of {@link boundingRect}. */
+  /** The offset from `pos` to the top-left of `boundingRect`. */
   get boundingOffset(): ReadOnlyPoint {
     const { pos, boundingRect } = this
     const [posX, posY] = pos
@@ -790,7 +790,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return this.#posSizeStore
   }
 
-  /** Anchor position in graph space; may differ from the top-left of {@link boundingRect}. */
+  /** Anchor position in graph space; may differ from the top-left of `boundingRect`. */
   public get pos() {
     return this.#posStore
   }
@@ -854,23 +854,23 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * The shape of the node used for rendering.
-   * @see {@link RenderShape}
+   * @see `RenderShape`
    */
   get renderingShape(): RenderShape {
     return this.#shapeStore || this.constructor.shape || LiteGraph.NODE_DEFAULT_SHAPE
   }
 
-  /** @deprecated Alias for {@link selected}. */
+  /** @deprecated Alias for `selected`. */
   public get is_selected(): boolean | undefined {
     return this.selected
   }
 
-  /** @deprecated Alias for {@link selected}. */
+  /** @deprecated Alias for `selected`. */
   public set is_selected(value: boolean) {
     this.selected = value
   }
 
-  /** Title rendering mode from the node constructor, defaulting to {@link TitleMode.NORMAL_TITLE}. */
+  /** Title rendering mode from the node constructor, defaulting to `TitleMode.NORMAL_TITLE`. */
   public get title_mode(): TitleMode {
     return this.constructor.title_mode ?? TitleMode.NORMAL_TITLE
   }
@@ -899,10 +899,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     target_node: number | LGraphNode | SubgraphOutputNode,
     target_slot: number,
   ): boolean
-  /** Called from {@link setSize} after the node dimensions change. */
+  /** Called from `setSize` after the node dimensions change. */
   onResize?(this: LGraphNode, size: Size): void
   /**
-   * Called when a {@link properties} entry changes via {@link setProperty} or the panel.
+   * Called when a `properties` entry changes via `setProperty` or the panel.
    * @returns `false` to revert the change.
    */
   onPropertyChanged?(
@@ -920,21 +920,21 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     link_info: LLink | null | undefined,
     inputOrOutput: INodeInputSlot | INodeOutputSlot | SubgraphIO,
   ): void
-  /** Called from {@link addInput} when a new input slot is created. */
+  /** Called from `addInput` when a new input slot is created. */
   onInputAdded?(this: LGraphNode, input: INodeInputSlot): void
-  /** Called from {@link addOutput} when a new output slot is created. */
+  /** Called from `addOutput` when a new output slot is created. */
   onOutputAdded?(this: LGraphNode, output: INodeOutputSlot): void
-  /** Called at the end of {@link configure} with the serialised node payload. */
+  /** Called at the end of `configure` with the serialised node payload. */
   onConfigure?(this: LGraphNode, serialisedNode: ISerialisedNode): void
-  /** Called from {@link serialize} to add extra fields; must not return a value. */
+  /** Called from `serialize` to add extra fields; must not return a value. */
   onSerialize?(this: LGraphNode, serialised: ISerialisedNode): any
-  /** Primary execution callback invoked by {@link doExecute} and the graph loop. */
+  /** Primary execution callback invoked by `doExecute` and the graph loop. */
   onExecute?(
     this: LGraphNode,
     param?: unknown,
     options?: { action_call?: any },
   ): void
-  /** Invoked when an action input slot fires via {@link actionDo}. */
+  /** Invoked when an action input slot fires via `actionDo`. */
   onAction?(
     this: LGraphNode,
     action: string,
@@ -946,10 +946,10 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     this: LGraphNode,
     ctx: CanvasRenderingContext2D,
   ): void
-  /** Called once when the node instance is created by {@link LiteGraph.createNode}. */
+  /** Called once when the node instance is created by `LiteGraph.createNode`. */
   onNodeCreated?(this: LGraphNode): void
   /**
-   * Callback invoked by {@link connect} to override the target slot index.
+   * Callback invoked by `connect` to override the target slot index.
    * Its return value overrides the target index selection.
    * @param target_slot The current input slot index
    * @param requested_slot The originally requested slot index - could be negative, or if using (deprecated) name search, a string
@@ -987,13 +987,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   ): (IContextMenuValue<unknown> | null)[]
   /** Fully replaces the default node context menu when implemented. */
   getMenuOptions?(this: LGraphNode, canvas: LGraphCanvas): IContextMenuValue[]
-  /** Called from {@link LGraph.add} after the node is registered (before {@link onConfigure} when loading). */
+  /** Called from `LGraph.add` after the node is registered (before `onConfigure` when loading). */
   onAdded?(this: LGraphNode, graph: LGraph): void
 
   /** Called after the node is configured on a graph; used by primitive/custom nodes. */
   onGraphConfigured?(): void
 
-  /** Called after {@link onGraphConfigured} for all nodes on the graph. */
+  /** Called after `onGraphConfigured` for all nodes on the graph. */
   onAfterGraphConfigured?(): void
   /**
    * Custom collapsed-node rendering.
@@ -1043,7 +1043,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /** Double-click on an output slot; often used to spawn a connected node. */
   onOutputDblClick?(this: LGraphNode, index: number, e: CanvasPointerEvent): void
   // TODO: Return type
-  /** Supplies metadata for a property name when not declared in {@link properties_info}. */
+  /** Supplies metadata for a property name when not declared in `properties_info`. */
   onGetPropertyInfo?(this: LGraphNode, property: string): any
   /** Called when the user adds a dynamic output via the context menu. */
   onNodeOutputAdd?(this: LGraphNode, value: unknown): void
@@ -1064,7 +1064,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onMouseEnter?(this: LGraphNode, e: CanvasPointerEvent): void
   /**
    * Blocks drag if return value is truthy.
-   * @param pos Offset from {@link LGraphNode.pos}.
+   * @param pos Offset from `LGraphNode.pos`.
    */
   onMouseDown?(
     this: LGraphNode,
@@ -1072,7 +1072,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     pos: Point,
     canvas: LGraphCanvas,
   ): boolean
-  /** @param pos Offset from {@link LGraphNode.pos}. */
+  /** @param pos Offset from `LGraphNode.pos`. */
   onDblClick?(
     this: LGraphNode,
     e: CanvasPointerEvent,
@@ -1081,7 +1081,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   ): void
   /**
    * Double-click on the title bar.
-   * @param pos Offset from {@link pos}.
+   * @param pos Offset from `pos`.
    */
   onNodeTitleDblClick?(
     this: LGraphNode,
@@ -1091,7 +1091,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   ): void
   /** Completely custom title bar rendering. */
   onDrawTitle?(this: LGraphNode, ctx: CanvasRenderingContext2D): void
-  /** Custom title text rendering; called from {@link drawTitleText}. */
+  /** Custom title text rendering; called from `drawTitleText`. */
   onDrawTitleText?(
     this: LGraphNode,
     ctx: CanvasRenderingContext2D,
@@ -1118,7 +1118,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     scale: number,
     fgcolor: any,
   ): void
-  /** Called from {@link LGraph.remove} before the node is detached. */
+  /** Called from `LGraph.remove` before the node is detached. */
   onRemoved?(this: LGraphNode): void
   onMouseMove?(
     this: LGraphNode,
@@ -1128,14 +1128,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   ): void
   /** Legacy property-panel refresh hook. */
   onPropertyChange?(this: LGraphNode): void
-  /** Forces recomputation of output {@link LLink.data} for upstream reads via {@link getInputData}. */
+  /** Forces recomputation of output `LLink.data` for upstream reads via `getInputData`. */
   updateOutputData?(this: LGraphNode, origin_slot: number): void
 
   /** Internal callback for subgraph nodes. Do not implement externally. */
   internalConfigureAfterSlots?(): void
 
   /**
-   * Restores node state from serialised data produced by {@link serialize}.
+   * Restores node state from serialised data produced by `serialize`.
    *
    * Rehydrates properties, slots, widgets, and fires connection callbacks for restored links.
    * @param info Deserialised node object from graph configuration.
@@ -1255,7 +1255,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Serialises this node to a plain object for persistence or cloning.
-   * @returns Shallow copy of serialisable node fields; widgets included when {@link serialize_widgets} is set.
+   * @returns Shallow copy of serialisable node fields; widgets included when `serialize_widgets` is set.
    */
   serialize(): ISerialisedNode {
     // special case for when there were errors
@@ -1311,7 +1311,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Creates a duplicate of this node without copying link IDs.
-   * @returns A new node of the same {@link type} with matching configuration, or `null` if creation fails.
+   * @returns A new node of the same `type` with matching configuration, or `null` if creation fails.
    */
   clone(): LGraphNode | null {
     if (this.type == null) return null
@@ -1346,14 +1346,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * @returns JSON string from {@link serialize}.
+   * @returns JSON string from `serialize`.
    */
   toString(): string {
     return JSON.stringify(this.serialize())
   }
 
   /**
-   * @returns The display title, falling back to the constructor's static {@link title}.
+   * @returns The display title, falling back to the constructor's static `title`.
    */
   getTitle(): string {
     return this.title || this.constructor.title
@@ -1655,7 +1655,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Ensures an `"onTrigger"` {@link LiteGraph.EVENT} input exists for trigger mode.
+   * Ensures an `"onTrigger"` `LiteGraph.EVENT` input exists for trigger mode.
    * @returns Index of the trigger input slot.
    */
   addOnTriggerInput(): number {
@@ -1670,7 +1670,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Ensures an `"onExecuted"` {@link LiteGraph.ACTION} output exists for trigger mode.
+   * Ensures an `"onExecuted"` `LiteGraph.ACTION` output exists for trigger mode.
    * @returns Index of the executed output slot.
    */
   addOnExecutedOutput(): number {
@@ -1685,7 +1685,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Fires the `"onExecuted"` output after {@link doExecute} completes.
+   * Fires the `"onExecuted"` output after `doExecute` completes.
    * @param param Payload forwarded to downstream nodes.
    * @param options Optional execution metadata including `action_call`.
    */
@@ -1697,8 +1697,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Switches {@link mode} and adds trigger slots when entering {@link LGraphEventMode.ON_TRIGGER}.
-   * @param modeTo Target {@link LGraphEventMode} value.
+   * Switches `mode` and adds trigger slots when entering `LGraphEventMode.ON_TRIGGER`.
+   * @param modeTo Target `LGraphEventMode` value.
    * @returns `false` if `modeTo` is unrecognised.
    */
   changeMode(modeTo: number): boolean {
@@ -2166,7 +2166,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * @deprecated Legacy resize hit-test for the bottom-right corner only.
    *
-   * Prefer {@link findResizeDirection} for full corner/edge support.
+   * Prefer `findResizeDirection` for full corner/edge support.
    * @param canvasX Pointer X in graph space.
    * @param canvasY Pointer Y in graph space.
    * @returns `true` if the pointer is over the legacy resize square.
@@ -2303,7 +2303,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Converts a plain widget descriptor to a concrete widget and appends it.
    * @param custom_widget Widget definition or pre-built instance.
-   * @returns The concrete widget added to {@link widgets}.
+   * @returns The concrete widget added to `widgets`.
    */
   addCustomWidget<TPlainWidget extends IBaseWidget>(
     custom_widget: TPlainWidget,
@@ -2318,7 +2318,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Adds a clickable button to the title bar.
-   * @param options Button configuration passed to {@link LGraphButton}.
+   * @param options Button configuration passed to `LGraphButton`.
    * @returns The created button instance.
    */
   addTitleButton(options: LGraphButtonOptions): LGraphButton {
@@ -2378,7 +2378,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Best-effort wrapper around {@link removeWidget} that logs failures instead of throwing.
+   * Best-effort wrapper around `removeWidget` that logs failures instead of throwing.
    * @param widget Widget to remove.
    */
   ensureWidgetRemoved(widget: IBaseWidget): void {
@@ -2389,7 +2389,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
   }
 
-  /** @inheritdoc Positionable.move — no-op when {@link pinned}. */
+  /** @inheritdoc Positionable.move — no-op when `pinned`. */
   move(deltaX: number, deltaY: number): void {
     if (this.pinned) return
 
@@ -2398,11 +2398,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Internal method to measure the node for rendering.  Prefer {@link boundingRect} where possible.
+   * Internal method to measure the node for rendering.  Prefer `boundingRect` where possible.
    *
-   * Populates {@link out} with the results in graph space.
-   * Populates {@link collapsed_width} with the collapsed width if the node is collapsed.
-   * Adjusts for title and collapsed status, but does not call {@link onBounding}.
+   * Populates `out` with the results in graph space.
+   * Populates `collapsed_width` with the collapsed width if the node is collapsed.
+   * Adjusts for title and collapsed status, but does not call `onBounding`.
    * @param out `x, y, width, height` are written to this array.
    * @param ctx The canvas context to use for measuring text.
    */
@@ -2449,7 +2449,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Calculates the render area of this node, populating both {@link boundingRect} and {@link renderArea}.
+   * Calculates the render area of this node, populating both `boundingRect` and `renderArea`.
    * Called automatically at the start of every frame.
    */
   updateArea(ctx: CanvasRenderingContext2D): void {
@@ -2514,7 +2514,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Returns the input or output slot at the given position.
    *
-   * Tries {@link getNodeInputOnPos} first, then {@link getNodeOutputOnPos}.
+   * Tries `getNodeInputOnPos` first, then `getNodeOutputOnPos`.
    * @param pos The graph co-ordinates to check
    * @returns The input or output slot at the given position if found, otherwise `undefined`.
    */
@@ -2525,7 +2525,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * @deprecated Use {@link getSlotOnPos} instead.
+   * @deprecated Use `getSlotOnPos` instead.
    * checks if a point is inside a node slot, and returns info about which slot
    * @param x
    * @param y
@@ -2844,13 +2844,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Finds the first free output slot with any of the comma-delimited types in {@link type}.
+   * Finds the first free output slot with any of the comma-delimited types in `type`.
    *
    * If no slots are free, falls back in order to:
    * - The first free wildcard slot
    * - The first occupied slot
    * - The first occupied wildcard slot
-   * @param type The {@link ISlotType type} of slot to find
+   * @param type The `ISlotType type` of slot to find
    * @returns The index and slot if found, otherwise `undefined`.
    */
   findOutputByType(type: ISlotType): undefined | { index: number, slot: INodeOutputSlot } {
@@ -2858,13 +2858,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Finds the first free input slot with any of the comma-delimited types in {@link type}.
+   * Finds the first free input slot with any of the comma-delimited types in `type`.
    *
    * If no slots are free, falls back in order to:
    * - The first free wildcard slot
    * - The first occupied slot
    * - The first occupied wildcard slot
-   * @param type The {@link ISlotType type} of slot to find
+   * @param type The `ISlotType type` of slot to find
    * @returns The index and slot if found, otherwise `undefined`.
    */
   findInputByType(type: ISlotType): undefined | { index: number, slot: INodeInputSlot } {
@@ -2931,7 +2931,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Checks whether a connection from `fromSlot` on this node to `toSlot` on `node` is allowed.
    *
-   * Used by {@link LinkConnector} and drag-link classes during hover validation.
+   * Used by `LinkConnector` and drag-link classes during hover validation.
    * @param node Target node at the other end of the proposed link.
    * @param toSlot Input-side slot (or subgraph IO) being connected to.
    * @param fromSlot Output-side slot (or subgraph IO) being connected from.
@@ -3161,7 +3161,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @param pos Graph position for the new reroute.
    * @param slot Input or output slot on this node to float from.
    * @param afterRerouteId Parent reroute when extending an existing chain.
-   * @returns The newly created {@link Reroute}.
+   * @returns The newly created `Reroute`.
    * @throws If `slot` is not on this node or parent reroute state is invalid.
    */
   connectFloatingReroute(pos: Point, slot: INodeInputSlot | INodeOutputSlot, afterRerouteId?: RerouteId): Reroute {
@@ -3437,7 +3437,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * @deprecated Use {@link getInputPos} or {@link getOutputPos} instead.
+   * @deprecated Use `getInputPos` or `getOutputPos` instead.
    * returns the center of a connection point in canvas coords
    * @param is_input true if if a input slot, false if it is an output
    * @param slot_number (could be the number of the slot or the string with the name of the slot)
@@ -3498,7 +3498,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Gets the position of an input slot, in graph co-ordinates.
    *
-   * This method is preferred over the legacy {@link getConnectionPos} method.
+   * This method is preferred over the legacy `getConnectionPos` method.
    * @param slot Input slot index
    * @returns Position of the input slot
    */
@@ -3535,7 +3535,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Gets the position of an output slot, in graph co-ordinates.
    *
-   * This method is preferred over the legacy {@link getConnectionPos} method.
+   * This method is preferred over the legacy `getConnectionPos` method.
    * @param outputSlotIndex Output slot index
    * @returns Position of the output slot
    */
@@ -3578,13 +3578,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     return this.pinned ? false : snapPoint(this.pos, snapTo)
   }
 
-  /** @see {@link snapToGrid} */
+  /** @see `snapToGrid` */
   alignToGrid(): void {
     this.snapToGrid(LiteGraph.CANVAS_GRID_SIZE)
   }
 
   /* Console output */
-  /** Appends a line to {@link console}, trimming to {@link MAX_CONSOLE}. */
+  /** Appends a line to `console`, trimming to `MAX_CONSOLE`. */
   trace(msg: string): void {
     this.console ||= []
     this.console.push(msg)
@@ -3599,7 +3599,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Loads an image from {@link LiteGraph.node_images_path} for use in custom drawing.
+   * Loads an image from `LiteGraph.node_images_path` for use in custom drawing.
    * @param URL Filename relative to the node images path.
    * @returns The loading `HTMLImageElement`; `ready` is set when load completes.
    */
@@ -3620,7 +3620,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Allows to get onMouseMove and onMouseUp events even if the mouse is out of focus
-   * @deprecated Use {@link LGraphCanvas.pointer} instead.
+   * @deprecated Use `LGraphCanvas.pointer` instead.
    */
   captureInput(v: boolean): void {
     warnDeprecated("[DEPRECATED] captureInput will be removed in a future version. Please use LGraphCanvas.pointer (CanvasPointer) instead.")
@@ -3637,7 +3637,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
   }
 
-  /** Whether {@link flags.collapsed} is set. */
+  /** Whether `flags.collapsed` is set. */
   get collapsed() {
     return !!this.flags.collapsed
   }
@@ -3670,7 +3670,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     this.setDirtyCanvas(true, true)
   }
 
-  /** Whether {@link flags.pinned} is set. */
+  /** Whether `flags.pinned` is set. */
   get pinned() {
     return !!this.flags.pinned
   }
@@ -3696,8 +3696,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * Converts node-local coordinates to canvas screen space.
-   * @param x X offset from {@link pos}.
-   * @param y Y offset from {@link pos}.
+   * @param x X offset from `pos`.
+   * @param y Y offset from `pos`.
    * @param dragAndScale Active canvas transform.
    * @returns Screen-space point.
    */
@@ -3730,7 +3730,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * Draws {@link badges} above the title bar according to {@link badgePosition}.
+   * Draws `badges` above the title bar according to `badgePosition`.
    * @param ctx Canvas context in node-local coordinates.
    * @param gap Horizontal spacing between badges. Default: `2`.
    */
@@ -3952,13 +3952,13 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    *
    * Each input is checked against each output.  This is done on a matching index basis, i.e. input 3 -> output 3.
    * If there are any input links remaining,
-   * and {@link flags} `keepAllLinksOnBypass` is `true`,
+   * and `flags` `keepAllLinksOnBypass` is `true`,
    * each input will check for outputs that match, and take the first one that matches
    * `true`: Try the index matching first, then every input to every output.
    * `false`: Only matches indexes, e.g. input 3 to output 3.
    *
-   * If {@link flags} `keepAllLinksOnBypass` is `undefined`, it will fall back to
-   * the static {@link LGraphNode.keepAllLinksOnBypass}.
+   * If `flags` `keepAllLinksOnBypass` is `undefined`, it will fall back to
+   * the static `LGraphNode.keepAllLinksOnBypass`.
    * @returns `true` if any new links were established, otherwise `false`.
    * @todo Decision: Change API to return array of new links instead?
    */
@@ -4079,7 +4079,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * When {@link LGraphNode.collapsed} is `true`, this method draws the node's collapsed slots.
+   * When `LGraphNode.collapsed` is `true`, this method draws the node's collapsed slots.
    */
   drawCollapsedSlots(ctx: CanvasRenderingContext2D): void {
     // Render the first connected slot only.
@@ -4097,7 +4097,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     }
   }
 
-  /** Combined {@link inputs} and {@link outputs} for iteration. */
+  /** Combined `inputs` and `outputs` for iteration. */
   get slots(): (INodeInputSlot | INodeOutputSlot)[] {
     return [...this.inputs, ...this.outputs]
   }
@@ -4159,7 +4159,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
   /**
    * @internal Sets the internal concrete slot arrays, ensuring they are instances of
-   * {@link NodeInputSlot} or {@link NodeOutputSlot}.
+   * `NodeInputSlot` or `NodeOutputSlot`.
    *
    * A temporary workaround until duck-typed inputs and outputs
    * have been removed from the ecosystem.

@@ -1,11 +1,11 @@
 /**
  * Error thrown when a slot index does not correspond to an existing input or output slot.
  *
- * Used by {@link ExecutableNodeDTO} when resolving links across flattened subgraph execution
- * trees. Differs from {@link InvalidLinkError}, which indicates a missing link record rather
+ * Used by `ExecutableNodeDTO` when resolving links across flattened subgraph execution
+ * trees. Differs from `InvalidLinkError`, which indicates a missing link record rather
  * than an out-of-bounds slot index.
- * @see {@link ExecutableNodeDTO.resolveInput}
- * @see {@link ExecutableNodeDTO.resolveOutput}
+ * @see `ExecutableNodeDTO.resolveInput`
+ * @see `ExecutableNodeDTO.resolveOutput`
  */
 export class SlotIndexError extends Error {
   /**

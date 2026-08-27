@@ -5,9 +5,9 @@ import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./B
 /**
  * Boolean toggle widget (`type: "toggle"`) rendered as a capsule with an on/off indicator disc.
  *
- * Clicking anywhere on the widget flips {@link value}. Display strings come from
+ * Clicking anywhere on the widget flips `value`. Display strings come from
  * `options.on` / `options.off` when provided, defaulting to `"true"` / `"false"`.
- * @see {@link IBooleanWidget}
+ * @see `IBooleanWidget`
  */
 export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBooleanWidget {
   /** Widget type discriminator; always `"toggle"`. */
@@ -70,8 +70,8 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
   }
 
   /**
-   * Toggles {@link value} on click.
-   * @param options Pointer event context passed to {@link setValue}.
+   * Toggles `value` on click.
+   * @param options Pointer event context passed to `setValue`.
    */
   override onClick(options: WidgetEventOptions) {
     this.setValue(!this.value, options)

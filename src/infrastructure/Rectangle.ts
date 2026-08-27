@@ -6,12 +6,12 @@ import { isInRectangle } from "@/measure"
  * A rectangle, represented as a float64 array of 4 numbers: [x, y, width, height].
  *
  * This class is a subclass of Float64Array, and so has all the methods of that class.  Notably,
- * {@link Rectangle.from} can be used to convert a {@link ReadOnlyRect}. Typing of this however,
+ * `Rectangle.from` can be used to convert a `ReadOnlyRect`. Typing of this however,
  * is broken due to the base TS lib returning Float64Array rather than `this`.
  *
- * Sub-array properties ({@link Float64Array.subarray}):
- * - {@link pos}: The position of the top-left corner of the rectangle.
- * - {@link size}: The size of the rectangle.
+ * Sub-array properties (`Float64Array.subarray`):
+ * - `pos`: The position of the top-left corner of the rectangle.
+ * - `size`: The size of the rectangle.
  */
 export class Rectangle extends Float64Array {
   #pos: Point | undefined
@@ -33,9 +33,9 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Creates a {@link Rectangle} from a {@link ReadOnlyRect} tuple.
+   * Creates a `Rectangle` from a `ReadOnlyRect` tuple.
    * @param rect `[x, y, width, height]` values to copy into the new instance.
-   * @returns A new rectangle with the same bounds as {@link rect}.
+   * @returns A new rectangle with the same bounds as `rect`.
    */
   static override from([x, y, width, height]: ReadOnlyRect): Rectangle {
     return new Rectangle(x, y, width, height)
@@ -45,8 +45,8 @@ export class Rectangle extends Float64Array {
    * Creates a new rectangle positioned at the given centre, with the given width/height.
    * @param centre The centre of the rectangle, as an `[x, y]` point
    * @param width The width of the rectangle
-   * @param height The height of the rectangle.  Default: {@link width}
-   * @returns A new rectangle whose centre is at {@link x}
+   * @param height The height of the rectangle.  Default: `width`
+   * @returns A new rectangle whose centre is at `x`
    */
   static fromCentre([x, y]: ReadOnlyPoint, width: number, height = width): Rectangle {
     const left = x - width * 0.5
@@ -55,9 +55,9 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Returns {@link rect} when it is already a {@link Rectangle}; otherwise wraps the tuple.
-   * @param rect Any {@link ReadOnlyRect} value.
-   * @returns A {@link Rectangle} sharing or copying the same `[x, y, width, height]` data.
+   * Returns `rect` when it is already a `Rectangle`; otherwise wraps the tuple.
+   * @param rect Any `ReadOnlyRect` value.
+   * @returns A `Rectangle` sharing or copying the same `[x, y, width, height]` data.
    */
   static ensureRect(rect: ReadOnlyRect): Rectangle {
     return rect instanceof this
@@ -68,11 +68,11 @@ export class Rectangle extends Float64Array {
   /**
    * Returns a typed sub-view of this rectangle's backing buffer.
    *
-   * Used internally by {@link pos} and {@link size} to expose mutable `[x, y]` and
+   * Used internally by `pos` and `size` to expose mutable `[x, y]` and
    * `[width, height]` slices without allocating.
    * @param begin Start index (inclusive). Defaults to `0`.
    * @param end End index (exclusive). When omitted, extends to the buffer end.
-   * @returns A {@link Float64Array} view sharing this rectangle's {@link ArrayBuffer}.
+   * @returns A `Float64Array` view sharing this rectangle's `ArrayBuffer`.
    */
   override subarray(begin: number = 0, end?: number): Float64Array<ArrayBuffer> {
     const byteOffset = begin << 3
@@ -195,7 +195,7 @@ export class Rectangle extends Float64Array {
   // #endregion Property accessors
 
   /**
-   * Updates the rectangle to the values of {@link rect}.
+   * Updates the rectangle to the values of `rect`.
    * @param rect The rectangle to update to.
    */
   updateTo(rect: ReadOnlyRect) {
@@ -206,7 +206,7 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Checks if the point [{@link x}, {@link y}] is inside this rectangle.
+   * Checks if the point [`x`, `y`] is inside this rectangle.
    * @param x The x-coordinate to check
    * @param y The y-coordinate to check
    * @returns `true` if the point is inside this rectangle, otherwise `false`.
@@ -220,9 +220,9 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Checks if {@link point} is inside this rectangle.
+   * Checks if `point` is inside this rectangle.
    * @param point The point to check
-   * @returns `true` if {@link point} is inside this rectangle, otherwise `false`.
+   * @returns `true` if `point` is inside this rectangle, otherwise `false`.
    */
   containsPoint([x, y]: ReadOnlyPoint): boolean {
     const [left, top, width, height] = this
@@ -233,10 +233,10 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Checks if {@link other} is a smaller rectangle inside this rectangle.
+   * Checks if `other` is a smaller rectangle inside this rectangle.
    * One **must** be larger than the other; identical rectangles are not considered to contain each other.
    * @param other The rectangle to check
-   * @returns `true` if {@link other} is inside this rectangle, otherwise `false`.
+   * @returns `true` if `other` is inside this rectangle, otherwise `false`.
    */
   containsRect(other: ReadOnlyRect): boolean {
     const { right, bottom } = this
@@ -256,9 +256,9 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Checks if {@link rect} overlaps with this rectangle.
+   * Checks if `rect` overlaps with this rectangle.
    * @param rect The rectangle to check
-   * @returns `true` if {@link rect} overlaps with this rectangle, otherwise `false`.
+   * @returns `true` if `rect` overlaps with this rectangle, otherwise `false`.
    */
   overlaps(rect: ReadOnlyRect): boolean {
     return this.x < rect[0] + rect[2] &&
@@ -268,7 +268,7 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Finds the corner (if any) of this rectangle that contains the point [{@link x}, {@link y}].
+   * Finds the corner (if any) of this rectangle that contains the point [`x`, `y`].
    * @param x The x-coordinate to check
    * @param y The y-coordinate to check
    * @param cornerSize Each corner is treated as an inset square with this width and height.
@@ -281,47 +281,47 @@ export class Rectangle extends Float64Array {
     if (this.isInBottomRightCorner(x, y, cornerSize)) return "SE"
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the top-left corner of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the top-left corner of this rectangle, otherwise `false`. */
   isInTopLeftCorner(x: number, y: number, cornerSize: number): boolean {
     return isInRectangle(x, y, this.x, this.y, cornerSize, cornerSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the top-right corner of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the top-right corner of this rectangle, otherwise `false`. */
   isInTopRightCorner(x: number, y: number, cornerSize: number): boolean {
     return isInRectangle(x, y, this.right - cornerSize, this.y, cornerSize, cornerSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the bottom-left corner of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the bottom-left corner of this rectangle, otherwise `false`. */
   isInBottomLeftCorner(x: number, y: number, cornerSize: number): boolean {
     return isInRectangle(x, y, this.x, this.bottom - cornerSize, cornerSize, cornerSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the bottom-right corner of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the bottom-right corner of this rectangle, otherwise `false`. */
   isInBottomRightCorner(x: number, y: number, cornerSize: number): boolean {
     return isInRectangle(x, y, this.right - cornerSize, this.bottom - cornerSize, cornerSize, cornerSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the top edge of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the top edge of this rectangle, otherwise `false`. */
   isInTopEdge(x: number, y: number, edgeSize: number): boolean {
     return isInRectangle(x, y, this.x, this.y, this.width, edgeSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the bottom edge of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the bottom edge of this rectangle, otherwise `false`. */
   isInBottomEdge(x: number, y: number, edgeSize: number): boolean {
     return isInRectangle(x, y, this.x, this.bottom - edgeSize, this.width, edgeSize)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the left edge of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the left edge of this rectangle, otherwise `false`. */
   isInLeftEdge(x: number, y: number, edgeSize: number): boolean {
     return isInRectangle(x, y, this.x, this.y, edgeSize, this.height)
   }
 
-  /** @returns `true` if the point [{@link x}, {@link y}] is in the right edge of this rectangle, otherwise `false`. */
+  /** @returns `true` if the point [`x`, `y`] is in the right edge of this rectangle, otherwise `false`. */
   isInRightEdge(x: number, y: number, edgeSize: number): boolean {
     return isInRectangle(x, y, this.right - edgeSize, this.y, edgeSize, this.height)
   }
 
-  /** @returns The centre point of this rectangle, as a new {@link Point}. */
+  /** @returns The centre point of this rectangle, as a new `Point`. */
   getCentre(): Point {
     return [this.centreX, this.centreY]
   }
@@ -336,27 +336,27 @@ export class Rectangle extends Float64Array {
     return 2 * (this.width + this.height)
   }
 
-  /** @returns The top-left corner of this rectangle, as a new {@link Point}. */
+  /** @returns The top-left corner of this rectangle, as a new `Point`. */
   getTopLeft(): Point {
     return [this[0], this[1]]
   }
 
-  /** @returns The bottom-right corner of this rectangle, as a new {@link Point}. */
+  /** @returns The bottom-right corner of this rectangle, as a new `Point`. */
   getBottomRight(): Point {
     return [this.right, this.bottom]
   }
 
-  /** @returns The width and height of this rectangle, as a new {@link Size}. */
+  /** @returns The width and height of this rectangle, as a new `Size`. */
   getSize(): Size {
     return [this[2], this[3]]
   }
 
-  /** @returns The offset from the top-left of this rectangle to the point [{@link x}, {@link y}], as a new {@link Point}. */
+  /** @returns The offset from the top-left of this rectangle to the point [`x`, `y`], as a new `Point`. */
   getOffsetTo([x, y]: ReadOnlyPoint): Point {
     return [x - this[0], y - this[1]]
   }
 
-  /** @returns The offset from the point [{@link x}, {@link y}] to the top-left of this rectangle, as a new {@link Point}. */
+  /** @returns The offset from the point [`x`, `y`] to the top-left of this rectangle, as a new `Point`. */
   getOffsetFrom([x, y]: ReadOnlyPoint): Point {
     return [this[0] - x, this[1] - y]
   }
@@ -409,7 +409,7 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Sets {@link width} while keeping the right edge stationary (adjusts {@link x}).
+   * Sets `width` while keeping the right edge stationary (adjusts `x`).
    * @param width New width value.
    */
   setWidthRightAnchored(width: number) {
@@ -419,7 +419,7 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * Sets {@link height} while keeping the bottom edge stationary (adjusts {@link y}).
+   * Sets `height` while keeping the bottom edge stationary (adjusts `y`).
    * @param height New height value.
    */
   setHeightBottomAnchored(height: number) {
@@ -429,13 +429,13 @@ export class Rectangle extends Float64Array {
   }
 
   /**
-   * @returns A new {@link Rectangle} with the same `[x, y, width, height]` values.
+   * @returns A new `Rectangle` with the same `[x, y, width, height]` values.
    */
   clone(): Rectangle {
     return new Rectangle(this[0], this[1], this[2], this[3])
   }
 
-  /** Alias of {@link export}. */
+  /** Alias of `export`. */
   toArray() { return this.export() }
 
   /** @returns A new, untyped array (serializable) containing the values of this rectangle. */
@@ -445,9 +445,9 @@ export class Rectangle extends Float64Array {
 }
 
 /**
- * Read-only view of a {@link Rectangle} for APIs that must not mutate bounds in place.
+ * Read-only view of a `Rectangle` for APIs that must not mutate bounds in place.
  *
- * Omits in-place mutation helpers ({@link Rectangle.updateTo}, resize methods, and edge-anchored
+ * Omits in-place mutation helpers (`Rectangle.updateTo`, resize methods, and edge-anchored
  * setters) while retaining measurement and containment queries.
  */
 export type ReadOnlyRectangle = Omit<

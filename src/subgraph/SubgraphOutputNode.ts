@@ -23,10 +23,10 @@ import { SubgraphIONodeBase } from "./SubgraphIONodeBase"
  * node outputs onto output boundaries, and exposes legacy connection helpers used during
  * paste and import.
  * @remarks
- * Includes an {@link emptySlot} at the bottom for creating outputs on first connection.
- * Each concrete slot is a {@link SubgraphOutput} stored on {@link Subgraph.outputs}.
- * @see {@link SubgraphInputNode}
- * @see {@link SubgraphIONodeBase}
+ * Includes an `emptySlot` at the bottom for creating outputs on first connection.
+ * Each concrete slot is a `SubgraphOutput` stored on `Subgraph.outputs`.
+ * @see `SubgraphInputNode`
+ * @see `SubgraphIONodeBase`
  */
 export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> implements Positionable {
   /** Sentinel node ID used in links whose target is a subgraph output boundary. */
@@ -35,7 +35,7 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
   /** Virtual slot that creates a new output when a link is dropped on it. */
   readonly emptySlot: EmptySubgraphOutput = new EmptySubgraphOutput(this)
 
-  /** The concrete output slots defined on this subgraph (excludes {@link emptySlot}). */
+  /** The concrete output slots defined on this subgraph (excludes `emptySlot`). */
   get slots() {
     return this.subgraph.outputs
   }
@@ -59,7 +59,7 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
    * Handles pointer down on the output boundary node.
    *
    * Left-click begins a link drag from the slot under the cursor via
-   * {@link LinkConnector.dragNewFromSubgraphOutput}. Right-click opens the slot context menu.
+   * `LinkConnector.dragNewFromSubgraphOutput`. Right-click opens the slot context menu.
    * @param e The pointer event in canvas coordinates.
    * @param pointer Drag lifecycle callbacks for the active pointer.
    * @param linkConnector Active link connector managing the drag operation.
@@ -105,7 +105,7 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
    * Delegates connection validation to the target node.
    * @param outputNode The node that would receive the connection.
    * @param fromSlot The subgraph output slot being connected from.
-   * @param output The candidate output slot or subgraph IO definition on {@link outputNode}.
+   * @param output The candidate output slot or subgraph IO definition on `outputNode`.
    */
   canConnectTo(outputNode: NodeLike, fromSlot: SubgraphOutput, output: INodeOutputSlot | SubgraphIO): boolean {
     return outputNode.canConnectTo(this, fromSlot, output)
@@ -134,7 +134,7 @@ export class SubgraphOutputNode extends SubgraphIONodeBase<SubgraphOutput> imple
   /**
    * Finds the first subgraph output of the given type that has no active connection.
    * @param type The slot type to match.
-   * @returns A free {@link SubgraphOutput} of that type, or `undefined`.
+   * @returns A free `SubgraphOutput` of that type, or `undefined`.
    */
   findInputByType(type: ISlotType): SubgraphOutput | undefined {
     return findFreeSlotOfType(this.slots, type, slot => slot.linkIds.length > 0)?.slot

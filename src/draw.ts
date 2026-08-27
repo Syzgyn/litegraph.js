@@ -11,7 +11,7 @@ const ONE_DOT_LEADER = "\u{2024}"
 
 /**
  * Semantic slot type constants used when drawing node inputs and outputs.
- * @see {@link SlotShape} for visual slot geometry.
+ * @see `SlotShape` for visual slot geometry.
  */
 export enum SlotType {
   /** Slot accepts or emits array-typed data. */
@@ -23,7 +23,7 @@ export enum SlotType {
 /**
  * Visual shape used when rendering node slot connectors.
  *
- * Values mirror {@link RenderShape} so slot drawing can reuse node shape constants.
+ * Values mirror `RenderShape` so slot drawing can reuse node shape constants.
  */
 /** @see RenderShape */
 export enum SlotShape {
@@ -37,7 +37,7 @@ export enum SlotShape {
 /**
  * Cardinal direction used when orienting slot labels and connector offsets.
  *
- * Values mirror {@link LinkDirection}.
+ * Values mirror `LinkDirection`.
  */
 /** @see LinkDirection */
 export enum SlotDirection {
@@ -56,12 +56,12 @@ export enum LabelPosition {
 }
 
 /**
- * Options for {@link strokeShape} when drawing an outline around a rectangular area.
+ * Options for `strokeShape` when drawing an outline around a rectangular area.
  */
 export interface IDrawBoundingOptions {
   /** The shape to render */
   shape?: RenderShape
-  /** The radius of the rounded corners for {@link RenderShape.ROUND} and {@link RenderShape.CARD} */
+  /** The radius of the rounded corners for `RenderShape.ROUND` and `RenderShape.CARD` */
   round_radius?: number
   /**
    * Shape will extend above the Y-axis 0 by this amount
@@ -72,7 +72,7 @@ export interface IDrawBoundingOptions {
   title_mode?: TitleMode
   /** The color that should be drawn */
   color?: CanvasColour
-  /** The distance between the edge of the {@link area} and the middle of the line */
+  /** The distance between the edge of the `area` and the middle of the line */
   padding?: number
   /** @deprecated This is node-specific: it should be removed entirely, and behaviour defined by the caller more explicitly */
   collapsed?: boolean
@@ -81,7 +81,7 @@ export interface IDrawBoundingOptions {
 }
 
 /**
- * Options for {@link drawTextInArea} when rendering truncated label text.
+ * Options for `drawTextInArea` when rendering truncated label text.
  */
 export interface IDrawTextInAreaOptions {
   /** The canvas to draw the text on. */

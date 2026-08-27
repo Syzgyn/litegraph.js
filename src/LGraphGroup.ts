@@ -27,7 +27,7 @@ import {
   snapPoint,
 } from "./measure"
 
-/** Optional flags stored on {@link LGraphGroup.flags}. */
+/** Optional flags stored on `LGraphGroup.flags`. */
 export interface IGraphGroupFlags extends Record<string, unknown> {
   /** When present, the group cannot be moved or resized by mouse interaction. */
   pinned?: true
@@ -36,22 +36,22 @@ export interface IGraphGroupFlags extends Record<string, unknown> {
 /**
  * A visual grouping frame on the graph canvas that organises nodes, reroutes, and nested groups.
  *
- * Groups are {@link Positionable} items managed by {@link LGraph}. They render a titled rectangle
+ * Groups are `Positionable` items managed by `LGraph`. They render a titled rectangle
  * with a resize handle and can automatically track child items whose centres fall inside their bounds
- * via {@link recomputeInsideNodes}.
- * @see {@link LGraph.add}
- * @see {@link LGraphGroup.recomputeInsideNodes}
+ * via `recomputeInsideNodes`.
+ * @see `LGraph.add`
+ * @see `LGraphGroup.recomputeInsideNodes`
  */
 export class LGraphGroup implements Positionable, IPinnable, IColorable {
-  /** Minimum group width in graph units. Enforced by the {@link size} setter and {@link resize}. */
+  /** Minimum group width in graph units. Enforced by the `size` setter and `resize`. */
   static minWidth = 140
-  /** Minimum group height in graph units. Enforced by the {@link size} setter and {@link resize}. */
+  /** Minimum group height in graph units. Enforced by the `size` setter and `resize`. */
   static minHeight = 80
   /** Length of the resize handle triangle drawn in the bottom-right corner. */
   static resizeLength = 10
   /** Padding used when drawing the title text inside the title bar. */
   static padding = 4
-  /** Fallback fill/stroke colour when {@link color} is unset. */
+  /** Fallback fill/stroke colour when `color` is unset. */
   static defaultColour = "#335"
   /**
    * Background luminance (0-255) below which the title text is lightened for
@@ -61,7 +61,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
    */
   static darkBgLuminanceThreshold = 80
 
-  /** Background colour last used to compute {@link titleTextColor} */
+  /** Background colour last used to compute `titleTextColor` */
   #lastTitleBgColor?: string
   /** Title text colour, cached until the background colour changes */
   #titleTextColor: string = LGraphGroup.defaultColour
@@ -77,32 +77,32 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /** Nodes, reroutes, and nested groups whose bounds are contained by this group. */
   #childrenStore: Set<Positionable> = new Set()
 
-  /** Unique identifier within the owning {@link LGraph}. Assigned on {@link LGraph.add} if unset. */
+  /** Unique identifier within the owning `LGraph`. Assigned on `LGraph.add` if unset. */
   id: number
   /** CSS colour string for the group background and title bar. */
   color?: string
   /** Label shown in the group title bar. */
   title: string
-  /** @deprecated Unused; title rendering uses {@link LiteGraph.GROUP_FONT}. */
+  /** @deprecated Unused; title rendering uses `LiteGraph.GROUP_FONT`. */
   font?: string
   /** Font size in pixels for the title bar text. */
   font_size: number = LiteGraph.GROUP_TEXT_SIZE
 
-  /** The {@link LGraph} that owns this group, set by {@link LGraph.add}. */
+  /** The `LGraph` that owns this group, set by `LGraph.add`. */
   graph?: LGraph
-  /** Persistent flags such as the `pinned` flag on {@link flags}. */
+  /** Persistent flags such as the `pinned` flag on `flags`. */
   flags: IGraphGroupFlags = {}
   /** Whether the group is currently selected on the canvas. */
   selected?: boolean
 
-  /** @inheritdoc — delegated to {@link LGraphNode.prototype.isPointInside}. */
+  /** @inheritdoc — delegated to `LGraphNode.prototype.isPointInside`. */
   isPointInside = LGraphNode.prototype.isPointInside
   /** @inheritdoc — requests a canvas redraw via the owning graph's canvases. */
   setDirtyCanvas = LGraphNode.prototype.setDirtyCanvas
 
   /**
    * @param title Initial title bar label. Defaults to `"Group"`.
-   * @param id Optional ID; if omitted, {@link LGraph.add} assigns one from {@link LGraph.state}.
+   * @param id Optional ID; if omitted, `LGraph.add` assigns one from `LGraph.state`.
    */
   constructor(title?: string, id?: number) {
     // TODO: Object instantiation pattern requires too much boilerplate and null checking.  ID should be passed in via constructor.
@@ -167,7 +167,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     return this.#childrenStore
   }
 
-  /** Whether the `pinned` flag is set on {@link flags}. */
+  /** Whether the `pinned` flag is set on `flags`. */
   get pinned() {
     return !!this.flags.pinned
   }
@@ -184,14 +184,14 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
     else delete this.flags.pinned
   }
 
-  /** Clears the pinned flag via {@link pin}. */
+  /** Clears the pinned flag via `pin`. */
   unpin(): void {
     this.pin(false)
   }
 
   /**
    * Restores group state from serialised data.
-   * @param o Deserialised group object, typically from {@link LGraph.configure}.
+   * @param o Deserialised group object, typically from `LGraph.configure`.
    */
   configure(o: ISerialisedGroup): void {
     this.id = o.id
@@ -203,7 +203,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
 
   /**
    * Serialises this group for persistence or cloning.
-   * @returns A plain object suitable for {@link JSON.stringify} or {@link LGraph.configure}.
+   * @returns A plain object suitable for `JSON.stringify` or `LGraph.configure`.
    */
   serialize(): ISerialisedGroup {
     const b = this.#bounding
@@ -286,10 +286,10 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   }
 
   /**
-   * Resizes the group, clamping to {@link minWidth} and {@link minHeight}.
+   * Resizes the group, clamping to `minWidth` and `minHeight`.
    * @param width New width in graph units.
    * @param height New height in graph units.
-   * @returns `false` if the group is {@link pinned}, otherwise `true`.
+   * @returns `false` if the group is `pinned`, otherwise `true`.
    */
   resize(width: number, height: number): boolean {
     if (this.pinned) return false
@@ -300,7 +300,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   }
 
   /**
-   * Translates the group and, by default, all {@link children}.
+   * Translates the group and, by default, all `children`.
    * @param deltaX Horizontal offset in graph units.
    * @param deltaY Vertical offset in graph units.
    * @param skipChildren When `true`, only the group frame moves; child items stay put.
@@ -323,12 +323,12 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   }
 
   /**
-   * Rebuilds {@link childrenStore} from the current graph contents.
+   * Rebuilds `childrenStore` from the current graph contents.
    *
    * A node is included when its bounding centre lies inside this group. Reroutes are included
    * when their position is inside the group bounds. Nested groups are included when wholly
    * contained. Also reorders the graph's group list so parent groups render above children.
-   * @throws {@link NullGraphError} if {@link graph} is unset.
+   * @throws `NullGraphError` if `graph` is unset.
    */
   recomputeInsideNodes(
     maxDepth: number = 100,
@@ -401,10 +401,10 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /**
    * Expands the group to include additional nodes.
    *
-   * Combines existing {@link children} and the provided nodes, then
-   * calls {@link resizeTo}.
+   * Combines existing `children` and the provided nodes, then
+   * calls `resizeTo`.
    * @param nodes Nodes to include in the new bounds.
-   * @param padding Extra margin passed to {@link resizeTo}. Default: `10`.
+   * @param padding Extra margin passed to `resizeTo`. Default: `10`.
    */
   addNodes(nodes: LGraphNode[], padding: number = 10): void {
     if (this.children.size === 0 && nodes.length === 0) return

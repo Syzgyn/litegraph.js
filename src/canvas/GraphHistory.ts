@@ -67,9 +67,9 @@ function applyWidgetValues(graph: LGraph, store: WidgetValueStore): void {
 }
 
 /**
- * Undo/redo history for a {@link LGraphCanvas}, using graph serialisation snapshots.
+ * Undo/redo history for a `LGraphCanvas`, using graph serialisation snapshots.
  *
- * Listens for {@link LGraphCanvas} change events and pointer release to capture state,
+ * Listens for `LGraphCanvas` change events and pointer release to capture state,
  * resets its baseline when the root graph is configured or replaced, and handles
  * Ctrl/Cmd+Z (undo) and Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z (redo).
  *
@@ -364,7 +364,7 @@ export class GraphHistory implements Disposable {
     this.#controller.abort()
   }
 
-  /** {@link Disposable} protocol — delegates to {@link dispose}. */
+  /** `Disposable` protocol — delegates to `dispose`. */
   [Symbol.dispose](): void {
     this.dispose()
   }

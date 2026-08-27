@@ -9,7 +9,7 @@ import { LiteGraph } from "@/litegraph"
 import { cachedMeasureText } from "@/utils/textMeasureCache"
 
 /**
- * Options passed to {@link BaseWidget.drawWidget} and related drawing helpers.
+ * Options passed to `BaseWidget.drawWidget` and related drawing helpers.
  */
 export interface DrawWidgetOptions {
   /** Canvas width of the owning node — used to size the widget capsule and text layout. */
@@ -22,7 +22,7 @@ export interface DrawWidgetOptions {
 }
 
 /**
- * Options for {@link BaseWidget.drawTruncatingText}, extending draw options with canvas context
+ * Options for `BaseWidget.drawTruncatingText`, extending draw options with canvas context
  * and horizontal padding for label/value text.
  */
 export interface DrawTruncatingTextOptions extends DrawWidgetOptions {
@@ -35,8 +35,8 @@ export interface DrawTruncatingTextOptions extends DrawWidgetOptions {
 }
 
 /**
- * Context bundle passed to widget interaction handlers ({@link BaseWidget.onClick},
- * {@link BaseWidget.onDrag}, {@link BaseWidget.setValue}, etc.).
+ * Context bundle passed to widget interaction handlers (`BaseWidget.onClick`,
+ * `BaseWidget.onDrag`, `BaseWidget.setValue`, etc.).
  */
 export interface WidgetEventOptions {
   /** The pointer event that triggered the interaction. */
@@ -52,11 +52,11 @@ export interface WidgetEventOptions {
  *
  * Provides shared layout constants, value storage, serialization hooks, default drawing helpers
  * (capsule shape, truncating label/value text), and the standard value-change pipeline
- * ({@link setValue} → callback → {@link LGraphNode.onWidgetChanged}).
+ * (`setValue` → callback → `LGraphNode.onWidgetChanged`).
  * @remarks
- * Concrete widget types extend this class or {@link BaseSteppedWidget}. Custom third-party widgets
- * may be wrapped by {@link LegacyWidget} until they migrate to this interface.
- * @see {@link toConcreteWidget}
+ * Concrete widget types extend this class or `BaseSteppedWidget`. Custom third-party widgets
+ * may be wrapped by `LegacyWidget` until they migrate to this interface.
+ * @see `toConcreteWidget`
  */
 export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> implements IBaseWidget {
   /** Horizontal inset from the node edge to the widget capsule's outer edge, in canvas pixels. */
@@ -70,15 +70,15 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   /** Minimum horizontal gap between label and value text when both are drawn inline. */
   static labelValueGap = 5
 
-  /** The {@link LGraphNode} that owns and displays this widget. */
+  /** The `LGraphNode` that owns and displays this widget. */
   #node: LGraphNode
 
-  /** Current widget value; assignment does not trigger callbacks — use {@link setValue} instead. */
+  /** Current widget value; assignment does not trigger callbacks — use `setValue` instead. */
   #value?: TWidget["value"]
 
   /**
    * Optional override for widget height, set by layout when the widget needs non-standard vertical space
-   * (e.g. {@link KnobWidget}).
+   * (e.g. `KnobWidget`).
    */
   declare computedHeight?: number
   /** When `false`, this widget is omitted from graph serialization. */
@@ -90,23 +90,23 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   name: string
   /** Type-specific configuration object (min/max, values list, precision, etc.). */
   options: TWidget["options"]
-  /** Optional display label; falls back to {@link name} via {@link displayName}. */
+  /** Optional display label; falls back to `name` via `displayName`. */
   label?: string
-  /** Discriminator string matching {@link TWidgetType} (e.g. `"number"`, `"combo"`). */
+  /** Discriminator string matching `TWidgetType` (e.g. `"number"`, `"combo"`). */
   type: TWidget["type"]
   /** Vertical offset of this widget within the node's widget stack, in canvas pixels. */
   y: number = 0
-  /** Previous {@link y} value, used during layout reflow. */
+  /** Previous `y` value, used during layout reflow. */
   last_y?: number
   /** Cached width for hit-testing and drawing; typically mirrors node width. */
   width?: number
   /** When `true`, the widget is non-interactive and drawn in a disabled style. */
   disabled?: boolean
-  /** Runtime-computed disabled state (may differ from {@link disabled} when linked to node state). */
+  /** Runtime-computed disabled state (may differ from `disabled` when linked to node state). */
   computedDisabled?: boolean
   /** When `true`, the widget is not drawn and does not receive pointer events. */
   hidden?: boolean
-  /** When `true`, the widget uses the advanced outline colour ({@link outline_color}). */
+  /** When `true`, the widget uses the advanced outline colour (`outline_color`). */
   advanced?: boolean
   /** Optional hover tooltip text shown by the canvas. */
   tooltip?: string
@@ -139,7 +139,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     Object.assign(this, safeValues)
   }
 
-  /** The {@link LGraphNode} that owns and displays this widget. */
+  /** The `LGraphNode` that owns and displays this widget. */
   get node() {
     return this.#node
   }
@@ -154,7 +154,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     maxWidth?: number
   }
   /**
-   * Invoked after {@link setValue} changes the widget value.
+   * Invoked after `setValue` changes the widget value.
    * @param value The new widget value (type varies by widget).
    * @param canvas The canvas instance, when available.
    * @param node The owning node, when available.
@@ -170,10 +170,10 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   ): void
   /**
    * Legacy mouse handler for custom widgets; returns whether the event was consumed.
-   * @remarks Prefer {@link onPointerDown} and {@link onClick} on {@link BaseWidget} subclasses.
+   * @remarks Prefer `onPointerDown` and `onClick` on `BaseWidget` subclasses.
    */
   mouse?(event: CanvasPointerEvent, pointerOffset: Point, node: LGraphNode): boolean
-  /** Returns the preferred {@link Size} for this widget at the given node width. */
+  /** Returns the preferred `Size` for this widget at the given node width. */
   computeSize?(width?: number): Size
   /**
    * Called when a pointer down occurs over this widget.
@@ -181,7 +181,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    */
   onPointerDown?(pointer: CanvasPointer, node: LGraphNode, canvas: LGraphCanvas): boolean
 
-  /** Current widget value; assignment does not trigger callbacks — use {@link setValue} instead. */
+  /** Current widget value; assignment does not trigger callbacks — use `setValue` instead. */
   get value(): TWidget["value"] {
     return this.#value
   }
@@ -201,7 +201,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     return LiteGraph.WIDGET_BGCOLOR
   }
 
-  /** Default widget row height; subclasses may override (e.g. knobs with {@link computedHeight}). */
+  /** Default widget row height; subclasses may override (e.g. knobs with `computedHeight`). */
   get height() {
     return LiteGraph.NODE_WIDGET_HEIGHT
   }
@@ -221,15 +221,15 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     return LiteGraph.WIDGET_DISABLED_TEXT_COLOR
   }
 
-  /** User-facing label: {@link label} when set, otherwise {@link name}. */
+  /** User-facing label: `label` when set, otherwise `name`. */
   get displayName() {
     return this.label || this.name
   }
 
   // TODO: Resolve this workaround. Ref: https://github.com/Comfy-Org/litegraph.js/issues/1022
   /**
-   * String representation of {@link value} for canvas text rendering.
-   * @remarks Returns an empty string when {@link computedDisabled} is `true`. Subclasses override
+   * String representation of `value` for canvas text rendering.
+   * @remarks Returns an empty string when `computedDisabled` is `true`. Subclasses override
    * for formatted numbers, combo labels, etc.
    */
   get displayValue(): string {
@@ -246,7 +246,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * @param ctx The canvas 2D rendering context (already translated to node space).
    * @param options Width and quality flags for the draw pass.
    * @remarks Named `drawWidget` instead of `draw` to avoid colliding with legacy custom widget
-   * `draw` methods wrapped by {@link LegacyWidget}.
+   * `draw` methods wrapped by `LegacyWidget`.
    */
   abstract drawWidget(ctx: CanvasRenderingContext2D, options: DrawWidgetOptions): void
 
@@ -255,7 +255,7 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * cleared, and may be used for further drawing.
    * @param ctx The canvas context
    * @param options The options for drawing the widget
-   * @remarks Leaves {@link ctx} dirty.
+   * @remarks Leaves `ctx` dirty.
    */
   protected drawWidgetShape(ctx: CanvasRenderingContext2D, { width, showText }: DrawWidgetOptions): void {
     const { height, y } = this
@@ -276,11 +276,11 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   }
 
   /**
-   * Draws {@link displayName} and {@link displayValue} inline, truncating or scaling text when the
+   * Draws `displayName` and `displayValue` inline, truncating or scaling text when the
    * combined width exceeds the available capsule interior.
    * @param options Canvas context, node width, and optional horizontal padding.
-   * @remarks Uses {@link LiteGraph.truncateWidgetTextEvenly} and
-   * {@link LiteGraph.truncateWidgetValuesFirst} to choose truncation strategy.
+   * @remarks Uses `LiteGraph.truncateWidgetTextEvenly` and
+   * `LiteGraph.truncateWidgetValuesFirst` to choose truncation strategy.
    */
   protected drawTruncatingText({
     ctx,
@@ -358,8 +358,8 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
    * Assigns a new value and runs the standard change notification pipeline.
    *
    * Updates the backing property, mirrors to `node.properties` when
-   * {@link options.property} is set, invokes {@link callback}, fires
-   * {@link LGraphNode.onWidgetChanged}, and bumps the graph version.
+   * `options.property` is set, invokes `callback`, fires
+   * `LGraphNode.onWidgetChanged`, and bumps the graph version.
    * @param value The new value (no-op when equal to the current value).
    * @param options Event context for callbacks and property sync.
    */

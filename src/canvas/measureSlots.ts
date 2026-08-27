@@ -7,7 +7,7 @@ import { isInRectangle } from "@/measure"
  * Finds the input slot on a node at the given canvas position, if any.
  *
  * Hit-tests each input slot using a rectangle that approximates the slot icon and label width.
- * Used by {@link isOverNodeInput} and by node-level pointer handling in {@link LGraphCanvas}.
+ * Used by `isOverNodeInput` and by node-level pointer handling in `LGraphCanvas`.
  * @param node The node whose input slots to test.
  * @param x Canvas-space X coordinate.
  * @param y Canvas-space Y coordinate.
@@ -46,7 +46,7 @@ export function getNodeInputOnPos(node: LGraphNode, x: number, y: number): undef
  * Finds the output slot on a node at the given canvas position, if any.
  *
  * Hit-tests each output slot using a fixed-size rectangle around the slot icon. Used by
- * {@link isOverNodeOutput} and by node-level pointer handling in {@link LGraphCanvas}.
+ * `isOverNodeOutput` and by node-level pointer handling in `LGraphCanvas`.
  * @param node The node whose output slots to test.
  * @param x Canvas-space X coordinate.
  * @param y Canvas-space Y coordinate.
@@ -76,8 +76,8 @@ export function getNodeOutputOnPos(node: LGraphNode, x: number, y: number): unde
 /**
  * Returns the input slot index if the given position (in graph space) is on top of a node input slot.
  *
- * Legacy helper originally on the prototype of {@link LGraphCanvas}. Delegates to
- * {@link getNodeInputOnPos} and optionally writes the slot's canvas position into `slot_pos`.
+ * Legacy helper originally on the prototype of `LGraphCanvas`. Delegates to
+ * `getNodeInputOnPos` and optionally writes the slot's canvas position into `slot_pos`.
  * @param node The node whose input slots to test.
  * @param canvasx Canvas-space X coordinate.
  * @param canvasy Canvas-space Y coordinate.
@@ -103,8 +103,8 @@ export function isOverNodeInput(
 /**
  * Returns the output slot index if the given position (in graph space) is on top of a node output slot.
  *
- * Legacy helper originally on the prototype of {@link LGraphCanvas}. Delegates to
- * {@link getNodeOutputOnPos} and optionally writes the slot's canvas position into `slot_pos`.
+ * Legacy helper originally on the prototype of `LGraphCanvas`. Delegates to
+ * `getNodeOutputOnPos` and optionally writes the slot's canvas position into `slot_pos`.
  * @param node The node whose output slots to test.
  * @param canvasx Canvas-space X coordinate.
  * @param canvasy Canvas-space Y coordinate.

@@ -20,7 +20,7 @@ class LabelledWidgetNode extends LGraphNode {
 LiteGraph.registerNodeType("test/LabelledWidget", LabelledWidgetNode)
 
 /**
- * `configure` adopts the payload's graph id when it is not {@link zeroUuid} on a root graph.
+ * `configure` adopts the payload's graph id when it is not `zeroUuid` on a root graph.
  * Widget display labels are serialised on input slots; without syncing them back onto widgets
  * after configure, a reload can leave stale `IBaseWidget.label` values on in-memory widget instances.
  */

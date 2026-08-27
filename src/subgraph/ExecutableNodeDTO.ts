@@ -14,7 +14,7 @@ import { Subgraph } from "./Subgraph"
 /**
  * A colon-separated path that uniquely identifies a node within a nested subgraph hierarchy.
  *
- * Each segment is a {@link NodeId}: subgraph instance IDs from the root graph outward, followed
+ * Each segment is a `NodeId`: subgraph instance IDs from the root graph outward, followed
  * by the inner node's ID. For example, `"1:2:3"` means instance `1` in the root graph, instance
  * `2` inside that subgraph, and node `3` inside the innermost subgraph definition.
  */
@@ -23,16 +23,16 @@ export type ExecutionId = string
 /**
  * Flattened, execution-ready view of a graph node with subgraph instances expanded away.
  *
- * Omits the live graph references ({@link ExecutableNodeDTO.graph}, {@link ExecutableNodeDTO.node},
- * {@link ExecutableNodeDTO.subgraphNode}) so DTOs can be passed to executors without retaining
+ * Omits the live graph references (`ExecutableNodeDTO.graph`, `ExecutableNodeDTO.node`,
+ * `ExecutableNodeDTO.subgraphNode`) so DTOs can be passed to executors without retaining
  * the full editor object graph.
- * @see {@link ExecutableNodeDTO}
+ * @see `ExecutableNodeDTO`
  */
 export type ExecutableLGraphNode = Omit<ExecutableNodeDTO, "graph" | "node" | "subgraphNode">
 
 /**
  * The end result of resolving a DTO input.
- * When a widget value is returned, {@link widgetInfo} is present and {@link origin_slot} is `-1`.
+ * When a widget value is returned, `widgetInfo` is present and `origin_slot` is `-1`.
  */
 type ResolvedInput = {
   /** DTO for the node that the link originates from. */
@@ -48,17 +48,17 @@ type ResolvedInput = {
 /**
  * Data transfer object representing a single node in a flattened execution graph.
  *
- * Created during subgraph expansion ({@link SubgraphNode.getInnerNodes}) to give executors a
+ * Created during subgraph expansion (`SubgraphNode.getInnerNodes`) to give executors a
  * stable, path-qualified view of each node. Resolves input links across subgraph boundaries,
- * bypass nodes, and virtual nodes via {@link resolveInput} and {@link resolveOutput}.
+ * bypass nodes, and virtual nodes via `resolveInput` and `resolveOutput`.
  * @remarks
- * Each DTO's {@link id} encodes the full instance path from the root graph. Link resolution
- * walks outward through {@link SubgraphNode} instances when a link crosses a subgraph boundary.
- * @see {@link ExecutableLGraphNode}
- * @see {@link SubgraphNode.getInnerNodes}
+ * Each DTO's `id` encodes the full instance path from the root graph. Link resolution
+ * walks outward through `SubgraphNode` instances when a link crosses a subgraph boundary.
+ * @see `ExecutableLGraphNode`
+ * @see `SubgraphNode.getInnerNodes`
  */
 export class ExecutableNodeDTO implements ExecutableLGraphNode {
-  /** Backing field for {@link id}. */
+  /** Backing field for `id`. */
   #id: ExecutionId
 
   /** The graph (or subgraph definition) that owns the wrapped node. */
@@ -73,11 +73,11 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
 
   /**
    * @param node The live node this DTO represents.
-   * @param subgraphNodePath Ordered list of {@link SubgraphNode} instance IDs from the root graph
+   * @param subgraphNodePath Ordered list of `SubgraphNode` instance IDs from the root graph
    * to the containing instance. Empty when the node lives directly in the root graph.
    * @param nodesByExecutionId Shared map populated during flattening; used to resolve links across
    * the expanded node network.
-   * @param subgraphNode The {@link SubgraphNode} instance that directly contains this node,
+   * @param subgraphNode The `SubgraphNode` instance that directly contains this node,
    * or `undefined` when the node is not inside a subgraph instance.
    */
   constructor(
@@ -111,7 +111,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   }
 
   /**
-   * Finds the index of the input slot on this node that matches the given output {@link slot} index.
+   * Finds the index of the input slot on this node that matches the given output `slot` index.
    * Used when bypassing nodes.
    * @param slot The output slot index on this node
    * @param type The type of the final target input (so type list matches are accurate)
@@ -152,7 +152,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   /**
    * Resolves the link inside a subgraph node, from the subgraph IO node to the node inside the subgraph.
    * @param slot The slot index of the output on the subgraph node.
-   * @param visited A set of unique IDs to guard against infinite recursion. See {@link resolveInput}.
+   * @param visited A set of unique IDs to guard against infinite recursion. See `resolveInput`.
    * @returns A DTO for the node, and the origin ID / slot index of the output.
    */
   #resolveSubgraphOutput(slot: number, type: ISlotType, visited: Set<string>): ResolvedInput | undefined {
@@ -180,14 +180,14 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   /**
    * Unique execution identifier for this node within the flattened graph.
    *
-   * Formed by joining {@link subgraphNodePath} and {@link node.id} with `:`.
+   * Formed by joining `subgraphNodePath` and `node.id` with `:`.
    * @example `"1:2:3"` — instance `1` in the root, instance `2` nested inside, node `3` in the definition.
    */
   get id() {
     return this.#id
   }
 
-  /** The wrapped node's {@link LGraphNode.type}. */
+  /** The wrapped node's `LGraphNode.type`. */
   get type() {
     return this.node.type
   }
@@ -217,7 +217,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
     return this.node.widgets
   }
 
-  /** The subgraph definition ID when this DTO is contained within a {@link SubgraphNode} instance. */
+  /** The subgraph definition ID when this DTO is contained within a `SubgraphNode` instance. */
   get subgraphId() {
     return this.subgraphNode?.subgraph.id
   }
@@ -232,7 +232,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   /**
    * Returns the DTOs that should be executed for this node.
    *
-   * For a {@link SubgraphNode}, recursively expands and returns all inner node DTOs. For any
+   * For a `SubgraphNode`, recursively expands and returns all inner node DTOs. For any
    * other node, returns a single-element array containing this DTO.
    * @returns The executable DTO(s) represented by this node.
    */
@@ -244,7 +244,7 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
    * Resolves the upstream source for a given input slot.
    *
    * Follows links through subgraph boundaries, bypass nodes, and virtual nodes until a concrete
-   * output endpoint (or widget value) is found. Throws {@link RecursionError} on circular paths.
+   * output endpoint (or widget value) is found. Throws `RecursionError` on circular paths.
    * @param slot The input slot index on this DTO.
    * @param visited Set of visited resolution keys used to detect cycles. Leave empty unless
    * overriding; pass through on all recursive calls when overriding.
@@ -318,12 +318,12 @@ export class ExecutableNodeDTO implements ExecutableLGraphNode {
   /**
    * Resolves whether an output slot is a valid execution endpoint.
    *
-   * Bypass and virtual nodes are transparently skipped. {@link SubgraphNode} outputs are resolved
-   * to their inner connected nodes. Throws {@link RecursionError} on circular paths.
+   * Bypass and virtual nodes are transparently skipped. `SubgraphNode` outputs are resolved
+   * to their inner connected nodes. Throws `RecursionError` on circular paths.
    * @param slot The output slot index on this DTO.
    * @param type The type of the downstream input requesting this output; used when traversing
    * bypass nodes.
-   * @param visited Set of visited resolution keys. See {@link resolveInput}.
+   * @param visited Set of visited resolution keys. See `resolveInput`.
    * @returns The concrete source node, origin ID, and output slot index; `undefined` when the
    * output cannot be resolved to a valid endpoint.
    */

@@ -1,11 +1,11 @@
 /**
- * Error thrown when link resolution encounters a missing or inconsistent {@link LLink}.
+ * Error thrown when link resolution encounters a missing or inconsistent `LLink`.
  *
- * Used during subgraph execution planning when {@link ExecutableNodeDTO} cannot find a link
+ * Used during subgraph execution planning when `ExecutableNodeDTO` cannot find a link
  * record, upstream node, or outer-graph connection that an input slot references. Indicates
  * corrupted graph state or a deserialisation mismatch rather than a user input mistake.
- * @see {@link ExecutableNodeDTO.resolveInput}
- * @see {@link SlotIndexError}
+ * @see `ExecutableNodeDTO.resolveInput`
+ * @see `SlotIndexError`
  */
 export class InvalidLinkError extends Error {
   /**

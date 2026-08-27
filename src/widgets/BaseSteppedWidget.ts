@@ -3,11 +3,11 @@ import type { IBaseWidget } from "@/types/widgets"
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
 /**
- * Abstract base for widgets with left/right stepped controls ({@link NumberWidget}, {@link ComboWidget}).
+ * Abstract base for widgets with left/right stepped controls (`NumberWidget`, `ComboWidget`).
  *
- * Extends {@link BaseWidget} with arrow-button rendering and increment/decrement semantics. The
- * default {@link drawWidget} draws the standard capsule, arrow buttons, and truncating label/value text.
- * @see {@link BaseWidget}
+ * Extends `BaseWidget` with arrow-button rendering and increment/decrement semantics. The
+ * default `drawWidget` draws the standard capsule, arrow buttons, and truncating label/value text.
+ * @see `BaseWidget`
  */
 export abstract class BaseSteppedWidget<TWidget extends IBaseWidget = IBaseWidget> extends BaseWidget<TWidget> {
   /**
@@ -21,12 +21,12 @@ export abstract class BaseSteppedWidget<TWidget extends IBaseWidget = IBaseWidge
    */
   abstract canDecrement(): boolean
   /**
-   * Applies one positive step to the widget value via {@link setValue}.
+   * Applies one positive step to the widget value via `setValue`.
    * @param options Pointer and canvas context for the interaction.
    */
   abstract incrementValue(options: WidgetEventOptions): void
   /**
-   * Applies one negative step to the widget value via {@link setValue}.
+   * Applies one negative step to the widget value via `setValue`.
    * @param options Pointer and canvas context for the interaction.
    */
   abstract decrementValue(options: WidgetEventOptions): void
@@ -35,8 +35,8 @@ export abstract class BaseSteppedWidget<TWidget extends IBaseWidget = IBaseWidge
    * Renders left and right chevron buttons at the widget capsule edges.
    * @param ctx Canvas context (path may be left dirty).
    * @param width Full node width used to position the right arrow.
-   * @remarks Arrow colour reflects {@link canDecrement}/{@link canIncrement}; disabled arrows use
-   * {@link disabledTextColor}.
+   * @remarks Arrow colour reflects `canDecrement`/`canIncrement`; disabled arrows use
+   * `disabledTextColor`.
    */
   drawArrowButtons(ctx: CanvasRenderingContext2D, width: number) {
     const { height, text_color, disabledTextColor, y } = this

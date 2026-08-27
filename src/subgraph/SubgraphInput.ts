@@ -21,13 +21,13 @@ import { isNodeSlot, isSubgraphOutput } from "./subgraphUtils"
  * connection point between a parent graph and a subgraph, so is conceptually similar to a reroute.
  *
  * When editing inside the subgraph, this slot is the **origin** (output side) of links that fan
- * out to internal node inputs. On the parent {@link SubgraphNode}, the corresponding slot is a
+ * out to internal node inputs. On the parent `SubgraphNode`, the corresponding slot is a
  * normal input.
  * @remarks
  * May promote a connected internal widget to the parent graph when all connected links target
  * widget-backed inputs of the same type.
- * @see {@link SubgraphOutput}
- * @see {@link SubgraphInputNode}
+ * @see `SubgraphOutput`
+ * @see `SubgraphInputNode`
  */
 export class SubgraphInput extends SubgraphSlot {
   /** The linked widget that this slot is connected to. */
@@ -56,13 +56,13 @@ export class SubgraphInput extends SubgraphSlot {
   /**
    * Connects this subgraph input to an internal node input slot.
    *
-   * Creates a link whose origin is this slot (on the {@link SubgraphInputNode}) and whose target
+   * Creates a link whose origin is this slot (on the `SubgraphInputNode`) and whose target
    * is the given node input. Disconnects any existing link on the target input first. When the
    * target is widget-backed, validates widget compatibility and records the widget reference.
    * @param slot The internal node input to connect to.
-   * @param node The node that owns {@link slot}.
+   * @param node The node that owns `slot`.
    * @param afterRerouteId Optional reroute ID when the link chain continues through reroutes.
-   * @returns The created {@link LLink}, or `undefined` if the connection was blocked.
+   * @returns The created `LLink`, or `undefined` if the connection was blocked.
    */
   override connect(slot: INodeInputSlot, node: LGraphNode, afterRerouteId?: RerouteId): LLink | undefined {
     const { subgraph } = this.parent

@@ -32,7 +32,7 @@ export enum RenderShape {
 /**
  * Bit flags indicating what canvas item(s) the pointer is currently hovering over.
  *
- * Multiple flags may be set simultaneously. Use {@link hasFlag} to test individual flags.
+ * Multiple flags may be set simultaneously. Use `hasFlag` to test individual flags.
  */
 export enum CanvasItem {
   /** No items / none. */
@@ -56,7 +56,7 @@ export enum CanvasItem {
 /**
  * Direction that a link segment flows towards when leaving or entering a slot.
  *
- * For example, horizontal output slots default to {@link RIGHT}, meaning the link
+ * For example, horizontal output slots default to `RIGHT`, meaning the link
  * exits the slot heading rightward.
  */
 export enum LinkDirection {
@@ -77,7 +77,7 @@ export enum LinkDirection {
 /**
  * Algorithm used to calculate the visual path of links between nodes.
  *
- * Configured globally via {@link LiteGraph} link render settings.
+ * Configured globally via `LiteGraph` link render settings.
  */
 export enum LinkRenderType {
   /** Link is not rendered. */
@@ -144,8 +144,8 @@ export enum EaseFunction {
 /**
  * Bit flags for alignment and positioning operations on canvas items.
  *
- * Flags may be combined (e.g. {@link TopLeft} = {@link Top} | {@link Left}).
- * Use {@link hasFlag} to test individual flags.
+ * Flags may be combined (e.g. `TopLeft` = `Top` | `Left`).
+ * Use `hasFlag` to test individual flags.
  */
 export enum Alignment {
   /** No alignment constraint. */
@@ -186,7 +186,7 @@ export enum Alignment {
  * Tests whether a single bit flag is set in a flag set.
  * @param flagSet The combined flag value to inspect.
  * @param flag The individual flag bit to test for.
- * @returns `true` if {@link flag} is fully set in {@link flagSet}.
+ * @returns `true` if `flag` is fully set in `flagSet`.
  */
 export function hasFlag(flagSet: number, flag: number): boolean {
   return (flagSet & flag) === flag

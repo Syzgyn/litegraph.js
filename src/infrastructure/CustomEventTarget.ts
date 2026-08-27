@@ -5,16 +5,16 @@ type EventListeners<T> = {
 }
 
 /**
- * Typed listener registration contract for a {@link CustomEventTarget}.
+ * Typed listener registration contract for a `CustomEventTarget`.
  *
- * Mirrors the DOM {@link EventTarget.addEventListener} and
- * {@link EventTarget.removeEventListener} signatures but restricts event names and listener
- * payloads to those declared in {@link EventMap}.
+ * Mirrors the DOM `EventTarget.addEventListener` and
+ * `EventTarget.removeEventListener` signatures but restricts event names and listener
+ * payloads to those declared in `EventMap`.
  * @template EventMap - Record mapping event name strings to detail payload types. Keys mapped
  * to `never` represent events with no detail payload.
- * @template Keys - Union of string keys from {@link EventMap}; defaults to all keys.
- * @see {@link CustomEventTarget}
- * @see {@link CustomEventDispatcher}
+ * @template Keys - Union of string keys from `EventMap`; defaults to all keys.
+ * @see `CustomEventTarget`
+ * @see `CustomEventDispatcher`
  */
 export interface ICustomEventTarget<
   EventMap extends Record<Keys, unknown>,
@@ -22,9 +22,9 @@ export interface ICustomEventTarget<
 > {
   /**
    * Registers a typed listener for the named event.
-   * @param type Event name key from {@link EventMap}.
-   * @param listener Callback invoked with a {@link CustomEvent} whose `detail` matches
-   * {@link EventMap}[`type`].
+   * @param type Event name key from `EventMap`.
+   * @param listener Callback invoked with a `CustomEvent` whose `detail` matches
+   * `EventMap`[`type`].
    * @param options Standard DOM listener options (capture, once, passive, signal).
    */
   addEventListener<K extends Keys>(
@@ -35,8 +35,8 @@ export interface ICustomEventTarget<
 
   /**
    * Removes a previously registered typed listener.
-   * @param type Event name key from {@link EventMap}.
-   * @param listener The same listener reference passed to {@link addEventListener}.
+   * @param type Event name key from `EventMap`.
+   * @param listener The same listener reference passed to `addEventListener`.
    * @param options Capture flag or options object matching the original registration.
    */
   removeEventListener<K extends Keys>(
@@ -45,18 +45,18 @@ export interface ICustomEventTarget<
     options?: boolean | EventListenerOptions,
   ): void
 
-  /** @deprecated Use {@link CustomEventTarget.dispatch} instead of raw {@link EventTarget.dispatchEvent}. */
+  /** @deprecated Use `CustomEventTarget.dispatch` instead of raw `EventTarget.dispatchEvent`. */
   dispatchEvent(event: never): boolean
 }
 
 /**
- * Typed event dispatch contract for a {@link CustomEventTarget}.
+ * Typed event dispatch contract for a `CustomEventTarget`.
  *
  * Overloads ensure the `detail` argument is required for events with a payload and omitted for
  * events mapped to `never`.
  * @template EventMap - Record mapping event name strings to detail payload types.
- * @template Keys - Union of string keys from {@link EventMap}; defaults to all keys.
- * @see {@link CustomEventTarget.dispatch}
+ * @template Keys - Union of string keys from `EventMap`; defaults to all keys.
+ * @see `CustomEventTarget.dispatch`
  */
 export interface CustomEventDispatcher<
   EventMap extends Record<Keys, unknown>,
@@ -64,27 +64,27 @@ export interface CustomEventDispatcher<
 > {
   /**
    * Dispatches an event that carries a detail payload.
-   * @param type Event name whose {@link EventMap} entry is not `never`.
-   * @param detail Payload attached to the {@link CustomEvent}.
+   * @param type Event name whose `EventMap` entry is not `never`.
+   * @param detail Payload attached to the `CustomEvent`.
    * @returns `true` if the event was not cancelled by a listener; `false` otherwise.
    */
   dispatch<T extends keyof NeverNever<EventMap>>(type: T, detail: EventMap[T]): boolean
 
   /**
    * Dispatches an event with no detail payload.
-   * @param type Event name whose {@link EventMap} entry is `never`.
+   * @param type Event name whose `EventMap` entry is `never`.
    * @returns `true` if the event was not cancelled by a listener; `false` otherwise.
    */
   dispatch<T extends keyof PickNevers<EventMap>>(type: T): boolean
 }
 
 /**
- * Strongly-typed {@link EventTarget} for custom app events.
+ * Strongly-typed `EventTarget` for custom app events.
  *
  * Subclass or instantiate directly to emit and listen for events defined by an event-map
- * interface (e.g. {@link LGraphEventMap}, {@link LinkConnectorEventMap}).
+ * interface (e.g. `LGraphEventMap`, `LinkConnectorEventMap`).
  * @template EventMap - Record mapping event name strings to detail payload types.
- * @template Keys - Union of string keys from {@link EventMap}; defaults to all keys.
+ * @template Keys - Union of string keys from `EventMap`; defaults to all keys.
  * @remarks
  * **Usage**
  *
@@ -108,8 +108,8 @@ export interface CustomEventDispatcher<
  *    events.dispatch("simple-event")
  *    events.addEventListener("my-event", (ev) => console.log(ev.detail.message))
  *    ```
- * @see {@link ICustomEventTarget}
- * @see {@link CustomEventDispatcher}
+ * @see `ICustomEventTarget`
+ * @see `CustomEventDispatcher`
  */
 export class CustomEventTarget<
   EventMap extends Record<Keys, unknown>,
@@ -117,13 +117,13 @@ export class CustomEventTarget<
 >
   extends EventTarget implements ICustomEventTarget<EventMap, Keys> {
   /**
-   * Dispatches a cancelable {@link CustomEvent} with optional typed detail.
+   * Dispatches a cancelable `CustomEvent` with optional typed detail.
    *
-   * Prefer this over {@link EventTarget.dispatchEvent} to preserve type safety.
-   * @param type Event name key from {@link EventMap}.
+   * Prefer this over `EventTarget.dispatchEvent` to preserve type safety.
+   * @param type Event name key from `EventMap`.
    * @param detail Payload for events that require one; omit for `never`-mapped events.
-   * @returns `true` if no listener called {@link Event.preventDefault}; otherwise `false`.
-   * @see {@link EventTarget.dispatchEvent}
+   * @returns `true` if no listener called `Event.preventDefault`; otherwise `false`.
+   * @see `EventTarget.dispatchEvent`
    */
   dispatch<T extends keyof NeverNever<EventMap>>(type: T, detail: EventMap[T]): boolean
   dispatch<T extends keyof PickNevers<EventMap>>(type: T): boolean
@@ -134,8 +134,8 @@ export class CustomEventTarget<
 
   /**
    * Registers a typed listener for the named event.
-   * @param type Event name key from {@link EventMap}.
-   * @param listener Callback invoked with a {@link CustomEvent} whose `detail` matches the map entry.
+   * @param type Event name key from `EventMap`.
+   * @param listener Callback invoked with a `CustomEvent` whose `detail` matches the map entry.
    * @param options Standard DOM listener options (capture, once, passive, signal).
    */
   override addEventListener<K extends Keys>(
@@ -149,8 +149,8 @@ export class CustomEventTarget<
 
   /**
    * Removes a previously registered typed listener.
-   * @param type Event name key from {@link EventMap}.
-   * @param listener The same listener reference passed to {@link addEventListener}.
+   * @param type Event name key from `EventMap`.
+   * @param listener The same listener reference passed to `addEventListener`.
    * @param options Capture flag or options object matching the original registration.
    */
   override removeEventListener<K extends Keys>(
@@ -162,7 +162,7 @@ export class CustomEventTarget<
     super.removeEventListener(type as string, listener as EventListener, options)
   }
 
-  /** @deprecated Use {@link dispatch} instead. */
+  /** @deprecated Use `dispatch` instead. */
   override dispatchEvent(event: never): boolean {
     return super.dispatchEvent(event)
   }

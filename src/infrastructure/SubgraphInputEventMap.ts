@@ -4,14 +4,14 @@ import type { SubgraphInput } from "@/subgraph/SubgraphInput"
 import type { IBaseWidget } from "@/types/widgets"
 
 /**
- * Strongly-typed event map for {@link SubgraphInput} connection lifecycle.
+ * Strongly-typed event map for `SubgraphInput` connection lifecycle.
  *
- * Extends {@link LGraphEventMap} with events fired when external links are connected to or
+ * Extends `LGraphEventMap` with events fired when external links are connected to or
  * disconnected from a subgraph input boundary slot.
  *
- * Listen on {@link SubgraphInput.events}.
- * @see {@link SubgraphInput}
- * @see {@link LGraphEventMap}
+ * Listen on `SubgraphInput.events`.
+ * @see `SubgraphInput`
+ * @see `LGraphEventMap`
  */
 export interface SubgraphInputEventMap extends LGraphEventMap {
   /**

@@ -14,30 +14,30 @@ import { LinkDirection } from "@/types/globalEnums"
 /**
  * Represents a link being dragged **from** a subgraph input boundary **to** an input slot.
  *
- * Created by {@link LinkConnector.dragNewFromSubgraphInput}, {@link LinkConnector.dragFromReroute},
- * and {@link LinkConnector.moveInputLink} (for subgraph input links). The origin is a
- * {@link SubgraphInput} exposed on the subgraph's {@link SubgraphInputNode}.
+ * Created by `LinkConnector.dragNewFromSubgraphInput`, `LinkConnector.dragFromReroute`,
+ * and `LinkConnector.moveInputLink` (for subgraph input links). The origin is a
+ * `SubgraphInput` exposed on the subgraph's `SubgraphInputNode`.
  * @remarks
  * Subgraph inputs act as virtual outputs inside the subgraph — data flows from the parent graph
  * into the subgraph through these boundary slots. This class handles both creating new links and
  * moving existing subgraph-input links.
- * @see {@link ToOutputFromIoNodeLink}
- * @see {@link LinkConnector.dragNewFromSubgraphInput}
+ * @see `ToOutputFromIoNodeLink`
+ * @see `LinkConnector.dragNewFromSubgraphInput`
  */
 export class ToInputFromIoNodeLink implements RenderLink {
   /** Always `"input"` — this link is being dragged toward an input slot. */
   readonly toType = "input"
 
-  /** Index of {@link fromSlot} on {@link node}. */
+  /** Index of `fromSlot` on `node`. */
   readonly fromSlotIndex: number
 
   /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
 
   /**
-   * The direction the link segment faces as it leaves {@link fromPos}.
+   * The direction the link segment faces as it leaves `fromPos`.
    *
-   * Defaults to {@link LinkDirection.RIGHT}. May be overridden to {@link LinkDirection.NONE}
+   * Defaults to `LinkDirection.RIGHT`. May be overridden to `LinkDirection.NONE`
    * when dragging from a reroute.
    */
   fromDirection: LinkDirection = LinkDirection.RIGHT
@@ -45,12 +45,12 @@ export class ToInputFromIoNodeLink implements RenderLink {
   /**
    * When set, the drag is repositioning an existing link rather than creating a new one.
    *
-   * Set by {@link LinkConnector.moveInputLink} for subgraph input links. Affects which event
+   * Set by `LinkConnector.moveInputLink` for subgraph input links. Affects which event
    * is dispatched on connect (`"input-moved"` vs `"link-created"`).
    */
   readonly existingLink?: LLink
 
-  /** When true, dropping near {@link disconnectOrigin} disconnects the link instead of reconnecting. */
+  /** When true, dropping near `disconnectOrigin` disconnects the link instead of reconnecting. */
   disconnectOnDrop: boolean
 
   /** Canvas position of the input slot for fast-disconnect circle hit testing. */
@@ -60,12 +60,12 @@ export class ToInputFromIoNodeLink implements RenderLink {
 
   /**
    * @param network The subgraph that owns the input boundary.
-   * @param node The {@link SubgraphInputNode} displaying the subgraph inputs.
-   * @param fromSlot The {@link SubgraphInput} at the origin of the drag.
+   * @param node The `SubgraphInputNode` displaying the subgraph inputs.
+   * @param fromSlot The `SubgraphInput` at the origin of the drag.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
    * @param dragDirection Controls how the free end of the link follows the cursor.
-   * @param existingLink When repositioning an existing link, the {@link LLink} being moved.
-   * @throws When {@link fromSlot} is not found on {@link node} (unless it is the empty slot).
+   * @param existingLink When repositioning an existing link, the `LLink` being moved.
+   * @throws When `fromSlot` is not found on `node` (unless it is the empty slot).
    */
   constructor(
     readonly network: LinkNetwork,
@@ -95,8 +95,8 @@ export class ToInputFromIoNodeLink implements RenderLink {
   /**
    * Determines whether dropping onto the given input slot would produce a valid connection.
    *
-   * Delegates to {@link SubgraphInputNode.canConnectTo}, passing this link's origin
-   * {@link SubgraphInput} as the upstream source.
+   * Delegates to `SubgraphInputNode.canConnectTo`, passing this link's origin
+   * `SubgraphInput` as the upstream source.
    * @param inputNode The node that owns the candidate input slot.
    * @param input The input slot being hovered or dropped on.
    */
@@ -115,7 +115,7 @@ export class ToInputFromIoNodeLink implements RenderLink {
   /**
    * Completes the drag by connecting the subgraph input to an input slot inside the subgraph.
    *
-   * Dispatches `"input-moved"` when {@link existingLink} is set, otherwise `"link-created"`.
+   * Dispatches `"input-moved"` when `existingLink` is set, otherwise `"link-created"`.
    * @param node The node that owns the target input slot.
    * @param input The input slot to connect to.
    * @param events Event target for dispatching connection lifecycle events.
@@ -156,9 +156,9 @@ export class ToInputFromIoNodeLink implements RenderLink {
   /**
    * Completes the drag by connecting through a reroute's input side.
    *
-   * Parents the drop-target reroute to {@link fromReroute}, creates the link via
-   * {@link SubgraphInput.connect}, cleans up orphaned reroutes, and dispatches the appropriate
-   * lifecycle event based on whether {@link existingLink} is set.
+   * Parents the drop-target reroute to `fromReroute`, creates the link via
+   * `SubgraphInput.connect`, cleans up orphaned reroutes, and dispatches the appropriate
+   * lifecycle event based on whether `existingLink` is set.
    * @param reroute The reroute being dropped on.
    * @param param1 The target input node, slot, and existing link at the reroute terminus.
    * @param events Dispatches `"input-moved"` or `"link-created"`.
@@ -232,7 +232,7 @@ export class ToInputFromIoNodeLink implements RenderLink {
 
   /**
    * Input-directed drags cannot terminate on a reroute's output side.
-   * @throws Always throws — use {@link connectToRerouteInput} instead.
+   * @throws Always throws — use `connectToRerouteInput` instead.
    */
   connectToRerouteOutput() {
     throw new Error("ToInputRenderLink cannot connect to an output.")

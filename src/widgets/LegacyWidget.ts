@@ -6,14 +6,14 @@ import { LiteGraph } from "@/litegraph"
 import { BaseWidget, type DrawWidgetOptions } from "./BaseWidget"
 
 /**
- * Adapter that wraps legacy plain-object custom widgets in the {@link BaseWidget} interface.
+ * Adapter that wraps legacy plain-object custom widgets in the `BaseWidget` interface.
  *
  * Delegates drawing to the original `draw` function while routing value changes through the
- * standard {@link BaseWidget} pipeline where possible.
+ * standard `BaseWidget` pipeline where possible.
  * @remarks Support will eventually be removed. Expect breaking changes without warning.
- * Third-party click handling still occurs via {@link LGraphCanvas} mouse callbacks, not
- * {@link onClick} here.
- * @see {@link toConcreteWidget}
+ * Third-party click handling still occurs via `LGraphCanvas` mouse callbacks, not
+ * `onClick` here.
+ * @see `toConcreteWidget`
  */
 export class LegacyWidget<TWidget extends IBaseWidget = IBaseWidget> extends BaseWidget<TWidget> implements IBaseWidget {
   /**
@@ -45,7 +45,7 @@ export class LegacyWidget<TWidget extends IBaseWidget = IBaseWidget> extends Bas
   }
 
   /**
-   * No-op placeholder; legacy widgets handle clicks via {@link LGraphCanvas} mouse routing.
+   * No-op placeholder; legacy widgets handle clicks via `LGraphCanvas` mouse routing.
    */
   override onClick() {
     console.warn("Custom widget wrapper onClick was just called. Handling for third party widgets is done via LGraphCanvas - the mouse callback.")

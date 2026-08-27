@@ -4,12 +4,12 @@ import type { IButtonWidget } from "@/types/widgets"
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
 
 /**
- * Clickable button widget (`type: "button"`) that invokes {@link callback} instead of storing a
+ * Clickable button widget (`type: "button"`) that invokes `callback` instead of storing a
  * persistent value.
  *
- * Briefly highlights on click via {@link clicked}. The callback receives the widget instance as its
+ * Briefly highlights on click via `clicked`. The callback receives the widget instance as its
  * first argument rather than a value.
- * @see {@link IButtonWidget}
+ * @see `IButtonWidget`
  */
 export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWidget {
   /** Widget type discriminator; always `"button"`. */
@@ -29,7 +29,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
   }
 
   /**
-   * Draws a rectangular button with centred {@link displayName} text.
+   * Draws a rectangular button with centred `displayName` text.
    * @param ctx Canvas 2D context.
    * @param options Node width and quality flags.
    */
@@ -76,7 +76,7 @@ export class ButtonWidget extends BaseWidget<IButtonWidget> implements IButtonWi
   }
 
   /**
-   * Marks the button as clicked, redraws, and invokes {@link callback} with the widget instance.
+   * Marks the button as clicked, redraws, and invokes `callback` with the widget instance.
    * @param options Pointer event, node, and canvas for the callback.
    */
   override onClick({ e, node, canvas }: WidgetEventOptions) {

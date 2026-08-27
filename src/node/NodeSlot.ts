@@ -14,7 +14,7 @@ import { SlotBase } from "./SlotBase"
 const MAX_MULTITYPE_SLICES = 3
 const ROTATION_OFFSET = -Math.PI
 
-/** Options passed to {@link NodeSlot.draw} and its subclasses when rendering a slot on the canvas. */
+/** Options passed to `NodeSlot.draw` and its subclasses when rendering a slot on the canvas. */
 export interface IDrawOptions {
   /** Theme colours used to resolve slot fill colours when custom colours are not set. */
   colorContext: DefaultConnectionColors
@@ -29,12 +29,12 @@ export interface IDrawOptions {
 }
 
 /**
- * Shared abstract base class for {@link LGraphNode} input and output slots.
+ * Shared abstract base class for `LGraphNode` input and output slots.
  *
- * Extends {@link SlotBase} with node ownership, layout helpers, connection validation,
+ * Extends `SlotBase` with node ownership, layout helpers, connection validation,
  * and full canvas rendering (expanded and collapsed states).
- * @see {@link NodeInputSlot}
- * @see {@link NodeOutputSlot}
+ * @see `NodeInputSlot`
+ * @see `NodeOutputSlot`
  */
 export abstract class NodeSlot extends SlotBase implements INodeSlot {
   #node: LGraphNode
@@ -82,7 +82,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
    */
   abstract get collapsedPos(): ReadOnlyPoint
 
-  /** The {@link LGraphNode} that owns this slot. */
+  /** The `LGraphNode` that owns this slot. */
   get node(): LGraphNode {
     return this.#node
   }
@@ -100,7 +100,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
   abstract get isWidgetInputSlot(): boolean
 
   /**
-   * Determines whether a dragging link originating from {@link fromSlot} may connect here.
+   * Determines whether a dragging link originating from `fromSlot` may connect here.
    * @param fromSlot The slot at the free end of the link being dragged.
    * @returns `true` if the connection is type-compatible and otherwise valid.
    */
@@ -109,7 +109,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
   /**
    * The label text rendered beside this slot on the canvas.
    *
-   * Resolves in order: {@link label}, {@link localized_name}, then {@link name}.
+   * Resolves in order: `label`, `localized_name`, then `name`.
    */
   get renderingLabel(): string {
     return this.label || this.localized_name || this.name || ""
@@ -119,7 +119,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
    * Renders this slot's shape, label, and error indicator on the canvas.
    *
    * Draws the slot at its layout centre offset from the parent node, using the shape and colour
-   * determined by {@link type}, {@link shape}, and {@link renderingColor}.
+   * determined by `type`, `shape`, and `renderingColor`.
    * @param ctx The 2D rendering context for the node canvas.
    * @param options Drawing options controlling colours, label placement, and quality.
    */
@@ -286,7 +286,7 @@ export abstract class NodeSlot extends SlotBase implements INodeSlot {
   /**
    * Renders a simplified slot indicator when the parent node is collapsed.
    *
-   * Uses {@link collapsedPos} and a fixed grey fill. Arrow slots adjust direction based on
+   * Uses `collapsedPos` and a fixed grey fill. Arrow slots adjust direction based on
    * whether this is an input or output slot.
    * @param ctx The 2D rendering context for the node canvas.
    */

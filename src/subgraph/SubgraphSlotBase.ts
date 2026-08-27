@@ -18,7 +18,7 @@ import { SlotBase } from "@/node/SlotBase"
 import { createUuidv4, type UUID } from "@/utils/uuid"
 
 /**
- * Options passed to {@link SubgraphSlot.draw} when rendering a subgraph IO slot.
+ * Options passed to `SubgraphSlot.draw` when rendering a subgraph IO slot.
  */
 export interface SubgraphSlotDrawOptions {
   /** Canvas rendering context; may be left dirty after drawing. */
@@ -34,24 +34,24 @@ export interface SubgraphSlotDrawOptions {
 }
 
 /**
- * Shared base class for {@link SubgraphInput} and {@link SubgraphOutput} boundary slots.
+ * Shared base class for `SubgraphInput` and `SubgraphOutput` boundary slots.
  *
  * Implements serialisation, hit-testing, layout measurement, link ID tracking, and canvas
  * rendering for slots displayed on subgraph IO boundary nodes.
- * @see {@link SubgraphInput}
- * @see {@link SubgraphOutput}
+ * @see `SubgraphInput`
+ * @see `SubgraphOutput`
  */
 export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hoverable, Serialisable<SubgraphIO> {
   /** Canvas-space position of this slot. */
   readonly #pos: Point = new Float32Array(2)
-  /** Cached label width/height used during {@link arrange}. */
+  /** Cached label width/height used during `arrange`. */
   readonly measurement: ConstrainedSize = new ConstrainedSize(SubgraphSlot.defaultHeight, SubgraphSlot.defaultHeight)
   /** Stable unique identifier for this slot within the subgraph definition. */
   readonly id: UUID
-  /** The IO boundary node ({@link SubgraphInputNode} or {@link SubgraphOutputNode}) that owns this slot. */
+  /** The IO boundary node (`SubgraphInputNode` or `SubgraphOutputNode`) that owns this slot. */
   readonly parent: SubgraphInputNode | SubgraphOutputNode
   /**
-   * IDs of all {@link LLink} instances attached to this slot.
+   * IDs of all `LLink` instances attached to this slot.
    *
    * Inputs may fan out to multiple internal targets; outputs typically hold a single link ID.
    */
@@ -100,7 +100,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
     return this.linkIds.length > 0
   }
 
-  /** Resolved display label, preferring {@link label}, then {@link localized_name}, then {@link name}. */
+  /** Resolved display label, preferring `label`, then `localized_name`, then `name`. */
   get displayName() {
     return this.label ?? this.localized_name ?? this.name
   }
@@ -114,7 +114,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   }
 
   /**
-   * Updates {@link isPointerOver} from a pointer move event.
+   * Updates `isPointerOver` from a pointer move event.
    * @param e The pointer event in canvas coordinates.
    */
   onPointerMove(e: CanvasPointerEvent): void {
@@ -122,7 +122,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   }
 
   /**
-   * Resolves all link IDs on this slot to live {@link LLink} instances.
+   * Resolves all link IDs on this slot to live `LLink` instances.
    * @returns Links still present in the parent subgraph's link map.
    */
   getLinks(): LLink[] {
@@ -248,8 +248,8 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   }
 
   /**
-   * Serialises this slot for persistence inside {@link ExportedSubgraph}.
-   * @returns A {@link SubgraphIO} plain object including link IDs and styling.
+   * Serialises this slot for persistence inside `ExportedSubgraph`.
+   * @returns A `SubgraphIO` plain object including link IDs and styling.
    */
   asSerialisable(): SubgraphIO {
     const { id, name, type, linkIds, localized_name, label, dir, shape, color_off, color_on, pos } = this
@@ -261,14 +261,14 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
 
   /**
    * Positions this slot within its parent IO node's vertical layout.
-   * @param rect Layout rectangle assigned by {@link SubgraphIONodeBase.arrange}.
+   * @param rect Layout rectangle assigned by `SubgraphIONodeBase.arrange`.
    */
   abstract arrange(rect: ReadOnlyRect): void
 
   /**
    * Creates a connection from or to this slot, depending on the concrete subclass.
    * @param slot The node slot on the other end of the connection.
-   * @param node The node that owns {@link slot}.
+   * @param node The node that owns `slot`.
    * @param afterRerouteId Optional reroute parent when the link passes through reroutes.
    */
   abstract connect(

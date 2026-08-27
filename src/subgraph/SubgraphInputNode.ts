@@ -21,13 +21,13 @@ import { SubgraphIONodeBase } from "./SubgraphIONodeBase"
  * Fixed boundary node on the left side of a subgraph canvas listing all subgraph inputs.
  *
  * Renders the input IO panel, handles pointer interaction for dragging new links from inputs
- * into the subgraph interior, and exposes legacy {@link LGraphNode}-compatible connection APIs
- * used by {@link LinkConnector} and paste/import logic.
+ * into the subgraph interior, and exposes legacy `LGraphNode`-compatible connection APIs
+ * used by `LinkConnector` and paste/import logic.
  * @remarks
- * Includes an {@link emptySlot} at the bottom for creating inputs on first connection.
- * Each concrete slot is a {@link SubgraphInput} stored on {@link Subgraph.inputs}.
- * @see {@link SubgraphOutputNode}
- * @see {@link SubgraphIONodeBase}
+ * Includes an `emptySlot` at the bottom for creating inputs on first connection.
+ * Each concrete slot is a `SubgraphInput` stored on `Subgraph.inputs`.
+ * @see `SubgraphOutputNode`
+ * @see `SubgraphIONodeBase`
  */
 export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> implements Positionable {
   /** Sentinel node ID used in links whose origin is a subgraph input boundary. */
@@ -36,7 +36,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
   /** Virtual slot that creates a new input when a link is dropped on it. */
   readonly emptySlot: EmptySubgraphInput = new EmptySubgraphInput(this)
 
-  /** The concrete input slots defined on this subgraph (excludes {@link emptySlot}). */
+  /** The concrete input slots defined on this subgraph (excludes `emptySlot`). */
   get slots() {
     return this.subgraph.inputs
   }
@@ -60,7 +60,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
    * Handles pointer down on the input boundary node.
    *
    * Left-click begins a link drag from the slot under the cursor via
-   * {@link LinkConnector.dragNewFromSubgraphInput}. Right-click opens the slot context menu.
+   * `LinkConnector.dragNewFromSubgraphInput`. Right-click opens the slot context menu.
    * @param e The pointer event in canvas coordinates.
    * @param pointer Drag lifecycle callbacks for the active pointer.
    * @param linkConnector Active link connector managing the drag operation.
@@ -105,7 +105,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
   /**
    * Delegates connection validation to the target node.
    * @param inputNode The node that would receive the connection.
-   * @param input The candidate input slot on {@link inputNode}.
+   * @param input The candidate input slot on `inputNode`.
    * @param fromSlot The subgraph input slot being connected from.
    */
   canConnectTo(inputNode: NodeLike, input: INodeInputSlot, fromSlot: SubgraphInput): boolean {
@@ -116,9 +116,9 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
    * Creates a link from a subgraph input slot to an internal node input.
    * @param fromSlot The subgraph input acting as the link origin.
    * @param inputNode The target node inside the subgraph.
-   * @param input The target input slot on {@link inputNode}.
+   * @param input The target input slot on `inputNode`.
    * @param afterRerouteId Optional reroute parent when the link passes through reroutes.
-   * @returns The newly created {@link LLink}.
+   * @returns The newly created `LLink`.
    * @throws When either slot index cannot be resolved.
    */
   connectSlots(fromSlot: SubgraphInput, inputNode: LGraphNode, input: INodeInputSlot, afterRerouteId: RerouteId | undefined): LLink {
@@ -181,7 +181,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
   /**
    * Finds a subgraph input slot by name.
    * @param name The slot name to search for.
-   * @returns The matching {@link SubgraphInput}, or `undefined`.
+   * @returns The matching `SubgraphInput`, or `undefined`.
    */
   findOutputSlot(name: string): SubgraphInput | undefined {
     return this.slots.find(output => output.name === name)
@@ -190,7 +190,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
   /**
    * Finds the first subgraph input of the given type that has no active connections.
    * @param type The slot type to match.
-   * @returns A free {@link SubgraphInput} of that type, or `undefined`.
+   * @returns A free `SubgraphInput` of that type, or `undefined`.
    */
   findOutputByType(type: ISlotType): SubgraphInput | undefined {
     return findFreeSlotOfType(this.slots, type, slot => slot.linkIds.length > 0)?.slot
@@ -204,7 +204,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
    * Cleans up floating links, removes the link from the subgraph input's `linkIds`, and notifies
    * the node via `onConnectionsChange`.
    * @param node The node whose input is being disconnected.
-   * @param input The input slot on {@link node}.
+   * @param input The input slot on `node`.
    * @param link The link being removed, if known.
    */
   disconnectNodeInput(node: LGraphNode, input: INodeInputSlot, link: LLink | undefined): void {

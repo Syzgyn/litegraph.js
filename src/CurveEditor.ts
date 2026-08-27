@@ -10,9 +10,9 @@ import { distance } from "./measure"
  * `[0, 1]`. Used by curve widgets to edit easing or response curves via mouse interaction
  * and to sample values along the piecewise-linear path.
  * @remarks
- * Points are stored in graph-normalised space; {@link draw} maps them into widget pixel
+ * Points are stored in graph-normalised space; `draw` maps them into widget pixel
  * coordinates. Edge points (first and last) are locked to `x = 0` and `x = 1` respectively.
- * @see {@link CurveEditor.sampleCurve}
+ * @see `CurveEditor.sampleCurve`
  */
 export class CurveEditor {
   /** Control points in normalised `[0, 1]` space, sorted by ascending `x`. */
@@ -21,14 +21,14 @@ export class CurveEditor {
   selected: number
   /** Index of the point nearest the pointer for hover highlighting, or `-1`. */
   nearest: number
-  /** Last widget size passed to {@link draw}, required for hit testing in mouse handlers. */
+  /** Last widget size passed to `draw`, required for hit testing in mouse handlers. */
   size: Rect | null
   /** When `true`, downstream code should recompute any cached curve samples. */
   must_update: boolean
   /** Pixel inset applied on all sides when mapping normalised points to canvas space. */
   margin: number
   /**
-   * @internal Cached nearest-point index used during {@link onMouseMove}.
+   * @internal Cached nearest-point index used during `onMouseMove`.
    * TODO: Delete once confirmed it does nothing, or finish implementation
    */
   nearestCache?: number
@@ -47,7 +47,7 @@ export class CurveEditor {
   }
 
   /**
-   * Samples the piecewise-linear curve defined by {@link points} at normalised input `f`.
+   * Samples the piecewise-linear curve defined by `points` at normalised input `f`.
    *
    * Walks adjacent point pairs and linearly interpolates within the segment that contains
    * `f`. Returns `0` when `f` lies beyond the final segment.
@@ -224,8 +224,8 @@ export class CurveEditor {
   }
 
   /**
-   * Finds the index of the control point closest to {@link pos} within {@link max_dist}.
-   * @param pos Pointer position in editor-local pixel space (after subtracting {@link margin}).
+   * Finds the index of the control point closest to `pos` within `max_dist`.
+   * @param pos Pointer position in editor-local pixel space (after subtracting `margin`).
    * @param max_dist Maximum distance in pixels for a point to be considered. Defaults to `30`.
    * @returns Index of the closest point, or `-1` when none are within range.
    */

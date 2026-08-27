@@ -15,13 +15,13 @@ import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 
 import { Subgraph } from "./litegraph"
 
-/** Numeric identifier for a link within an {@link LGraph}. */
+/** Numeric identifier for a link within an `LGraph`. */
 export type LinkId = number
 
 /**
  * Legacy tuple serialisation of a link, used by schema version 0.4.
- * @see {@link LLink.createFromArray}
- * @see {@link LLink.serialize}
+ * @see `LLink.createFromArray`
+ * @see `LLink.serialize`
  */
 export type SerialisedLLinkArray = [
   id: LinkId,
@@ -33,11 +33,11 @@ export type SerialisedLLinkArray = [
 ]
 
 /**
- * Fully resolved endpoints of a link after looking up nodes and slots in a {@link LinkNetwork}.
+ * Fully resolved endpoints of a link after looking up nodes and slots in a `LinkNetwork`.
  *
  * Exactly one of the normal input/output pairs or subgraph IO pairs is populated, depending on
- * whether the link crosses a subgraph boundary via {@link SUBGRAPH_INPUT_ID} or
- * {@link SUBGRAPH_OUTPUT_ID}.
+ * whether the link crosses a subgraph boundary via `SUBGRAPH_INPUT_ID` or
+ * `SUBGRAPH_OUTPUT_ID`.
  */
 export type ResolvedConnection = BaseResolvedConnection &
   (
@@ -48,17 +48,17 @@ export type ResolvedConnection = BaseResolvedConnection &
 
 interface BaseResolvedConnection {
   link: LLink
-  /** The node on the input side of the link (owns {@link input}) */
+  /** The node on the input side of the link (owns `input`) */
   inputNode?: LGraphNode
-  /** The input the link is connected to (mutually exclusive with {@link subgraphOutput}) */
+  /** The input the link is connected to (mutually exclusive with `subgraphOutput`) */
   input?: INodeInputSlot
-  /** The node on the output side of the link (owns {@link output}) */
+  /** The node on the output side of the link (owns `output`) */
   outputNode?: LGraphNode
-  /** The output the link is connected to (mutually exclusive with {@link subgraphInput}) */
+  /** The output the link is connected to (mutually exclusive with `subgraphInput`) */
   output?: INodeOutputSlot
-  /** The subgraph output the link is connected to (mutually exclusive with {@link input}) */
+  /** The subgraph output the link is connected to (mutually exclusive with `input`) */
   subgraphOutput?: SubgraphIO
-  /** The subgraph input the link is connected to (mutually exclusive with {@link output}) */
+  /** The subgraph input the link is connected to (mutually exclusive with `output`) */
   subgraphInput?: SubgraphIO
 }
 
@@ -76,7 +76,7 @@ interface ResolvedNormalOutput {
 
 interface ResolvedSubgraphInput {
   inputNode?: undefined
-  /** The actual input slot the link is connected to (mutually exclusive with {@link subgraphOutput}) */
+  /** The actual input slot the link is connected to (mutually exclusive with `subgraphOutput`) */
   input?: undefined
   subgraphOutput: SubgraphIO
 }
@@ -93,15 +93,15 @@ type BasicReadonlyNetwork = Pick<ReadonlyLinkNetwork, "getNodeById" | "links" | 
 /**
  * Represents a directed connection from an output slot to an input slot in a graph.
  *
- * Links store only primitive IDs ({@link origin_id}, {@link target_id}, slot indices) and resolve
- * live node/slot references through their owning {@link LinkNetwork}. They may pass through zero or
- * more {@link Reroute} points via {@link parentId}.
+ * Links store only primitive IDs (`origin_id`, `target_id`, slot indices) and resolve
+ * live node/slot references through their owning `LinkNetwork`. They may pass through zero or
+ * more `Reroute` points via `parentId`.
  * @remarks
- * Implements {@link LinkSegment} so links can participate in reroute chains and drag operations.
- * Use {@link LLink.resolve} or {@link LLink.create} rather than constructing instances directly
+ * Implements `LinkSegment` so links can participate in reroute chains and drag operations.
+ * Use `LLink.resolve` or `LLink.create` rather than constructing instances directly
  * when deserialising.
- * @see {@link LGraph.connectSlots}
- * @see {@link LLink.getReroutes}
+ * @see `LGraph.connectSlots`
+ * @see `LLink.getReroutes`
  */
 export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /** When `true`, renders debug overlays for link geometry during canvas draw. */
@@ -111,17 +111,17 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /** Unique link identifier within the owning graph. */
   id: LinkId
-  /** ID of the first {@link Reroute} after the output slot in this link's path, if any. */
+  /** ID of the first `Reroute` after the output slot in this link's path, if any. */
   parentId?: RerouteId
   /** Connection type string used for colour and compatibility checks. */
   type: ISlotType
   /** ID of the node that owns the output (origin) slot. */
   origin_id: NodeId
-  /** Index of the output slot on {@link origin_id}. */
+  /** Index of the output slot on `origin_id`. */
   origin_slot: number
   /** ID of the node that owns the input (target) slot. */
   target_id: NodeId
-  /** Index of the input slot on {@link target_id}. */
+  /** Index of the input slot on `target_id`. */
   target_slot: number
 
   /** Runtime payload propagated along the link during execution. */
@@ -172,7 +172,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
     this.pathCentre = new Float32Array(2)
   }
 
-  /** @deprecated Use {@link LLink.create}. Parses legacy 0.4 tuple format. */
+  /** @deprecated Use `LLink.create`. Parses legacy 0.4 tuple format. */
   static createFromArray(data: SerialisedLLinkArray): LLink {
     return new LLink(data[0], data[5], data[1], data[2], data[3], data[4])
   }
@@ -212,7 +212,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /**
    * Returns the first reroute in the chain from the output slot toward this segment.
    * @param network Graph providing the reroute map.
-   * @param linkSegment Starting segment (link or reroute) whose {@link parentId} begins the search.
+   * @param linkSegment Starting segment (link or reroute) whose `parentId` begins the search.
    * @returns The first reroute after the output, or `undefined` if there is no parent reroute.
    */
   static getFirstReroute(
@@ -227,7 +227,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
    * @param network The network this link belongs to
    * @param linkSegment The starting point of the search (input side).
    * Typically the LLink object itself, but can be any link segment.
-   * @param rerouteId The matching reroute will have this set as its {@link parentId}.
+   * @param rerouteId The matching reroute will have this set as its `parentId`.
    * @returns The reroute that was found, `undefined` if no reroute was found, or `null` if an infinite loop was detected.
    */
   static findNextReroute(
@@ -265,7 +265,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /**
    * Resolves a link ID to the link, node, and slot objects.
-   * @param linkId The {@link id} of the link to resolve
+   * @param linkId The `id` of the link to resolve
    * @param network The link network to search
    * @returns An object containing the input and output nodes, as well as the input and output slots.
    * @remarks This method is heavier than others; it will always resolve all objects.
@@ -279,10 +279,10 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /**
    * Resolves a list of link IDs to the link, node, and slot objects.
    * Discards invalid link IDs.
-   * @param linkIds An iterable of link {@link id}s to resolve
+   * @param linkIds An iterable of link `id`s to resolve
    * @param network The link network to search
    * @returns An array of resolved connections.  If a link is not found, it is not included in the array.
-   * @see {@link LLink.resolve}
+   * @see `LLink.resolve`
    */
   static resolveMany(linkIds: Iterable<LinkId>, network: BasicReadonlyNetwork): ResolvedConnection[] {
     const resolved: ResolvedConnection[] = []
@@ -313,8 +313,8 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /**
    * `true` when either end of the link is floating.
-   * @see {@link isFloatingOutput}
-   * @see {@link isFloatingInput}
+   * @see `isFloatingOutput`
+   * @see `isFloatingInput`
    */
   public get isFloating(): boolean {
     return this.isFloatingOutput || this.isFloatingInput
@@ -359,8 +359,8 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   /**
    * Restores link fields from serialised data.
    *
-   * Accepts either the modern object form or the legacy {@link SerialisedLLinkArray} tuple.
-   * @param o Serialised link data or another {@link LLink} instance to copy from.
+   * Accepts either the modern object form or the legacy `SerialisedLLinkArray` tuple.
+   * @param o Serialised link data or another `LLink` instance to copy from.
    */
   configure(o: LLink | SerialisedLLinkArray) {
     if (Array.isArray(o)) {
@@ -476,7 +476,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
   }
 
   /**
-   * @deprecated Prefer {@link LLink.asSerialisable}, which returns an object rather than a tuple.
+   * @deprecated Prefer `LLink.asSerialisable`, which returns an object rather than a tuple.
    * @returns Legacy array representation of this link.
    */
   serialize(): SerialisedLLinkArray {
@@ -492,7 +492,7 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
   /**
    * Prepares a shallow copy for serialisation.
-   * @returns Plain object including {@link parentId} only when set.
+   * @returns Plain object including `parentId` only when set.
    */
   asSerialisable(): SerialisableLLink {
     const copy: SerialisableLLink = {

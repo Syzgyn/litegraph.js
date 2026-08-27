@@ -23,7 +23,7 @@ function getColorInput(): HTMLInputElement {
  * Colour picker widget (`type: "color"`) using a native HTML colour input.
  *
  * Renders a label, hex value, and colour swatch on the canvas; clicking opens the system picker.
- * @see {@link IColorWidget}
+ * @see `IColorWidget`
  */
 export class ColorWidget extends BaseWidget<IColorWidget> implements IColorWidget {
   /** Widget type discriminator; always `"color"`. */

@@ -41,7 +41,7 @@ export interface FilteredItems {
 
 /**
  * Partitions a mixed iterable of canvas positionables into typed sets.
- * @param items Any iterable of {@link Positionable} objects from a canvas selection.
+ * @param items Any iterable of `Positionable` objects from a canvas selection.
  * @returns Categorised sets for nodes, reroutes, groups, IO nodes, and unknown items.
  */
 export function splitPositionables(items: Iterable<Positionable>): FilteredItems {
@@ -221,7 +221,7 @@ export function getBoundaryLinks(graph: LGraph, items: Set<Positionable>): Bound
  * Deep-clones a set of nodes while preserving their IDs and link references.
  *
  * Used when duplicating a selection into a new subgraph definition. Each node is recreated via
- * {@link LiteGraph.createNode} and configured from a cloned serialisation payload.
+ * `LiteGraph.createNode` and configured from a cloned serialisation payload.
  * @param nodes The nodes to clone.
  * @returns Serialised node data ready to embed in a new graph or subgraph.
  */
@@ -293,7 +293,7 @@ function mapReroutes(
  * Creates subgraph input slot definitions from boundary input links when wrapping a selection.
  *
  * Groups links by their external output, assigns unique names, rewrites link origins to
- * {@link SUBGRAPH_INPUT_ID}, and appends serialised link data to the provided array.
+ * `SUBGRAPH_INPUT_ID`, and appends serialised link data to the provided array.
  * @param resolvedInputLinks Resolved connections whose input ends lie inside the new subgraph.
  * @param links Mutable array that receives rewritten serialised links for the new subgraph.
  * @returns definitions for each grouped external input.
@@ -530,11 +530,11 @@ export function walkSegment(
 }
 
 /**
- * Registers a {@link SubgraphNode} constructor under the subgraph definition's UUID so
- * {@link LiteGraph.createNode} can instantiate it.
+ * Registers a `SubgraphNode` constructor under the subgraph definition's UUID so
+ * `LiteGraph.createNode` can instantiate it.
  *
  * Skips registration when a host app (e.g. ComfyUI) has already registered a custom class
- * via the {@link LGraphEventMap} `"subgraph-created"` event.
+ * via the `LGraphEventMap` `"subgraph-created"` event.
  */
 export function registerSubgraphNodeType(subgraph: Subgraph): void {
   if (Object.hasOwn(LiteGraph.registered_node_types, subgraph.id)) return

@@ -1,7 +1,7 @@
 import type { Point } from "@/interfaces"
 import type { LGraphCanvas, LGraphNode } from "@/litegraph"
 
-/** Mirrors {@link LGraphCanvas} title-button mousedown handling (see #5079). */
+/** Mirrors `LGraphCanvas` title-button mousedown handling (see #5079). */
 export function handleTitleButtonClick(
   node: LGraphNode,
   pos: Point,

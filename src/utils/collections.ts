@@ -50,9 +50,9 @@ export function getDraggedItems(
 }
 
 /**
- * Iterates through a collection of {@link Positionable} items, returning the first {@link LGraphNode}.
+ * Iterates through a collection of `Positionable` items, returning the first `LGraphNode`.
  * @param items The items to search through
- * @returns The first node found in {@link items}, otherwise `undefined`
+ * @returns The first node found in `items`, otherwise `undefined`
  */
 export function findFirstNode(items: Iterable<Positionable>): LGraphNode | undefined {
   for (const item of items) {
@@ -73,14 +73,14 @@ export function isDraggingLink(linkId: LinkId, connectingLinks: ConnectingLink[]
 type FreeSlotResult<T extends { type: ISlotType }> = { index: number, slot: T } | undefined
 
 /**
- * Finds the first free in/out slot with any of the comma-delimited types in {@link type}.
+ * Finds the first free in/out slot with any of the comma-delimited types in `type`.
  *
  * If no slots are free, falls back in order to:
  * - The first free wildcard slot
  * - The first occupied slot
  * - The first occupied wildcard slot
  * @param slots The iterable of node slots slots to search through
- * @param type The {@link ISlotType type} of slot to find
+ * @param type The `ISlotType type` of slot to find
  * @param hasNoLinks A predicate that returns `true` if the slot is free.
  * @returns The index and slot if found, otherwise `undefined`.
  */
@@ -124,7 +124,7 @@ export function findFreeSlotOfType<T extends { type: ISlotType }>(
 }
 
 /**
- * Removes the first occurrence of {@link value} from {@link array} in place.
+ * Removes the first occurrence of `value` from `array` in place.
  * @param array The array to modify.
  * @param value The element to remove.
  * @returns `true` if the value was found and removed, `false` otherwise.

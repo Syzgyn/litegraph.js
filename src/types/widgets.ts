@@ -4,7 +4,7 @@ import type { CanvasPointerEvent } from "./events"
 
 /**
  * Configuration options shared by all widget types.
- * @template TValues The type of the {@link values} option (combo box entries, etc.).
+ * @template TValues The type of the `values` option (combo box entries, etc.).
  */
 export interface IWidgetOptions<TValues = unknown[]> {
   /** Label text shown when the widget value is `true` (toggle widgets). */
@@ -80,7 +80,7 @@ export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
  * All types are based on IBaseWidget - additions can be made there or directly on individual types.
  *
  * Implemented as a discriminative union of widget types, so this type itself cannot be extended.
- * Recommend declaration merging any properties that use IWidget (e.g. {@link LGraphNode.widgets}) with a new type alias.
+ * Recommend declaration merging any properties that use IWidget (e.g. `LGraphNode.widgets`) with a new type alias.
  * @see ICustomWidget
  */
 export type IWidget =
@@ -138,7 +138,7 @@ export interface IKnobWidget extends IBaseWidget<number, "knob", IWidgetKnobOpti
 /**
  * A combo-box widget restricted to string values.
  *
- * Avoids the type issues with the legacy {@link IComboWidget} union type.
+ * Avoids the type issues with the legacy `IComboWidget` union type.
  */
 export interface IStringComboWidget extends IBaseWidget<string, "combo", RequiredProps<IWidgetOptions<string[]>, "values">> {
   type: "combo"
@@ -189,7 +189,7 @@ export interface ICustomWidget extends IBaseWidget<string | object, "custom"> {
  */
 export type TWidgetType = IWidget["type"]
 
-/** Union of all possible widget value types across the {@link IWidget} discriminated union. */
+/** Union of all possible widget value types across the `IWidget` discriminated union. */
 export type TWidgetValue = IWidget["value"]
 
 /**
@@ -214,7 +214,7 @@ export interface IBaseWidget<
 
   /** User-facing label shown beside the widget. */
   label?: string
-  /** Widget type (see {@link TWidgetType}) */
+  /** Widget type (see `TWidgetType`) */
   type: TType
   value?: TValue
 
@@ -283,7 +283,7 @@ export interface IBaseWidget<
   /**
    * Simple callback for pointer events, allowing custom widgets to events relevant to them.
    * @param event The pointer event that triggered this callback
-   * @param pointerOffset Offset of the pointer relative to {@link node.pos}
+   * @param pointerOffset Offset of the pointer relative to `node.pos`
    * @param node The node this widget belongs to
    * @todo Expose CanvasPointer API to custom widgets
    */
@@ -331,7 +331,7 @@ export interface IBaseWidget<
 
   /**
    * Callback for pointerdown events, allowing custom widgets to register callbacks to occur
-   * for all {@link CanvasPointer} events.
+   * for all `CanvasPointer` events.
    *
    * This callback is operated early in the pointerdown logic; actions that prevent it from firing are:
    * - `Ctrl + Drag` Multi-select

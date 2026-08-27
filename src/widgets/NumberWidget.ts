@@ -8,7 +8,7 @@ import { BaseSteppedWidget } from "./BaseSteppedWidget"
 /**
  * Numeric stepped widget (`type: "number"`) with min/max clamping, arrow buttons, prompt editor,
  * and horizontal drag adjustment.
- * @see {@link INumericWidget}
+ * @see `INumericWidget`
  */
 export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements INumericWidget {
   /** Widget type discriminator; always `"number"`. */
@@ -39,18 +39,18 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
     return min == null || this.value > min
   }
 
-  /** Adds one {@link getWidgetStep} increment. */
+  /** Adds one `getWidgetStep` increment. */
   override incrementValue(options: WidgetEventOptions): void {
     this.setValue(this.value + getWidgetStep(this.options), options)
   }
 
-  /** Subtracts one {@link getWidgetStep} increment. */
+  /** Subtracts one `getWidgetStep` increment. */
   override decrementValue(options: WidgetEventOptions): void {
     this.setValue(this.value - getWidgetStep(this.options), options)
   }
 
   /**
-   * Clamps to `options.min` / `options.max` then delegates to {@link BaseWidget.setValue}.
+   * Clamps to `options.min` / `options.max` then delegates to `BaseWidget.setValue`.
    * @param value Proposed numeric value.
    * @param options Event context for callbacks.
    */

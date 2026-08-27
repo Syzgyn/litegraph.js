@@ -6,8 +6,8 @@ const sentWarnings: Set<string> = new Set()
 
 /**
  * Warns that a deprecated function has been used via the public
- * {@link onDeprecationWarning} / {@link onEveryDeprecationWarning} callback arrays.
- * @param message Plain-language detail about what has been deprecated. This **should not** include unique data; use {@link source}.
+ * `onDeprecationWarning` / `onEveryDeprecationWarning` callback arrays.
+ * @param message Plain-language detail about what has been deprecated. This **should not** include unique data; use `source`.
  * @param source A reference object to include alongside the message, e.g. `this`.
  */
 export function warnDeprecated(message: string, source?: object): void {
@@ -30,7 +30,7 @@ export function warnDeprecated(message: string, source?: object): void {
  * Defines a deprecated property alias that proxies to a current property,
  * logging a deprecation warning on first access.
  *
- * Warning is deduplicated by {@link warnDeprecated} (once per unique message per session).
+ * Warning is deduplicated by `warnDeprecated` (once per unique message per session).
  * @param target The object to define the deprecated property on.
  * @param deprecatedKey The old property name to deprecate.
  * @param currentKey The new property name to proxy to.

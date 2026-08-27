@@ -11,11 +11,11 @@ import type { LinkDirection } from "@/types/globalEnums"
 /**
  * Contract for a link segment currently being dragged or rendered during a connection operation.
  *
- * Implemented by {@link MovingInputLink}, {@link MovingOutputLink}, {@link FloatingRenderLink},
- * {@link ToInputRenderLink}, {@link ToOutputRenderLink}, and their subgraph IO variants. The
- * {@link LinkConnector} holds an array of {@link RenderLink} instances while the user drags,
+ * Implemented by `MovingInputLink`, `MovingOutputLink`, `FloatingRenderLink`,
+ * `ToInputRenderLink`, `ToOutputRenderLink`, and their subgraph IO variants. The
+ * `LinkConnector` holds an array of `RenderLink` instances while the user drags,
  * queries them for hover validation, and calls the appropriate `connectTo*` method on drop.
- * @see {@link LinkConnector}
+ * @see `LinkConnector`
  */
 export interface RenderLink {
   /**
@@ -34,20 +34,20 @@ export interface RenderLink {
   readonly fromPos: Point
 
   /**
-   * The direction the link segment faces as it leaves {@link fromPos}.
+   * The direction the link segment faces as it leaves `fromPos`.
    *
-   * When {@link toType} is `"output"`, this is the direction the link input faces at the origin.
+   * When `toType` is `"output"`, this is the direction the link input faces at the origin.
    */
   readonly fromDirection: LinkDirection
 
   /**
    * When set, forces the free end of the dragged link to extend from the cursor in this direction.
    *
-   * Used by {@link LinkConnector.moveOutputLink} to fan out multi-link drags predictably.
+   * Used by `LinkConnector.moveOutputLink` to fan out multi-link drags predictably.
    */
   dragDirection: LinkDirection
 
-  /** When true, dropping near {@link disconnectOrigin} disconnects the link instead of reconnecting. */
+  /** When true, dropping near `disconnectOrigin` disconnects the link instead of reconnecting. */
   disconnectOnDrop?: boolean
 
   /** Canvas position of the input slot for fast-disconnect circle hit testing. */
@@ -64,17 +64,17 @@ export interface RenderLink {
   /**
    * The slot at the fixed origin of the link being dragged.
    *
-   * May be a regular node slot or a {@link SubgraphInput} / {@link SubgraphOutput} definition.
+   * May be a regular node slot or a `SubgraphInput` / `SubgraphOutput` definition.
    */
   readonly fromSlot: INodeOutputSlot | INodeInputSlot | SubgraphInput | SubgraphOutput
 
-  /** Index of {@link fromSlot} on {@link node}. */
+  /** Index of `fromSlot` on `node`. */
   readonly fromSlotIndex: number
 
   /**
    * When the link originates from (or passes through) a reroute, the first reroute in the chain.
    *
-   * Its position is used for {@link fromPos} and its ID is passed as parentage when connecting.
+   * Its position is used for `fromPos` and its ID is passed as parentage when connecting.
    */
   readonly fromReroute?: Reroute
 
@@ -128,7 +128,7 @@ export interface RenderLink {
    * Completes the drag by connecting the free end to a reroute's output side.
    * @param reroute The reroute being dropped on.
    * @param outputNode The node that owns the output slot the link ultimately connects through.
-   * @param output The output slot on {@link outputNode}.
+   * @param output The output slot on `outputNode`.
    * @param events Event target for dispatching connection lifecycle events.
    */
   connectToRerouteOutput(

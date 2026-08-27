@@ -7,21 +7,21 @@ import { dist2 } from "./measure"
  * Allows click and drag actions to be declared ahead of time during a pointerdown event.
  *
  * By default, it retains the most recent event of each type until it is reset (on pointerup).
- * - {@link eDown}
- * - {@link eMove}
- * - {@link eUp}
+ * - `eDown`
+ * - `eMove`
+ * - `eUp`
  *
  * Depending on whether the user clicks or drags the pointer, only the appropriate callbacks are called:
- * - {@link onClick}
- * - {@link onDoubleClick}
- * - {@link onDragStart}
- * - {@link onDrag}
- * - {@link onDragEnd}
- * - {@link finally}
+ * - `onClick`
+ * - `onDoubleClick`
+ * - `onDragStart`
+ * - `onDrag`
+ * - `onDragEnd`
+ * - `finally`
  * @see
- * - {@link LGraphCanvas.processMouseDown}
- * - {@link LGraphCanvas.processMouseMove}
- * - {@link LGraphCanvas.processMouseUp}
+ * - `LGraphCanvas.processMouseDown`
+ * - `LGraphCanvas.processMouseMove`
+ * - `LGraphCanvas.processMouseUp`
  */
 export class CanvasPointer {
   /** Maximum time in milliseconds to ignore click drift */
@@ -31,7 +31,7 @@ export class CanvasPointer {
   static doubleClickTime = 300
 
   static #maxClickDrift = 6
-  /** {@link maxClickDrift} squared.  Used to calculate click drift without `sqrt`. */
+  /** `maxClickDrift` squared.  Used to calculate click drift without `sqrt`. */
   static #maxClickDrift2 = this.#maxClickDrift ** 2
 
   /** Assume that "wheel" events with both deltaX and deltaY less than this value are trackpad gestures. */
@@ -60,7 +60,7 @@ export class CanvasPointer {
   /** Set to true when if the pointer moves far enough after a down event, before the corresponding up event is fired. */
   dragStarted: boolean = false
 
-  /** The {@link eUp} from the last successful click */
+  /** The `eUp` from the last successful click */
   eLastDown?: CanvasPointerEvent
 
   /** Used downstream for touch event support. */
@@ -72,8 +72,8 @@ export class CanvasPointer {
   resizeDirection?: CompassCorners
 
   /**
-   * If `true`, {@link eDown}, {@link eMove}, and {@link eUp} will be set to
-   * `undefined` when {@link reset} is called.
+   * If `true`, `eDown`, `eMove`, and `eUp` will be set to
+   * `undefined` when `reset` is called.
    *
    * Default: `true`
    */
@@ -147,7 +147,7 @@ export class CanvasPointer {
    * @param a The first event to compare
    * @param b The second event to compare
    * @param tolerance2 The maximum distance (squared) before the positions are considered different
-   * @returns `true` if the two events were no more than {@link maxClickDrift} apart, otherwise `false`
+   * @returns `true` if the two events were no more than `maxClickDrift` apart, otherwise `false`
    */
   #hasSamePosition(
     a: PointerEvent,
@@ -335,8 +335,8 @@ export class CanvasPointer {
    * @param eMove The pointermove event of this ongoing drag action.
    *
    * It is possible for no `pointermove` events to occur, but still be far from
-   * the original `pointerdown` event. In this case, {@link eMove} will be null, and
-   * {@link onDragEnd} will be called immediately after {@link onDragStart}.
+   * the original `pointerdown` event. In this case, `eMove` will be null, and
+   * `onDragEnd` will be called immediately after `onDragStart`.
    */
   onDragStart?(pointer: this, eMove?: CanvasPointerEvent): unknown
 
@@ -464,9 +464,9 @@ export class CanvasPointer {
   }
 
   /**
-   * Resets the state of this {@link CanvasPointer} instance.
+   * Resets the state of this `CanvasPointer` instance.
    *
-   * The {@link finally} callback is first executed, then all callbacks and intra-click
+   * The `finally` callback is first executed, then all callbacks and intra-click
    * state is cleared.
    */
   reset(): void {

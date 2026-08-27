@@ -30,7 +30,7 @@ import { ToOutputFromRerouteLink } from "./ToOutputFromRerouteLink"
 import { ToOutputRenderLink } from "./ToOutputRenderLink"
 
 /**
- * A Litegraph state object for the {@link LinkConnector}.
+ * A Litegraph state object for the `LinkConnector`.
  * References are only held atomically within a function, never passed.
  * The concrete implementation may be replaced or proxied without side-effects.
  */
@@ -45,7 +45,7 @@ export interface LinkConnectorState {
   /**
    * When `true`, multiple links are being dragged simultaneously.
    *
-   * Set by {@link LinkConnector.moveOutputLink} when dragging all links from an output slot.
+   * Set by `LinkConnector.moveOutputLink` when dragging all links from an output slot.
    */
   multi: boolean
 
@@ -67,25 +67,25 @@ export type RenderLinkUnion =
   ToOutputFromIoNodeLink
 
 /**
- * Snapshot of an in-progress link drag operation, returned by {@link LinkConnector.export}.
+ * Snapshot of an in-progress link drag operation, returned by `LinkConnector.export`.
  * @remarks
  * All array and state properties are shallow clones; mutating them does not affect the
- * {@link LinkConnector} instance.
+ * `LinkConnector` instance.
  */
 export interface LinkConnectorExport {
-  /** Active {@link RenderLink} instances driving the drag rendering and drop logic. */
+  /** Active `RenderLink` instances driving the drag rendering and drop logic. */
   renderLinks: RenderLink[]
 
-  /** Existing {@link LLink}s whose input end is being repositioned. */
+  /** Existing `LLink`s whose input end is being repositioned. */
   inputLinks: LLink[]
 
-  /** Existing {@link LLink}s whose output end is being repositioned. */
+  /** Existing `LLink`s whose output end is being repositioned. */
   outputLinks: LLink[]
 
-  /** Floating {@link LLink}s being completed during this drag. */
+  /** Floating `LLink`s being completed during this drag. */
   floatingLinks: LLink[]
 
-  /** Shallow copy of the current {@link LinkConnectorState}. */
+  /** Shallow copy of the current `LinkConnectorState`. */
   state: LinkConnectorState
 
   /** The graph (or subgraph) that owns the links being connected. */
@@ -93,8 +93,8 @@ export interface LinkConnectorExport {
 }
 
 /**
- * Component of {@link LGraphCanvas} that handles connecting and moving links.
- * @see {@link LLink}
+ * Component of `LGraphCanvas` that handles connecting and moving links.
+ * @see `LLink`
  */
 export class LinkConnector {
   readonly #setConnectingLinks: (value: ConnectingLink[]) => void
@@ -104,7 +104,7 @@ export class LinkConnector {
    *
    * Can be replaced or proxied to allow notifications. Is always dereferenced at the start of
    * an operation.
-   * @see {@link LinkConnectorState}
+   * @see `LinkConnectorState`
    */
   state: LinkConnectorState = {
     connectingTo: undefined,
@@ -119,15 +119,15 @@ export class LinkConnector {
    * Dispatches events such as `"before-move-input"`, `"link-created"`, `"input-moved"`,
    * `"output-moved"`, `"reset"`, and `"after-drop-links"`. Listeners may return `false` to
    * veto an operation.
-   * @see {@link LinkConnectorEventMap}
+   * @see `LinkConnectorEventMap`
    */
   readonly events = new CustomEventTarget<LinkConnectorEventMap>()
 
   /**
-   * Active {@link RenderLink} instances for the current drag operation.
+   * Active `RenderLink` instances for the current drag operation.
    *
-   * Contains rendering and connection metadata only; the underlying {@link LLink} objects are
-   * tracked separately in {@link inputLinks}, {@link outputLinks}, and {@link floatingLinks}.
+   * Contains rendering and connection metadata only; the underlying `LLink` objects are
+   * tracked separately in `inputLinks`, `outputLinks`, and `floatingLinks`.
    */
   readonly renderLinks: RenderLinkUnion[] = []
 
@@ -151,24 +151,24 @@ export class LinkConnector {
   /**
    * The widget beneath the pointer, if it is a valid connection target.
    *
-   * Set by {@link LGraphCanvas} during hover; used by {@link dropOnNode} as a fallback when
+   * Set by `LGraphCanvas` during hover; used by `dropOnNode` as a fallback when
    * the pointer is not directly over an input slot.
    */
   overWidget?: IBaseWidget
 
-  /** The slot type (from a downstream callback) associated with {@link overWidget}. */
+  /** The slot type (from a downstream callback) associated with `overWidget`. */
   overWidgetType?: string
 
   /**
    * The reroute beneath the pointer, if it is a valid connection target.
    *
-   * Updated during hover by {@link LGraphCanvas} for highlight rendering.
+   * Updated during hover by `LGraphCanvas` for highlight rendering.
    */
   overReroute?: Reroute
 
   /**
    * @param setConnectingLinks Callback that synchronises the legacy `connecting_links` array
-   * on {@link LGraphCanvas}. Invoked whenever a drag operation starts to populate the
+   * on `LGraphCanvas`. Invoked whenever a drag operation starts to populate the
    * extension-compatible representation.
    */
   constructor(setConnectingLinks: (value: ConnectingLink[]) => void) {
@@ -229,7 +229,7 @@ export class LinkConnector {
   /**
    * Whether the current drag is repositioning existing links rather than creating new ones.
    *
-   * Mirrors {@link LinkConnectorState.draggingExistingLinks}.
+   * Mirrors `LinkConnectorState.draggingExistingLinks`.
    */
   get draggingExistingLinks() {
     return this.state.draggingExistingLinks
@@ -239,12 +239,12 @@ export class LinkConnector {
    * Begins dragging an existing link's input end to a new connection target.
    *
    * Handles three cases:
-   * - A floating link parented to a reroute → creates a {@link FloatingRenderLink}.
-   * - A subgraph input link → creates a {@link ToInputFromIoNodeLink}.
-   * - A regular node link → creates a {@link MovingInputLink}.
+   * - A floating link parented to a reroute → creates a `FloatingRenderLink`.
+   * - A subgraph input link → creates a `ToInputFromIoNodeLink`.
+   * - A regular node link → creates a `MovingInputLink`.
    * @param network The graph (or subgraph) that owns the link.
    * @param input The input slot whose connected link is being repositioned.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   moveInputLink(network: LinkNetwork, input: INodeInputSlot, opts?: { startPoint?: Point }): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -340,12 +340,12 @@ export class LinkConnector {
   /**
    * Begins dragging all links from an output slot to new connection targets.
    *
-   * Creates a {@link MovingOutputLink} (or {@link FloatingRenderLink}) for each connected link
-   * and sets {@link LinkConnectorState.multi} to `true`. The first reroute in each link chain
-   * is added to {@link hiddenReroutes}.
+   * Creates a `MovingOutputLink` (or `FloatingRenderLink`) for each connected link
+   * and sets `LinkConnectorState.multi` to `true`. The first reroute in each link chain
+   * is added to `hiddenReroutes`.
    * @param network The graph (or subgraph) that owns the links.
    * @param output The output slot whose connected links are being repositioned.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   moveOutputLink(network: LinkNetwork, output: INodeOutputSlot): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -427,13 +427,13 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from an output slot toward an input slot.
    *
-   * Creates a {@link ToInputRenderLink} and sets {@link LinkConnectorState.connectingTo} to
+   * Creates a `ToInputRenderLink` and sets `LinkConnectorState.connectingTo` to
    * `"input"`.
    * @param network The graph (or subgraph) that will own the new link.
    * @param node The node whose output slot the link is dragged from.
    * @param output The output slot at the origin of the drag.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   dragNewFromOutput(network: LinkNetwork, node: LGraphNode, output: INodeOutputSlot, fromReroute?: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -450,13 +450,13 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from an input slot toward an output slot.
    *
-   * Creates a {@link ToOutputRenderLink} and sets {@link LinkConnectorState.connectingTo} to
+   * Creates a `ToOutputRenderLink` and sets `LinkConnectorState.connectingTo` to
    * `"output"`.
    * @param network The graph (or subgraph) that will own the new link.
    * @param node The node whose input slot the link is dragged from.
    * @param input The input slot at the origin of the drag.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   dragNewFromInput(network: LinkNetwork, node: LGraphNode, input: INodeInputSlot, fromReroute?: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -473,10 +473,10 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from a subgraph input boundary toward an input slot.
    * @param network The subgraph that owns the input boundary.
-   * @param inputNode The {@link SubgraphInputNode} displaying subgraph inputs.
-   * @param input The {@link SubgraphInput} slot the link is dragged from.
+   * @param inputNode The `SubgraphInputNode` displaying subgraph inputs.
+   * @param input The `SubgraphInput` slot the link is dragged from.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   dragNewFromSubgraphInput(network: LinkNetwork, inputNode: SubgraphInputNode, input: SubgraphInput, fromReroute?: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -492,10 +492,10 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from a subgraph output boundary toward an output slot.
    * @param network The subgraph that owns the output boundary.
-   * @param outputNode The {@link SubgraphOutputNode} displaying subgraph outputs.
-   * @param output The {@link SubgraphOutput} slot the link is dragged from.
+   * @param outputNode The `SubgraphOutputNode` displaying subgraph outputs.
+   * @param output The `SubgraphOutput` slot the link is dragged from.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   dragNewFromSubgraphOutput(network: LinkNetwork, outputNode: SubgraphOutputNode, output: SubgraphOutput, fromReroute?: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -511,13 +511,13 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from a reroute toward an input slot.
    *
-   * Resolves the link attached to the reroute and creates either a {@link ToInputFromIoNodeLink}
-   * (for subgraph inputs) or a {@link ToInputRenderLink} (for regular outputs). Sets
-   * {@link fromDirection} to {@link LinkDirection.NONE} on the created render link.
+   * Resolves the link attached to the reroute and creates either a `ToInputFromIoNodeLink`
+   * (for subgraph inputs) or a `ToInputRenderLink` (for regular outputs). Sets
+   * `fromDirection` to `LinkDirection.NONE` on the created render link.
    * @param network The graph (or subgraph) that owns the reroute.
    * @param reroute The reroute the link is dragged from.
-   * @throws When a drag is already in progress ({@link isConnecting}).
-   * @throws When a subgraph input link is found but {@link network} is not a {@link Subgraph}.
+   * @throws When a drag is already in progress (`isConnecting`).
+   * @throws When a subgraph input link is found but `network` is not a `Subgraph`.
    */
   dragFromReroute(network: LinkNetwork, reroute: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -572,12 +572,12 @@ export class LinkConnector {
    * Begins dragging a new link from a reroute toward an output slot.
    *
    * Resolves the link attached to the reroute and creates either a
-   * {@link ToOutputFromIoNodeLink} (for subgraph outputs), a {@link ToOutputFromRerouteLink}
-   * (for regular inputs), setting {@link fromDirection} appropriately on each.
+   * `ToOutputFromIoNodeLink` (for subgraph outputs), a `ToOutputFromRerouteLink`
+   * (for regular inputs), setting `fromDirection` appropriately on each.
    * @param network The graph (or subgraph) that owns the reroute.
    * @param reroute The reroute the link is dragged from.
-   * @throws When a drag is already in progress ({@link isConnecting}).
-   * @throws When a subgraph output link is found but {@link network} is not a {@link Subgraph}.
+   * @throws When a drag is already in progress (`isConnecting`).
+   * @throws When a subgraph output link is found but `network` is not a `Subgraph`.
    */
   dragFromRerouteToOutput(network: LinkNetwork, reroute: Reroute): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -631,11 +631,11 @@ export class LinkConnector {
   /**
    * Begins dragging a new link from a point on an existing link segment.
    *
-   * Resolves the segment's origin node and output slot, then creates a {@link ToInputRenderLink}
-   * with {@link LinkDirection.NONE} at the reroute (if any) along the segment.
+   * Resolves the segment's origin node and output slot, then creates a `ToInputRenderLink`
+   * with `LinkDirection.NONE` at the reroute (if any) along the segment.
    * @param network The graph (or subgraph) that owns the link segment.
    * @param linkSegment The clicked segment of an existing link, including origin and parent reroute.
-   * @throws When a drag is already in progress ({@link isConnecting}).
+   * @throws When a drag is already in progress (`isConnecting`).
    */
   dragFromLinkSegment(network: LinkNetwork, linkSegment: LinkSegment): void {
     if (this.isConnecting) throw new Error("Already dragging links.")
@@ -662,8 +662,8 @@ export class LinkConnector {
   /**
    * Completes the current drag by connecting links at the drop location.
    *
-   * Resolves the item under the pointer via {@link ItemLocator} and delegates to
-   * {@link dropOnIoNode}, {@link dropOnNode}, {@link dropOnReroute}, or {@link dropOnNothing}.
+   * Resolves the item under the pointer via `ItemLocator` and delegates to
+   * `dropOnIoNode`, `dropOnNode`, `dropOnReroute`, or `dropOnNothing`.
    * Always dispatches `"after-drop-links"` in a `finally` block.
    * @param locator Provides hit-testing for nodes, IO nodes, and reroutes at the drop position.
    * @param event The pointer event containing canvas-space coordinates.
@@ -704,10 +704,10 @@ export class LinkConnector {
   /**
    * Handles dropping links onto a subgraph IO boundary node.
    *
-   * When connecting to an input, resolves the slot on a {@link SubgraphOutputNode} and calls
-   * {@link RenderLink.connectToSubgraphOutput} on each render link. When connecting to an output,
-   * resolves the slot on a {@link SubgraphInputNode} and calls
-   * {@link RenderLink.connectToSubgraphInput}.
+   * When connecting to an input, resolves the slot on a `SubgraphOutputNode` and calls
+   * `RenderLink.connectToSubgraphOutput` on each render link. When connecting to an output,
+   * resolves the slot on a `SubgraphInputNode` and calls
+   * `RenderLink.connectToSubgraphInput`.
    * @param ioNode The subgraph input or output boundary node under the pointer.
    * @param event The pointer event containing canvas-space coordinates.
    * @throws When no matching slot is found at the drop position.
@@ -776,9 +776,9 @@ export class LinkConnector {
   /**
    * Handles dropping links onto a regular graph node.
    *
-   * Resolves the slot under the pointer (or falls back to {@link overWidget} for input drags)
+   * Resolves the slot under the pointer (or falls back to `overWidget` for input drags)
    * and delegates to the private `#dropOnInput` / `#dropOnOutput` helpers. When no slot is
-   * hit, falls back to {@link connectToNode} for type-based auto-matching.
+   * hit, falls back to `connectToNode` for type-based auto-matching.
    * @param node The node under the pointer.
    * @param event The pointer event containing canvas-space coordinates.
    */
@@ -817,9 +817,9 @@ export class LinkConnector {
   /**
    * Handles dropping links onto a reroute.
    *
-   * For input-directed drags, delegates to {@link connectOutputToReroute} with the single
+   * For input-directed drags, delegates to `connectOutputToReroute` with the single
    * render link. For output-directed drags, finds the reroute's source output and calls
-   * {@link RenderLink.connectToRerouteOutput} on each compatible link.
+   * `RenderLink.connectToRerouteOutput` on each compatible link.
    * @param reroute The reroute under the pointer.
    * @param event The pointer event; may be used by `"dropped-on-reroute"` listeners to veto.
    * @throws When multiple input links are dropped on a single reroute.
@@ -856,8 +856,8 @@ export class LinkConnector {
    * Connects an output-directed render link to a reroute's input side.
    *
    * Finds all target inputs along the reroute chain, filters by compatibility, and calls
-   * {@link RenderLink.connectToRerouteInput} for each valid target. For
-   * {@link ToInputRenderLink} origins, also updates floating-link tracking on intermediate
+   * `RenderLink.connectToRerouteInput` for each valid target. For
+   * `ToInputRenderLink` origins, also updates floating-link tracking on intermediate
    * reroutes.
    * @internal Temporary workaround — requires refactor.
    * @param reroute The reroute being dropped on.
@@ -904,7 +904,7 @@ export class LinkConnector {
    * Handles dropping links onto empty canvas (no valid target).
    *
    * Dispatches `"dropped-on-canvas"`; listeners may return `false` to prevent disconnection.
-   * Otherwise calls {@link disconnectLinks} to remove moving links.
+   * Otherwise calls `disconnectLinks` to remove moving links.
    * @param event The pointer event; forwarded to `"dropped-on-canvas"` listeners.
    */
   dropOnNothing(event: CanvasPointerEvent): void {
@@ -980,8 +980,8 @@ export class LinkConnector {
    * Checks whether any active render link can be dropped on the given input slot.
    * @param node The node that owns the candidate input slot.
    * @param input The input slot to validate.
-   * @returns `true` if at least one {@link renderLinks} entry passes
-   * {@link RenderLink.canConnectToInput}.
+   * @returns `true` if at least one `renderLinks` entry passes
+   * `RenderLink.canConnectToInput`.
    */
   isInputValidDrop(node: LGraphNode, input: INodeInputSlot): boolean {
     return this.renderLinks.some(link => link.canConnectToInput(node, input))
@@ -999,7 +999,7 @@ export class LinkConnector {
    * Checks whether any active render link can be dropped somewhere on the given node.
    *
    * Tests all output slots (for output-directed drags) or all input slots (for input-directed
-   * drags) against the current {@link renderLinks}.
+   * drags) against the current `renderLinks`.
    * @param node The node to validate as a drop target.
    * @returns `true` if at least one slot on the node accepts a connection.
    */
@@ -1047,7 +1047,7 @@ export class LinkConnector {
    * Exports the current state of the link connector.
    * @param network The network that the links being connected belong to.
    * @returns A POJO with the state of the link connector, links being connected, and their network.
-   * @remarks Other than {@link network}, all properties are shallow cloned.
+   * @remarks Other than `network`, all properties are shallow cloned.
    */
   export(network: LinkNetwork): LinkConnectorExport {
     return {
@@ -1104,7 +1104,7 @@ export class LinkConnector {
   }
 }
 
-/** Validates that a single {@link RenderLink} can be dropped on the specified reroute. */
+/** Validates that a single `RenderLink` can be dropped on the specified reroute. */
 function canConnectInputLinkToReroute(
   link: ToInputRenderLink | MovingInputLink | FloatingRenderLink | ToInputFromIoNodeLink,
   inputNode: LGraphNode,

@@ -19,7 +19,7 @@ import type { RenderShape } from "./globalEnums"
 import type { UUID } from "@/utils/uuid"
 
 /**
- * An object that implements custom pre-serialization logic via {@link Serialisable.asSerialisable}.
+ * An object that implements custom pre-serialization logic via `Serialisable.asSerialisable`.
  */
 export interface Serialisable<SerialisableObject> {
   /**
@@ -44,7 +44,7 @@ export interface BaseExportedGraph {
   /**
    * Details of the appearance and location of subgraph instances shown in this graph.
    *
-   * Each entry references a subgraph definition in {@link definitions}.
+   * Each entry references a subgraph definition in `definitions`.
    */
   subgraphs?: ExportedSubgraphInstance[]
   /** Definitions of re-usable objects referenced elsewhere in this exported graph. */
@@ -102,7 +102,7 @@ export type ISerialisableNodeOutput = Omit<INodeOutputSlot, "boundingRect" | "da
   widget?: { name: string }
 }
 
-/** Serialised representation of an {@link LGraphNode}. */
+/** Serialised representation of an `LGraphNode`. */
 export interface ISerialisedNode {
   /** Display title shown on the node. Falls back to the node type when omitted. */
   title?: string
@@ -118,7 +118,7 @@ export interface ISerialisedNode {
   flags: INodeFlags
   /** Execution order index within the graph. */
   order: number
-  /** Execution mode ({@link LGraphEventMode} value). */
+  /** Execution mode (`LGraphEventMode` value). */
   mode: number
   /** Serialised output slots on this node. */
   outputs?: ISerialisableNodeOutput[]
@@ -143,7 +143,7 @@ export interface ISerialisedNode {
    * See example in https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite/blob/8629188458dc6cb832f871ece3bd273507e8a766/web/js/VHS.core.js#L59-L84
    */
   widgets_values?: TWidgetValue[]
-  /** Widget values keyed by widget name; used when {@link LiteGraphGlobal.namedValuesRestore} is enabled. */
+  /** Widget values keyed by widget name; used when `LiteGraphGlobal.namedValuesRestore` is enabled. */
   widgets_values_named?: Record<string, TWidgetValue>
 }
 
@@ -154,12 +154,12 @@ type NodeSubgraphSharedProps = Omit<ISerialisedNode, "properties" | "showAdvance
  * A single placed instance of a subgraph on a parent graph.
  *
  * Stores the instance's position, size, and visual customisations. The actual subgraph
- * definition is referenced by {@link type} and stored in {@link BaseExportedGraph.definitions}.
+ * definition is referenced by `type` and stored in `BaseExportedGraph.definitions`.
  */
 export interface ExportedSubgraphInstance extends NodeSubgraphSharedProps {
   /**
    * The ID of the actual subgraph definition.
-   * @see {@link ExportedSubgraph.subgraphs}
+   * @see `ExportedSubgraph.subgraphs`
    */
   type: UUID
 }
@@ -168,7 +168,7 @@ export interface ExportedSubgraphInstance extends NodeSubgraphSharedProps {
  * Legacy serialised graph format.
  *
  * Maintained for backwards compatibility with the original `litegraph.d.ts` schema.
- * @deprecated Prefer {@link SerialisableGraph} for new save/load implementations.
+ * @deprecated Prefer `SerialisableGraph` for new save/load implementations.
  */
 export interface ISerialisedGraph extends BaseExportedGraph {
   /** Highest node ID assigned in this graph. Used to allocate new IDs on deserialise. */
@@ -183,7 +183,7 @@ export interface ISerialisedGraph extends BaseExportedGraph {
   floatingLinks?: SerialisableLLink[]
   /** All groups in this graph. */
   groups: ISerialisedGroup[]
-  /** Schema version, matching {@link LiteGraph.VERSION}. */
+  /** Schema version, matching `LiteGraph.VERSION`. */
   version: typeof LiteGraph.VERSION
   /** Arbitrary extra data attached by downstream consumers. */
   extra?: LGraphExtra
@@ -234,7 +234,7 @@ export interface ExposedWidget {
   name: string
 }
 
-/** Serialised representation of an {@link LGraphGroup}. */
+/** Serialised representation of an `LGraphGroup`. */
 export interface ISerialisedGroup {
   /** Unique group identifier. */
   id: number
@@ -279,14 +279,14 @@ export interface ClipboardItems {
 
 /**
  * Legacy clipboard contents format.
- * @deprecated Prefer {@link ClipboardItems} which uses {@link SerialisableLLink} instead of tuple links.
+ * @deprecated Prefer `ClipboardItems` which uses `SerialisableLLink` instead of tuple links.
  */
 export interface IClipboardContents {
   nodes?: ISerialisedNode[]
   links?: TClipboardLink[]
 }
 
-/** Serialisable representation of a {@link Reroute} point on a link path. */
+/** Serialisable representation of a `Reroute` point on a link path. */
 export interface SerialisableReroute {
   /** Unique reroute identifier. */
   id: RerouteId
@@ -300,7 +300,7 @@ export interface SerialisableReroute {
   floating?: FloatingRerouteSlot
 }
 
-/** Serialisable representation of an {@link LLink} between two node slots. */
+/** Serialisable representation of an `LLink` between two node slots. */
 export interface SerialisableLLink {
   /** Link ID */
   id: LinkId

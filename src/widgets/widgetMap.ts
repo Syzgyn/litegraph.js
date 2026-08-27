@@ -30,42 +30,42 @@ import { SliderWidget } from "./SliderWidget"
 import { TextWidget } from "./TextWidget"
 
 /**
- * Maps each {@link TWidgetType} string to its concrete {@link BaseWidget} subclass.
+ * Maps each `TWidgetType` string to its concrete `BaseWidget` subclass.
  *
- * Used by {@link toConcreteWidget} for return-type inference. Unknown type keys fall back to
- * {@link BaseWidget}.
+ * Used by `toConcreteWidget` for return-type inference. Unknown type keys fall back to
+ * `BaseWidget`.
  */
 export type WidgetTypeMap = {
-  /** {@link ButtonWidget} */
+  /** `ButtonWidget` */
   button: ButtonWidget
-  /** {@link BooleanWidget} */
+  /** `BooleanWidget` */
   toggle: BooleanWidget
-  /** {@link SliderWidget} */
+  /** `SliderWidget` */
   slider: SliderWidget
-  /** {@link GradientSliderWidget} */
+  /** `GradientSliderWidget` */
   gradientslider: GradientSliderWidget
-  /** {@link KnobWidget} */
+  /** `KnobWidget` */
   knob: KnobWidget
-  /** {@link ComboWidget} */
+  /** `ComboWidget` */
   combo: ComboWidget
-  /** {@link NumberWidget} */
+  /** `NumberWidget` */
   number: NumberWidget
-  /** {@link TextWidget} (`type: "string"`) */
+  /** `TextWidget` (`type: "string"`) */
   string: TextWidget
-  /** {@link TextWidget} (`type: "text"`) */
+  /** `TextWidget` (`type: "text"`) */
   text: TextWidget
-  /** {@link ColorWidget} */
+  /** `ColorWidget` */
   color: ColorWidget
-  /** {@link LegacyWidget} for unrecognized custom POJOs */
+  /** `LegacyWidget` for unrecognized custom POJOs */
   custom: LegacyWidget
   [key: string]: BaseWidget
 }
 
 /**
- * Converts a widget POJO (or passes through an existing {@link BaseWidget}) into a typed instance.
+ * Converts a widget POJO (or passes through an existing `BaseWidget`) into a typed instance.
  * @param widget Widget definition or existing instance.
  * @param node Node that will own the widget.
- * @param wrapLegacyWidgets When `true` (default), unknown types are wrapped in {@link LegacyWidget}.
+ * @param wrapLegacyWidgets When `true` (default), unknown types are wrapped in `LegacyWidget`.
  * When `false`, unknown types yield `undefined`.
  * @returns Concrete widget matching `widget.type`, or the original instance if already concrete.
  */
@@ -109,7 +109,7 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
 // #region Type Guards
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IButtonWidget}.
+ * Type guard: narrows `IBaseWidget` to `IButtonWidget`.
  * @param widget Widget to test.
  */
 export function isButtonWidget(widget: IBaseWidget): widget is IButtonWidget {
@@ -117,7 +117,7 @@ export function isButtonWidget(widget: IBaseWidget): widget is IButtonWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IBooleanWidget}.
+ * Type guard: narrows `IBaseWidget` to `IBooleanWidget`.
  * @param widget Widget to test.
  */
 export function isBooleanWidget(widget: IBaseWidget): widget is IBooleanWidget {
@@ -125,7 +125,7 @@ export function isBooleanWidget(widget: IBaseWidget): widget is IBooleanWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link ISliderWidget}.
+ * Type guard: narrows `IBaseWidget` to `ISliderWidget`.
  * @param widget Widget to test.
  */
 export function isSliderWidget(widget: IBaseWidget): widget is ISliderWidget {
@@ -133,7 +133,7 @@ export function isSliderWidget(widget: IBaseWidget): widget is ISliderWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IGradientSliderWidget}.
+ * Type guard: narrows `IBaseWidget` to `IGradientSliderWidget`.
  * @param widget Widget to test.
  */
 export function isGradientSliderWidget(widget: IBaseWidget): widget is IGradientSliderWidget {
@@ -141,7 +141,7 @@ export function isGradientSliderWidget(widget: IBaseWidget): widget is IGradient
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IColorWidget}.
+ * Type guard: narrows `IBaseWidget` to `IColorWidget`.
  * @param widget Widget to test.
  */
 export function isColorWidget(widget: IBaseWidget): widget is IColorWidget {
@@ -149,7 +149,7 @@ export function isColorWidget(widget: IBaseWidget): widget is IColorWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IKnobWidget}.
+ * Type guard: narrows `IBaseWidget` to `IKnobWidget`.
  * @param widget Widget to test.
  */
 export function isKnobWidget(widget: IBaseWidget): widget is IKnobWidget {
@@ -157,7 +157,7 @@ export function isKnobWidget(widget: IBaseWidget): widget is IKnobWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IComboWidget}.
+ * Type guard: narrows `IBaseWidget` to `IComboWidget`.
  * @param widget Widget to test.
  */
 export function isComboWidget(widget: IBaseWidget): widget is IComboWidget {
@@ -165,7 +165,7 @@ export function isComboWidget(widget: IBaseWidget): widget is IComboWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link INumericWidget}.
+ * Type guard: narrows `IBaseWidget` to `INumericWidget`.
  * @param widget Widget to test.
  */
 export function isNumberWidget(widget: IBaseWidget): widget is INumericWidget {
@@ -173,7 +173,7 @@ export function isNumberWidget(widget: IBaseWidget): widget is INumericWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IStringWidget} (`type: "string"`).
+ * Type guard: narrows `IBaseWidget` to `IStringWidget` (`type: "string"`).
  * @param widget Widget to test.
  */
 export function isStringWidget(widget: IBaseWidget): widget is IStringWidget {
@@ -181,7 +181,7 @@ export function isStringWidget(widget: IBaseWidget): widget is IStringWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link IStringWidget} (`type: "text"`).
+ * Type guard: narrows `IBaseWidget` to `IStringWidget` (`type: "text"`).
  * @param widget Widget to test.
  */
 export function isTextWidget(widget: IBaseWidget): widget is IStringWidget {
@@ -189,7 +189,7 @@ export function isTextWidget(widget: IBaseWidget): widget is IStringWidget {
 }
 
 /**
- * Type guard: narrows {@link IBaseWidget} to {@link ICustomWidget}.
+ * Type guard: narrows `IBaseWidget` to `ICustomWidget`.
  * @param widget Widget to test.
  */
 export function isCustomWidget(widget: IBaseWidget): widget is ICustomWidget {

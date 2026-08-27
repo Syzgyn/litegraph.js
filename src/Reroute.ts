@@ -17,7 +17,7 @@ import { LiteGraph } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import { distance, isPointInRect } from "./measure"
 
-/** Numeric identifier for a {@link Reroute} within an {@link LGraph}. */
+/** Numeric identifier for a `Reroute` within an `LGraph`. */
 export type RerouteId = number
 
 /** Describes which end of a floating reroute chain remains connected to a node slot. */
@@ -31,7 +31,7 @@ export interface FloatingRerouteSlot {
  *
  * Requires no disposal or clean up.
  * Stores only primitive values (IDs) to reference other items in its network,
- * and a `WeakRef` to a {@link LinkNetwork} to resolve them.
+ * and a `WeakRef` to a `LinkNetwork` to resolve them.
  */
 export class Reroute implements Positionable, LinkSegment, Serialisable<SerialisableReroute> {
   /** Visual radius of the reroute circle in graph units. */
@@ -64,17 +64,17 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /**
    * Present only on the last reroute of a floating chain (closest to the input end).
    *
-   * Records which slot type ({@link FloatingRerouteSlot.slotType}) the dangling end connects to.
+   * Records which slot type (`FloatingRerouteSlot.slotType`) the dangling end connects to.
    */
   floating?: FloatingRerouteSlot
 
   /** @inheritdoc */
   selected?: boolean
 
-  /** The ID ({@link LLink.id}) of every link using this reroute */
+  /** The ID (`LLink.id`) of every link using this reroute */
   linkIds: Set<LinkId>
 
-  /** The ID ({@link LLink.id}) of every floating link using this reroute */
+  /** The ID (`LLink.id`) of every floating link using this reroute */
   floatingLinkIds: Set<LinkId>
 
   /** Cached cos */
@@ -102,7 +102,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * @param id Unique identifier for this reroute
    * @param network The network of links this reroute belongs to.  Internally converted to a WeakRef.
    * @param pos Position in graph coordinates
-   * @param linkIds Link IDs ({@link LLink.id}) of all links that use this reroute
+   * @param linkIds Link IDs (`LLink.id`) of all links that use this reroute
    */
   constructor(
     public readonly id: RerouteId,
@@ -275,7 +275,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * has already visited whilst recursing up the chain.
    * @returns An ordered array of all reroutes from the node output to this reroute, inclusive.
    * `null` if an infinite loop is detected.
-   * `undefined` if the reroute chain or {@link LinkNetwork} are invalid.
+   * `undefined` if the reroute chain or `LinkNetwork` are invalid.
    */
   getReroutes(visited = new Set<Reroute>()): Reroute[] | null {
     // No parentId - last in the chain
@@ -297,7 +297,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   }
 
   /**
-   * Internal.  Called by {@link LLink.findNextReroute}.  Not intended for use by itself.
+   * Internal.  Called by `LLink.findNextReroute`.  Not intended for use by itself.
    * @param withParentId The rerouteId to look for
    * @param visited A set of reroutes that have already been visited
    * @returns The reroute that was found, `undefined` if no reroute was found, or `null` if an infinite loop was detected.
@@ -395,13 +395,13 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * Changes the origin node/output of all floating links that pass through this reroute.
    * @param node The new origin node
    * @param output The new origin output slot
-   * @param index The slot index of {@link output}
+   * @param index The slot index of `output`
    */
   /**
    * Updates floating links to originate from a new output node and slot.
    * @param node The node that now owns the output end.
-   * @param output The output slot object on {@link node}.
-   * @param index Index of {@link output} on {@link node}.
+   * @param output The output slot object on `node`.
+   * @param index Index of `output` on `node`.
    * @throws If the reroute's network reference is invalid.
    */
   setFloatingLinkOrigin(node: LGraphNode, output: INodeOutputSlot, index: number) {
@@ -447,7 +447,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /**
    * Removes every floating link registered on this reroute.
    *
-   * Delegates to {@link removeFloatingLink} for each ID in {@link floatingLinkIds}.
+   * Delegates to `removeFloatingLink` for each ID in `floatingLinkIds`.
    */
   removeAllFloatingLinks() {
     for (const linkId of this.floatingLinkIds) {
@@ -491,9 +491,9 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   }
 
   /**
-   * Removes this reroute from its owning {@link LinkNetwork}.
+   * Removes this reroute from its owning `LinkNetwork`.
    *
-   * Equivalent to {@link LGraph.removeReroute} on the dereferenced network.
+   * Equivalent to `LGraph.removeReroute` on the dereferenced network.
    */
   remove() {
     const network = this.#network.deref()
@@ -505,7 +505,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   /**
    * Computes bezier control-point geometry for rendering links through this reroute.
    *
-   * Averages incoming link angles and stores {@link cos}, {@link sin}, and {@link controlPoint}.
+   * Averages incoming link angles and stores `cos`, `sin`, and `controlPoint`.
    * Runs at most once per render frame per reroute.
    * @param lastRenderTime Monotonic render timestamp from the canvas.
    * @param network Link network used to resolve downstream positions.
@@ -575,7 +575,7 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
    * Renders the reroute on the canvas.
    * @param ctx Canvas context to draw on
    * @param backgroundPattern The canvas background pattern; used to make floating reroutes appear washed out.
-   * @remarks Leaves {@link ctx}.fillStyle, strokeStyle, and lineWidth dirty (perf.).
+   * @remarks Leaves `ctx`.fillStyle, strokeStyle, and lineWidth dirty (perf.).
    */
   draw(ctx: CanvasRenderingContext2D, backgroundPattern?: CanvasPattern): void {
     const { globalAlpha } = ctx
@@ -687,9 +687,9 @@ export class Reroute implements Positionable, LinkSegment, Serialisable<Serialis
   }
 
   /**
-   * Precisely determines if {@link pos} is inside this reroute.
+   * Precisely determines if `pos` is inside this reroute.
    * @param pos The position to check (canvas space)
-   * @returns `true` if {@link pos} is within the reroute's radius.
+   * @returns `true` if `pos` is within the reroute's radius.
    */
   containsPoint(pos: Point): boolean {
     return isPointInRect(pos, this.#hoverArea) && this.#contains(pos)
@@ -766,7 +766,7 @@ class RerouteSlot {
   /**
    * Updates the slot's visibility based on the position of the pointer.
    * @param pos The position of the pointer.
-   * @param outlineOnly If `true`, slot will display with the faded outline only ({@link showOutline}).
+   * @param outlineOnly If `true`, slot will display with the faded outline only (`showOutline`).
    */
   update(pos: Point, outlineOnly?: boolean) {
     if (outlineOnly) {

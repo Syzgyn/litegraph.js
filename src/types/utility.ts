@@ -3,7 +3,7 @@
  */
 
 /**
- * {@link Pick} only the properties whose values evaluate to `never`.
+ * `Pick` only the properties whose values evaluate to `never`.
  *
  * Useful for extracting impossible or uninitialised keys from a type.
  */
@@ -12,7 +12,7 @@ export type PickNevers<T> = {
 }
 
 /**
- * {@link Omit} all properties whose values evaluate to `never`.
+ * `Omit` all properties whose values evaluate to `never`.
  *
  * Produces a type with only the keys that have assignable value types.
  */

@@ -29,19 +29,19 @@ import { createUuidv4 } from "./utils/uuid"
 /**
  * Global litegraph runtime: configuration, constants, and node type registry.
  *
- * A single instance is exported as {@link LiteGraph} from the package entry point.
- * Register node classes with {@link registerNodeType}, create nodes with {@link createNode},
+ * A single instance is exported as `LiteGraph` from the package entry point.
+ * Register node classes with `registerNodeType`, create nodes with `createNode`,
  * and read/write editor-wide defaults (colours, grid size, interaction flags) on this object.
- * @see {@link LiteGraph}
+ * @see `LiteGraph`
  */
 export class LiteGraphGlobal {
-  /** @see {@link SlotShape} Re-exported for legacy global access. */
+  /** @see `SlotShape` Re-exported for legacy global access. */
   SlotShape = SlotShape
-  /** @see {@link SlotDirection} Re-exported for legacy global access. */
+  /** @see `SlotDirection` Re-exported for legacy global access. */
   SlotDirection = SlotDirection
-  /** @see {@link SlotType} Re-exported for legacy global access. */
+  /** @see `SlotType` Re-exported for legacy global access. */
   SlotType = SlotType
-  /** @see {@link LabelPosition} Re-exported for legacy global access. */
+  /** @see `LabelPosition` Re-exported for legacy global access. */
   LabelPosition = LabelPosition
 
   /** Serialised graph format version written into saved graphs. */
@@ -126,83 +126,83 @@ export class LiteGraphGlobal {
   MAX_NUMBER_OF_NODES = 10_000
   /** Default `[x, y]` position for newly created nodes. */
   DEFAULT_POSITION = [100, 100]
-  /** Valid {@link RenderShape} name strings for node configuration. */
+  /** Valid `RenderShape` name strings for node configuration. */
   VALID_SHAPES = ["default", "box", "round", "card"] satisfies ("default" | Lowercase<keyof typeof RenderShape>)[]
-  /** Corner radius for {@link RenderShape.ROUND} nodes. */
+  /** Corner radius for `RenderShape.ROUND` nodes. */
   ROUND_RADIUS = 8
 
-  /** @see {@link RenderShape.BOX} */
+  /** @see `RenderShape.BOX` */
   BOX_SHAPE = RenderShape.BOX
-  /** @see {@link RenderShape.ROUND} */
+  /** @see `RenderShape.ROUND` */
   ROUND_SHAPE = RenderShape.ROUND
-  /** @see {@link RenderShape.CIRCLE} */
+  /** @see `RenderShape.CIRCLE` */
   CIRCLE_SHAPE = RenderShape.CIRCLE
-  /** @see {@link RenderShape.CARD} */
+  /** @see `RenderShape.CARD` */
   CARD_SHAPE = RenderShape.CARD
-  /** @see {@link RenderShape.ARROW} */
+  /** @see `RenderShape.ARROW` */
   ARROW_SHAPE = RenderShape.ARROW
-  /** @see {@link RenderShape.GRID} Intended for slot arrays. */
+  /** @see `RenderShape.GRID` Intended for slot arrays. */
   GRID_SHAPE = RenderShape.GRID
 
-  /** @see {@link NodeSlotType.INPUT} */
+  /** @see `NodeSlotType.INPUT` */
   INPUT = NodeSlotType.INPUT
-  /** @see {@link NodeSlotType.OUTPUT} */
+  /** @see `NodeSlotType.OUTPUT` */
   OUTPUT = NodeSlotType.OUTPUT
 
   // TODO: -1 can lead to ambiguity in JS; these should be updated to a more explicit constant or Symbol.
   /**
    * Event slot type sentinel for outputs.
-   * @see {@link NodeSlotType}
+   * @see `NodeSlotType`
    */
   EVENT = -1 as const
   /**
    * Action slot type sentinel for inputs.
-   * @see {@link NodeSlotType}
+   * @see `NodeSlotType`
    */
   ACTION = -1 as const
 
   /** Human-readable node execution mode names. */
   NODE_MODES = ["Always", "On Event", "Never", "On Trigger"]
-  /** Title/box colours indexed by node mode when {@link node_box_coloured_by_mode} is enabled. */
+  /** Title/box colours indexed by node mode when `node_box_coloured_by_mode` is enabled. */
   NODE_MODES_COLORS = ["#666", "#422", "#333", "#224", "#626"]
-  /** @see {@link LGraphEventMode.ALWAYS} */
+  /** @see `LGraphEventMode.ALWAYS` */
   ALWAYS = LGraphEventMode.ALWAYS
-  /** @see {@link LGraphEventMode.ON_EVENT} */
+  /** @see `LGraphEventMode.ON_EVENT` */
   ON_EVENT = LGraphEventMode.ON_EVENT
-  /** @see {@link LGraphEventMode.NEVER} */
+  /** @see `LGraphEventMode.NEVER` */
   NEVER = LGraphEventMode.NEVER
-  /** @see {@link LGraphEventMode.ON_TRIGGER} */
+  /** @see `LGraphEventMode.ON_TRIGGER` */
   ON_TRIGGER = LGraphEventMode.ON_TRIGGER
 
-  /** @see {@link LinkDirection.UP} */
+  /** @see `LinkDirection.UP` */
   UP = LinkDirection.UP
-  /** @see {@link LinkDirection.DOWN} */
+  /** @see `LinkDirection.DOWN` */
   DOWN = LinkDirection.DOWN
-  /** @see {@link LinkDirection.LEFT} */
+  /** @see `LinkDirection.LEFT` */
   LEFT = LinkDirection.LEFT
-  /** @see {@link LinkDirection.RIGHT} */
+  /** @see `LinkDirection.RIGHT` */
   RIGHT = LinkDirection.RIGHT
-  /** @see {@link LinkDirection.CENTER} */
+  /** @see `LinkDirection.CENTER` */
   CENTER = LinkDirection.CENTER
 
   /** Human-readable link render mode names. */
   LINK_RENDER_MODES = ["Straight", "Linear", "Spline"]
-  /** @see {@link LinkRenderType.HIDDEN_LINK} */
+  /** @see `LinkRenderType.HIDDEN_LINK` */
   HIDDEN_LINK = LinkRenderType.HIDDEN_LINK
-  /** @see {@link LinkRenderType.STRAIGHT_LINK} */
+  /** @see `LinkRenderType.STRAIGHT_LINK` */
   STRAIGHT_LINK = LinkRenderType.STRAIGHT_LINK
-  /** @see {@link LinkRenderType.LINEAR_LINK} */
+  /** @see `LinkRenderType.LINEAR_LINK` */
   LINEAR_LINK = LinkRenderType.LINEAR_LINK
-  /** @see {@link LinkRenderType.SPLINE_LINK} */
+  /** @see `LinkRenderType.SPLINE_LINK` */
   SPLINE_LINK = LinkRenderType.SPLINE_LINK
 
-  /** @see {@link TitleMode.NORMAL_TITLE} */
+  /** @see `TitleMode.NORMAL_TITLE` */
   NORMAL_TITLE = TitleMode.NORMAL_TITLE
-  /** @see {@link TitleMode.NO_TITLE} */
+  /** @see `TitleMode.NO_TITLE` */
   NO_TITLE = TitleMode.NO_TITLE
-  /** @see {@link TitleMode.TRANSPARENT_TITLE} */
+  /** @see `TitleMode.TRANSPARENT_TITLE` */
   TRANSPARENT_TITLE = TitleMode.TRANSPARENT_TITLE
-  /** @see {@link TitleMode.AUTOHIDE_TITLE} */
+  /** @see `TitleMode.AUTOHIDE_TITLE` */
   AUTOHIDE_TITLE = TitleMode.AUTOHIDE_TITLE
 
   /** Layout mode string for vertically stacked slot arrays. */
@@ -215,9 +215,9 @@ export class LiteGraphGlobal {
 
   /** When `true`, logs node registration and debug information to the console. */
   debug = false
-  /** When `true`, {@link createNode} catches constructor exceptions and returns `null`. */
+  /** When `true`, `createNode` catches constructor exceptions and returns `null`. */
   catch_exceptions = true
-  /** When `true`, rethrows errors from {@link reloadNodes}. */
+  /** When `true`, rethrows errors from `reloadNodes`. */
   throw_errors = true
   /** When `true`, allows nodes such as Formula to evaluate code from untrusted configuration (security risk). */
   allow_scripts = false
@@ -240,7 +240,7 @@ export class LiteGraphGlobal {
 
   /** When `true`, closes dialogs when the pointer leaves the dialog area. */
   dialog_close_on_mouse_leave = false
-  /** Delay in ms before {@link dialog_close_on_mouse_leave} closes a dialog. */
+  /** Delay in ms before `dialog_close_on_mouse_leave` closes a dialog. */
   dialog_close_on_mouse_leave_delay = 500
 
   /** When `true`, Shift+click breaks links from an output slot. */
@@ -256,7 +256,7 @@ export class LiteGraphGlobal {
 
   /**
    * If `true`, items always snap to the grid - modifier keys are ignored.
-   * When {@link snapToGrid} is falsy, a value of `1` is used.
+   * When `snapToGrid` is falsy, a value of `1` is used.
    * Default: `false`
    */
   alwaysSnapToGrid?: boolean
@@ -265,7 +265,7 @@ export class LiteGraphGlobal {
    * When set to a positive number, when nodes are moved their positions will
    * be rounded to the nearest multiple of this value.  Half up.
    * Default: `undefined`
-   * @todo Not implemented - see {@link LiteGraph.CANVAS_GRID_SIZE}
+   * @todo Not implemented - see `LiteGraph.CANVAS_GRID_SIZE`
    */
   snapToGrid?: number
 
@@ -273,7 +273,7 @@ export class LiteGraphGlobal {
   search_hide_on_mouse_leave = true
   /**
    * When `true`, the node search widget filters results by compatible slot type.
-   * Requires {@link auto_load_slot_types} or manually populated slot type registries.
+   * Requires `auto_load_slot_types` or manually populated slot type registries.
    */
   search_filter_enabled = false
   /** When `true`, opens the full search result list when the search widget opens. */
@@ -356,7 +356,7 @@ export class LiteGraphGlobal {
 
   /**
    * @deprecated Removed; has no effect.
-   * If both this setting and {@link macTrackpadGestures} are `true`, trackpad gestures will
+   * If both this setting and `macTrackpadGestures` are `true`, trackpad gestures will
    * only be enabled when the browser user agent includes "Mac".
    * @default true
    * @see macTrackpadGestures
@@ -382,7 +382,7 @@ export class LiteGraphGlobal {
 
   /**
    * If `true`, widget values will be completely truncated when shrinking a widget,
-   * before truncating widget labels.  {@link truncateWidgetTextEvenly} must be `false`.
+   * before truncating widget labels.  `truncateWidgetTextEvenly` must be `false`.
    * @default false
    */
   truncateWidgetValuesFirst: boolean = false
@@ -400,23 +400,23 @@ export class LiteGraphGlobal {
    */
   namedValuesRestore: boolean = false
 
-  /** @see {@link LGraph} Legacy constructor reference on the global object. */
+  /** @see `LGraph` Legacy constructor reference on the global object. */
   LGraph = LGraph
-  /** @see {@link LLink} Legacy constructor reference on the global object. */
+  /** @see `LLink` Legacy constructor reference on the global object. */
   LLink = LLink
-  /** @see {@link LGraphNode} Legacy constructor reference on the global object. */
+  /** @see `LGraphNode` Legacy constructor reference on the global object. */
   LGraphNode = LGraphNode
-  /** @see {@link LGraphGroup} Legacy constructor reference on the global object. */
+  /** @see `LGraphGroup` Legacy constructor reference on the global object. */
   LGraphGroup = LGraphGroup
-  /** @see {@link DragAndScale} Legacy constructor reference on the global object. */
+  /** @see `DragAndScale` Legacy constructor reference on the global object. */
   DragAndScale = DragAndScale
-  /** @see {@link LGraphCanvas} Legacy constructor reference on the global object. */
+  /** @see `LGraphCanvas` Legacy constructor reference on the global object. */
   LGraphCanvas = LGraphCanvas
-  /** @see {@link ContextMenu} Legacy constructor reference on the global object. */
+  /** @see `ContextMenu` Legacy constructor reference on the global object. */
   ContextMenu = ContextMenu
-  /** @see {@link CurveEditor} Legacy constructor reference on the global object. */
+  /** @see `CurveEditor` Legacy constructor reference on the global object. */
   CurveEditor = CurveEditor
-  /** @see {@link Reroute} Legacy constructor reference on the global object. */
+  /** @see `Reroute` Legacy constructor reference on the global object. */
   Reroute = Reroute
 
   /**
@@ -437,27 +437,27 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * @see {@link createUuidv4}
+   * @see `createUuidv4`
    * @inheritdoc
    */
   uuidv4 = createUuidv4
 
-  /** @see {@link distance} Re-exported geometry helper. */
+  /** @see `distance` Re-exported geometry helper. */
   distance = distance
 
-  /** @see {@link isInsideRectangle} Re-exported hit-test helper (legacy edge semantics). */
+  /** @see `isInsideRectangle` Re-exported hit-test helper (legacy edge semantics). */
   isInsideRectangle = isInsideRectangle
 
-  /** @see {@link overlapBounding} Re-exported rectangle overlap test. */
+  /** @see `overlapBounding` Re-exported rectangle overlap test. */
   overlapBounding = overlapBounding
 
   constructor() {
     Object.defineProperty(this, "Classes", { writable: false })
   }
 
-  /** Called after a new node type is registered via {@link registerNodeType}. */
+  /** Called after a new node type is registered via `registerNodeType`. */
   onNodeTypeRegistered?(type: string, base_class: typeof LGraphNode): void
-  /** Called when an existing registration is replaced by {@link registerNodeType}. */
+  /** Called when an existing registration is replaced by `registerNodeType`. */
   onNodeTypeReplaced?(type: string, base_class: typeof LGraphNode, prev: unknown): void
 
   /**
@@ -730,7 +730,7 @@ export class LiteGraphGlobal {
 
   /**
    * Deep-clones a plain object via JSON serialisation.
-   * @deprecated Prefer {@link structuredClone} for modern environments.
+   * @deprecated Prefer `structuredClone` for modern environments.
    * @param obj Object to clone, or `null`/`undefined`.
    * @param target Optional object to receive cloned properties in place.
    */
@@ -809,10 +809,10 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * Registers a DOM event listener using {@link pointerevents_method} (`pointer` or `mouse`).
+   * Registers a DOM event listener using `pointerevents_method` (`pointer` or `mouse`).
    *
    * Falls back to touch events when PointerEvent is unavailable. Used by
-   * {@link LGraphCanvas}, {@link DragAndScale}, and {@link ContextMenu}.
+   * `LGraphCanvas`, `DragAndScale`, and `ContextMenu`.
    * @param oDOM Target DOM node.
    * @param sEvIn Event suffix (`down`, `move`, `up`, etc.).
    * @param fCall Event handler.
@@ -883,7 +883,7 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * Removes a listener previously added by {@link pointerListenerAdd}.
+   * Removes a listener previously added by `pointerListenerAdd`.
    * @param oDOM Target DOM node.
    * @param sEvent Event suffix (`down`, `move`, `up`, etc.).
    * @param fCall Handler to remove.
@@ -915,7 +915,7 @@ export class LiteGraphGlobal {
     }
   }
 
-  /** @returns High-resolution timestamp from {@link performance.now}. */
+  /** @returns High-resolution timestamp from `performance.now`. */
   getTime(): number {
     return performance.now()
   }
@@ -1033,7 +1033,7 @@ export class LiteGraphGlobal {
   }
 
   /**
-   * Copies enumerable properties and prototype members from {@link origin} onto {@link target}.
+   * Copies enumerable properties and prototype members from `origin` onto `target`.
    *
    * Legacy helper used when extending litegraph classes at runtime.
    * @param target Class or object to extend.

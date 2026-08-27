@@ -7,17 +7,17 @@ import type { Subgraph } from "@/subgraph/Subgraph"
 import type { CanvasPointerEvent } from "@/types/events"
 
 /**
- * Strongly-typed event map for {@link LGraphCanvas} lifecycle and pointer interactions.
+ * Strongly-typed event map for `LGraphCanvas` lifecycle and pointer interactions.
  *
- * Listen via {@link LGraphCanvas.addEventListener} or dispatch from canvas code when the active
+ * Listen via `LGraphCanvas.addEventListener` or dispatch from canvas code when the active
  * graph changes or the user interacts with nodes, groups, or empty canvas areas.
- * @see {@link LGraphCanvas}
+ * @see `LGraphCanvas`
  */
 export interface LGraphCanvasEventMap {
   /**
    * The active graph displayed by the canvas has changed.
    *
-   * Dispatched when {@link LGraphCanvas.setGraph} assigns a new root or subgraph view.
+   * Dispatched when `LGraphCanvas.setGraph` assigns a new root or subgraph view.
    */
   "litegraph:set-graph": {
     /** The new active graph. */
@@ -43,7 +43,7 @@ export interface LGraphCanvasEventMap {
       linkReleaseContext?: { links: ConnectingLink[] }
     } |
     {
-      /** The user double-clicked a {@link LGraphGroup}. */
+      /** The user double-clicked a `LGraphGroup`. */
       subType: "group-double-click"
       originalEvent?: CanvasPointerEvent
       /** The group that was double-clicked. */
@@ -55,7 +55,7 @@ export interface LGraphCanvasEventMap {
       originalEvent?: CanvasPointerEvent
     } |
     {
-      /** The user double-clicked a {@link LGraphNode}. */
+      /** The user double-clicked a `LGraphNode`. */
       subType: "node-double-click"
       originalEvent?: CanvasPointerEvent
       /** The node that was double-clicked. */
@@ -65,7 +65,7 @@ export interface LGraphCanvasEventMap {
   /**
    * A title-bar button on a node was clicked.
    *
-   * Dispatched from {@link LGraphNode} when a configured {@link LGraphButton} is activated.
+   * Dispatched from `LGraphNode` when a configured `LGraphButton` is activated.
    */
   "litegraph:node-title-button-clicked": {
     /** The node whose title button was clicked. */
@@ -77,8 +77,8 @@ export interface LGraphCanvasEventMap {
   /**
    * Ghost placement mode has started or ended.
    *
-   * Dispatched from {@link LGraphCanvas.startGhostPlacement} and
-   * {@link LGraphCanvas.finalizeGhostPlacement}. While `active` is `true`, the node follows the
+   * Dispatched from `LGraphCanvas.startGhostPlacement` and
+   * `LGraphCanvas.finalizeGhostPlacement`. While `active` is `true`, the node follows the
    * cursor at reduced opacity until the user clicks to place it or cancels (Escape, Delete,
    * Backspace, or right-click).
    *

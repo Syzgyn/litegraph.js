@@ -8,9 +8,9 @@ import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./B
  * Horizontal slider widget (`type: "slider"`) for numeric values between `options.min` and
  * `options.max`.
  *
- * Click and drag map pointer X position to a value along the bar. An optional {@link marker}
+ * Click and drag map pointer X position to a value along the bar. An optional `marker`
  * displays a secondary position (e.g. default or reference value).
- * @see {@link ISliderWidget}
+ * @see `ISliderWidget`
  */
 export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWidget {
   /** Widget type discriminator; always `"slider"`. */
@@ -18,7 +18,7 @@ export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWi
 
   /**
    * Optional secondary position drawn as a vertical marker on the slider track.
-   * @remarks Normalised against the same min/max range as {@link value}.
+   * @remarks Normalised against the same min/max range as `value`.
    */
   marker?: number
 

@@ -6,19 +6,19 @@ import type { Subgraph } from "@/subgraph/Subgraph"
 import type { ExportedSubgraph, ISerialisedGraph, SerialisableGraph } from "@/types/serialisation"
 
 /**
- * Strongly-typed event map for {@link LGraph} configuration and subgraph lifecycle.
+ * Strongly-typed event map for `LGraph` configuration and subgraph lifecycle.
  *
- * Extended by {@link SubgraphEventMap} and {@link SubgraphInputEventMap} for subgraph-specific
- * events. Listen on {@link LGraph.events} via {@link CustomEventTarget.addEventListener}.
- * @see {@link LGraph}
- * @see {@link SubgraphEventMap}
+ * Extended by `SubgraphEventMap` and `SubgraphInputEventMap` for subgraph-specific
+ * events. Listen on `LGraph.events` via `CustomEventTarget.addEventListener`.
+ * @see `LGraph`
+ * @see `SubgraphEventMap`
  */
 export interface LGraphEventMap {
   /**
    * Dispatched immediately before a graph is configured from serialised data.
    *
    * Returning `false` from a listener cancels the configure operation (see
-   * {@link CustomEventTarget.dispatch} cancelable semantics).
+   * `CustomEventTarget.dispatch` cancelable semantics).
    */
   "configuring": {
     /** The serialised graph payload about to be applied. */
@@ -31,9 +31,9 @@ export interface LGraphEventMap {
   "configured": never
 
   /**
-   * A new {@link Subgraph} definition was created and registered on the root graph.
+   * A new `Subgraph` definition was created and registered on the root graph.
    *
-   * Dispatched from {@link LGraph} when a subgraph asset is added programmatically or via
+   * Dispatched from `LGraph` when a subgraph asset is added programmatically or via
    * deserialisation.
    */
   "subgraph-created": {
@@ -73,7 +73,7 @@ export interface LGraphEventMap {
    * The user or host app opened a subgraph for editing.
    *
    * Dispatched when navigation switches the active editing context from a parent graph to a
-   * nested {@link Subgraph} view.
+   * nested `Subgraph` view.
    */
   "open-subgraph": {
     /** The subgraph being opened. */

@@ -5,7 +5,7 @@ import { isMiddleButtonHeld } from "@/utils/pointerUtils"
 /**
  * Overlay that renders pointer and keyboard status indicators on the canvas front layer.
  *
- * Hooks into {@link LGraphCanvas.drawFrontCanvas} to draw modifier-key labels, mouse-button
+ * Hooks into `LGraphCanvas.drawFrontCanvas` to draw modifier-key labels, mouse-button
  * dots, and undo/redo markers near the cursor. Intended for screen recordings and demos that
  * need to show which inputs are active.
  * @example
@@ -14,7 +14,7 @@ import { isMiddleButtonHeld } from "@/utils/pointerUtils"
  * // Dispose when done:
  * inputIndicators.dispose()
  * ```
- * @see {@link LGraphCanvas}
+ * @see `LGraphCanvas`
  */
 export class InputIndicators implements Disposable {
   #onPointerDownOrMove = this.onPointerDownOrMove.bind(this)
@@ -52,7 +52,7 @@ export class InputIndicators implements Disposable {
 
   // #region state
 
-  /** When `false`, {@link draw} is a no-op (listeners remain active). */
+  /** When `false`, `draw` is a no-op (listeners remain active). */
   enabled: boolean = true
 
   /** Whether the Shift key is currently held. */
@@ -86,12 +86,12 @@ export class InputIndicators implements Disposable {
   y: number = 0
   // #endregion
 
-  /** AbortController used to remove all event listeners on {@link dispose}. */
+  /** AbortController used to remove all event listeners on `dispose`. */
   controller?: AbortController
 
   /**
-   * @param canvas The {@link LGraphCanvas} whose front canvas will be overlaid with indicators.
-   * Registers pointer and keyboard listeners and wraps {@link LGraphCanvas.drawFrontCanvas}.
+   * @param canvas The `LGraphCanvas` whose front canvas will be overlaid with indicators.
+   * Registers pointer and keyboard listeners and wraps `LGraphCanvas.drawFrontCanvas`.
    */
   constructor(public canvas: LGraphCanvas) {
     this.controller = new AbortController()
@@ -162,7 +162,7 @@ export class InputIndicators implements Disposable {
    * Draws the indicator overlay onto the canvas front context.
    *
    * Renders modifier-key labels above the cursor, three mouse-button dots, and undo/redo
-   * emoji markers. Called automatically after each {@link LGraphCanvas.drawFrontCanvas} pass.
+   * emoji markers. Called automatically after each `LGraphCanvas.drawFrontCanvas` pass.
    */
   draw() {
     const {
@@ -229,14 +229,14 @@ export class InputIndicators implements Disposable {
   }
 
   /**
-   * Removes all event listeners and restores the original {@link LGraphCanvas.drawFrontCanvas}.
+   * Removes all event listeners and restores the original `LGraphCanvas.drawFrontCanvas`.
    */
   dispose() {
     this.controller?.abort()
     this.controller = undefined
   }
 
-  /** {@link Disposable} protocol — delegates to {@link dispose}. */
+  /** `Disposable` protocol — delegates to `dispose`. */
   [Symbol.dispose](): void {
     this.dispose()
   }

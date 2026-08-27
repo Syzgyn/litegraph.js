@@ -20,17 +20,17 @@ import { toConcreteWidget } from "@/widgets/widgetMap"
 import { type ExecutableLGraphNode, ExecutableNodeDTO, type ExecutionId } from "./ExecutableNodeDTO"
 
 /**
- * A live instance of a {@link Subgraph} definition, rendered as a single node on a parent graph.
+ * A live instance of a `Subgraph` definition, rendered as a single node on a parent graph.
  *
  * Mirrors the subgraph's input/output slots on its own node surface, promotes connected internal
  * widgets to the parent canvas, and provides link-resolution helpers used during execution
  * flattening and link dragging across subgraph boundaries.
  * @remarks
  * Subscribes to subgraph events so IO slot and widget changes on the definition stay in sync with
- * every placed instance. Virtual ({@link isVirtualNode}) for execution purposes — inner nodes are
- * expanded via {@link getInnerNodes}.
- * @see {@link Subgraph}
- * @see {@link ExecutableNodeDTO}
+ * every placed instance. Virtual (`isVirtualNode`) for execution purposes — inner nodes are
+ * expanded via `getInnerNodes`.
+ * @see `Subgraph`
+ * @see `ExecutableNodeDTO`
  */
 export class SubgraphNode extends LGraphNode implements BaseLGraph {
   /** Widgets added programmatically outside the promotion system. */
@@ -39,10 +39,10 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
   /** Manages lifecycle of all subgraph event listeners */
   #eventAbortController = new AbortController()
 
-  /** Input slots mirroring {@link Subgraph.inputs}, with optional subgraph-specific metadata. */
+  /** Input slots mirroring `Subgraph.inputs`, with optional subgraph-specific metadata. */
   declare inputs: (INodeInputSlot & Partial<ISubgraphInput>)[]
 
-  /** The subgraph definition ID; matches {@link Subgraph.id}. */
+  /** The subgraph definition ID; matches `Subgraph.id`. */
   override readonly type: UUID
   /** Subgraph instances are virtual nodes whose behaviour is expanded at execution time. */
   override readonly isVirtualNode = true as const
@@ -321,7 +321,7 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
     return "Subgraph node"
   }
 
-  /** Narrows this node to {@link SubgraphNode} for type guards. */
+  /** Narrows this node to `SubgraphNode` for type guards. */
   override isSubgraphNode(): this is SubgraphNode {
     return true
   }
@@ -508,12 +508,12 @@ export class SubgraphNode extends LGraphNode implements BaseLGraph {
    * Flattens this subgraph instance into executable node DTOs.
    *
    * Registers a DTO for this instance, then recursively expands nested subgraph nodes.
-   * Throws {@link RecursionError} when a circular subgraph hierarchy is detected.
-   * @param executableNodes Map populated with all DTOs keyed by {@link ExecutionId}.
+   * Throws `RecursionError` when a circular subgraph hierarchy is detected.
+   * @param executableNodes Map populated with all DTOs keyed by `ExecutionId`.
    * @param subgraphNodePath Ordered instance IDs from the root graph to this instance.
    * @param nodes Accumulator for leaf DTOs (internal recursion parameter).
    * @param visited Set of instances already being expanded (internal recursion parameter).
-   * @returns All leaf {@link ExecutableLGraphNode} DTOs inside this subgraph.
+   * @returns All leaf `ExecutableLGraphNode` DTOs inside this subgraph.
    */
   getInnerNodes(
     /** The set of computed node DTOs for this execution. */

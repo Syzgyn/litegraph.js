@@ -6,10 +6,10 @@ Symbol.asyncDispose ??= Symbol("Symbol.asyncDispose")
 /**
  * Installs runtime polyfills required by litegraph on older browsers.
  *
- * - Adds {@link CanvasRenderingContext2D.roundRect} when missing.
- * - Adds {@link window.requestAnimationFrame} fallback when missing.
+ * - Adds `CanvasRenderingContext2D.roundRect` when missing.
+ * - Adds `window.requestAnimationFrame` fallback when missing.
  *
- * Called automatically when importing {@link litegraph}.
+ * Called automatically when importing `litegraph`.
  */
 export function loadPolyfills() {
   if (

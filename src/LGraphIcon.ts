@@ -1,5 +1,5 @@
 /**
- * Configuration for constructing an {@link LGraphIcon}.
+ * Configuration for constructing an `LGraphIcon`.
  */
 export interface LGraphIconOptions {
   /** Unicode character or icon-font glyph to render. */
@@ -24,11 +24,11 @@ export interface LGraphIconOptions {
  * Icon-font glyph renderer for node badges and buttons.
  *
  * Draws a single Unicode character from an icon font (default PrimeIcons), optionally
- * inside a filled circle. Used by {@link LGraphBadge} and {@link LGraphButton}.
- * @see {@link LGraphBadge}
+ * inside a filled circle. Used by `LGraphBadge` and `LGraphButton`.
+ * @see `LGraphBadge`
  */
 export class LGraphIcon {
-  /** Unicode character rendered by {@link draw}. */
+  /** Unicode character rendered by `draw`. */
   unicode: string
   /** Icon font family name passed to `ctx.font`. */
   fontFamily: string
@@ -38,7 +38,7 @@ export class LGraphIcon {
   bgColor?: string
   /** Font size in pixels. */
   fontSize: number
-  /** Padding added to the glyph radius when drawing {@link bgColor}. */
+  /** Padding added to the glyph radius when drawing `bgColor`. */
   circlePadding: number
   /** Horizontal draw offset. */
   xOffset: number
@@ -71,7 +71,7 @@ export class LGraphIcon {
   /**
    * Draws the icon at `(x, y)`, vertically centred on `y`.
    *
-   * When {@link bgColor} is set, draws a filled circle behind the glyph first.
+   * When `bgColor` is set, draws a filled circle behind the glyph first.
    * Restores canvas text state after drawing.
    * @param ctx Canvas rendering context.
    * @param x Left anchor for the icon (circle starts at this x).

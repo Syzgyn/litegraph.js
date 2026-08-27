@@ -14,14 +14,14 @@ import { LinkDirection } from "@/types/globalEnums"
 /**
  * Represents a link being dragged **from** a subgraph output boundary **to** an output slot.
  *
- * Created by {@link LinkConnector.dragNewFromSubgraphOutput} and
- * {@link LinkConnector.dragFromRerouteToOutput}. The origin is a {@link SubgraphOutput} exposed
- * on the subgraph's {@link SubgraphOutputNode}.
+ * Created by `LinkConnector.dragNewFromSubgraphOutput` and
+ * `LinkConnector.dragFromRerouteToOutput`. The origin is a `SubgraphOutput` exposed
+ * on the subgraph's `SubgraphOutputNode`.
  * @remarks
  * Subgraph outputs act as virtual inputs inside the subgraph — data flows from inside the
  * subgraph out to the parent graph through these boundary slots.
- * @see {@link ToInputFromIoNodeLink}
- * @see {@link LinkConnector.dragNewFromSubgraphOutput}
+ * @see `ToInputFromIoNodeLink`
+ * @see `LinkConnector.dragNewFromSubgraphOutput`
  */
 export class ToOutputFromIoNodeLink implements RenderLink {
   /** Always `"output"` — this link is being dragged toward an output slot. */
@@ -30,24 +30,24 @@ export class ToOutputFromIoNodeLink implements RenderLink {
   /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
 
-  /** Index of {@link fromSlot} on {@link node}. */
+  /** Index of `fromSlot` on `node`. */
   readonly fromSlotIndex: number
 
   /**
-   * The direction the link segment faces as it leaves {@link fromPos}.
+   * The direction the link segment faces as it leaves `fromPos`.
    *
-   * Defaults to {@link LinkDirection.LEFT}. May be overridden to {@link LinkDirection.NONE}
+   * Defaults to `LinkDirection.LEFT`. May be overridden to `LinkDirection.NONE`
    * when dragging from a reroute.
    */
   fromDirection: LinkDirection = LinkDirection.LEFT
 
   /**
    * @param network The subgraph that owns the output boundary.
-   * @param node The {@link SubgraphOutputNode} displaying the subgraph outputs.
-   * @param fromSlot The {@link SubgraphOutput} at the origin of the drag.
+   * @param node The `SubgraphOutputNode` displaying the subgraph outputs.
+   * @param fromSlot The `SubgraphOutput` at the origin of the drag.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin.
    * @param dragDirection Controls how the free end of the link follows the cursor.
-   * @throws When {@link fromSlot} is not found on {@link node} (unless it is the empty slot).
+   * @throws When `fromSlot` is not found on `node` (unless it is the empty slot).
    */
   constructor(
     readonly network: LinkNetwork,
@@ -78,8 +78,8 @@ export class ToOutputFromIoNodeLink implements RenderLink {
   /**
    * Determines whether dropping onto the given output slot would produce a valid connection.
    *
-   * Delegates to {@link SubgraphOutputNode.canConnectTo}, passing this link's origin
-   * {@link SubgraphOutput} as the downstream target.
+   * Delegates to `SubgraphOutputNode.canConnectTo`, passing this link's origin
+   * `SubgraphOutput` as the downstream target.
    * @param outputNode The node that owns the candidate output slot.
    * @param output The output slot (or subgraph IO definition) being hovered or dropped on.
    */
@@ -125,7 +125,7 @@ export class ToOutputFromIoNodeLink implements RenderLink {
    * Completes the drag by connecting through a reroute's output side.
    * @param reroute The reroute being dropped on.
    * @param outputNode The node that owns the output slot the link ultimately connects through.
-   * @param output The output slot on {@link outputNode}.
+   * @param output The output slot on `outputNode`.
    * @param events Dispatches `"link-created"` with the new link.
    */
   connectToRerouteOutput(
@@ -158,7 +158,7 @@ export class ToOutputFromIoNodeLink implements RenderLink {
 
   /**
    * Output-directed drags cannot terminate on a reroute's input side.
-   * @throws Always throws — use {@link connectToRerouteOutput} instead.
+   * @throws Always throws — use `connectToRerouteOutput` instead.
    */
   connectToRerouteInput() {
     throw new Error("ToOutputRenderLink cannot connect to an input.")

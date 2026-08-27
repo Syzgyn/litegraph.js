@@ -15,8 +15,8 @@ const randomStorage = new Uint32Array(31)
  * @remarks
  * Original implementation from https://gist.github.com/jed/982883?permalink_comment_id=852670#gistcomment-852670
  *
- * Prefers the {@link crypto.randomUUID} method if available, falling back to
- * {@link crypto.getRandomValues}, then finally the legacy {@link Math.random} method.
+ * Prefers the `crypto.randomUUID` method if available, falling back to
+ * `crypto.getRandomValues`, then finally the legacy `Math.random` method.
  */
 export function createUuidv4(): UUID {
   if (typeof crypto?.randomUUID === "function") return crypto.randomUUID()

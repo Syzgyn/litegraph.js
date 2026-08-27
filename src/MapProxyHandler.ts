@@ -1,8 +1,8 @@
 /**
- * {@link ProxyHandler} that exposes a {@link Map} with object-like property access.
+ * `ProxyHandler` that exposes a `Map` with object-like property access.
  *
  * Allows legacy code to use `map[key]` syntax while backing storage remains a
- * {@link Map}. Numeric string keys are parsed as integers before lookup.
+ * `Map`. Numeric string keys are parsed as integers before lookup.
  * @remarks
  * Temporary workaround until downstream consumers migrate to Map directly.
  * Does not support all Map prototype keys (`values`, `entries`, etc.) as property names.
@@ -30,7 +30,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
   }
 
   /**
-   * Returns a property descriptor when {@link get} would return a defined value.
+   * Returns a property descriptor when `get` would return a defined value.
    * @param target The proxied map.
    * @param p Property key or symbol.
    */
@@ -49,7 +49,7 @@ export class MapProxyHandler<V> implements ProxyHandler<Map<number | string, V>>
   }
 
   /**
-   * Reports whether the map contains an entry for property key {@link p}.
+   * Reports whether the map contains an entry for property key `p`.
    * @param target The proxied map.
    * @param p Property key. Symbol keys always return `false`.
    */

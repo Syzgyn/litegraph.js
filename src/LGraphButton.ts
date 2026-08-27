@@ -3,9 +3,9 @@ import { LGraphBadge, type LGraphBadgeOptions } from "./LGraphBadge"
 import { cachedMeasureText } from "./utils/textMeasureCache"
 
 /**
- * Configuration for an {@link LGraphButton} title-bar control.
+ * Configuration for an `LGraphButton` title-bar control.
  *
- * Extends {@link LGraphBadgeOptions} with an optional logical name for hit-test routing.
+ * Extends `LGraphBadgeOptions` with an optional logical name for hit-test routing.
  */
 export interface LGraphButtonOptions extends LGraphBadgeOptions {
   /** Optional identifier used to distinguish multiple buttons on one node. */
@@ -15,18 +15,18 @@ export interface LGraphButtonOptions extends LGraphBadgeOptions {
 /**
  * Clickable icon-style control rendered in a node title bar.
  *
- * Subclasses {@link LGraphBadge} but draws without a background pill — only the
- * icon/text glyph. Tracks its last rendered bounds for {@link isPointInside} hit testing.
- * @see {@link LGraphBadge}
+ * Subclasses `LGraphBadge` but draws without a background pill — only the
+ * icon/text glyph. Tracks its last rendered bounds for `isPointInside` hit testing.
+ * @see `LGraphBadge`
  */
 export class LGraphButton extends LGraphBadge {
-  /** Logical button name, when set via {@link LGraphButtonOptions.name}. */
+  /** Logical button name, when set via `LGraphButtonOptions.name`. */
   name?: string
-  /** Last canvas area occupied by {@link draw}; used by {@link isPointInside}. */
+  /** Last canvas area occupied by `draw`; used by `isPointInside`. */
   lastArea: Rectangle = new Rectangle()
 
   /**
-   * @param options Button label/icon options and optional {@link name}.
+   * @param options Button label/icon options and optional `name`.
    */
   constructor(options: LGraphButtonOptions) {
     super(options)
@@ -36,7 +36,7 @@ export class LGraphButton extends LGraphBadge {
   /**
    * Measures button width using the PrimeIcons font (no badge padding).
    * @param ctx Canvas context used for text measurement.
-   * @returns Text width in pixels, or `0` when {@link visible} is `false`.
+   * @returns Text width in pixels, or `0` when `visible` is `false`.
    */
   override getWidth(ctx: CanvasRenderingContext2D): number {
     if (!this.visible) return 0

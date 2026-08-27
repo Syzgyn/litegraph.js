@@ -13,14 +13,14 @@ import { LinkDirection } from "@/types/globalEnums"
 /**
  * Represents a new link being dragged **from** an input slot **to** an output slot.
  *
- * Created by {@link LinkConnector.dragNewFromInput} and {@link LinkConnector.dragFromRerouteToOutput}
- * (via {@link ToOutputFromRerouteLink}). On drop, {@link connectToOutput} creates the connection
- * via {@link LGraphNode.connectSlots}.
+ * Created by `LinkConnector.dragNewFromInput` and `LinkConnector.dragFromRerouteToOutput`
+ * (via `ToOutputFromRerouteLink`). On drop, `connectToOutput` creates the connection
+ * via `LGraphNode.connectSlots`.
  * @remarks
- * This is the "new link" counterpart to {@link MovingOutputLink}, which repositions an existing
+ * This is the "new link" counterpart to `MovingOutputLink`, which repositions an existing
  * link's output end instead of creating one from scratch.
- * @see {@link ToInputRenderLink}
- * @see {@link LinkConnector.dragNewFromInput}
+ * @see `ToInputRenderLink`
+ * @see `LinkConnector.dragNewFromInput`
  */
 export class ToOutputRenderLink implements RenderLink {
   /** Always `"output"` — this link is being dragged toward an output slot. */
@@ -29,13 +29,13 @@ export class ToOutputRenderLink implements RenderLink {
   /** Canvas-space position where the rendered link segment originates. */
   readonly fromPos: Point
 
-  /** Index of {@link fromSlot} on {@link node}. */
+  /** Index of `fromSlot` on `node`. */
   readonly fromSlotIndex: number
 
   /**
-   * The direction the link segment faces as it leaves {@link fromPos}.
+   * The direction the link segment faces as it leaves `fromPos`.
    *
-   * Defaults to {@link LinkDirection.LEFT} (input slots face left). May be overridden when
+   * Defaults to `LinkDirection.LEFT` (input slots face left). May be overridden when
    * dragging from a reroute.
    */
   fromDirection: LinkDirection = LinkDirection.LEFT
@@ -45,9 +45,9 @@ export class ToOutputRenderLink implements RenderLink {
    * @param node The node whose input slot the link is being dragged from.
    * @param fromSlot The input slot at the origin of the drag.
    * @param fromReroute When dragging from a reroute, the reroute at the chain origin. Its
-   * position becomes {@link fromPos} and its ID is passed as parentage when connecting.
+   * position becomes `fromPos` and its ID is passed as parentage when connecting.
    * @param dragDirection Controls how the free end of the link follows the cursor.
-   * @throws When {@link fromSlot} is not found on {@link node}.
+   * @throws When `fromSlot` is not found on `node`.
    */
   constructor(
     readonly network: LinkNetwork,
@@ -76,8 +76,8 @@ export class ToOutputRenderLink implements RenderLink {
   /**
    * Determines whether dropping onto the given output slot would produce a valid connection.
    *
-   * Delegates to {@link LGraphNode.canConnectTo}, passing this link's origin input slot as the
-   * downstream target. Also accepts {@link SubgraphIO} slots when dropping onto subgraph
+   * Delegates to `LGraphNode.canConnectTo`, passing this link's origin input slot as the
+   * downstream target. Also accepts `SubgraphIO` slots when dropping onto subgraph
    * boundary nodes.
    * @param outputNode The node that owns the candidate output slot.
    * @param output The output slot (or subgraph IO definition) being hovered or dropped on.
@@ -104,7 +104,7 @@ export class ToOutputRenderLink implements RenderLink {
   /**
    * Completes the drag by creating a new link to an output slot.
    *
-   * Dispatches `"link-created"` with the new {@link LLink} on success.
+   * Dispatches `"link-created"` with the new `LLink` on success.
    * @param node The node that owns the target output slot.
    * @param output The output slot to connect to.
    * @param events Event target for dispatching `"link-created"`.
@@ -131,7 +131,7 @@ export class ToOutputRenderLink implements RenderLink {
    * Completes the drag by connecting through a reroute's output side.
    * @param reroute The reroute being dropped on.
    * @param outputNode The node that owns the output slot the link ultimately connects through.
-   * @param output The output slot on {@link outputNode}.
+   * @param output The output slot on `outputNode`.
    * @param events Dispatches `"link-created"` with the new link.
    */
   connectToRerouteOutput(
@@ -163,7 +163,7 @@ export class ToOutputRenderLink implements RenderLink {
 
   /**
    * Output-directed drags cannot terminate on a reroute's input side.
-   * @throws Always throws — use {@link connectToRerouteOutput} instead.
+   * @throws Always throws — use `connectToRerouteOutput` instead.
    */
   connectToRerouteInput() {
     throw new Error("ToOutputRenderLink cannot connect to an input.")

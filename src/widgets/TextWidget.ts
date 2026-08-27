@@ -6,8 +6,8 @@ import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./B
 /**
  * Single-line (or multiline prompt) text widget (`type: "string"` or `"text"`).
  *
- * Displays {@link value} with truncating layout; click opens {@link LGraphCanvas.prompt} for editing.
- * @see {@link IStringWidget}
+ * Displays `value` with truncating layout; click opens `LGraphCanvas.prompt` for editing.
+ * @see `IStringWidget`
  */
 export class TextWidget extends BaseWidget<IStringWidget> implements IStringWidget {
   /**
@@ -43,7 +43,7 @@ export class TextWidget extends BaseWidget<IStringWidget> implements IStringWidg
   }
 
   /**
-   * Opens a text prompt (optionally multiline) to edit {@link value}.
+   * Opens a text prompt (optionally multiline) to edit `value`.
    * @param options Canvas prompt uses current value and `options.multiline` from widget options.
    */
   override onClick({ e, node, canvas }: WidgetEventOptions) {

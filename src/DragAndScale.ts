@@ -3,7 +3,7 @@ import type { Point, ReadOnlyRect, Rect } from "./interfaces"
 import { EaseFunction, Rectangle } from "./litegraph"
 
 /**
- * Pan-and-zoom viewport state for {@link DragAndScale}.
+ * Pan-and-zoom viewport state for `DragAndScale`.
  *
  * Implemented as a plain object so it can be proxied or copied without side effects.
  */
@@ -18,7 +18,7 @@ export interface DragAndScaleState {
 }
 
 /**
- * Options for {@link DragAndScale.animateToBounds} viewport animations.
+ * Options for `DragAndScale.animateToBounds` viewport animations.
  */
 export type AnimationOptions = {
   /** Duration of the animation in milliseconds. */
@@ -30,11 +30,11 @@ export type AnimationOptions = {
 }
 
 /**
- * Manages canvas panning, zooming, and coordinate conversion for {@link LGraphCanvas}.
+ * Manages canvas panning, zooming, and coordinate conversion for `LGraphCanvas`.
  *
  * Tracks graph-space offset and scale, converts between canvas and graph coordinates,
  * and supports animated or immediate fit-to-bounds operations.
- * @see {@link LGraphCanvas.ds}
+ * @see `LGraphCanvas.ds`
  */
 export class DragAndScale {
   /**
@@ -43,7 +43,7 @@ export class DragAndScale {
    * Implemented as a POCO that can be proxied without side-effects.
    */
   state: DragAndScaleState
-  /** Snapshot of {@link state} from the previous frame; used to detect changes. */
+  /** Snapshot of `state` from the previous frame; used to detect changes. */
   lastState: DragAndScaleState = {
     offset: [0, 0],
     scale: 0,
@@ -59,7 +59,7 @@ export class DragAndScale {
   last_mouse: Point
   /** Canvas element whose size drives visible-area calculations. */
   element: HTMLCanvasElement
-  /** Graph-space rectangle currently visible in the viewport. Updated by {@link computeVisibleArea}. */
+  /** Graph-space rectangle currently visible in the viewport. Updated by `computeVisibleArea`. */
   visible_area: Rectangle
   /** Whether a pan drag is currently in progress. */
   dragging?: boolean
@@ -98,10 +98,10 @@ export class DragAndScale {
 
   /** Called when pan or zoom changes and the canvas should redraw. */
   onredraw?(das: DragAndScale): void
-  /** Called when {@link state} changes after {@link computeVisibleArea}. */
+  /** Called when `state` changes after `computeVisibleArea`. */
   onChanged?(scale: number, offset: Point): void
 
-  /** Graph-space pan offset (alias for {@link DragAndScaleState.offset}). */
+  /** Graph-space pan offset (alias for `DragAndScaleState.offset`). */
   get offset(): [number, number] {
     return this.state.offset
   }
@@ -111,7 +111,7 @@ export class DragAndScale {
     this.state.offset[1] = value[1]
   }
 
-  /** Current zoom scale (alias for {@link DragAndScaleState.scale}). */
+  /** Current zoom scale (alias for `DragAndScaleState.scale`). */
   get scale(): number {
     return this.state.scale
   }
@@ -121,9 +121,9 @@ export class DragAndScale {
   }
 
   /**
-   * Recomputes {@link visible_area} from current offset, scale, and optional {@link viewport}.
+   * Recomputes `visible_area` from current offset, scale, and optional `viewport`.
    *
-   * Invokes {@link onChanged} when {@link state} differs from {@link lastState}.
+   * Invokes `onChanged` when `state` differs from `lastState`.
    * @param viewport Optional canvas sub-rectangle in pixels; when omitted, uses the full canvas.
    */
   computeVisibleArea(viewport: Rect | undefined): void {
@@ -181,7 +181,7 @@ export class DragAndScale {
    * Converts canvas pixel coordinates to graph-space.
    * @param pos Point in canvas pixels.
    * @param out Optional reusable output point. When omitted, a new array is allocated.
-   * @returns Graph-space point written to {@link out} or a new `[x, y]` array.
+   * @returns Graph-space point written to `out` or a new `[x, y]` array.
    */
   convertCanvasToOffset(pos: Point, out?: Point): Point {
     out = out || [0, 0]
@@ -204,8 +204,8 @@ export class DragAndScale {
   }
 
   /**
-   * Sets zoom {@link scale}, clamped to {@link min_scale}–{@link max_scale}, keeping
-   * {@link zooming_center} fixed on screen when provided.
+   * Sets zoom `scale`, clamped to `min_scale`–`max_scale`, keeping
+   * `zooming_center` fixed on screen when provided.
    * @param value Target scale factor.
    * @param zooming_center Canvas pixel point that should remain stationary during zoom.
    * @param roundToScaleOne When `true`, snaps scale to exactly `1` when within `0.01`.
@@ -243,8 +243,8 @@ export class DragAndScale {
   }
 
   /**
-   * Multiplies current scale by {@link value} (relative zoom in/out).
-   * @param value Scale multiplier applied to {@link scale}.
+   * Multiplies current scale by `value` (relative zoom in/out).
+   * @param value Scale multiplier applied to `scale`.
    * @param zooming_center Canvas pixel point that should remain stationary during zoom.
    */
   changeDeltaScale(value: number, zooming_center?: Point): void {

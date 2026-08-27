@@ -47,7 +47,7 @@ function sanitizeMenuHTML(html: string): string {
 
 // TODO: Replace this pattern with something more modern.
 /**
- * Declares the constructor signature for {@link ContextMenu} instances.
+ * Declares the constructor signature for `ContextMenu` instances.
  *
  * Used to type recursive submenu creation without circular import issues.
  */
@@ -61,8 +61,8 @@ export interface ContextMenu<TValue = unknown> {
  * Built on LiteGUI-style markup (`.litecontextmenu`, `.litemenu-entry`). Supports nested
  * submenus, global and per-item callbacks, separators, and automatic viewport clamping.
  * @remarks
- * Menus register pointer listeners via an internal {@link AbortController}; call
- * {@link close} to remove the menu and release listeners.
+ * Menus register pointer listeners via an internal `AbortController`; call
+ * `close` to remove the menu and release listeners.
  * @template TValue Payload type stored on menu item values.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
@@ -78,7 +78,7 @@ export class ContextMenu<TValue = unknown> {
   /** When `true`, prevents the menu from auto-closing after item selection (submenu open). */
   lock?: boolean
 
-  /** Aborts pointer listeners when {@link close} is called. */
+  /** Aborts pointer listeners when `close` is called. */
   controller: AbortController = new AbortController()
 
   /**
@@ -240,7 +240,7 @@ export class ContextMenu<TValue = unknown> {
    * @param element Target menu element.
    * @param event_name Custom event name to dispatch.
    * @param params Event detail payload.
-   * @returns The created {@link CustomEvent}.
+   * @returns The created `CustomEvent`.
    */
   // this code is used to trigger events easily (used in the context menu mouseleave
   static trigger(
@@ -257,7 +257,7 @@ export class ContextMenu<TValue = unknown> {
 
   /** @deprecated Unused. */
   /**
-   * Tests whether the pointer in {@link event} lies inside {@link element}'s client rect.
+   * Tests whether the pointer in `event` lies inside `element`'s client rect.
    * @deprecated Unused in current code paths.
    */
   static isCursorOverElement(
@@ -281,10 +281,10 @@ export class ContextMenu<TValue = unknown> {
   }
 
   /**
-   * Checks if {@link node} is inside this context menu or any of its submenus
-   * @param node The {@link Node} to check
+   * Checks if `node` is inside this context menu or any of its submenus
+   * @param node The `Node` to check
    * @param visited A set of visited menus to avoid circular references
-   * @returns `true` if {@link node} is inside this context menu or any of its submenus
+   * @returns `true` if `node` is inside this context menu or any of its submenus
    */
   containsNode(node: Node, visited: Set<this> = new Set()): boolean {
     if (visited.has(this)) return false
@@ -294,9 +294,9 @@ export class ContextMenu<TValue = unknown> {
   }
 
   /**
-   * Appends a menu entry (or separator) to {@link root}.
-   * @param name Display label for the entry. Empty for separators when {@link value} is `null`.
-   * @param value Item payload: plain string, structured {@link IContextMenuValue}, `null` for a separator, or a callback function.
+   * Appends a menu entry (or separator) to `root`.
+   * @param name Display label for the entry. Empty for separators when `value` is `null`.
+   * @param value Item payload: plain string, structured `IContextMenuValue`, `null` for a separator, or a callback function.
    * @param options Menu options; reused for global callback and auto-open behaviour.
    * @returns The created DOM element for the entry.
    */
@@ -444,7 +444,7 @@ export class ContextMenu<TValue = unknown> {
   /**
    * Removes this menu from the DOM and aborts its event listeners.
    *
-   * When this menu is a submenu, unlocks the parent unless {@link ignore_parent_menu} is set.
+   * When this menu is a submenu, unlocks the parent unless `ignore_parent_menu` is set.
    * Recursively closes any open child submenu.
    * @param e Optional mouse event used to synthesise a leave event on the parent menu.
    * @param ignore_parent_menu When `true`, does not modify or close the parent menu.

@@ -11,17 +11,17 @@ import { type IDrawOptions, NodeSlot } from "@/node/NodeSlot"
 import { isSubgraphInput } from "@/subgraph/subgraphUtils"
 
 /**
- * Concrete implementation of an {@link INodeInputSlot} on an {@link LGraphNode}.
+ * Concrete implementation of an `INodeInputSlot` on an `LGraphNode`.
  *
- * Input slots receive data from output slots via {@link LLink} connections. A single input slot
+ * Input slots receive data from output slots via `LLink` connections. A single input slot
  * holds at most one link, and may optionally be bound to a widget (a "widget input slot").
- * @see {@link NodeOutputSlot}
- * @see {@link NodeSlot}
+ * @see `NodeOutputSlot`
+ * @see `NodeSlot`
  */
 export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
   #widget: WeakRef<IBaseWidget> | undefined
 
-  /** The ID of the {@link LLink} connected to this slot, or `null` if disconnected. */
+  /** The ID of the `LLink` connected to this slot, or `null` if disconnected. */
   link: LinkId | null
   alwaysVisible?: boolean
 
@@ -51,7 +51,7 @@ export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
     return this.#widget?.deref()
   }
 
-  /** @see {@link _widget} */
+  /** @see `_widget` */
   set _widget(widget: IBaseWidget | undefined) {
     this.#widget = widget ? new WeakRef(widget) : undefined
   }
@@ -71,10 +71,10 @@ export class NodeInputSlot extends NodeSlot implements INodeInputSlot {
   }
 
   /**
-   * Determines whether a dragging link originating from {@link fromSlot} may connect here.
+   * Determines whether a dragging link originating from `fromSlot` may connect here.
    *
-   * Validates type compatibility via {@link LiteGraph.isValidConnection} for output slots and
-   * {@link SubgraphInput} boundary nodes.
+   * Validates type compatibility via `LiteGraph.isValidConnection` for output slots and
+   * `SubgraphInput` boundary nodes.
    * @param fromSlot The slot at the free end of the link being dragged.
    * @returns `true` if the connection types are compatible.
    */

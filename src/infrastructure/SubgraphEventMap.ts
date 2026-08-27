@@ -5,20 +5,20 @@ import type { SubgraphOutput } from "@/subgraph/SubgraphOutput"
 import type { IBaseWidget } from "@/types/widgets"
 
 /**
- * Strongly-typed event map for {@link Subgraph} IO and widget promotion lifecycle.
+ * Strongly-typed event map for `Subgraph` IO and widget promotion lifecycle.
  *
- * Extends {@link LGraphEventMap} with events fired when subgraph inputs/outputs are added,
+ * Extends `LGraphEventMap` with events fired when subgraph inputs/outputs are added,
  * removed, or renamed, and when internal widgets are promoted to the subgraph node surface.
  *
- * Listen on {@link Subgraph.events}.
- * @see {@link Subgraph}
- * @see {@link LGraphEventMap}
+ * Listen on `Subgraph.events`.
+ * @see `Subgraph`
+ * @see `LGraphEventMap`
  */
 export interface SubgraphEventMap extends LGraphEventMap {
   /**
    * A new subgraph input slot is about to be created.
    *
-   * Dispatched before the {@link SubgraphInput} instance is added; listeners may observe or
+   * Dispatched before the `SubgraphInput` instance is added; listeners may observe or
    * validate the proposed name and type.
    */
   "adding-input": {
@@ -74,7 +74,7 @@ export interface SubgraphEventMap extends LGraphEventMap {
   }
 
   /**
-   * An internal node widget was promoted to appear on the {@link SubgraphNode}.
+   * An internal node widget was promoted to appear on the `SubgraphNode`.
    *
    * Allows UI layers to expose widget controls on the collapsed subgraph instance.
    */

@@ -13,12 +13,12 @@ import type { CanvasPointerEvent } from "@/types/events"
 import type { IWidget } from "@/types/widgets"
 
 /**
- * Strongly-typed event map for {@link LinkConnector} drag-and-drop link operations.
+ * Strongly-typed event map for `LinkConnector` drag-and-drop link operations.
  *
- * Emitted on {@link LinkConnector.events} as the user moves, connects, or cancels links on the
- * canvas. {@link RenderLink} implementations dispatch connection events after successful drops.
- * @see {@link LinkConnector}
- * @see {@link RenderLink}
+ * Emitted on `LinkConnector.events` as the user moves, connects, or cancels links on the
+ * canvas. `RenderLink` implementations dispatch connection events after successful drops.
+ * @see `LinkConnector`
+ * @see `RenderLink`
  */
 export interface LinkConnectorEventMap {
   /**
@@ -30,7 +30,7 @@ export interface LinkConnectorEventMap {
   /**
    * Dispatched immediately before dropped links are committed.
    *
-   * Returning `false` from a listener cancels the drop (see {@link CustomEventTarget.dispatch}).
+   * Returning `false` from a listener cancels the drop (see `CustomEventTarget.dispatch`).
    */
   "before-drop-links": {
     /** Render-link proxies representing every link segment being dropped. */
@@ -58,19 +58,19 @@ export interface LinkConnectorEventMap {
   "output-moved": MovingOutputLink | FloatingRenderLink
 
   /**
-   * A new {@link LLink} was created during the drag operation.
+   * A new `LLink` was created during the drag operation.
    *
    * Detail may be `null` or `undefined` when creation was attempted but no link resulted.
    */
   "link-created": LLink | null | undefined
 
-  /** The user dropped links onto a {@link Reroute}. */
+  /** The user dropped links onto a `Reroute`. */
   "dropped-on-reroute": {
     reroute: Reroute
     event: CanvasPointerEvent
   }
 
-  /** The user dropped links onto a {@link LGraphNode} (but not necessarily onto a slot). */
+  /** The user dropped links onto a `LGraphNode` (but not necessarily onto a slot). */
   "dropped-on-node": {
     node: LGraphNode
     event: CanvasPointerEvent

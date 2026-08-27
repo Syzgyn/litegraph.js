@@ -20,9 +20,9 @@ function valueFromPointer(
  * `options.min` and `options.max`.
  *
  * Click and drag map pointer X position to a value along the bar. Optional
- * {@link IWidgetGradientSliderOptions.gradient_stops} may be supplied for consumers that render
+ * `IWidgetGradientSliderOptions.gradient_stops` may be supplied for consumers that render
  * gradient styling outside the canvas.
- * @see {@link IGradientSliderWidget}
+ * @see `IGradientSliderWidget`
  */
 export class GradientSliderWidget extends BaseWidget<IGradientSliderWidget> implements IGradientSliderWidget {
   /** Widget type discriminator; always `"gradientslider"`. */

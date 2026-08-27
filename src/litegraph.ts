@@ -1,12 +1,12 @@
 /**
  * Public entry point for the litegraph.js library.
  *
- * Re-exports the graph editor API — core classes ({@link LGraph}, {@link LGraphCanvas},
- * {@link LGraphNode}), canvas utilities, widgets, subgraph support, and shared types.
+ * Re-exports the graph editor API — core classes (`LGraph`, `LGraphCanvas`,
+ * `LGraphNode`), canvas utilities, widgets, subgraph support, and shared types.
  * Import from this module (or the package root) rather than individual source files.
  *
- * The singleton {@link LiteGraph} global holds runtime configuration, registered node types,
- * and legacy helpers. {@link loadPolyfills} is invoked automatically on import.
+ * The singleton `LiteGraph` global holds runtime configuration, registered node types,
+ * and legacy helpers. `loadPolyfills` is invoked automatically on import.
  */
 
 import type { ContextMenu } from "./ContextMenu"
@@ -43,19 +43,19 @@ loadPolyfills()
 // Type definitions for litegraph.js 0.7.0
 // Project: litegraph.js
 // Definitions by: NateScarlet <https://github.com/NateScarlet>
-/** @deprecated Use {@link Point} instead. */
+/** @deprecated Use `Point` instead. */
 export type Vector2 = Point
 
 /**
  * Legacy four-number tuple used in litegraph.js 0.7.0 type definitions.
- * @deprecated Use {@link Rect} (`[x, y, width, height]`) instead.
+ * @deprecated Use `Rect` (`[x, y, width, height]`) instead.
  */
 export type Vector4 = [number, number, number, number]
 
 /**
- * Describes a single entry in a {@link ContextMenu} menu list.
+ * Describes a single entry in a `ContextMenu` menu list.
  * @remarks Backwards-compatibility interface retained from litegraph.js 0.7.0.
- * Prefer {@link IContextMenuValue} for new code.
+ * Prefer `IContextMenuValue` for new code.
  */
 export interface IContextMenuItem {
   /** Primary label text shown for the menu entry. */
@@ -77,12 +77,12 @@ export interface IContextMenuItem {
 }
 
 /**
- * Callback invoked when a legacy {@link IContextMenuItem} entry is selected.
+ * Callback invoked when a legacy `IContextMenuItem` entry is selected.
  * @param value The menu item that was clicked.
  * @param options The options object passed when the menu was created.
  * @param event The originating mouse event.
  * @param parentMenu The parent menu, if this item opened a submenu.
- * @param node The {@link LGraphNode} associated with the menu, when provided via options.
+ * @param node The `LGraphNode` associated with the menu, when provided via options.
  * @returns Return `true` to prevent the menu from closing automatically.
  */
 export type ContextMenuEventListener = (
@@ -102,7 +102,7 @@ export interface LinkReleaseContext {
   node_to?: LGraphNode
   /** Node that originates the released link, when dragging from an output. */
   node_from?: LGraphNode
-  /** Slot on {@link node_from} from which the link was dragged. */
+  /** Slot on `node_from` from which the link was dragged. */
   slot_from: INodeSlot
   /** When set, filters candidate input slot types during release handling. */
   type_filter_in?: string
@@ -112,7 +112,7 @@ export interface LinkReleaseContext {
 
 /**
  * Extended link-release context that includes all links being dragged as a batch.
- * @see {@link LinkReleaseContext}
+ * @see `LinkReleaseContext`
  */
 export interface LinkReleaseContextExtended {
   /** The links currently being moved or created by the user. */
@@ -120,16 +120,16 @@ export interface LinkReleaseContextExtended {
 }
 
 /**
- * DOM custom event dispatched by {@link LGraphCanvas} for canvas-level interactions.
+ * DOM custom event dispatched by `LGraphCanvas` for canvas-level interactions.
  *
- * The event `detail` payload is typed as {@link CanvasEventDetail}.
+ * The event `detail` payload is typed as `CanvasEventDetail`.
  */
 export interface LiteGraphCanvasEvent extends CustomEvent<CanvasEventDetail> {}
 
 /**
- * Constructor signature and static metadata for a registered {@link LGraphNode} subclass.
+ * Constructor signature and static metadata for a registered `LGraphNode` subclass.
  *
- * Used by {@link LiteGraph.registerNodeType} and node search/create flows to describe
+ * Used by `LiteGraph.registerNodeType` and node search/create flows to describe
  * default appearance and behaviour before an instance is constructed.
  */
 export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {

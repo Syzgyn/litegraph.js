@@ -2,8 +2,8 @@
  * Core constants used by LiteGraph, primarily for subgraph boundary nodes.
  *
  * This entire module is re-exported as `Constants` from the package barrel.
- * @see {@link SubgraphInputNode}
- * @see {@link SubgraphOutputNode}
+ * @see `SubgraphInputNode`
+ * @see `SubgraphOutputNode`
  */
 
 /** ID of the virtual input node of a subgraph. */

@@ -51,7 +51,7 @@ export const test = baseTest.extend<LitegraphFixtures>({
   },
 })
 
-/** Test that use {@link DirtyFixtures}. One test per file. */
+/** Test that use `DirtyFixtures`. One test per file. */
 export const dirtyTest = test.extend<DirtyFixtures>({
   basicSerialisableGraph: async ({}, use) => {
     if (!basicSerialisableGraph.nodes) throw new Error("Invalid test object")

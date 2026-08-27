@@ -24,8 +24,8 @@ function toArray(values: Values): string[] {
  *
  * Supports stepped arrow buttons, centre-click context menu selection, and legacy `values` shapes
  * (array, record map, or deprecated function). Numeric indices are used when `values` is a record.
- * @see {@link IComboWidget}
- * @see {@link IStringComboWidget}
+ * @see `IComboWidget`
+ * @see `IStringComboWidget`
  */
 export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWidget> implements IComboWidget {
   /** Widget type discriminator; always `"combo"`. */
@@ -61,7 +61,7 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   }
 
   /**
-   * Checks if the value is {@link Array.at at} the given index in the combo list.
+   * Checks if the value is `Array.at at` the given index in the combo list.
    * @param increment `true` if checking the use of the increment button, `false` for decrement
    * @returns `true` if the value is at the given index, otherwise `false`.
    */
@@ -122,7 +122,7 @@ export class ComboWidget extends BaseSteppedWidget<IStringComboWidget | IComboWi
   }
 
   /**
-   * Left/right arrows step the value; centre click opens a {@link LiteGraph.ContextMenu} dropdown.
+   * Left/right arrows step the value; centre click opens a `LiteGraph.ContextMenu` dropdown.
    * @param options Pointer position is mapped to arrow zones or menu invocation.
    */
   override onClick({ e, node, canvas }: WidgetEventOptions) {

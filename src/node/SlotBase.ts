@@ -10,15 +10,15 @@ import { Rectangle } from "@/infrastructure/Rectangle"
  *
  * Holds the shared serialisable properties (name, type, shape, colours, etc.) and provides
  * connection-state queries and colour resolution. Concrete rendering and connection logic
- * live in {@link NodeSlot} and its subclasses.
- * @see {@link NodeInputSlot}
- * @see {@link NodeOutputSlot}
+ * live in `NodeSlot` and its subclasses.
+ * @see `NodeInputSlot`
+ * @see `NodeOutputSlot`
  */
 export abstract class SlotBase implements INodeSlot {
   /** Internal slot identifier used for linking and serialisation. */
   name: string
 
-  /** Localised display name, shown in the UI when {@link label} is not set. */
+  /** Localised display name, shown in the UI when `label` is not set. */
   localized_name?: string
 
   /** Optional user-facing label override for rendering. */
@@ -80,8 +80,8 @@ export abstract class SlotBase implements INodeSlot {
   /**
    * Resolves the fill colour to use when rendering this slot.
    *
-   * Returns {@link color_on} or {@link color_off} when set; otherwise delegates to
-   * {@link DefaultConnectionColors} based on {@link isConnected}.
+   * Returns `color_on` or `color_off` when set; otherwise delegates to
+   * `DefaultConnectionColors` based on `isConnected`.
    * @param colorContext Theme colours for connected and disconnected slot states.
    * @returns The canvas colour string to use for this slot's fill.
    */

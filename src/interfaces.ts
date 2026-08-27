@@ -18,7 +18,7 @@ import type { CanvasPointerEvent } from "@/types/events"
 export type Dictionary<T> = { [key: string]: T }
 
 /**
- * Allows all properties of {@link T} to be `null`.
+ * Allows all properties of `T` to be `null`.
  *
  * Similar to `Partial<T>`, but uses `null` instead of `undefined` for absent values.
  */
@@ -27,30 +27,30 @@ export type NullableProperties<T> = {
 }
 
 /**
- * If {@link T} is `null` or `undefined`, evaluates to {@link Result}. Otherwise, evaluates to {@link T}.
+ * If `T` is `null` or `undefined`, evaluates to `Result`. Otherwise, evaluates to `T`.
  *
  * Useful for functions that return e.g. `undefined` when a param is nullish.
  */
 export type WhenNullish<T, Result> = T & {} | (T extends null ? Result : T extends undefined ? Result : T & {})
 
 /**
- * A type with each of the {@link Properties} made optional.
+ * A type with each of the `Properties` made optional.
  * @template T - The base object type.
- * @template Properties - Keys of {@link T} to make optional.
+ * @template Properties - Keys of `T` to make optional.
  */
 export type OptionalProps<T, Properties extends keyof T> = Omit<T, Properties> & { [K in Properties]?: T[K] }
 
 /**
- * A type with each of the {@link Properties} marked as required.
+ * A type with each of the `Properties` marked as required.
  * @template T - The base object type.
- * @template Properties - Keys of {@link T} to make required.
+ * @template Properties - Keys of `T` to make required.
  */
 export type RequiredProps<T, Properties extends keyof T> = Omit<T, Properties> & { [K in Properties]-?: T[K] }
 
 /**
  * Bitwise AND intersection of two types.
  *
- * Returns a new, non-union type that includes only properties that exist on both {@link T1} and {@link T2}.
+ * Returns a new, non-union type that includes only properties that exist on both `T1` and `T2`.
  */
 export type SharedIntersection<T1, T2> = {
   [P in keyof T1 as P extends keyof T2 ? P : never]: T1[P]
@@ -61,7 +61,7 @@ export type SharedIntersection<T1, T2> = {
 /**
  * Any valid 2D canvas fill or stroke colour.
  *
- * May be a CSS colour string, a {@link CanvasGradient}, or a {@link CanvasPattern}.
+ * May be a CSS colour string, a `CanvasGradient`, or a `CanvasPattern`.
  */
 export type CanvasColour = string | CanvasGradient | CanvasPattern
 
@@ -72,7 +72,7 @@ export interface ColorStop {
 }
 
 /**
- * Any object that has a {@link boundingRect}.
+ * Any object that has a `boundingRect`.
  */
 export interface HasBoundingRect {
   /**
@@ -80,9 +80,9 @@ export interface HasBoundingRect {
    *
    * Used for various calculations, such as overlap, selective rendering, and click checks.
    * For most items, this is cached position & size as `x, y, width, height`.
-   * Some items (such as nodes and slots) may extend above and/or to the left of their {@link pos}.
+   * Some items (such as nodes and slots) may extend above and/or to the left of their `pos`.
    * @readonly
-   * @see {@link move}
+   * @see `move`
    */
   readonly boundingRect: ReadOnlyRect
 }
@@ -99,7 +99,7 @@ export interface Parent<TChild> {
 /**
  * An object that can be positioned, selected, and moved on the graph canvas.
  *
- * May contain other {@link Positionable} objects (e.g. group contents).
+ * May contain other `Positionable` objects (e.g. group contents).
  */
 export interface Positionable extends Parent<Positionable>, HasBoundingRect {
   /** Unique identifier for this item within its graph. */
@@ -133,7 +133,7 @@ export interface Positionable extends Parent<Positionable>, HasBoundingRect {
   /**
    * Snaps this item to a grid.
    *
-   * Position values are rounded to the nearest multiple of {@link snapTo}.
+   * Position values are rounded to the nearest multiple of `snapTo`.
    * @param snapTo The size of the grid to align to
    * @returns `true` if it moved, or `false` if the snap was rejected (e.g. `pinned`)
    */
@@ -146,8 +146,8 @@ export interface Positionable extends Parent<Positionable>, HasBoundingRect {
 }
 
 /**
- * A colour preset used to customise the appearance of {@link LGraphNode} or {@link LGraphGroup}.
- * @see {@link LGraphCanvas.node_colors}
+ * A colour preset used to customise the appearance of `LGraphNode` or `LGraphGroup`.
+ * @see `LGraphCanvas.node_colors`
  */
 export interface ColorOption {
   /** Primary foreground / title-bar colour. */
@@ -159,7 +159,7 @@ export interface ColorOption {
 }
 
 /**
- * An object whose colours can be set from a {@link ColorOption} preset.
+ * An object whose colours can be set from a `ColorOption` preset.
  */
 export interface IColorable {
   /**
@@ -194,7 +194,7 @@ export interface IPinnable {
 /**
  * Read-only view of a graph's link and reroute collections.
  *
- * Implemented by {@link LGraph} and {@link Subgraph} for safe traversal without mutation.
+ * Implemented by `LGraph` and `Subgraph` for safe traversal without mutation.
  */
 export interface ReadonlyLinkNetwork {
   /** All permanent links in the graph, keyed by link ID. */
@@ -235,7 +235,7 @@ export interface ReadonlyLinkNetwork {
 /**
  * A mutable graph network containing links, reroutes, and nodes.
  *
- * Extends {@link ReadonlyLinkNetwork} with write access to link collections
+ * Extends `ReadonlyLinkNetwork` with write access to link collections
  * and floating-link management.
  */
 export interface LinkNetwork extends ReadonlyLinkNetwork {
@@ -262,7 +262,7 @@ export interface LinkNetwork extends ReadonlyLinkNetwork {
 /**
  * Provides hit-testing helpers to locate graph items at canvas coordinates.
  *
- * Implemented by {@link LGraph} and used by {@link LGraphCanvas} during pointer interaction.
+ * Implemented by `LGraph` and used by `LGraphCanvas` during pointer interaction.
  */
 export interface ItemLocator {
   /**
@@ -297,10 +297,10 @@ export interface LinkSegment {
 
   /** The last canvas 2D path that was used to render this segment. */
   path?: Path2D
-  /** Centre point of the {@link path}. Calculated during render only — can be inaccurate. */
+  /** Centre point of the `path`. Calculated during render only — can be inaccurate. */
   readonly pathCentre: Float32Array
   /**
-   * Y-forward angle along the {@link path} from its centre point, in radians.
+   * Y-forward angle along the `path` from its centre point, in radians.
    * `undefined` if using circles for link centres.
    * Calculated during render only — can be inaccurate.
    */
@@ -319,7 +319,7 @@ export interface LinkSegment {
 }
 
 /**
- * Discriminated union helper: exactly one of {@link input} or {@link output} is set
+ * Discriminated union helper: exactly one of `input` or `output` is set
  * when describing a slot found during hit-testing or link dragging.
  */
 export interface IInputOrOutput {
@@ -332,7 +332,7 @@ export interface IInputOrOutput {
 /**
  * Result of hit-testing a node slot at a pointer position.
  *
- * Extends {@link IInputOrOutput} with the slot index and rendered connection point.
+ * Extends `IInputOrOutput` with the slot index and rendered connection point.
  */
 export interface IFoundSlot extends IInputOrOutput {
   /** Index of the slot on its parent node. */
@@ -387,28 +387,28 @@ type TypedBigIntArrays = BigInt64Array | BigUint64Array
 /**
  * A read-only view of a typed array with mutating methods removed.
  *
- * Used for {@link ReadOnlyPoint}, {@link ReadOnlySize}, and {@link ReadOnlyRect} to
+ * Used for `ReadOnlyPoint`, `ReadOnlySize`, and `ReadOnlyRect` to
  * prevent accidental in-place modification of shared geometry buffers.
  */
 export type ReadOnlyTypedArray<T extends TypedArrays | TypedBigIntArrays> =
   Omit<Readonly<T>, "fill" | "copyWithin" | "reverse" | "set" | "sort" | "subarray">
 
 /**
- * Union of property names on {@link T} whose values extend {@link Match}.
+ * Union of property names on `T` whose values extend `Match`.
  * @template T - The object type to inspect.
  * @template Match - The value type to filter properties by.
  */
 export type KeysOfType<T, Match> = Exclude<{ [P in keyof T]: T[P] extends Match ? P : never }[keyof T], undefined>
 
 /**
- * A new type containing only the properties of {@link T} whose values extend {@link Match}.
+ * A new type containing only the properties of `T` whose values extend `Match`.
  * @template T - The object type to filter.
  * @template Match - The value type to keep.
  */
 export type PickByType<T, Match> = { [P in keyof T]: Extract<T[P], Match> }
 
 /**
- * The names of all (optional) methods and functions in {@link T}.
+ * The names of all (optional) methods and functions in `T`.
  *
  * Useful for extracting callback property names from interface types.
  */
@@ -452,13 +452,13 @@ export interface INodeSlot extends HasBoundingRect {
   name: string
   /**
    * The localized name of the slot to display in the UI.
-   * Takes higher priority than {@link name} if set.
+   * Takes higher priority than `name` if set.
    * Will be included in the serialized data.
    */
   localized_name?: string
   /**
    * The name of the slot to display in the UI, modified by the user.
-   * Takes higher priority than {@link localized_name} if set.
+   * Takes higher priority than `localized_name` if set.
    * Will be included in the serialized data.
    */
   label?: string
@@ -497,7 +497,7 @@ export interface INodeSlot extends HasBoundingRect {
 /**
  * Runtime flags that control node behaviour and appearance.
  *
- * Stored on {@link LGraphNode} and included in serialisation when set.
+ * Stored on `LGraphNode` and included in serialisation when set.
  */
 export interface INodeFlags {
   /** When `true`, repeated output values are not re-emitted each execution tick. */
@@ -508,7 +508,7 @@ export interface INodeFlags {
   pinned?: boolean
   /** When `true`, the node is rendered in collapsed (compact) form. */
   collapsed?: boolean
-  /** Configuration setting for {@link LGraphNode.connectInputToOutput} */
+  /** Configuration setting for `LGraphNode.connectInputToOutput` */
   keepAllLinksOnBypass?: boolean
   /** Node is in ghost placement mode (semi-transparent, following cursor) */
   ghost?: boolean
@@ -564,12 +564,12 @@ export interface INodeOutputSlot extends INodeSlot {
 /**
  * Describes an in-progress or moving link during pointer interaction.
  *
- * Used by {@link LGraphCanvas.connecting_links} and the {@link LinkConnector} system.
+ * Used by `LGraphCanvas.connecting_links` and the `LinkConnector` system.
  */
 export interface ConnectingLink extends IInputOrOutput {
   /** The node at the fixed end of the connection being dragged. */
   node: LGraphNode
-  /** Slot index on {@link node} at the fixed end. */
+  /** Slot index on `node` at the fixed end. */
   slot: number
   /** Canvas position where the free end of the link is rendered. */
   pos: Point
@@ -579,7 +579,7 @@ export interface ConnectingLink extends IInputOrOutput {
   afterRerouteId?: RerouteId
   /** The first reroute in the chain, if any. */
   firstRerouteId?: RerouteId
-  /** The existing {@link LLink} being moved, or `undefined` if creating a new link. */
+  /** The existing `LLink` being moved, or `undefined` if creating a new link. */
   link?: LLink
 }
 
@@ -589,7 +589,7 @@ interface IContextMenuBase {
 }
 
 /**
- * Options passed when constructing a {@link ContextMenu}.
+ * Options passed when constructing a `ContextMenu`.
  * @template TValue - The value type associated with menu entries.
  * @template TExtra - Arbitrary extra data attached to the menu instance.
  */
@@ -625,7 +625,7 @@ export interface IContextMenuOptions<TValue = unknown, TExtra = unknown> extends
 }
 
 /**
- * A single entry in a {@link ContextMenu}.
+ * A single entry in a `ContextMenu`.
  * @template TValue - The value returned when this entry is selected.
  * @template TExtra - Extra data forwarded to the entry callback.
  * @template TCallbackValue - Value type passed to the entry's own callback.
@@ -635,7 +635,7 @@ export interface IContextMenuValue<TValue = unknown, TExtra = unknown, TCallback
   value?: TValue
   /** Display text shown in the menu. */
   content: string | undefined
-  /** When `true`, a submenu arrow is shown and {@link submenu} is opened on click. */
+  /** When `true`, a submenu arrow is shown and `submenu` is opened on click. */
   has_submenu?: boolean
   /** When `true`, the entry is greyed out and not selectable. */
   disabled?: boolean
@@ -659,11 +659,11 @@ export interface IContextMenuValue<TValue = unknown, TExtra = unknown, TCallback
 }
 
 /**
- * Configuration for a submenu attached to a {@link IContextMenuValue} entry.
+ * Configuration for a submenu attached to a `IContextMenuValue` entry.
  * @template TValue - The value type for submenu entries.
  */
 export interface IContextMenuSubmenu<TValue = unknown> extends IContextMenuOptions<TValue> {
-  /** Constructor arguments for the nested {@link ContextMenu}. */
+  /** Constructor arguments for the nested `ContextMenu`. */
   options: ConstructorParameters<typeof ContextMenu<TValue>>[0]
 }
 
@@ -712,7 +712,7 @@ export interface ISubgraphInput extends INodeInputSlot {
 }
 
 /**
- * Shorthand for {@link Parameters} of optional callbacks.
+ * Shorthand for `Parameters` of optional callbacks.
  * @example
  * ```ts
  * const { onClick } = CustomClass.prototype
@@ -727,8 +727,8 @@ export type CallbackParams<T extends ((...args: any) => any) | undefined> =
   Parameters<Exclude<T, undefined>>
 
 /**
- * Shorthand for {@link ReturnType} of optional callbacks.
- * @see {@link CallbackParams}
+ * Shorthand for `ReturnType` of optional callbacks.
+ * @see `CallbackParams`
  */
 export type CallbackReturn<T extends ((...args: any) => any) | undefined> = ReturnType<Exclude<T, undefined>>
 

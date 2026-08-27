@@ -12,7 +12,7 @@ import { Alignment, hasFlag, LinkDirection } from "./types/globalEnums"
  * Calculates the distance between two points (2D vector)
  * @param a Point a as `x, y`
  * @param b Point b as `x, y`
- * @returns Distance between point {@link a} & {@link b}
+ * @returns Distance between point `a` & `b`
  */
 export function distance(a: ReadOnlyPoint, b: ReadOnlyPoint): number {
   return Math.sqrt(
@@ -27,7 +27,7 @@ export function distance(a: ReadOnlyPoint, b: ReadOnlyPoint): number {
  * @param y1 Origin point Y
  * @param x2 Destination point X
  * @param y2 Destination point Y
- * @returns Distance2 (squared) between point [{@link x1}, {@link y1}] & [{@link x2}, {@link y2}]
+ * @returns Distance2 (squared) between point [`x1`, `y1`] & [`x2`, `y2`]
  */
 export function dist2(x1: number, y1: number, x2: number, y2: number): number {
   return ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1))
@@ -36,7 +36,7 @@ export function dist2(x1: number, y1: number, x2: number, y2: number): number {
 /**
  * Determines whether a point is inside a rectangle.
  *
- * Otherwise identical to {@link isInsideRectangle}, it also returns `true` if `x` equals `left` or `y` equals `top`.
+ * Otherwise identical to `isInsideRectangle`, it also returns `true` if `x` equals `left` or `y` equals `top`.
  * @param x Point x
  * @param y Point y
  * @param left Rect x
@@ -60,7 +60,7 @@ export function isInRectangle(
 }
 
 /**
- * Determines whether a {@link Point} is inside a {@link Rect}.
+ * Determines whether a `Point` is inside a `Rect`.
  * @param point The point to check, as `x, y`
  * @param rect The rectangle, as `x, y, width, height`
  * @returns `true` if the point is inside the rect, otherwise `false`
@@ -73,7 +73,7 @@ export function isPointInRect(point: ReadOnlyPoint, rect: ReadOnlyRect): boolean
 }
 
 /**
- * Determines whether the point represented by {@link x}, {@link y} is inside a {@link Rect}.
+ * Determines whether the point represented by `x`, `y` is inside a `Rect`.
  * @param x X co-ordinate of the point to check
  * @param y Y co-ordinate of the point to check
  * @param rect The rectangle, as `x, y, width, height`
@@ -91,7 +91,7 @@ export function isInRect(x: number, y: number, rect: ReadOnlyRect): boolean {
  *
  * This is the original litegraph implementation.  It returns `false` if `x` is equal to `left`, or `y` is equal to `top`.
  * @deprecated
- * Use {@link isInRectangle} to match inclusive of top left.
+ * Use `isInRectangle` to match inclusive of top left.
  * This function returns a false negative when an integer point (e.g. pixel) is on the leftmost or uppermost edge of a rectangle.
  * @param x Point x
  * @param y Point y
@@ -148,10 +148,10 @@ export function getCentre(rect: ReadOnlyRect): Point {
 }
 
 /**
- * Determines if rectangle {@link a} contains the centre point of rectangle {@link b}.
+ * Determines if rectangle `a` contains the centre point of rectangle `b`.
  * @param a Container rectangle A as `x, y, width, height`
  * @param b Sub-rectangle B as `x, y, width, height`
- * @returns `true` if {@link a} contains most of {@link b}, otherwise `false`
+ * @returns `true` if `a` contains most of `b`, otherwise `false`
  */
 export function containsCentre(a: ReadOnlyRect, b: ReadOnlyRect): boolean {
   const centreX = b[0] + (b[2] * 0.5)
@@ -160,10 +160,10 @@ export function containsCentre(a: ReadOnlyRect, b: ReadOnlyRect): boolean {
 }
 
 /**
- * Determines if rectangle {@link a} wholly contains rectangle {@link b}.
+ * Determines if rectangle `a` wholly contains rectangle `b`.
  * @param a Container rectangle A as `x, y, width, height`
  * @param b Sub-rectangle B as `x, y, width, height`
- * @returns `true` if {@link a} wholly contains {@link b}, otherwise `false`
+ * @returns `true` if `a` wholly contains `b`, otherwise `false`
  */
 export function containsRect(a: ReadOnlyRect, b: ReadOnlyRect): boolean {
   const aRight = a[0] + a[2]
@@ -184,10 +184,10 @@ export function containsRect(a: ReadOnlyRect, b: ReadOnlyRect): boolean {
 }
 
 /**
- * Adds an offset in the specified direction to {@link out}
+ * Adds an offset in the specified direction to `out`
  * @param amount Amount of offset to add
  * @param direction Direction to add the offset to
- * @param out The {@link Point} to add the offset to
+ * @param out The `Point` to add the offset to
  */
 export function addDirectionalOffset(
   amount: number,
@@ -215,7 +215,7 @@ export function addDirectionalOffset(
  * Rotates an offset in 90° increments.
  *
  * Swaps/flips axis values of a 2D vector offset - effectively rotating
- * {@link offset} by 90°
+ * `offset` by 90°
  * @param offset The zero-based offset to rotate
  * @param from Direction to rotate from
  * @param to Direction to rotate to
@@ -285,7 +285,7 @@ export function rotateLink(
  * Check if a point is to to the left or right of a line.
  * Project a line from lineStart -> lineEnd.  Determine if point is to the left
  * or right of that projection.
- * {@link https://www.geeksforgeeks.org/orientation-3-ordered-points/}
+ * `https://www.geeksforgeeks.org/orientation-3-ordered-points/`
  * @param lineStart The start point of the line
  * @param lineEnd The end point of the line
  * @param x X co-ordinate of the point to check
@@ -332,9 +332,9 @@ export function findPointOnCurve(
 }
 
 /**
- * Computes an axis-aligned bounding rectangle that encloses all {@link objects}.
+ * Computes an axis-aligned bounding rectangle that encloses all `objects`.
  *
- * Each object must expose a {@link HasBoundingRect.boundingRect}. When no finite bounds
+ * Each object must expose a `HasBoundingRect.boundingRect`. When no finite bounds
  * can be derived (empty iterable or non-finite coordinates), returns `null`.
  * @param objects Iterable of positionable items to measure.
  * @param padding Extra space added on all sides of the computed bounds. Default: `10`.
@@ -364,7 +364,7 @@ export function createBounds(
 }
 
 /**
- * Snaps the provided {@link Point} or {@link Rect} ({@link pos}) to a grid of size {@link snapTo}.
+ * Snaps the provided `Point` or `Rect` (`pos`) to a grid of size `snapTo`.
  * @param pos The point that will be snapped
  * @param snapTo The value to round up/down by (multiples thereof)
  * @returns `true` if snapTo is truthy, otherwise `false`
@@ -383,10 +383,10 @@ export function snapPoint(
 }
 
 /**
- * Expands a {@link Rect} outwards so that all four edges lie on a grid of size
- * {@link snapTo}.
+ * Expands a `Rect` outwards so that all four edges lie on a grid of size
+ * `snapTo`.
  *
- * Unlike {@link snapPoint}, the rect is only ever grown, never shrunk, so
+ * Unlike `snapPoint`, the rect is only ever grown, never shrunk, so
  * anything it contained before the call is still contained afterwards.
  * @param rect The rect that will be expanded, modified in place
  * @param snapTo The grid size to expand out to (multiples thereof)
@@ -408,17 +408,17 @@ export function expandRectToGrid(rect: Rect, snapTo: number): boolean {
 }
 
 /**
- * Aligns a {@link Rect} relative to the edges or centre of a {@link container} rectangle.
+ * Aligns a `Rect` relative to the edges or centre of a `container` rectangle.
  *
- * With no {@link inset}, the element will be placed on the interior of the {@link container},
- * with their edges lined up on the {@link anchors}.  A positive {@link inset} moves the element towards the centre,
- * negative will push it outside the {@link container}.
+ * With no `inset`, the element will be placed on the interior of the `container`,
+ * with their edges lined up on the `anchors`.  A positive `inset` moves the element towards the centre,
+ * negative will push it outside the `container`.
  * @param rect The bounding rect of the element to align.
  * If using the element's pos/size backing store, this function will move the element.
  * @param anchors The direction(s) to anchor the element to
  * @param container The rectangle inside which to align the element
- * @param inset Relative offset from each {@link anchors} edge, with positive always leading to the centre, as an `[x, y]` point
- * @returns The original {@link rect}, modified in place.
+ * @param inset Relative offset from each `anchors` edge, with positive always leading to the centre, as an `[x, y]` point
+ * @returns The original `rect`, modified in place.
  */
 export function alignToContainer(
   rect: Rect,
@@ -451,17 +451,17 @@ export function alignToContainer(
 }
 
 /**
- * Aligns a {@link Rect} relative to the edges of {@link other}.
+ * Aligns a `Rect` relative to the edges of `other`.
  *
- * With no {@link outset}, the element will be placed on the exterior of the {@link other},
- * with their edges lined up on the {@link anchors}.  A positive {@link outset} moves the element away from the {@link other},
- * negative will push it inside the {@link other}.
+ * With no `outset`, the element will be placed on the exterior of the `other`,
+ * with their edges lined up on the `anchors`.  A positive `outset` moves the element away from the `other`,
+ * negative will push it inside the `other`.
  * @param rect The bounding rect of the element to align.
  * If using the element's pos/size backing store, this function will move the element.
  * @param anchors The direction(s) to anchor the element to
- * @param other The rectangle to align {@link rect} to
- * @param outset Relative offset from each {@link anchors} edge, with positive always moving away from the centre of the {@link other}, as an `[x, y]` point
- * @returns The original {@link rect}, modified in place.
+ * @param other The rectangle to align `rect` to
+ * @param outset Relative offset from each `anchors` edge, with positive always moving away from the centre of the `other`, as an `[x, y]` point
+ * @returns The original `rect`, modified in place.
  */
 export function alignOutsideContainer(
   rect: Rect,
@@ -494,7 +494,7 @@ export function alignOutsideContainer(
 }
 
 /**
- * Clamps {@link value} to the inclusive range `[min, max]`.
+ * Clamps `value` to the inclusive range `[min, max]`.
  * @param value The number to clamp.
  * @param min Lower bound (inclusive).
  * @param max Upper bound (inclusive).

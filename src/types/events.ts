@@ -2,7 +2,7 @@
  * Event type definitions for canvas pointer interactions.
  *
  * These interfaces extend native DOM events with graph-space coordinates and workarounds
- * for browser inconsistencies. They are attached by {@link LGraphCanvas.adjustMouseEvent}
+ * for browser inconsistencies. They are attached by `LGraphCanvas.adjustMouseEvent`
  * before dispatching to node and canvas event handlers.
  */
 
@@ -13,7 +13,7 @@ import type { LinkReleaseContextExtended } from "../litegraph"
 /**
  * Graph-space coordinates added to canvas pointer events.
  *
- * Used by {@link CanvasPointerEvent} and related types. Property names are part of the public API.
+ * Used by `CanvasPointerEvent` and related types. Property names are part of the public API.
  */
 export interface ICanvasPosition {
   /** X co-ordinate of the event, in graph space (NOT canvas space). */
@@ -36,13 +36,13 @@ export interface IDeltaPosition {
  */
 export interface IOffsetWorkaround {
   /**
-   * Reliable equivalent of {@link MouseEvent.offsetX}.
+   * Reliable equivalent of `MouseEvent.offsetX`.
    *
    * Required (as of 2024-12-31) to support Firefox, which always returns `0` for the native property.
    */
   safeOffsetX: number
   /**
-   * Reliable equivalent of {@link MouseEvent.offsetY}.
+   * Reliable equivalent of `MouseEvent.offsetY`.
    *
    * Required (as of 2024-12-31) to support Firefox, which always returns `0` for the native property.
    */
@@ -51,7 +51,7 @@ export interface IOffsetWorkaround {
 
 /**
  * All properties added when converting a native pointer event to a canvas pointer event
- * via {@link LGraphCanvas.adjustMouseEvent}.
+ * via `LGraphCanvas.adjustMouseEvent`.
  */
 export type CanvasPointerExtensions = ICanvasPosition & IDeltaPosition & IOffsetWorkaround
 
@@ -62,14 +62,14 @@ interface LegacyMouseEvent {
 }
 
 /**
- * A {@link PointerEvent} enriched with graph-space coordinates and pointer deltas.
+ * A `PointerEvent` enriched with graph-space coordinates and pointer deltas.
  *
- * The primary event type used by {@link LGraphCanvas} for all pointer interactions.
+ * The primary event type used by `LGraphCanvas` for all pointer interactions.
  */
 export interface CanvasPointerEvent extends PointerEvent, CanvasMouseEvent {}
 
 /**
- * A {@link MouseEvent} enriched with graph-space coordinates and pointer deltas.
+ * A `MouseEvent` enriched with graph-space coordinates and pointer deltas.
  *
  * Used where legacy mouse event handling is still required.
  */
@@ -79,7 +79,7 @@ export interface CanvasMouseEvent extends
   LegacyMouseEvent {}
 
 /**
- * A {@link DragEvent} enriched with graph-space coordinates and pointer deltas.
+ * A `DragEvent` enriched with graph-space coordinates and pointer deltas.
  *
  * Used for drag-and-drop operations onto the canvas.
  */

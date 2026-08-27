@@ -137,7 +137,7 @@ interface ICreateDefaultNodeOptions extends ICreateNodeOptions {
 }
 
 interface HasShowSearchCallback {
-  /** See {@link LGraphCanvas.showSearchBox} */
+  /** See `LGraphCanvas.showSearchBox` */
   showSearchBox: (
     event: MouseEvent,
     options?: IShowSearchOptions,
@@ -165,13 +165,13 @@ interface IDialogOptions {
 }
 
 /**
- * Runtime interaction state for an {@link LGraphCanvas} instance.
+ * Runtime interaction state for an `LGraphCanvas` instance.
  *
  * Tracked separately from rendering configuration so it can be proxied or observed
- * without affecting draw settings. Access via {@link LGraphCanvas.state}.
+ * without affecting draw settings. Access via `LGraphCanvas.state`.
  */
 export interface LGraphCanvasState {
-  /** {@link Positionable} items are being dragged on the canvas. */
+  /** `Positionable` items are being dragged on the canvas. */
   draggingItems: boolean
   /** The canvas itself is being dragged. */
   draggingCanvas: boolean
@@ -184,7 +184,7 @@ export interface LGraphCanvasState {
   shouldSetCursor: boolean
 
   /**
-   * Dirty flag indicating that {@link selectedItems} has changed.
+   * Dirty flag indicating that `selectedItems` has changed.
    * Downstream consumers may reset to false once actioned.
    */
   selectionChanged: boolean
@@ -210,7 +210,7 @@ interface ClipboardPasteResult {
   subgraphs: Map<UUID, Subgraph>
 }
 
-/** Options for {@link LGraphCanvas.pasteFromClipboard}. */
+/** Options for `LGraphCanvas.pasteFromClipboard`. */
 interface IPasteFromClipboardOptions {
   /** If `true`, always attempt to connect inputs of pasted nodes - including to nodes that were not pasted. */
   connectInputs?: boolean
@@ -235,18 +235,18 @@ const cursors = {
 } as const
 
 /**
- * Renders and interacts with a single {@link LGraph} (or {@link Subgraph}) on an HTML canvas.
+ * Renders and interacts with a single `LGraph` (or `Subgraph`) on an HTML canvas.
  *
  * Owns the render loop, pointer/keyboard input, selection, clipboard, context menus,
- * link dragging ({@link LinkConnector}), and pan/zoom ({@link DragAndScale}).
+ * link dragging (`LinkConnector`), and pan/zoom (`DragAndScale`).
  * @remarks
  * Most user-facing behaviour is configurable via instance properties (e.g.
- * {@link allow_dragnodes}, {@link render_curved_connections}) and optional callbacks
- * ({@link onNodeSelected}, {@link onNodeDblClicked}, {@link onShowNodePanel},
- * {@link onRender}). Dispatches typed events through {@link dispatch} /
- * {@link LGraphCanvasEventMap}.
- * @see {@link LGraph.attachCanvas}
- * @see {@link LinkConnector}
+ * `allow_dragnodes`, `render_curved_connections`) and optional callbacks
+ * (`onNodeSelected`, `onNodeDblClicked`, `onShowNodePanel`,
+ * `onRender`). Dispatches typed events through `dispatch` /
+ * `LGraphCanvasEventMap`.
+ * @see `LGraph.attachCanvas`
+ * @see `LinkConnector`
  */
 export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap> {
   // Optimised buffers used during rendering
@@ -259,10 +259,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   static #lTempB: Point = new Float32Array(2)
   static #lTempC: Point = new Float32Array(2)
 
-  /** Default tiled background image (base64 PNG) used when no custom {@link LGraphCanvas.background_image} is set. */
+  /** Default tiled background image (base64 PNG) used when no custom `LGraphCanvas.background_image` is set. */
   static DEFAULT_BACKGROUND_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQBJREFUeNrs1rEKwjAUhlETUkj3vP9rdmr1Ysammk2w5wdxuLgcMHyptfawuZX4pJSWZTnfnu/lnIe/jNNxHHGNn//HNbbv+4dr6V+11uF527arU7+u63qfa/bnmh8sWLBgwYJlqRf8MEptXPBXJXa37BSl3ixYsGDBMliwFLyCV/DeLIMFCxYsWLBMwSt4Be/NggXLYMGCBUvBK3iNruC9WbBgwYJlsGApeAWv4L1ZBgsWLFiwYJmCV/AK3psFC5bBggULloJX8BpdwXuzYMGCBctgwVLwCl7Be7MMFixYsGDBsu8FH1FaSmExVfAxBa/gvVmwYMGCZbBg/W4vAQYA5tRF9QYlv/QAAAAASUVORK5CYII="
 
-  /** Default colour for event-type links when no per-type override exists in {@link LGraphCanvas.link_type_colors}. */
+  /** Default colour for event-type links when no per-type override exists in `LGraphCanvas.link_type_colors`. */
   static DEFAULT_EVENT_LINK_COLOR = "#A86"
 
   /** Link type to colour dictionary. */
@@ -272,12 +272,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     "node": "#DCA",
   }
 
-  /** Cache of named {@link CanvasGradient} objects created during rendering. */
+  /** Cache of named `CanvasGradient` objects created during rendering. */
   static gradients: Record<string, CanvasGradient> = {}
 
   /** Maximum number of search results shown in the node search box. `-1` means unlimited. */
   static search_limit = -1
-  /** Named {@link ColorOption} presets available for nodes and groups via context menus. */
+  /** Named `ColorOption` presets available for nodes and groups via context menus. */
   static node_colors: Record<string, ColorOption> = {
     red: { color: "#322", bgcolor: "#533", groupcolor: "#A88" },
     brown: { color: "#332922", bgcolor: "#593930", groupcolor: "#b06634" },
@@ -295,14 +295,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * @internal Exclusively a workaround for design limitation in {@link LGraphNode.computeSize}.
+   * @internal Exclusively a workaround for design limitation in `LGraphNode.computeSize`.
    */
   static measureText?: (text: string, fontStyle?: string) => number
 
   /** The canvas instance that most recently received pointer input. Used by static menu handlers. */
   static active_canvas: LGraphCanvas
 
-  /** The node that was most recently right-clicked. Set during {@link processContextMenu}. */
+  /** The node that was most recently right-clicked. Set during `processContextMenu`. */
   static active_node: LGraphNode
 
   #subgraph?: Subgraph
@@ -334,7 +334,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   #min_font_size_for_lod: number = 8
   /**
    * The IDs of the nodes that are currently visible on the canvas. More
-   * performant than {@link visible_nodes} for visibility checks.
+   * performant than `visible_nodes` for visibility checks.
    */
   #visible_node_ids: Set<NodeId> = new Set()
 
@@ -352,31 +352,31 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   #ghostPointerHandler: ((e: PointerEvent) => void) | null = null
   #ghostKeyHandler: ((e: KeyboardEvent) => void) | null = null
-  /** Whether pointer and keyboard events are currently bound to {@link canvas}. */
+  /** Whether pointer and keyboard events are currently bound to `canvas`. */
   #events_binded?: boolean
   /** Canvas position of the slot highlight indicator shown during link dragging. */
   #highlight_pos?: Point
   /** Input slot currently highlighted as a valid drop target during link dragging. */
   #highlight_input?: INodeInputSlot
-  /** Cached {@link HTMLImageElement} for the tiled background pattern. */
+  /** Cached `HTMLImageElement` for the tiled background pattern. */
   #bg_img?: HTMLImageElement
-  /** Cached {@link CanvasPattern} created from {@link bg_img}. */
+  /** Cached `CanvasPattern` created from `bg_img`. */
   #pattern?: CanvasPattern
-  /** Cached {@link CanvasPattern} created from {@link bg_img}. */
+  /** Cached `CanvasPattern` created from `bg_img`. */
   // private pattern_img?: HTMLImageElement
-  /** Bound pointer-down handler registered on {@link canvas}. */
+  /** Bound pointer-down handler registered on `canvas`. */
   #mousedown_callback?: (e: PointerEvent) => void
-  /** Bound wheel handler registered on {@link canvas}. */
+  /** Bound wheel handler registered on `canvas`. */
   #mousewheel_callback?: (e: WheelEvent) => void
-  /** Bound pointer-move handler registered on {@link canvas}. */
+  /** Bound pointer-move handler registered on `canvas`. */
   #mousemove_callback?: (e: PointerEvent) => void
-  /** Bound pointer-up handler registered on {@link canvas}. */
+  /** Bound pointer-up handler registered on `canvas`. */
   #mouseup_callback?: (e: PointerEvent) => void
-  /** Bound pointer-out handler registered on {@link canvas}. */
+  /** Bound pointer-out handler registered on `canvas`. */
   #mouseout_callback?: (e: PointerEvent) => void
-  /** Bound pointer-cancel handler registered on {@link canvas}. */
+  /** Bound pointer-cancel handler registered on `canvas`. */
   #mousecancel_callback?: (e: PointerEvent) => void
-  /** Bound keyboard handler registered on {@link canvas} and its document. */
+  /** Bound keyboard handler registered on `canvas` and its document. */
   #key_callback?: (e: KeyboardEvent) => void
   autoPan: AutoPanController | null = null
 
@@ -399,7 +399,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Constructor options retained from {@link LGraphCanvas}'s constructor.
+   * Constructor options retained from `LGraphCanvas`'s constructor.
    * Controls viewport clipping, event binding, render startup, and autoresize behaviour.
    */
   options: {
@@ -411,7 +411,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Base64 or URL of the tiled background image drawn behind the graph. */
   background_image: string
-  /** Pan/zoom controller for this canvas. Tightly coupled with {@link LGraphCanvas.visible_area}. */
+  /** Pan/zoom controller for this canvas. Tightly coupled with `LGraphCanvas.visible_area`. */
   readonly ds: DragAndScale
   /** Unified pointer state tracker for mouse, touch, and pen input on this canvas. */
   readonly pointer: CanvasPointer
@@ -432,9 +432,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     output_on: string
   }
 
-  /** Per-type colours for connected slots. Keys are {@link ISlotType} strings. */
+  /** Per-type colours for connected slots. Keys are `ISlotType` strings. */
   default_connection_color_byType: Dictionary<CanvasColour>
-  /** Per-type colours for disconnected slots. Falls back to {@link default_connection_color_byType} when a type is missing. */
+  /** Per-type colours for disconnected slots. Falls back to `default_connection_color_byType` when a type is missing. */
   default_connection_color_byTypeOff: Dictionary<CanvasColour>
 
   /** Gets link colours. Extremely basic impl. until the legacy object dictionaries are removed. */
@@ -456,9 +456,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   editor_alpha: number
   /** When `true`, the render loop continues but skips drawing frames. */
   pause_rendering: boolean
-  /** When `true`, fills the background with {@link clear_background_color} before drawing. */
+  /** When `true`, fills the background with `clear_background_color` before drawing. */
   clear_background: boolean
-  /** CSS colour used when {@link clear_background} is enabled. */
+  /** CSS colour used when `clear_background` is enabled. */
   clear_background_color: string
   /** When `true`, only selected nodes are fully rendered; others may be simplified. */
   render_only_selected: boolean
@@ -511,14 +511,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Shape of the markers shown at the midpoint of links.  Default: Circle */
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
-  /** Controls link rendering style. See {@link LinkRenderType} constants. */
+  /** Controls link rendering style. See `LinkRenderType` constants. */
   links_render_mode: number
 
   /** Pointer position in canvas pixel coordinates, where `(0, 0)` is the top-left of the canvas element. */
   readonly mouse: Point
   /** Pointer position in graph coordinates, where `(0, 0)` is the top-left of the visible graph area. */
   readonly graph_mouse: Point
-  /** @deprecated LEGACY: REMOVE THIS, USE {@link graph_mouse} INSTEAD */
+  /** @deprecated LEGACY: REMOVE THIS, USE `graph_mouse` INSTEAD */
   canvas_mouse: Point
   /** Callback to customise the node search box UI as the user types. */
   onSearchBox?: (helper: Element, str: string, canvas: LGraphCanvas) => any
@@ -543,7 +543,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   onDrawForeground?: (arg0: CanvasRenderingContext2D, arg1: any) => void
   /** Stroke width in pixels for rendered link segments. */
   connections_width: number
-  /** The current node being drawn by {@link drawNode}.  This should NOT be used to determine the currently selected node.  See {@link selectedItems} */
+  /** The current node being drawn by `drawNode`.  This should NOT be used to determine the currently selected node.  See `selectedItems` */
   current_node: LGraphNode | null
   /** Transient state while a widget is being interacted with: `[node, widget]`, or `null`. */
   node_widget?: [LGraphNode, IBaseWidget] | null
@@ -551,17 +551,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   over_link_center?: LinkSegment
   /** Last known pointer position in canvas pixel coordinates. */
   last_mouse_position: Point
-  /** The visible area of this canvas.  Tightly coupled with {@link ds}. */
+  /** The visible area of this canvas.  Tightly coupled with `ds`. */
   visible_area: Rectangle
   /** Contains all links and reroutes that were rendered.  Repopulated every render cycle. */
   renderedPaths: Set<LinkSegment> = new Set()
-  /** @deprecated Replaced by {@link renderedPaths}, but length is set to 0 by some extensions. */
+  /** @deprecated Replaced by `renderedPaths`, but length is set to 0 by some extensions. */
   visible_links: LLink[] = []
   /** @deprecated This array is populated and cleared to support legacy extensions. The contents are ignored by Litegraph. */
   connecting_links: ConnectingLink[] | null
   /** Manages in-progress link drag operations and floating link state during pointer interaction. */
   linkConnector = new LinkConnector(links => this.connecting_links = links)
-  /** The viewport of this canvas.  Tightly coupled with {@link ds}. */
+  /** The viewport of this canvas.  Tightly coupled with `ds`. */
   readonly viewport?: Rect
   /** When `true`, resizes the canvas to match its parent element dimensions. */
   autoresize: boolean
@@ -573,13 +573,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   render_time = 0
   /** Smoothed frames-per-second estimate updated each render frame. */
   fps = 0
-  /** @deprecated See {@link LGraphCanvas.selectedItems} */
+  /** @deprecated See `LGraphCanvas.selectedItems` */
   selected_nodes: Dictionary<LGraphNode> = {}
   /** All selected nodes, groups, and reroutes */
   selectedItems: Set<Positionable> = new Set()
   /** The group currently being resized. */
   resizingGroup: LGraphGroup | null = null
-  /** @deprecated See {@link LGraphCanvas.selectedItems} */
+  /** @deprecated See `LGraphCanvas.selectedItems` */
   selected_group: LGraphGroup | null = null
   /** The nodes that are currently visible on the canvas. */
   visible_nodes: LGraphNode[] = []
@@ -604,16 +604,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   last_mouse: ReadOnlyPoint = [0, 0]
   /** Timestamp (ms) of the last mouse click, used for double-click detection. */
   last_mouseclick: number = 0
-  /** The {@link LGraph} or {@link Subgraph} currently displayed and edited by this canvas. */
+  /** The `LGraph` or `Subgraph` currently displayed and edited by this canvas. */
   graph: LGraph | Subgraph | null
 
   /** The primary HTML canvas element used for foreground rendering and event dispatch. */
   canvas: HTMLCanvasElement & ICustomEventTarget<LGraphCanvasEventMap>
   /** Off-screen canvas used for background rendering (links, groups, grid). */
   bgcanvas: HTMLCanvasElement
-  /** 2D rendering context for the primary {@link canvas}. */
+  /** 2D rendering context for the primary `canvas`. */
   ctx: CanvasRenderingContext2D
-  /** 2D rendering context for the off-screen {@link bgcanvas}. */
+  /** 2D rendering context for the off-screen `bgcanvas`. */
   bgctx?: CanvasRenderingContext2D | null
   /** Whether the requestAnimationFrame render loop is currently active. */
   is_rendering?: boolean
@@ -623,9 +623,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   last_click_position?: Point | null
   /** Node currently being resized via its corner handles, if any. */
   resizing_node?: LGraphNode | null
-  /** @deprecated See {@link LGraphCanvas.resizingGroup} */
+  /** @deprecated See `LGraphCanvas.resizingGroup` */
   selected_group_resizing?: boolean
-  /** @deprecated See {@link pointer}.{@link CanvasPointer.dragStarted dragStarted} */
+  /** @deprecated See `pointer`.`CanvasPointer.dragStarted dragStarted` */
   last_mouse_dragging?: boolean
   /** Optional hook called at the start of pointer-down processing, before default handling. */
   onMouseDown?: (arg0: CanvasPointerEvent) => void
@@ -635,22 +635,22 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** @deprecated Panels */
   options_panel?: any
   // TODO: This looks like another panel thing
-  /** Active prompt dialog element, if a {@link prompt} is open. */
+  /** Active prompt dialog element, if a `prompt` is open. */
   prompt_box?: PromptDialog | null
-  /** Active node search box DOM element, if {@link showSearchBox} is open. */
+  /** Active node search box DOM element, if `showSearchBox` is open. */
   search_box?: HTMLDivElement
   /** @deprecated Panels */
   SELECTED_NODE?: LGraphNode
   /** @deprecated Panels */
   NODEPANEL_IS_OPEN?: boolean
-  /** Called when {@link clear} resets canvas state. */
+  /** Called when `clear` resets canvas state. */
   onClear?: () => void
   /**
    * Called after moving a node
    * @deprecated Does not handle multi-node move, and can return the wrong node.
    */
   onNodeMoved?: (node_dragged: LGraphNode | undefined) => void
-  /** @deprecated Called with the deprecated {@link selected_nodes} when the selection changes. Replacement not yet impl. */
+  /** @deprecated Called with the deprecated `selected_nodes` when the selection changes. Replacement not yet impl. */
   onSelectionChange?: (selected: Dictionary<Positionable>) => void
   /**
    * Called when rendering a link tooltip. Return `true` to suppress the default tooltip.
@@ -893,7 +893,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#updateLowQualityThreshold()
   }
 
-  /** Context-menu callback that creates a new {@link LGraphGroup} at the pointer position. */
+  /** Context-menu callback that creates a new `LGraphGroup` at the pointer position. */
   static onGroupAdd(_info: unknown, _entry: unknown, mouse_event: MouseEvent): void {
     const canvas = LGraphCanvas.active_canvas
 
@@ -904,7 +904,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * @deprecated Functionality moved to {@link getBoundaryNodes}.  The new function returns null on failure, instead of an object with all null properties.
+   * @deprecated Functionality moved to `getBoundaryNodes`.  The new function returns null on failure, instead of an object with all null properties.
    * Determines the furthest nodes in each direction
    * @param nodes the nodes to from which boundary nodes will be extracted
    * @returns
@@ -924,7 +924,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * @deprecated Functionality moved to {@link alignNodes}.  The new function does not set dirty canvas.
+   * @deprecated Functionality moved to `alignNodes`.  The new function does not set dirty canvas.
    * @param nodes a list of nodes
    * @param direction Direction to align the nodes
    * @param align_to Node to align to (if null, align to the furthest node in the given direction)
@@ -1676,7 +1676,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Finds the canvas if required, throwing on failure.
    * @param canvas Canvas element, or its element ID
    * @returns The canvas element
-   * @throws If {@link canvas} is an element ID that does not belong to a valid HTML canvas element
+   * @throws If `canvas` is an element ID that does not belong to a valid HTML canvas element
    */
   #validateCanvas(
     canvas: string | HTMLCanvasElement,
@@ -1993,7 +1993,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Processes a pointerdown event inside the bounds of a node.  Part of {@link processMouseDown}.
+   * Processes a pointerdown event inside the bounds of a node.  Part of `processMouseDown`.
    * @param e The pointerdown event
    * @param ctrlOrMeta Ctrl or meta key is pressed
    * @param node The node to process a click event for
@@ -2339,7 +2339,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Pointer middle button click processing.  Part of {@link processMouseDown}.
+   * Pointer middle button click processing.  Part of `processMouseDown`.
    * @param e The pointerdown event
    * @param node The node to process a click event for
    */
@@ -2444,7 +2444,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Updates the hover / snap state of all visible reroutes.
-   * @returns The original value of {@link underPointer}, with any found reroute items added.
+   * @returns The original value of `underPointer`, with any found reroute items added.
    */
   #updateReroutes(underPointer: CanvasItem): CanvasItem {
     const { graph, pointer, linkConnector } = this
@@ -2481,10 +2481,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /**
    * Start dragging an item, optionally including all other selected items.
    *
-   * ** This function sets the {@link CanvasPointer.finally}() callback. **
+   * ** This function sets the `CanvasPointer.finally`() callback. **
    * @param item The item that the drag event started on
    * @param pointer The pointer event that initiated the drag, e.g. pointerdown
-   * @param sticky If `true`, the item is added to the selection - see {@link processSelect}
+   * @param sticky If `true`, the item is added to the selection - see `processSelect`
    */
   #startDraggingItems(item: Positionable, pointer: CanvasPointer, sticky = false): void {
     this.emitBeforeChange()
@@ -2629,7 +2629,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Iterative traversal of a group's descendants.
-   * Calls {@link groupAction} on nested groups and {@link leafAction} on
+   * Calls `groupAction` on nested groups and `leafAction` on
    * non-group children.  Always recurses into nested groups regardless of
    * their current selection state.
    */
@@ -3040,7 +3040,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Copies canvas items to an internal, app-specific clipboard backed by local storage.
-   * When called without parameters, it copies {@link selectedItems}.
+   * When called without parameters, it copies `selectedItems`.
    * @param items The items to copy.  If nullish, all selected items are copied.
    */
   #serializeItems(items?: Iterable<Positionable>): ClipboardItems {
@@ -3315,7 +3315,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Sets the active subgraph context for this canvas.
-   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:set-graph"` when the value changes.
+   * Dispatches `LGraphCanvasEventMap` `"litegraph:set-graph"` when the value changes.
    */
   set subgraph(value: Subgraph | undefined) {
     if (value === this.#subgraph) {
@@ -3330,12 +3330,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   dispatch<T extends keyof NeverNever<LGraphCanvasEventMap>>(type: T, detail: LGraphCanvasEventMap[T]): boolean
   /**
    * Dispatches a custom event on the canvas element with no detail payload.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   * @param type The event name defined in `LGraphCanvasEventMap`.
    */
   dispatch<T extends keyof PickNevers<LGraphCanvasEventMap>>(type: T): boolean
   /**
    * Dispatches a custom event on the canvas element.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   * @param type The event name defined in `LGraphCanvasEventMap`.
    * @param detail Event-specific payload. Omitted for events with no detail.
    */
   dispatch<T extends keyof LGraphCanvasEventMap>(type: T, detail?: LGraphCanvasEventMap[T]) {
@@ -3345,7 +3345,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Dispatches a custom event on the canvas element.
-   * @param type The event name defined in {@link LGraphCanvasEventMap}.
+   * @param type The event name defined in `LGraphCanvasEventMap`.
    * @param detail Event-specific payload.
    */
   dispatchEvent<TEvent extends keyof LGraphCanvasEventMap>(type: TEvent, detail: LGraphCanvasEventMap[TEvent]) {
@@ -3366,14 +3366,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
+   * @deprecated Use `LiteGraphGlobal.ROUND_RADIUS` instead.
    */
   get round_radius() {
     return LiteGraph.ROUND_RADIUS
   }
 
   /**
-   * @deprecated Use {@link LiteGraphGlobal.ROUND_RADIUS} instead.
+   * @deprecated Use `LiteGraphGlobal.ROUND_RADIUS` instead.
    */
   set round_radius(value: number) {
     LiteGraph.ROUND_RADIUS = value
@@ -3408,7 +3408,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   // #region Legacy accessors
-  /** @deprecated Use {@link LGraphCanvas.state} `readOnly` instead. */
+  /** @deprecated Use `LGraphCanvas.state` `readOnly` instead. */
   get read_only(): boolean {
     return this.state.readOnly
   }
@@ -3435,17 +3435,17 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#updateCursorStyle()
   }
 
-  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDown isDown}. */
+  /** @deprecated Replace all references with `pointer`.`CanvasPointer.isDown isDown`. */
   get pointer_is_down() {
     return this.pointer.isDown
   }
 
-  /** @deprecated Replace all references with {@link pointer}.{@link CanvasPointer.isDouble isDouble}. */
+  /** @deprecated Replace all references with `pointer`.`CanvasPointer.isDouble isDouble`. */
   get pointer_is_double() {
     return this.pointer.isDouble
   }
 
-  /** @deprecated Use {@link LGraphCanvas.state} `draggingCanvas` instead. */
+  /** @deprecated Use `LGraphCanvas.state` `draggingCanvas` instead. */
   get dragging_canvas(): boolean {
     return this.state.draggingCanvas
   }
@@ -3456,7 +3456,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * @deprecated Use {@link LGraphNode.titleFontStyle} instead.
+   * @deprecated Use `LGraphNode.titleFontStyle` instead.
    */
   get title_text_font(): string {
     return `${LiteGraph.NODE_TEXT_SIZE}px ${LiteGraph.NODE_FONT}`
@@ -3465,7 +3465,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * draws the widgets stored inside a node
-   * @deprecated Use {@link LGraphNode.drawWidgets} instead.
+   * @deprecated Use `LGraphNode.drawWidgets` instead.
    * @remarks Currently there are extensions hijacking this function, so we cannot remove it.
    */
   drawNodeWidgets(
@@ -3764,7 +3764,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Gets the widget at the current cursor position.
    * @param node Optional node to check for widgets under cursor
    * @returns The widget located at the current cursor position, if any is found.
-   * @deprecated Use {@link LGraphNode.getWidgetOnPos} instead.
+   * @deprecated Use `LGraphNode.getWidgetOnPos` instead.
    * ```ts
    * const [x, y] = canvas.graph_mouse
    * const widget = canvas.node_over?.getWidgetOnPos(x, y, true)
@@ -4212,7 +4212,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * The node will be semi-transparent and follow the cursor until the user
    * clicks to place it, or presses Escape/right-clicks to cancel.
    *
-   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:ghost-placement"` with `active: true`.
+   * Dispatches `LGraphCanvasEventMap` `"litegraph:ghost-placement"` with `active: true`.
    * @param node The node to place
    * @param dragEvent Optional mouse event for positioning under cursor
    */
@@ -4268,7 +4268,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /**
    * Finalizes ghost placement mode.
    *
-   * Dispatches {@link LGraphCanvasEventMap} `"litegraph:ghost-placement"` with `active: false`
+   * Dispatches `LGraphCanvasEventMap` `"litegraph:ghost-placement"` with `active: false`
    * before removing or committing the node.
    * @param cancelled If true, the node is removed; otherwise it's placed
    */
@@ -4560,7 +4560,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * Copies canvas items to an internal, app-specific clipboard backed by local storage.
-   * When called without parameters, it copies {@link selectedItems}.
+   * When called without parameters, it copies `selectedItems`.
    * @param items The items to copy.  If nullish, all selected items are copied.
    */
   copyToClipboard(items?: Iterable<Positionable>): void {
@@ -4586,7 +4586,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     })
   }
 
-  /** @todo See {@link emitBeforeChange} */
+  /** @todo See `emitBeforeChange` */
   emitAfterChange(): void {
     this.emitEvent({
       subType: "after-change",
@@ -4620,7 +4620,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param e The MouseEvent to handle
    * @param sticky Prevents deselecting individual nodes (as used by aux/right-click)
    * @remarks
-   * Accessibility: anyone using {@link mutli_select} always deselects when clicking empty space.
+   * Accessibility: anyone using `mutli_select` always deselects when clicking empty space.
    */
   processSelect<TPositionable extends Positionable = LGraphNode>(
     item: TPositionable | null | undefined,
@@ -4659,7 +4659,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Selects a {@link Positionable} item.
+   * Selects a `Positionable` item.
    * @param item The canvas item to add to the selection.
    */
   select<TPositionable extends Positionable = LGraphNode>(item: TPositionable): void {
@@ -4713,7 +4713,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Deselects a {@link Positionable} item.
+   * Deselects a `Positionable` item.
    * @param item The canvas item to remove from the selection.
    */
   deselect<TPositionable extends Positionable = LGraphNode>(item: TPositionable): void {
@@ -4777,7 +4777,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
   }
 
-  /** @deprecated See {@link LGraphCanvas.processSelect} */
+  /** @deprecated See `LGraphCanvas.processSelect` */
   processNodeSelected(item: LGraphNode, e: CanvasPointerEvent): void {
     this.processSelect(
       item,
@@ -4786,7 +4786,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     )
   }
 
-  /** @deprecated See {@link LGraphCanvas.select} */
+  /** @deprecated See `LGraphCanvas.select` */
   selectNode(node: LGraphNode, add_to_current_selection?: boolean): void {
     if (node == null) {
       this.deselectAll()
@@ -4820,13 +4820,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * selects several nodes (or adds them to the current selection)
-   * @deprecated See {@link LGraphCanvas.selectItems}
+   * @deprecated See `LGraphCanvas.selectItems`
    */
   selectNodes(nodes?: LGraphNode[], add_to_current_selection?: boolean): void {
     this.selectItems(nodes, add_to_current_selection)
   }
 
-  /** @deprecated See {@link LGraphCanvas.deselect} */
+  /** @deprecated See `LGraphCanvas.deselect` */
   deselectNode(node: LGraphNode): void {
     this.deselect(node)
   }
@@ -4884,7 +4884,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.onSelectionChange?.(this.selected_nodes)
   }
 
-  /** @deprecated See {@link LGraphCanvas.deselectAll} */
+  /** @deprecated See `LGraphCanvas.deselectAll` */
   deselectAllNodes(): void {
     this.deselectAll()
   }
@@ -4930,7 +4930,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /**
    * deletes all nodes in the current selection from the graph
-   * @deprecated See {@link LGraphCanvas.deleteSelected}
+   * @deprecated See `LGraphCanvas.deleteSelected`
    */
   deleteSelectedNodes(): void {
     this.deleteSelected()
@@ -5049,10 +5049,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Determines which nodes are visible and populates {@link out} with the results.
+   * Determines which nodes are visible and populates `out` with the results.
    * @param nodes The list of nodes to check - if falsy, all nodes in the graph will be checked
    * @param out Array to write visible nodes into - if falsy, a new array is created instead
-   * @returns Array passed ({@link out}), or a new array containing all visible nodes
+   * @returns Array passed (`out`), or a new array containing all visible nodes
    */
   computeVisibleNodes(nodes?: LGraphNode[], out?: LGraphNode[]): LGraphNode[] {
     const visible_nodes = out || []
@@ -5634,7 +5634,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param ctx Canvas 2D context to draw on
    * @param link The link to render the mouseover effect for
    * @remarks
-   * Called against {@link LGraphCanvas.over_link_center}.
+   * Called against `LGraphCanvas.over_link_center`.
    * @todo Split tooltip from hover, so it can be drawn / eased separately
    */
   drawLinkTooltip(ctx: CanvasRenderingContext2D, link: LinkSegment): void {
@@ -5821,7 +5821,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
-   * Draws a snap guide for a {@link Positionable} item.
+   * Draws a snap guide for a `Positionable` item.
    *
    * Initial design was a simple white rectangle representing the location the
    * item would land if dropped.
@@ -6324,7 +6324,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param t Time: distance between points (e.g 0.25 is 25% along the line)
    * @param start_dir Spline start direction
    * @param end_dir Spline end direction
-   * @returns The point at {@link t} distance along the spline a-b.
+   * @returns The point at `t` distance along the spline a-b.
    */
   computeConnectionPoint(
     a: ReadOnlyPoint,

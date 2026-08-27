@@ -17,23 +17,23 @@ import { LinkDirection } from "@/types/globalEnums"
  * Represents a floating (partially connected) link being dragged to complete its open end.
  *
  * Floating links have one end attached to a slot or reroute and the other end unresolved
- * (stored with sentinel node IDs). Created by {@link LinkConnector.moveInputLink} and
- * {@link LinkConnector.moveOutputLink} when the user drags from a slot that has floating links
+ * (stored with sentinel node IDs). Created by `LinkConnector.moveInputLink` and
+ * `LinkConnector.moveOutputLink` when the user drags from a slot that has floating links
  * rather than fully connected links.
  * @remarks
  * This is a heavier, but short-lived convenience data structure. All refs should be discarded on
- * drop. Unlike {@link MovingLinkBase} subclasses, floating links mutate the {@link LLink} in place
- * rather than disconnecting and reconnecting through {@link LGraphNode.connectSlots}.
- * @see {@link LinkConnector.moveInputLink}
- * @see {@link LinkConnector.moveOutputLink}
- * @see {@link LLink.toFloating}
+ * drop. Unlike `MovingLinkBase` subclasses, floating links mutate the `LLink` in place
+ * rather than disconnecting and reconnecting through `LGraphNode.connectSlots`.
+ * @see `LinkConnector.moveInputLink`
+ * @see `LinkConnector.moveOutputLink`
+ * @see `LLink.toFloating`
  */
 export class FloatingRenderLink implements RenderLink {
   /**
    * The node at the connected end of the floating link.
    *
-   * When the floating end is an output ({@link toType} `"input"`), this is the output node;
-   * when the floating end is an input ({@link toType} `"output"`), this is the input node.
+   * When the floating end is an output (`toType` `"input"`), this is the output node;
+   * when the floating end is an input (`toType` `"output"`), this is the input node.
    */
   readonly node: LGraphNode
 
@@ -44,14 +44,14 @@ export class FloatingRenderLink implements RenderLink {
   readonly fromPos: Point
 
   /**
-   * The direction the link segment faces as it leaves {@link fromPos}.
+   * The direction the link segment faces as it leaves `fromPos`.
    *
-   * {@link LinkDirection.LEFT} when dragging from an output-side float;
-   * {@link LinkDirection.RIGHT} when dragging from an input-side float.
+   * `LinkDirection.LEFT` when dragging from an output-side float;
+   * `LinkDirection.RIGHT` when dragging from an input-side float.
    */
   readonly fromDirection: LinkDirection
 
-  /** Index of {@link fromSlot} on {@link node}. */
+  /** Index of `fromSlot` on `node`. */
   readonly fromSlotIndex: number
 
   /** ID of the output node, or `-1` when the output end is the floating (unresolved) end. */
@@ -63,10 +63,10 @@ export class FloatingRenderLink implements RenderLink {
   /** The connected output slot, when the output end is connected. */
   readonly outputSlot?: INodeOutputSlot
 
-  /** Index of {@link outputSlot}, or `-1` when the output end is floating. */
+  /** Index of `outputSlot`, or `-1` when the output end is floating. */
   readonly outputIndex: number = -1
 
-  /** Canvas-space position of {@link outputSlot}, when connected. */
+  /** Canvas-space position of `outputSlot`, when connected. */
   readonly outputPos?: Point
 
   /** ID of the input node, or `-1` when the input end is the floating (unresolved) end. */
@@ -78,22 +78,22 @@ export class FloatingRenderLink implements RenderLink {
   /** The connected input slot, when the input end is connected. */
   readonly inputSlot?: INodeInputSlot
 
-  /** Index of {@link inputSlot}, or `-1` when the input end is floating. */
+  /** Index of `inputSlot`, or `-1` when the input end is floating. */
   readonly inputIndex: number = -1
 
-  /** Canvas-space position of {@link inputSlot}, when connected. */
+  /** Canvas-space position of `inputSlot`, when connected. */
   readonly inputPos?: Point
 
   /**
    * @param network The graph (or subgraph) that owns the floating link.
-   * @param link The {@link LLink} in floating state being repositioned.
+   * @param link The `LLink` in floating state being repositioned.
    * @param toType Which end is unresolved — `"input"` when completing toward an input slot,
    * `"output"` when completing toward an output slot.
    * @param fromReroute The reroute the floating link is parented to; its position becomes
-   * {@link fromPos}.
+   * `fromPos`.
    * @param dragDirection Controls how the free end of the link follows the cursor.
-   * @throws When the connected node or slot referenced by {@link link} cannot be found in
-   * {@link network}.
+   * @throws When the connected node or slot referenced by `link` cannot be found in
+   * `network`.
    */
   constructor(
     readonly network: LinkNetwork,
@@ -155,7 +155,7 @@ export class FloatingRenderLink implements RenderLink {
 
   /**
    * Floating links completing toward an input slot may connect to inputs.
-   * @returns `true` when {@link toType} is `"input"`.
+   * @returns `true` when `toType` is `"input"`.
    */
   canConnectToInput(): boolean {
     return this.toType === "input"
@@ -163,7 +163,7 @@ export class FloatingRenderLink implements RenderLink {
 
   /**
    * Floating links completing toward an output slot may connect to outputs.
-   * @returns `true` when {@link toType} is `"output"`.
+   * @returns `true` when `toType` is `"output"`.
    */
   canConnectToOutput(): boolean {
     return this.toType === "output"
@@ -192,7 +192,7 @@ export class FloatingRenderLink implements RenderLink {
   /**
    * Resolves the floating end by attaching it to an input slot.
    *
-   * Mutates {@link link} in place, moving it from the origin slot's `_floatingLinks` set to
+   * Mutates `link` in place, moving it from the origin slot's `_floatingLinks` set to
    * the target input's set.
    * @param node The node that owns the target input slot.
    * @param input The input slot to connect to.
@@ -212,7 +212,7 @@ export class FloatingRenderLink implements RenderLink {
   /**
    * Resolves the floating end by attaching it to an output slot.
    *
-   * Mutates {@link link} in place, moving it from the origin slot's `_floatingLinks` set to
+   * Mutates `link` in place, moving it from the origin slot's `_floatingLinks` set to
    * the target output's set.
    * @param node The node that owns the target output slot.
    * @param output The output slot to connect to.
@@ -231,7 +231,7 @@ export class FloatingRenderLink implements RenderLink {
    * Resolves the floating end by attaching it to a subgraph input boundary.
    *
    * Sets the link's origin to the subgraph input sentinel ID and updates floating-link tracking
-   * on the target {@link SubgraphInput}.
+   * on the target `SubgraphInput`.
    * @param input The subgraph input IO definition being dropped on.
    */
   connectToSubgraphInput(input: SubgraphInput, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
@@ -248,7 +248,7 @@ export class FloatingRenderLink implements RenderLink {
    * Resolves the floating end by attaching it to a subgraph output boundary.
    *
    * Sets the link's origin to the subgraph output sentinel ID and updates floating-link tracking
-   * on the target {@link SubgraphOutput}.
+   * on the target `SubgraphOutput`.
    * @param output The subgraph output IO definition being dropped on.
    */
   connectToSubgraphOutput(output: SubgraphOutput, _events?: CustomEventTarget<LinkConnectorEventMap>): void {
@@ -287,7 +287,7 @@ export class FloatingRenderLink implements RenderLink {
    * Resolves the floating end by attaching it to a reroute's output side.
    * @param _reroute The reroute being dropped on.
    * @param outputNode The node that owns the output slot the link ultimately connects through.
-   * @param output The output slot on {@link outputNode}.
+   * @param output The output slot on `outputNode`.
    * @param events Dispatches `"output-moved"` after the connection is made.
    */
   connectToRerouteOutput(

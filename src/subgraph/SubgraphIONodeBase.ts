@@ -17,11 +17,11 @@ import { CanvasItem } from "@/types/globalEnums"
  * Abstract base for the fixed input and output boundary nodes rendered on a subgraph canvas.
  *
  * Provides shared layout, hit-testing, context menus, serialisation, and slot arrangement for
- * {@link SubgraphInputNode} and {@link SubgraphOutputNode}. Subclasses supply side-specific
+ * `SubgraphInputNode` and `SubgraphOutputNode`. Subclasses supply side-specific
  * drawing, slot lists, and link-drag behaviour.
- * @template TSlot Concrete slot type ({@link SubgraphInput} or {@link SubgraphOutput}).
- * @see {@link SubgraphInputNode}
- * @see {@link SubgraphOutputNode}
+ * @template TSlot Concrete slot type (`SubgraphInput` or `SubgraphOutput`).
+ * @see `SubgraphInputNode`
+ * @see `SubgraphOutputNode`
  */
 export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphOutput> implements Positionable, Hoverable, Serialisable<ExportedSubgraphIONode> {
   /** Padding between the IO panel edge and its slots. */
@@ -49,7 +49,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   /** Placeholder slot for creating a new IO slot on first connection. */
   abstract readonly emptySlot: EmptySubgraphInput | EmptySubgraphOutput
 
-  /** Concrete IO slots defined on the subgraph (excludes {@link emptySlot}). */
+  /** Concrete IO slots defined on the subgraph (excludes `emptySlot`). */
   abstract readonly slots: TSlot[]
 
   /**
@@ -159,7 +159,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
     return this.isPointerOver ? "white" : "#efefef"
   }
 
-  /** All slots to render and hit-test, including {@link emptySlot}. */
+  /** All slots to render and hit-test, including `emptySlot`. */
   abstract get allSlots(): TSlot[]
 
   /** Axis-aligned bounds of this IO node in canvas space. */
@@ -178,7 +178,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   }
 
   /**
-   * Snaps {@link pos} to the editor grid when this node is not pinned.
+   * Snaps `pos` to the editor grid when this node is not pinned.
    * @param snapTo Grid spacing in canvas units.
    * @returns `true` when the position was adjusted.
    */
@@ -215,7 +215,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
   /**
    * Updates hover state for this node and its slots during pointer move.
    * @param e The pointer event in canvas coordinates.
-   * @returns Bitmask of {@link CanvasItem} flags for items under the pointer.
+   * @returns Bitmask of `CanvasItem` flags for items under the pointer.
    */
   onPointerMove(e: CanvasPointerEvent): CanvasItem {
     const containsPoint = this.boundingRect.containsXy(e.canvasX, e.canvasY)
@@ -348,10 +348,10 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
     Object.assign(ctx, { lineWidth, strokeStyle, fillStyle, font, textBaseline })
   }
 
-  /** @internal Leaves {@link ctx} dirty. */
+  /** @internal Leaves `ctx` dirty. */
   protected abstract drawProtected(ctx: CanvasRenderingContext2D, colorContext: DefaultConnectionColors, fromSlot?: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput, editorAlpha?: number): void
 
-  /** @internal Leaves {@link ctx} dirty. */
+  /** @internal Leaves `ctx` dirty. */
   protected drawSlots(ctx: CanvasRenderingContext2D, colorContext: DefaultConnectionColors, fromSlot?: INodeInputSlot | INodeOutputSlot | SubgraphInput | SubgraphOutput, editorAlpha?: number): void {
     ctx.fillStyle = "#AAA"
     ctx.font = "12px Inter, sans-serif"
@@ -373,7 +373,7 @@ export abstract class SubgraphIONodeBase<TSlot extends SubgraphInput | SubgraphO
 
   /**
    * Serialises this IO node's position, size, and pin state.
-   * @returns Data suitable for {@link ExportedSubgraphIONode}.
+   * @returns Data suitable for `ExportedSubgraphIONode`.
    */
   asSerialisable(): ExportedSubgraphIONode {
     return {

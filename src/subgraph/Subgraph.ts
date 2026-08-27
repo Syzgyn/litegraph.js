@@ -15,24 +15,24 @@ import { SubgraphOutput } from "./SubgraphOutput"
 import { SubgraphOutputNode } from "./SubgraphOutputNode"
 
 /**
- * Union of graph types that may contain or be contained by a {@link Subgraph}.
+ * Union of graph types that may contain or be contained by a `Subgraph`.
  *
- * Used where APIs accept either a root {@link LGraph} or a nested subgraph definition.
+ * Used where APIs accept either a root `LGraph` or a nested subgraph definition.
  */
 export type GraphOrSubgraph = LGraph | Subgraph
 
 /**
- * A reusable subgraph definition that can be instantiated as {@link SubgraphNode} instances.
+ * A reusable subgraph definition that can be instantiated as `SubgraphNode` instances.
  *
- * Extends {@link LGraph} with named inputs/outputs, IO boundary nodes, and widget promotion.
+ * Extends `LGraph` with named inputs/outputs, IO boundary nodes, and widget promotion.
  * When opened in the canvas, the editor displays the subgraph's internal node network while
- * preserving links to the parent graph through {@link SubgraphInput} and {@link SubgraphOutput}.
+ * preserving links to the parent graph through `SubgraphInput` and `SubgraphOutput`.
  * @remarks
  * Subgraph instances on a parent graph mirror this definition's IO slots. Changes to inputs,
  * outputs, or promoted widgets propagate to all live instances via events.
- * @see {@link SubgraphNode}
- * @see {@link SubgraphInput}
- * @see {@link SubgraphOutput}
+ * @see `SubgraphNode`
+ * @see `SubgraphInput`
+ * @see `SubgraphOutput`
  */
 export class Subgraph extends LGraph implements BaseLGraph, Serialisable<ExportedSubgraph> {
   /**
@@ -47,7 +47,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
   /** Typed event target for subgraph lifecycle and IO slot changes. */
   declare readonly events: CustomEventTarget<SubgraphEventMap>
 
-  /** Human-readable name shown in the editor and on {@link SubgraphNode} instances. */
+  /** Human-readable name shown in the editor and on `SubgraphNode` instances. */
   name: string = "Unnamed Subgraph"
 
   /** Fixed boundary node listing all subgraph inputs on the left side of the subgraph canvas. */
@@ -70,7 +70,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    */
   readonly outputs: SubgraphOutput[] = []
   /**
-   * Node widgets promoted to the parent graph and displayed on {@link SubgraphNode} instances.
+   * Node widgets promoted to the parent graph and displayed on `SubgraphNode` instances.
    */
   readonly widgets: ExposedWidget[] = []
 
@@ -172,7 +172,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
     }
   }
 
-  /** The top-level {@link LGraph} that owns this subgraph definition in the registry. */
+  /** The top-level `LGraph` that owns this subgraph definition in the registry. */
   override get rootGraph(): LGraph {
     return this.#rootGraph
   }
@@ -193,7 +193,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    * Reconfigures this subgraph from serialised data.
    * @param data The serialised graph and subgraph metadata.
    * @param keep_old When `true`, merges with existing state instead of replacing it.
-   * @returns The result of the base {@link LGraph.configure} call.
+   * @returns The result of the base `LGraph.configure` call.
    */
   override configure(data: ISerialisedGraph & ExportedSubgraph | SerialisableGraph & ExportedSubgraph, keep_old?: boolean): boolean | undefined {
     const r = super.configure(data, keep_old)
@@ -217,7 +217,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    * Dispatches `"adding-input"` before creation and `"input-added"` after the slot is registered.
    * @param name Display name for the new input.
    * @param type Slot type string used for connection validation.
-   * @returns The created {@link SubgraphInput}.
+   * @returns The created `SubgraphInput`.
    */
   addInput(name: string, type: string): SubgraphInput {
     this.events.dispatch("adding-input", { name, type })
@@ -240,7 +240,7 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
    * Dispatches `"adding-output"` before creation and `"output-added"` after the slot is registered.
    * @param name Display name for the new output.
    * @param type Slot type string used for connection validation.
-   * @returns The created {@link SubgraphOutput}.
+   * @returns The created `SubgraphOutput`.
    */
   addOutput(name: string, type: string): SubgraphOutput {
     this.events.dispatch("adding-output", { name, type })

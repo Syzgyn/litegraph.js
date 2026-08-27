@@ -10,12 +10,12 @@ import { type IDrawOptions, NodeSlot } from "@/node/NodeSlot"
 import { isSubgraphOutput } from "@/subgraph/subgraphUtils"
 
 /**
- * Concrete implementation of an {@link INodeOutputSlot} on an {@link LGraphNode}.
+ * Concrete implementation of an `INodeOutputSlot` on an `LGraphNode`.
  *
- * Output slots send data to one or more input slots via {@link LLink} connections. Unlike inputs,
+ * Output slots send data to one or more input slots via `LLink` connections. Unlike inputs,
  * a single output may fan out to multiple downstream links.
- * @see {@link NodeInputSlot}
- * @see {@link NodeSlot}
+ * @see `NodeInputSlot`
+ * @see `NodeSlot`
  */
 export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   #node: LGraphNode
@@ -24,9 +24,9 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   data?: unknown
 
   /**
-   * IDs of all {@link LLink} instances connected from this slot, or `null` when none are connected.
+   * IDs of all `LLink` instances connected from this slot, or `null` when none are connected.
    *
-   * An empty array is treated as disconnected by {@link isConnected}.
+   * An empty array is treated as disconnected by `isConnected`.
    */
   links: LinkId[] | null
 
@@ -64,11 +64,11 @@ export class NodeOutputSlot extends NodeSlot implements INodeOutputSlot {
   }
 
   /**
-   * Determines whether a dragging link originating from {@link fromSlot} may connect to an input
+   * Determines whether a dragging link originating from `fromSlot` may connect to an input
    * that would receive data from this output.
    *
-   * Validates type compatibility via {@link LiteGraph.isValidConnection} for input slots and
-   * {@link SubgraphOutput} boundary nodes.
+   * Validates type compatibility via `LiteGraph.isValidConnection` for input slots and
+   * `SubgraphOutput` boundary nodes.
    * @param fromSlot The slot at the free end of the link being dragged.
    * @returns `true` if the connection types are compatible.
    */

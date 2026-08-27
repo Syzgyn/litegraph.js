@@ -2,7 +2,7 @@ import { LGraphIcon, type LGraphIconOptions } from "./LGraphIcon"
 import { cachedMeasureText } from "./utils/textMeasureCache"
 
 /**
- * Corner placement for {@link LGraphBadge} overlays on node titles.
+ * Corner placement for `LGraphBadge` overlays on node titles.
  */
 export enum BadgePosition {
   /** Badge anchored to the top-left of the node title bar. */
@@ -12,7 +12,7 @@ export enum BadgePosition {
 }
 
 /**
- * Configuration for constructing an {@link LGraphBadge}.
+ * Configuration for constructing an `LGraphBadge`.
  */
 export interface LGraphBadgeOptions {
   /** Text label rendered inside the badge. */
@@ -27,7 +27,7 @@ export interface LGraphBadgeOptions {
   padding?: number
   /** Total badge height in pixels. Default: `20`. */
   height?: number
-  /** Corner radius when {@link CanvasRenderingContext2D.roundRect} is available. Default: `5`. */
+  /** Corner radius when `CanvasRenderingContext2D.roundRect` is available. Default: `5`. */
   cornerRadius?: number
   /** Optional icon drawn to the left of the label text. */
   iconOptions?: LGraphIconOptions
@@ -40,10 +40,10 @@ export interface LGraphBadgeOptions {
 /**
  * Small labelled overlay drawn on node title bars (e.g. status or category badges).
  *
- * Renders a rounded rectangle with optional {@link LGraphIcon} and text. Used by
- * {@link LGraphNode} badge lists and {@link LGraphButton} for interactive controls.
- * @see {@link BadgePosition}
- * @see {@link LGraphButton}
+ * Renders a rounded rectangle with optional `LGraphIcon` and text. Used by
+ * `LGraphNode` badge lists and `LGraphButton` for interactive controls.
+ * @see `BadgePosition`
+ * @see `LGraphButton`
  */
 export class LGraphBadge {
   /** Badge label text. */
@@ -108,7 +108,7 @@ export class LGraphBadge {
    *
    * Temporarily adjusts `ctx.font` and restores it before returning.
    * @param ctx Canvas context used for text measurement.
-   * @returns Width in pixels, or `0` when {@link visible} is `false`.
+   * @returns Width in pixels, or `0` when `visible` is `false`.
    */
   getWidth(ctx: CanvasRenderingContext2D) {
     if (!this.visible) return 0
