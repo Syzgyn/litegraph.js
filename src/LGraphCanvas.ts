@@ -5153,6 +5153,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       ? this.graph?.getSnapToGridSize()
       : undefined
 
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+
     // clear
     // canvas.width = canvas.width;
     if (this.clear_background) {
@@ -5160,19 +5162,16 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       else ctx.clearRect(0, 0, canvas.width, canvas.height)
     }
 
-    // draw bg canvas
+    // draw bg canvas (device pixels; graph overlay uses CSS coords below)
     if (this.bgcanvas == this.canvas) {
       this.drawBackCanvas()
     } else {
-      const scale = window.devicePixelRatio
-      ctx.drawImage(
-        this.bgcanvas,
-        0,
-        0,
-        this.bgcanvas.width / scale,
-        this.bgcanvas.height / scale,
-      )
+      ctx.drawImage(this.bgcanvas, 0, 0)
     }
+
+    const view = canvas.ownerDocument.defaultView ?? window
+    const dpr = Math.max(view.devicePixelRatio ?? 1, 1)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     // rendering
     this.onRender?.(canvas, ctx)
@@ -6429,13 +6428,22 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       height = parent.offsetHeight
     }
 
+    const cssWidth = Math.round(width ?? 0)
+    const cssHeight = Math.round(height ?? 0)
     const view = this.canvas.ownerDocument.defaultView ?? window
     const dpr = Math.max(view.devicePixelRatio ?? 1, 1)
-    const bufferWidth = Math.round((width ?? 0) * dpr)
-    const bufferHeight = Math.round((height ?? 0) * dpr)
+    const bufferWidth = Math.round(cssWidth * dpr)
+    const bufferHeight = Math.round(cssHeight * dpr)
 
-    if (this.canvas.width == bufferWidth && this.canvas.height == bufferHeight) return
+    if (
+      this.canvas.width == bufferWidth &&
+      this.canvas.height == bufferHeight &&
+      this.canvas.style.width == `${cssWidth}px` &&
+      this.canvas.style.height == `${cssHeight}px`
+    ) { return }
 
+    this.canvas.style.width = `${cssWidth}px`
+    this.canvas.style.height = `${cssHeight}px`
     this.canvas.width = bufferWidth
     this.canvas.height = bufferHeight
     this.bgcanvas.width = this.canvas.width

@@ -138,7 +138,9 @@ export class DragAndScale {
       visible_area[0] = visible_area[1] = visible_area[2] = visible_area[3] = 0
       return
     }
-    let { width, height } = this.element
+    const rect = this.element.getBoundingClientRect()
+    let width = rect.width
+    let height = rect.height
     let startx = -offset[0]
     let starty = -offset[1]
     if (viewport) {

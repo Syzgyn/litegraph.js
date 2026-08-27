@@ -58,6 +58,8 @@ describe("LGraphCanvas.resize", () => {
 
     expect(lgCanvas.canvas.width).toBe(1600)
     expect(lgCanvas.canvas.height).toBe(1200)
+    expect(lgCanvas.canvas.style.width).toBe("800px")
+    expect(lgCanvas.canvas.style.height).toBe("600px")
     expect(lgCanvas.bgcanvas.width).toBe(1600)
     expect(lgCanvas.bgcanvas.height).toBe(1200)
   })
@@ -70,6 +72,8 @@ describe("LGraphCanvas.resize", () => {
 
     expect(lgCanvas.canvas.width).toBe(800)
     expect(lgCanvas.canvas.height).toBe(600)
+    expect(lgCanvas.canvas.style.width).toBe("400px")
+    expect(lgCanvas.canvas.style.height).toBe("300px")
   })
 
   test("uses CSS pixel dimensions when devicePixelRatio is 1", () => {
@@ -87,8 +91,9 @@ describe("LGraphCanvas.resize", () => {
     const lgCanvas = createCanvas()
     lgCanvas.resize(800, 600)
 
-    const scale = window.devicePixelRatio
-    expect(lgCanvas.bgcanvas.width / scale).toBe(800)
-    expect(lgCanvas.bgcanvas.height / scale).toBe(600)
+    expect(lgCanvas.canvas.style.width).toBe("800px")
+    expect(lgCanvas.canvas.style.height).toBe("600px")
+    expect(lgCanvas.bgcanvas.width).toBe(1600)
+    expect(lgCanvas.bgcanvas.height).toBe(1200)
   })
 })
