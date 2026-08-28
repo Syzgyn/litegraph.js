@@ -1,4 +1,4 @@
-import type { CanvasColour, ColorStop, Point, RequiredProps, Size } from "../interfaces"
+import type { CanvasColour, Point, RequiredProps, Size } from "../interfaces"
 import type { CanvasPointer, LGraphCanvas, LGraphNode } from "../litegraph"
 import type { CanvasPointerEvent } from "./events"
 
@@ -56,14 +56,6 @@ export interface IWidgetSliderOptions extends IWidgetOptions<number[]> {
   markerColor?: CanvasColour
 }
 
-/** Configuration options for gradient slider widgets. Requires min, max, and step values. */
-export interface IWidgetGradientSliderOptions extends IWidgetOptions<number[]> {
-  min: number
-  max: number
-  step2: number
-  gradientStops?: ColorStop[]
-}
-
 /** Configuration options for knob widgets. Requires min, max, and step values. */
 export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
   min: number
@@ -91,7 +83,6 @@ export type IWidget =
   IStringComboWidget |
   ICustomWidget |
   ISliderWidget |
-  IGradientSliderWidget |
   IButtonWidget |
   IKnobWidget |
   IColorWidget
@@ -114,12 +105,6 @@ export interface ISliderWidget extends IBaseWidget<number, "slider", IWidgetSlid
   value: number
   /** Optional marker position on the slider track (e.g. a default or reference value). */
   marker?: number
-}
-
-/** A horizontal slider widget with optional gradient track styling. */
-export interface IGradientSliderWidget extends IBaseWidget<number, "gradientslider", IWidgetGradientSliderOptions> {
-  type: "gradientslider"
-  value: number
 }
 
 /** A colour picker widget backed by a hex colour string. */

@@ -6,7 +6,6 @@ import type {
   IColorWidget,
   IComboWidget,
   ICustomWidget,
-  IGradientSliderWidget,
   IKnobWidget,
   INumericWidget,
   ISliderWidget,
@@ -22,7 +21,6 @@ import { BooleanWidget } from "./BooleanWidget"
 import { ButtonWidget } from "./ButtonWidget"
 import { ColorWidget } from "./ColorWidget"
 import { ComboWidget } from "./ComboWidget"
-import { GradientSliderWidget } from "./GradientSliderWidget"
 import { KnobWidget } from "./KnobWidget"
 import { LegacyWidget } from "./LegacyWidget"
 import { NumberWidget } from "./NumberWidget"
@@ -42,8 +40,6 @@ export type WidgetTypeMap = {
   toggle: BooleanWidget
   /** `SliderWidget` */
   slider: SliderWidget
-  /** `GradientSliderWidget` */
-  gradientslider: GradientSliderWidget
   /** `KnobWidget` */
   knob: KnobWidget
   /** `ComboWidget` */
@@ -93,7 +89,6 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
     case "button": return toClass(ButtonWidget, narrowedWidget, node)
     case "toggle": return toClass(BooleanWidget, narrowedWidget, node)
     case "slider": return toClass(SliderWidget, narrowedWidget, node)
-    case "gradientslider": return toClass(GradientSliderWidget, narrowedWidget, node)
     case "knob": return toClass(KnobWidget, narrowedWidget, node)
     case "combo": return toClass(ComboWidget, narrowedWidget, node)
     case "number": return toClass(NumberWidget, narrowedWidget, node)
@@ -130,14 +125,6 @@ export function isBooleanWidget(widget: IBaseWidget): widget is IBooleanWidget {
  */
 export function isSliderWidget(widget: IBaseWidget): widget is ISliderWidget {
   return widget.type === "slider"
-}
-
-/**
- * Type guard: narrows `IBaseWidget` to `IGradientSliderWidget`.
- * @param widget Widget to test.
- */
-export function isGradientSliderWidget(widget: IBaseWidget): widget is IGradientSliderWidget {
-  return widget.type === "gradientslider"
 }
 
 /**
