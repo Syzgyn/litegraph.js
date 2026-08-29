@@ -1448,6 +1448,46 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
   }
 
+  /**
+   * Updates a properties-panel row to reflect the node's current property value.
+   * Used after `setProperty` when clamping or `onPropertyChanged` may alter the stored value.
+   */
+  static syncPanelPropertyWidget(panel: Panel, name: string, value: TWidgetValue): void {
+    const widgets = panel.content.querySelectorAll(":scope [data-property]") as NodeListOf<PanelWidget>
+    let elem: PanelWidget | undefined
+    for (const widget of widgets) {
+      if (widget.dataset["property"] === name) {
+        elem = widget
+        break
+      }
+    }
+    if (!elem) return
+
+    const valueElement = elem.querySelector(":scope .property-value")
+    if (!valueElement) return
+
+    const type = (elem.dataset["type"] || elem.options?.type || "string").toLowerCase()
+    elem.value = value
+
+    if (type === "boolean") {
+      elem.classList.toggle("bool-on", !!value)
+      valueElement.textContent = value ? "true" : "false"
+      return
+    }
+
+    if (type === "enum" || type === "combo") {
+      valueElement.textContent = LGraphCanvas.getPropertyPrintableValue(value, elem.options?.values) ?? ""
+      return
+    }
+
+    if (type === "number" && typeof value === "number") {
+      valueElement.textContent = value.toFixed(3)
+      return
+    }
+
+    valueElement.textContent = String(value ?? "")
+  }
+
   /** Context-menu callback that toggles a node's collapsed state. */
   static onMenuNodeCollapse(
     _value: IContextMenuValue,
@@ -8102,6 +8142,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             break
           default:
             node.setProperty(name, value)
+            LGraphCanvas.syncPanelPropertyWidget(panel, name, node.properties[name]!)
             break
         }
         this.graph.afterChange()
