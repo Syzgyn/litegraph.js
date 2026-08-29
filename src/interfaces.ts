@@ -771,6 +771,7 @@ export type PanelWidgetCallback = (
  */
 export interface PanelWidgetOptions {
   label?: string
+  precision?: number
   type?: string
   widget?: string
   values?: Array<string | IContextMenuValue<unknown, unknown, unknown> | null>

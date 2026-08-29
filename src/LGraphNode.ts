@@ -79,8 +79,13 @@ export interface INodePropertyInfo {
   type?: string
   /** Initial value when the property is first created. */
   defaultValue?: NodeProperty
+  /** Widget type to use for the property. */
   widget?: string
+  /** Label to display for the property. */
   label?: string
+  /** Precision when displaying number properties. */
+  precision?: number
+  /** Selectable values to use for combo widgets. */
   values?: TWidgetValue[]
 }
 

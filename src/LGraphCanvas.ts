@@ -7976,7 +7976,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       options = options || {}
       let strValue = String(value)
       type = type.toLowerCase()
-      if (type == "number" && typeof value === "number") strValue = value.toFixed(3)
+      const precision = options.precision ?? 3
+      if (type == "number" && typeof value === "number") strValue = value.toFixed(precision)
 
       const elem = document.createElement("div") as PanelWidget
       elem.className = "property"
