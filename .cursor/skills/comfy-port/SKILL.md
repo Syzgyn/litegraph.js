@@ -103,6 +103,7 @@ Do not add packages to `package.json` or install anything until the user chooses
 - Never introduce `@/stores/*`, `@/types/nodeId`, `pinia`, or `es-toolkit` unless already in this repo
 - Never add a new npm package without Step 2b user approval
 - Subgraph tests: import from `@/litegraph` barrel only (see `CLAUDE.md`)
+- Local variables have been renamed from snake_case to camelCase.  Match old variable names to new ones.
 
 List each upstream file → local target before editing. Apply the PR's diff to those files; avoid drive-by refactors.
 

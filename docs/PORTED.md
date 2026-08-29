@@ -95,4 +95,4 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#9332](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9332) | 2026-08-25 | `82556f02` | `src/measure.ts`, `src/LGraph.ts`, `src/LGraphCanvas.ts` | `test/measure.test.ts` |
 | [#14707](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14707) | 2026-08-25 | `b1861ab4` | `src/subgraph/SubgraphNode.ts` | — |
 | [#5637](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5637) | 2026-08-25 | `eb664f47` | Already addressed by copy-based promoted widgets (empty commit) | — |
-| [#13809](https://github.com/Comfy-Org/ComfyUI_frontend/pull/13809) | 2026-08-25 | `f21a7583` | `src/LGraph.ts` (host widget snapshot already present) | `test/subgraph/SubgraphNestedPackPromotedValues.test.ts` |
+| [#7935](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7935) | 2026-08-28 | `965ab67` | `src/LGraph.ts`, `src/LGraphCanvas.ts`, `src/LGraphNode.ts` (typing only; `actionCall` camelCase) | — |

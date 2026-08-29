@@ -927,12 +927,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /** Called at the end of `configure` with the serialised node payload. */
   onConfigure?(this: LGraphNode, serialisedNode: ISerialisedNode): void
   /** Called from `serialize` to add extra fields; must not return a value. */
-  onSerialize?(this: LGraphNode, serialised: ISerialisedNode): any
+  onSerialize?(this: LGraphNode, serialised: ISerialisedNode): void
   /** Primary execution callback invoked by `doExecute` and the graph loop. */
   onExecute?(
     this: LGraphNode,
     param?: unknown,
-    options?: { actionCall?: any },
+    options?: { actionCall?: string },
   ): void
   /** Invoked when an action input slot fires via `actionDo`. */
   onAction?(
@@ -1031,11 +1031,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onDropData?(
     this: LGraphNode,
     data: string | ArrayBuffer,
-    filename: any,
-    file: any,
+    filename: string,
+    file: File,
   ): void
   /** Handle drag-and-drop of files onto the node. */
-  onDropFile?(this: LGraphNode, file: any): void
+  onDropFile?(this: LGraphNode, file: File): void
   onInputClick?(this: LGraphNode, index: number, e: CanvasPointerEvent): void
   /** Double-click on an input slot; often used to spawn a connected node. */
   onInputDblClick?(this: LGraphNode, index: number, e: CanvasPointerEvent): void
@@ -1116,7 +1116,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     titleHeight: number,
     size: Size,
     scale: number,
-    fgcolor: any,
+    fgcolor: string,
   ): void
   /** Called from `LGraph.remove` before the node is detached. */
   onRemoved?(this: LGraphNode): void
@@ -1700,7 +1700,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * @param param Payload forwarded to downstream nodes.
    * @param options Optional execution metadata including `actionCall`.
    */
-  onAfterExecuteNode(param: unknown, options?: { actionCall?: any }) {
+  onAfterExecuteNode(param: unknown, options?: { actionCall?: string }) {
     const trigS = this.findOutputSlot("onExecuted")
     if (trigS != -1) {
       this.triggerSlot(trigS, param, null, options)
@@ -1743,7 +1743,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   /**
    * Triggers the node code execution, place a boolean/counter to mark the node as being executed
    */
-  doExecute(param?: unknown, options?: { actionCall?: any }): void {
+  doExecute(param?: unknown, options?: { actionCall?: string }): void {
     options = options || {}
     if (this.onExecute) {
       // enable this to give the event an ID
@@ -1809,7 +1809,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   trigger(
     action: string,
     param: unknown,
-    options: { actionCall?: any },
+    options: { actionCall?: string },
   ): void {
     const { outputs } = this
     if (!outputs || !outputs.length) {
@@ -1839,7 +1839,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     slot: number,
     param: unknown,
     linkId: number | null,
-    options?: { actionCall?: any },
+    options?: { actionCall?: string },
   ): void {
     options = options || {}
     if (!this.outputs) return

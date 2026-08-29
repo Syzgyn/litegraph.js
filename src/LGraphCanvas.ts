@@ -219,12 +219,12 @@ interface IPasteFromClipboardOptions {
 }
 
 interface ICreatePanelOptions {
-  closable?: any
-  window?: any
+  closable?: boolean
+  window?: Window
   onOpen?: () => void
   onClose?: () => void
-  width?: any
-  height?: any
+  width?: number | string
+  height?: number | string
 }
 
 const cursors = {
@@ -410,10 +410,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * Controls viewport clipping, event binding, render startup, and autoresize behaviour.
    */
   options: {
-    skipEvents?: any
-    viewport?: any
-    skipRender?: any
-    autoresize?: any
+    skipEvents?: boolean
+    viewport?: Rect
+    skipRender?: boolean
+    autoresize?: boolean
   }
 
   /** Base64 or URL of the tiled background image drawn behind the graph. */
@@ -528,9 +528,19 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** @deprecated LEGACY: REMOVE THIS, USE `graphMouse` INSTEAD */
   canvasMouse: Point
   /** Callback to customise the node search box UI as the user types. */
-  onSearchBox?: (helper: Element, str: string, canvas: LGraphCanvas) => any
+  onSearchBox?: (
+    helper: HTMLDivElement,
+    str: string,
+    canvas: LGraphCanvas,
+  ) => string[] | undefined
+
   /** Callback invoked when the user selects an entry from the node search box. */
-  onSearchBoxSelection?: (name: any, event: any, canvas: LGraphCanvas) => void
+  onSearchBoxSelection?: (
+    name: string,
+    event: MouseEvent,
+    canvas: LGraphCanvas,
+  ) => void
+
   /**
    * Global pointer event hook invoked during mouse move processing.
    * Return `true` to consume the event and prevent default canvas handling.
@@ -541,13 +551,21 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param ctx The 2D rendering context.
    * @param visibleArea The visible graph rectangle `[x, y, width, height]`.
    */
-  onDrawBackground?: (ctx: CanvasRenderingContext2D, visibleArea: any) => void
+  onDrawBackground?: (
+    ctx: CanvasRenderingContext2D,
+    visibleArea: Rectangle,
+  ) => void
+
   /**
    * Called to render custom content above nodes and links (affected by pan/zoom transform).
    * @param ctx The 2D rendering context.
    * @param visibleArea The visible graph rectangle `[x, y, width, height]`.
    */
-  onDrawForeground?: (arg0: CanvasRenderingContext2D, arg1: any) => void
+  onDrawForeground?: (
+    ctx: CanvasRenderingContext2D,
+    visibleArea: Rectangle,
+  ) => void
+
   /** Stroke width in pixels for rendered link segments. */
   connectionsWidth: number
   /** The current node being drawn by `drawNode`.  This should NOT be used to determine the currently selected node.  See `selectedItems` */
@@ -864,7 +882,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.connectingLinks = null
 
     // to constraint render area to a portion of the canvas
-    this.viewport = options.viewport || null
+    this.viewport = options.viewport
 
     // link canvas and graph
     this.graph = graph
@@ -893,7 +911,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       this.startRendering()
     }
 
-    this.autoresize = options.autoresize
+    this.autoresize = options.autoresize ?? false
 
     this.#updateLowQualityThreshold()
   }
@@ -6912,8 +6930,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   // refactor: there are different dialogs, some uses createDialog some dont
   prompt(
     title: string,
-    value: any,
-    callback: (arg0: any) => void,
+    value: string | number,
+    callback: (value: string) => void,
     event: CanvasPointerEvent,
     multiline?: boolean,
   ): HTMLDivElement {
@@ -6986,7 +7004,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const valueElement: HTMLInputElement | null = dialog.querySelector(":scope .value")
     if (!valueElement) throw new TypeError("valueElement was null")
 
-    valueElement.value = value
+    valueElement.value = String(value)
     valueElement.select()
 
     const input = valueElement
@@ -8253,7 +8271,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         },
         {
           content: "Properties Panel",
-          callback: function (_item: unknown, _options: unknown, _e: unknown, _menu: unknown, node: LGraphNode) { LGraphCanvas.activeCanvas.showShowNodePanel(node) },
+          callback: function (
+            _item: Positionable,
+            _options: IContextMenuOptions | undefined,
+            _e: MouseEvent | undefined,
+            _menu: ContextMenu<unknown> | undefined,
+            node: LGraphNode,
+          ) { LGraphCanvas.activeCanvas.showShowNodePanel(node) },
         },
         null,
         {

@@ -72,9 +72,9 @@ type ParamsArray<T extends Record<any, any>, K extends MethodNames<T>> =
 /** Configuration used by `LGraph.config`. */
 export interface LGraphConfig {
   /** @deprecated Legacy config - unused */
-  alignToGrid?: any
+  alignToGrid?: boolean
   /** @deprecated Legacy config - unused */
-  linksOnTop?: any
+  linksOnTop?: boolean
 }
 
 /** Options for `LGraph.add`. */
@@ -1661,7 +1661,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /** @todo Clean up - never implemented. Fires `onTrigger` on nodes matched by title. */
-  triggerInput(name: string, value: any): void {
+  triggerInput(name: string, value: unknown): void {
     const nodes = this.findNodesByTitle(name)
     for (const node of nodes) {
       // @ts-expect-error
@@ -1670,7 +1670,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   }
 
   /** @todo Clean up - never implemented. Sets trigger callback on nodes matched by title. */
-  setCallback(name: string, func: any): void {
+  setCallback(name: string, func?: () => void): void {
     const nodes = this.findNodesByTitle(name)
     for (const node of nodes) {
       // @ts-expect-error
