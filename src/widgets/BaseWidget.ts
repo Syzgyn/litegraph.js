@@ -1,10 +1,10 @@
 import type { Point } from "@/interfaces"
-import type { CanvasPointer, LGraphCanvas, LGraphNode, Size } from "@/litegraph"
 import type { CanvasPointerEvent } from "@/types/events"
 import type { IBaseWidget } from "@/types/widgets"
 
 import { drawTextInArea } from "@/draw"
 import { Rectangle } from "@/infrastructure/Rectangle"
+import { type CanvasPointer, LGraphCanvas, type LGraphNode, type Size } from "@/litegraph"
 import { LiteGraph } from "@/litegraph"
 import { cachedMeasureText } from "@/utils/textMeasureCache"
 
@@ -374,6 +374,12 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
       node.properties[this.options.property] !== undefined
     ) {
       node.setProperty(this.options.property, v)
+
+      // Update panel widget value
+      // Might need to debounce this
+      if (canvas.nodePanel) {
+        LGraphCanvas.syncPanelPropertyWidget(canvas.nodePanel, this.options.property, v)
+      }
     }
     const pos = canvas.graphMouse
     this.callback?.(this.value, canvas, node, pos, e)
