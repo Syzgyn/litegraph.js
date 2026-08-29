@@ -16,6 +16,7 @@ import type {
   INodeSlotContextItem,
   IPinnable,
   ISlotType,
+  Panel,
   Point,
   Positionable,
   ReadOnlyPoint,
@@ -73,11 +74,14 @@ export type NodeProperty = string | number | boolean | object
 /** Schema describing a custom node property shown in the properties panel. */
 export interface INodePropertyInfo {
   /** Property key shown in the panel. */
-  name: string
+  name?: string
   /** Optional type hint (`"number"`, `"enum"`, etc.). */
   type?: string
   /** Initial value when the property is first created. */
-  defaultValue: NodeProperty | undefined
+  defaultValue?: NodeProperty
+  widget?: string
+  label?: string
+  values?: TWidgetValue[]
 }
 
 /** Transient hit-test state populated by `LGraphCanvas` during pointer moves. */
@@ -962,9 +966,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     requestedSlot?: number | string,
   ): number | false | null
   /** Customises the node properties panel layout. */
-  onShowCustomPanelInfo?(this: LGraphNode, panel: any): void
+  onShowCustomPanelInfo?(this: LGraphNode, panel: Panel): void
   /** Return `true` to skip default property panel row for `pName`. */
-  onAddPropertyToPanel?(this: LGraphNode, pName: string, panel: any): boolean
+  onAddPropertyToPanel?(this: LGraphNode, pName: string, panel: Panel): boolean
   /** Called when a widget value changes through user interaction. */
   onWidgetChanged?(
     this: LGraphNode,
@@ -1044,7 +1048,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onOutputDblClick?(this: LGraphNode, index: number, e: CanvasPointerEvent): void
   // TODO: Return type
   /** Supplies metadata for a property name when not declared in `propertiesInfo`. */
-  onGetPropertyInfo?(this: LGraphNode, property: string): any
+  onGetPropertyInfo?(this: LGraphNode, property: string): INodePropertyInfo
   /** Called when the user adds a dynamic output via the context menu. */
   onNodeOutputAdd?(this: LGraphNode, value: unknown): void
   /** Called when the user adds a dynamic input via the context menu. */

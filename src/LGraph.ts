@@ -1234,7 +1234,13 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     if (!listOfGraphCanvas) return
 
     for (const c of listOfGraphCanvas) {
-      c[action]?.apply(c, params)
+      const method = c[action]
+
+      if (typeof method === "function") {
+        const args =
+          params == null ? [] : (Array.isArray(params) ? params : [params])
+        ;(method as (...args: unknown[]) => unknown).apply(c, args)
+      }
     }
   }
 

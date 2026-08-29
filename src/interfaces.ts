@@ -5,6 +5,7 @@ import type { Reroute, RerouteId } from "./Reroute"
 import type { SubgraphInputNode } from "./subgraph/SubgraphInputNode"
 import type { SubgraphOutputNode } from "./subgraph/SubgraphOutputNode"
 import type { LinkDirection, RenderShape } from "./types/globalEnums"
+import type { TWidgetValue } from "./types/widgets"
 import type { IBaseWidget } from "./types/widgets"
 import type { Rectangle } from "@/infrastructure/Rectangle"
 import type { CanvasPointerEvent } from "@/types/events"
@@ -754,4 +755,69 @@ export interface Hoverable extends HasBoundingRect {
   onPointerEnter?(e?: CanvasPointerEvent): void
   /** Called when the pointer leaves this item's bounds. */
   onPointerLeave?(e?: CanvasPointerEvent): void
+}
+
+/**
+ * Callback for panel widget value changes.
+ */
+export type PanelWidgetCallback = (
+  name: string | undefined,
+  value: TWidgetValue,
+  options: PanelWidgetOptions,
+) => void
+
+/**
+ * Options for panel widgets.
+ */
+export interface PanelWidgetOptions {
+  label?: string
+  type?: string
+  widget?: string
+  values?: Array<string | IContextMenuValue<unknown, unknown, unknown> | null>
+  callback?: PanelWidgetCallback
+}
+
+/**
+ * A button element with optional options property.
+ */
+export interface PanelButton extends HTMLButtonElement {
+  options?: unknown
+}
+
+/**
+ * A widget element with options and value properties.
+ */
+export interface PanelWidget extends HTMLDivElement {
+  options?: PanelWidgetOptions
+  value?: TWidgetValue
+}
+
+/**
+ * A dialog panel created by `LGraphCanvas.createPanel()`.
+ * Extends `HTMLDivElement` with additional properties and methods for panel management.
+ */
+export interface Panel extends HTMLDivElement {
+  header: HTMLElement
+  titleElement: HTMLSpanElement
+  content: HTMLDivElement
+  altContent: HTMLDivElement
+  footer: HTMLDivElement
+  node?: LGraphNode
+  onOpen?: () => void
+  onClose?: () => void
+  close(): void
+  toggleAltContent(force?: boolean): void
+  toggleFooterVisibility(force?: boolean): void
+  clear(): void
+  addHTML(code: string, classname?: string, onFooter?: boolean): HTMLDivElement
+  addButton(name: string, callback: () => void, options?: unknown): PanelButton
+  addSeparator(): void
+  addWidget(
+    type: string,
+    name: string,
+    value: TWidgetValue,
+    options?: PanelWidgetOptions,
+    callback?: PanelWidgetCallback,
+  ): PanelWidget
+  innerShowCodePad?(property: string): void
 }

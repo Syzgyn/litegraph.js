@@ -95,4 +95,5 @@ PRs from [ComfyUI_frontend `src/lib/litegraph`](https://github.com/Comfy-Org/Com
 | [#9332](https://github.com/Comfy-Org/ComfyUI_frontend/pull/9332) | 2026-08-25 | `82556f02` | `src/measure.ts`, `src/LGraph.ts`, `src/LGraphCanvas.ts` | `test/measure.test.ts` |
 | [#14707](https://github.com/Comfy-Org/ComfyUI_frontend/pull/14707) | 2026-08-25 | `b1861ab4` | `src/subgraph/SubgraphNode.ts` | — |
 | [#5637](https://github.com/Comfy-Org/ComfyUI_frontend/pull/5637) | 2026-08-25 | `eb664f47` | Already addressed by copy-based promoted widgets (empty commit) | — |
+| [#7970](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7970) | 2026-08-28 | `3412a09` | `src/interfaces.ts`, `src/LGraph.ts`, `src/LGraphCanvas.ts`, `src/LGraphNode.ts`, `src/subgraph/SubgraphIONodeBase.ts` (Panel types camelCase; contextMenuCompat guard already present) | — |
 | [#7935](https://github.com/Comfy-Org/ComfyUI_frontend/pull/7935) | 2026-08-28 | `965ab67` | `src/LGraph.ts`, `src/LGraphCanvas.ts`, `src/LGraphNode.ts` (typing only; `actionCall` camelCase) | — |
