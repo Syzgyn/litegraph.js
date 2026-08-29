@@ -2,7 +2,7 @@ import type { IWidgetOptions } from "@/types/widgets"
 
 import { describe, expect, test } from "vitest"
 
-import { evaluateInput, getWidgetStep } from "@/utils/widget"
+import { clampWidgetValue, evaluateInput, getWidgetStep } from "@/utils/widget"
 
 describe("getWidgetStep", () => {
   test("should return step2 when available", () => {
@@ -41,6 +41,20 @@ describe("getWidgetStep", () => {
     }
 
     expect(getWidgetStep(optionsWithZeroStep)).toBe(1)
+  })
+})
+
+describe("clampWidgetValue", () => {
+  test("clamps to min and max when both are set", () => {
+    const widget = { options: { min: 0, max: 10 } }
+
+    expect(clampWidgetValue(widget, 5)).toBe(5)
+    expect(clampWidgetValue(widget, -1)).toBe(0)
+    expect(clampWidgetValue(widget, 15)).toBe(10)
+  })
+
+  test("returns value unchanged when no bounds are set", () => {
+    expect(clampWidgetValue({ options: {} }, 42)).toBe(42)
   })
 })
 

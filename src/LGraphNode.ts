@@ -58,7 +58,7 @@ import { distributeSpace } from "./utils/spaceDistribution"
 import { cachedMeasureText } from "./utils/textMeasureCache"
 import { truncateText } from "./utils/textUtils"
 import { commonType, toClass } from "./utils/type"
-import { syncWidgetLabelsFromInputs } from "./utils/widget"
+import { clampWidgetValue, syncWidgetLabelsFromInputs } from "./utils/widget"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
 
@@ -1149,8 +1149,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       if (j == "properties") {
         // i don't want to clone properties, I want to reuse the old container
         for (const k in info.properties) {
-          this.properties[k] = info.properties[k]
-          this.onPropertyChanged?.(k, info.properties[k])
+          const widget = this.widgets?.find(w => w?.options?.property === k)
+          const value = widget
+            ? clampWidgetValue(widget, info.properties[k])
+            : info.properties[k]
+          this.properties[k] = value
+          this.onPropertyChanged?.(k, value)
         }
         continue
       }
@@ -1211,8 +1215,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       for (const w of this.widgets) {
         if (!w) continue
 
-        if (w.options?.property && this.properties[w.options.property] != undefined)
-          w.value = JSON.parse(JSON.stringify(this.properties[w.options.property]))
+        if (w.options?.property && this.properties[w.options.property] != undefined) {
+          w.value = clampWidgetValue(
+            w,
+            JSON.parse(JSON.stringify(this.properties[w.options.property])),
+          )
+        }
       }
 
       const getNamedValues = (): Record<string, TWidgetValue> | undefined => {
@@ -1231,14 +1239,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         for (const widget of this.widgets) {
           if (widget.serialize === false || !(Object.hasOwn(namedValues, widget.name))) continue
 
-          widget.value = namedValues[widget.name]
+          widget.value = clampWidgetValue(widget, namedValues[widget.name])
         }
       } else if (info.widgetsValues) {
         let i = 0
         for (const widget of this.widgets ?? []) {
           if (widget.serialize === false) continue
 
-          widget.value = info.widgetsValues[i]
+          widget.value = clampWidgetValue(widget, info.widgetsValues[i])
           i++
         }
       }
@@ -1366,6 +1374,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    */
   setProperty(name: string, value: TWidgetValue): void {
     this.properties ||= {}
+    const widget = this.widgets?.find(w => w && w.options.property == name)
+    if (widget) value = clampWidgetValue(widget, value)
+
     if (value === this.properties[name]) return
 
     const prevValue = this.properties[name]

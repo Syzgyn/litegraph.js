@@ -12,6 +12,25 @@ export function getWidgetStep(options: IWidgetOptions<unknown>): number {
   return options.step2 || ((options.step || 10) * 0.1)
 }
 
+/**
+ * Clamps a numeric value to the bound widget's `options.min` / `options.max`.
+ * Non-numeric values are returned unchanged.
+ */
+export function clampWidgetValue<T>(
+  widget: Pick<IBaseWidget, "options">,
+  value: T,
+): T {
+  if (typeof value !== "number") return value
+
+  const { min, max } = widget.options ?? {}
+  if (min == null && max == null) return value
+
+  let newValue = value as number
+  if (min != null && newValue < min) newValue = min
+  if (max != null && newValue > max) newValue = max
+  return newValue as T
+}
+
 export function evaluateInput(input: string): number | undefined {
   const result = evaluateMathExpression(input)
   if (result !== undefined) {
