@@ -109,7 +109,7 @@ export function strokeShape(
     titleHeight,
     titleMode = TitleMode.NORMAL_TITLE,
     color,
-    padding = 6,
+    padding = 0.5,
     collapsed = false,
     lineWidth: thickness = 1,
   }: IDrawBoundingOptions = {},
@@ -151,7 +151,7 @@ export function strokeShape(
       const cornerRadii =
         isCollapsed || shape === RenderShape.ROUND
           ? [radius]
-          : [radius, 2, radius, 2]
+          : [radius, radius, 2, 2]
       ctx.roundRect(
         x - padding,
         y - padding,

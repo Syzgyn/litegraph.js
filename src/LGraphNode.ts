@@ -1950,7 +1950,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
-   * add a new property to this node
+   * Add a new property to this node
+   * @param name name of the property
+   * @param defaultValue default value of the property
    * @param type string defining the output type ("vec3","number",...)
    * @param extraInfo this can be used to have special properties of the property (like values, etc)
    */

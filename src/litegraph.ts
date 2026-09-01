@@ -233,6 +233,7 @@ export {
   EaseFunction,
   LGraphEventMode,
   LinkMarkerShape,
+  NodeSlotType,
   RenderShape,
   TitleMode,
 } from "./types/globalEnums"

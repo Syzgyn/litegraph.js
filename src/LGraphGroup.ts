@@ -50,7 +50,7 @@ export class LGraphGroup implements Positionable, IPinnable, IColorable {
   /** Length of the resize handle triangle drawn in the bottom-right corner. */
   static resizeLength = 10
   /** Padding used when drawing the title text inside the title bar. */
-  static padding = 4
+  static padding = 0.5
   /** Fallback fill/stroke colour when `color` is unset. */
   static defaultColour = "#335"
   /**
