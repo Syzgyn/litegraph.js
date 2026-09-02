@@ -4,6 +4,7 @@ exports[`LGraph (constructor only) > Matches previous snapshot > basicLGraph 1`]
 LGraph {
   "catchErrors": true,
   "config": {},
+  "connectionGestureDepth": 0,
   "elapsedTime": 0.01,
   "errorsInExecution": undefined,
   "events": CustomEventTarget {},
@@ -42,6 +43,7 @@ exports[`LGraph (constructor only) > Matches previous snapshot > minLGraph 1`] =
 LGraph {
   "catchErrors": true,
   "config": {},
+  "connectionGestureDepth": 0,
   "elapsedTime": 0.01,
   "errorsInExecution": undefined,
   "events": CustomEventTarget {},

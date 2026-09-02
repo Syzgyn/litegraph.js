@@ -462,10 +462,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   colourGetter: DefaultConnectionColors = {
     getConnectedColor: (type: string) =>
       this.defaultConnectionColorByType[type] ||
+      LiteGraph.slotTypeColors[type]?.colorOn ||
       this.defaultConnectionColor.outputOn,
     getDisconnectedColor: (type: string) =>
       this.defaultconnectionColorByTypeOff[type] ||
+      LiteGraph.slotTypeColors[type]?.colorOff ||
       this.defaultConnectionColorByType[type] ||
+      LiteGraph.slotTypeColors[type]?.colorOn ||
       this.defaultConnectionColor.outputOff,
   }
 

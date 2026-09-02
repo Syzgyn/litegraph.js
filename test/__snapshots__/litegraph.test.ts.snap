@@ -188,6 +188,7 @@ LiteGraphGlobal {
   "searchShowAllOnOpen": true,
   "searchboxExtras": {},
   "shiftClickDoBreakLinkFrom": false,
+  "slotTypeColors": {},
   "slotTypesDefaultIn": {},
   "slotTypesDefaultOut": {},
   "slotTypesIn": [],

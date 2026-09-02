@@ -4,6 +4,7 @@ exports[`LGraph configure() > LGraph matches previous snapshot (normal configure
 LGraph {
   "catchErrors": true,
   "config": {},
+  "connectionGestureDepth": 0,
   "elapsedTime": 0.01,
   "errorsInExecution": undefined,
   "events": CustomEventTarget {},
@@ -42,6 +43,7 @@ exports[`LGraph configure() > LGraph matches previous snapshot (normal configure
 LGraph {
   "catchErrors": true,
   "config": {},
+  "connectionGestureDepth": 0,
   "elapsedTime": 0.01,
   "errorsInExecution": undefined,
   "events": CustomEventTarget {},

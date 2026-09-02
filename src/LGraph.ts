@@ -198,6 +198,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   /** @internal version counter bumped on structural edits. */
   version: number = -1
   /**
+   * Nesting depth while `LinkConnector` repositions existing links.
+   * When greater than zero, consumers should defer reactions to intermediate disconnects.
+   */
+  connectionGestureDepth = 0
+  /**
    * Indexed property access is deprecated.
    * Backwards compatibility with a Proxy has been added, but will eventually be removed.
    *
@@ -652,6 +657,33 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     this.state.lastLinkId = value
   }
 
+  /** Whether a link reposition gesture is in progress on this graph. */
+  get isConnectionGestureActive(): boolean {
+    return this.connectionGestureDepth > 0
+  }
+
+  /** Notify listeners that `node`'s inputs or outputs changed. */
+  notifyConnectionChange(node: LGraphNode): void {
+    this.onConnectionChange?.(node)
+  }
+
+  /** @internal Used by `LinkConnector` when repositioning existing links. */
+  beginConnectionGesture(): void {
+    this.connectionGestureDepth++
+  }
+
+  /** @internal Used by `LinkConnector` when a reposition drag ends. */
+  endConnectionGesture(): void {
+    if (this.connectionGestureDepth <= 0) {
+      this.connectionGestureDepth = 0
+      return
+    }
+    this.connectionGestureDepth--
+    if (this.connectionGestureDepth === 0) {
+      this.onConnectionGestureEnd?.()
+    }
+  }
+
   onAfterStep?(): void
   /** Called immediately before each `runStep` iteration. */
   onBeforeStep?(): void
@@ -675,6 +707,11 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   onAfterChange?(graph: LGraph, info?: LGraphNode | null): void
   /** Called when any node's connections change (application-specific). */
   onConnectionChange?(node: LGraphNode): void
+  /**
+   * Called when a `LinkConnector` reposition drag of existing links finishes
+   * (successful drop, disconnect-on-canvas, or cancel).
+   */
+  onConnectionGestureEnd?(): void
   /** @deprecated Legacy change notification; prefer `events` or canvas hooks. */
   onChange?(graph: LGraph): void
   /** Hook invoked from `asSerialisable` before returning data. */

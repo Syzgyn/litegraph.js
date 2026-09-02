@@ -81,7 +81,7 @@ export abstract class SlotBase implements INodeSlot {
    * Resolves the fill colour to use when rendering this slot.
    *
    * Returns `colorOn` or `colorOff` when set; otherwise delegates to
-   * `DefaultConnectionColors` based on `isConnected`.
+   * `DefaultConnectionColors` (canvas overrides, then `LiteGraph.slotTypeColors`).
    * @param colorContext Theme colours for connected and disconnected slot states.
    * @returns The canvas colour string to use for this slot's fill.
    */

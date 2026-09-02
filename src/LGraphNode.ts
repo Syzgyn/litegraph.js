@@ -211,6 +211,19 @@ export interface LGraphNode {
   constructor: LGraphNodeConstructor
 }
 
+/** Graph-like object that supports the `onConnectionChange` callback. */
+interface ConnectionChangeNotifier {
+  notifyConnectionChange(node: LGraphNode): void
+}
+
+/** Invoke `graph.onConnectionChange` when implemented. */
+function notifyGraphConnectionChange(
+  graph: ConnectionChangeNotifier | null | undefined,
+  node: LGraphNode,
+): void {
+  graph?.notifyConnectionChange(node)
+}
+
 // #endregion Types
 
 /**
@@ -933,6 +946,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   onInputAdded?(this: LGraphNode, input: INodeInputSlot): void
   /** Called from `addOutput` when a new output slot is created. */
   onOutputAdded?(this: LGraphNode, output: INodeOutputSlot): void
+  /**
+   * Called after `configure` restores input and output slots.
+   *
+   * Use to re-apply slot styling (e.g. wire colours) omitted from serialised data.
+   */
+  onSlotsConfigured?(this: LGraphNode): void
   /** Called at the end of `configure` with the serialised node payload. */
   onConfigure?(this: LGraphNode, serialisedNode: ISerialisedNode): void
   /** Called from `serialize` to add extra fields; must not return a value. */
@@ -1216,6 +1235,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       }
       this.onOutputAdded?.(output)
     }
+
+    this.onSlotsConfigured?.()
 
     // SubgraphNode callback.
     this.internalConfigureAfterSlots?.()
@@ -3172,6 +3193,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       input,
     )
 
+    notifyGraphConnectionChange(graph, this)
+    notifyGraphConnectionChange(graph, inputNode)
+
     this.setDirtyCanvas(false, true)
     graph.afterChange()
 
@@ -3309,6 +3333,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           output,
         )
 
+        notifyGraphConnectionChange(graph, target)
+        notifyGraphConnectionChange(graph, this)
+
         break
       }
     } else {
@@ -3355,6 +3382,11 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           linkInfo,
           output,
         )
+
+        if (target) {
+          notifyGraphConnectionChange(graph, target)
+        }
+        notifyGraphConnectionChange(graph, this)
       }
       output.links = null
     }
@@ -3451,6 +3483,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           linkInfo,
           output,
         )
+
+        notifyGraphConnectionChange(graph, this)
+        notifyGraphConnectionChange(graph, targetNode)
       }
     }
 

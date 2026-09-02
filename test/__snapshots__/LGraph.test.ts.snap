@@ -4,6 +4,7 @@ exports[`LGraph > supports schema v0.4 graphs > oldSchemaGraph 1`] = `
 LGraph {
   "catchErrors": true,
   "config": {},
+  "connectionGestureDepth": 0,
   "elapsedTime": 0.01,
   "errorsInExecution": undefined,
   "events": CustomEventTarget {},

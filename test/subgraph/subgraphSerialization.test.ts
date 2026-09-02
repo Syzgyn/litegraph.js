@@ -76,6 +76,7 @@ describe("SubgraphSerialization - Basic Serialization", () => {
     // Verify core properties
     expect(restored.id).toBe(original.id)
     expect(restored.name).toBe(original.name)
+    expect(restored.description).toBe(original.description)
 
     // Verify I/O structure
     expect(restored.inputs.length).toBe(original.inputs.length)
@@ -196,8 +197,8 @@ describe("SubgraphSerialization - Complex Serialization", () => {
     if (nodes.length > 0) {
       const firstNode = nodes[0]
       if (firstNode.properties) {
-        firstNode.properties["customValue"] = 42
-        firstNode.properties["customString"] = "test"
+        firstNode.properties.customValue = 42
+        firstNode.properties.customString = "test"
       }
     }
 
@@ -228,11 +229,11 @@ describe("SubgraphSerialization - Version Compatibility", () => {
 
   it("should load version 1.0+ format", () => {
     const modernFormat = {
-      version: 1 as const, // Number as expected by current implementation
+      version: 1, // Number as expected by current implementation
       id: "test-modern-id",
       name: "Modern Subgraph",
       nodes: [],
-      links: [],
+      links: {},
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
@@ -240,20 +241,13 @@ describe("SubgraphSerialization - Version Compatibility", () => {
       outputs: [{ id: "output-id", name: "modern_output", type: "string" }],
       inputNode: {
         id: -10,
-        bounding: [0, 0, 120, 60] as [number, number, number, number],
+        bounding: [0, 0, 120, 60],
       },
       outputNode: {
         id: -20,
-        bounding: [300, 0, 120, 60] as [number, number, number, number],
+        bounding: [300, 0, 120, 60],
       },
       widgets: [],
-      state: {
-        lastGroupId: 0,
-        lastNodeId: 0,
-        lastLinkId: 0,
-        lastRerouteId: 0,
-      },
-      revision: 0,
     }
 
     expect(() => {
@@ -266,29 +260,22 @@ describe("SubgraphSerialization - Version Compatibility", () => {
 
   it("should handle missing fields gracefully", () => {
     const incompleteFormat = {
-      version: 1 as const,
+      version: 1,
       id: "incomplete-id",
       name: "Incomplete Subgraph",
       nodes: [],
-      links: [],
+      links: {},
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
       inputNode: {
         id: -10,
-        bounding: [0, 0, 120, 60] as [number, number, number, number],
+        bounding: [0, 0, 120, 60],
       },
       outputNode: {
         id: -20,
-        bounding: [300, 0, 120, 60] as [number, number, number, number],
+        bounding: [300, 0, 120, 60],
       },
-      state: {
-        lastGroupId: 0,
-        lastNodeId: 0,
-        lastLinkId: 0,
-        lastRerouteId: 0,
-      },
-      revision: 0,
       // Missing optional: inputs, outputs, widgets
     }
 
@@ -303,11 +290,11 @@ describe("SubgraphSerialization - Version Compatibility", () => {
 
   it("should consider future-proofing", () => {
     const futureFormat = {
-      version: 2 as const, // Future version (number)
+      version: 2, // Future version (number)
       id: "future-id",
       name: "Future Subgraph",
       nodes: [],
-      links: [],
+      links: {},
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
@@ -315,26 +302,18 @@ describe("SubgraphSerialization - Version Compatibility", () => {
       outputs: [],
       inputNode: {
         id: -10,
-        bounding: [0, 0, 120, 60] as [number, number, number, number],
+        bounding: [0, 0, 120, 60],
       },
       outputNode: {
         id: -20,
-        bounding: [300, 0, 120, 60] as [number, number, number, number],
+        bounding: [300, 0, 120, 60],
       },
       widgets: [],
       futureFeature: "unknown_data", // Unknown future field
-      state: {
-        lastGroupId: 0,
-        lastNodeId: 0,
-        lastLinkId: 0,
-        lastRerouteId: 0,
-      },
-      revision: 0,
     }
 
     // Should handle future format gracefully
     expect(() => {
-      // @ts-expect-error - version (number) is intentionally set to a future version
       const subgraph = new Subgraph(new LGraph(), futureFormat)
       expect(subgraph.name).toBe("Future Subgraph")
     }).not.toThrow()

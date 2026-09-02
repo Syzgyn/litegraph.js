@@ -4,6 +4,7 @@ import type { MovingOutputLink } from "@/canvas/MovingOutputLink"
 import type { RenderLink } from "@/canvas/RenderLink"
 import type { ToInputFromIoNodeLink } from "@/canvas/ToInputFromIoNodeLink"
 import type { ToInputRenderLink } from "@/canvas/ToInputRenderLink"
+import type { LinkNetwork } from "@/interfaces"
 import type { LGraphNode } from "@/LGraphNode"
 import type { LLink } from "@/LLink"
 import type { Reroute } from "@/Reroute"
@@ -84,6 +85,14 @@ export interface LinkConnectorEventMap {
 
   /** The user dropped links onto empty canvas space. */
   "dropped-on-canvas": CanvasPointerEvent
+
+  /**
+   * A reposition drag of existing links ended (drop, disconnect, or cancel).
+   * Fired from `LinkConnector.reset` after connection changes complete.
+   */
+  "link-drag-ended": {
+    network: LinkNetwork
+  }
 
   /** The user dropped a link onto a node widget that accepts connections. */
   "dropped-on-widget": {

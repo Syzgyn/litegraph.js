@@ -29,6 +29,19 @@ import { ToOutputFromIoNodeLink } from "./ToOutputFromIoNodeLink"
 import { ToOutputFromRerouteLink } from "./ToOutputFromRerouteLink"
 import { ToOutputRenderLink } from "./ToOutputRenderLink"
 
+/** @internal Graph network that tracks link-reposition gesture depth. */
+interface ConnectionGestureNetwork {
+  beginConnectionGesture(): void
+  endConnectionGesture(): void
+}
+
+function isConnectionGestureNetwork(
+  network: LinkNetwork,
+): network is LinkNetwork & ConnectionGestureNetwork {
+  return typeof (network as Partial<ConnectionGestureNetwork>).beginConnectionGesture === "function" &&
+    typeof (network as Partial<ConnectionGestureNetwork>).endConnectionGesture === "function"
+}
+
 /**
  * A Litegraph state object for the `LinkConnector`.
  * References are only held atomically within a function, never passed.
@@ -98,6 +111,7 @@ export interface LinkConnectorExport {
  */
 export class LinkConnector {
   readonly #setConnectingLinks: (value: ConnectingLink[]) => void
+  #gestureNetwork: LinkNetwork | null = null
 
   /**
    * Link connection state POJO. Source of truth for state of link drag operations.
@@ -217,6 +231,13 @@ export class LinkConnector {
     this.#setConnectingLinks(links)
   }
 
+  #beginLinkGesture(network: LinkNetwork): void {
+    this.#gestureNetwork = network
+    if (isConnectionGestureNetwork(network)) {
+      network.beginConnectionGesture()
+    }
+  }
+
   /**
    * Whether a link drag operation is currently in progress.
    *
@@ -334,6 +355,7 @@ export class LinkConnector {
     state.connectingTo = "input"
     state.draggingExistingLinks = true
 
+    this.#beginLinkGesture(network)
     this.#setLegacyLinks(false)
   }
 
@@ -421,6 +443,7 @@ export class LinkConnector {
     state.multi = true
     state.connectingTo = "output"
 
+    this.#beginLinkGesture(network)
     this.#setLegacyLinks(true)
   }
 
@@ -1084,6 +1107,8 @@ export class LinkConnector {
     if (mayContinue === false) return
 
     const { state, outputLinks, inputLinks, hiddenReroutes, renderLinks, floatingLinks } = this
+    const wasDraggingExisting = state.draggingExistingLinks
+    const gestureNetwork = this.#gestureNetwork
 
     if (!force && state.connectingTo === undefined) return
     state.connectingTo = undefined
@@ -1101,6 +1126,14 @@ export class LinkConnector {
     state.multi = false
     state.draggingExistingLinks = false
     state.snapLinksPos = undefined
+
+    if (wasDraggingExisting && gestureNetwork) {
+      this.events.dispatch("link-drag-ended", { network: gestureNetwork })
+      if (isConnectionGestureNetwork(gestureNetwork)) {
+        gestureNetwork.endConnectionGesture()
+      }
+    }
+    this.#gestureNetwork = null
   }
 }
 

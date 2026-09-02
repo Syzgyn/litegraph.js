@@ -1,4 +1,4 @@
-import type { Dictionary, ISlotType, Rect, WhenNullish } from "./interfaces"
+import type { CanvasColour, Dictionary, ISlotType, Rect, WhenNullish } from "./interfaces"
 
 import { GraphHistory } from "./canvas/GraphHistory"
 import { InputIndicators } from "./canvas/InputIndicators"
@@ -293,6 +293,12 @@ export class LiteGraphGlobal {
   slotTypesIn: string[] = []
   /** Sorted list of known output slot type strings (lowercase). */
   slotTypesOut: string[] = []
+  /**
+   * Global wire-type colours used when slots have no explicit `colorOn` / `colorOff`.
+   * Populated via `registerSlotTypeColors`; resolved through `LGraphCanvas.colourGetter`
+   * after per-canvas `defaultConnectionColorByType` overrides.
+   */
+  slotTypeColors: Record<string, { colorOn: CanvasColour, colorOff: CanvasColour }> = {}
   /** Default node type(s) suggested for each input slot type in search/create menus. */
   slotTypesDefaultIn: Record<string, string[]> = {}
   /** Default node type(s) suggested for each output slot type in search/create menus. */
@@ -570,6 +576,28 @@ export class LiteGraphGlobal {
         types.push(type)
         types.sort((a, b) => a.localeCompare(b))
       }
+    }
+  }
+
+  /**
+   * Register global connected/disconnected colours for a wire slot type.
+   *
+   * Used as a fallback when individual slots have no `colorOn` / `colorOff`
+   * (e.g. after `configure` hydration). Resolved via `LGraphCanvas.colourGetter`
+   * unless a canvas overrides `defaultConnectionColorByType`.
+   */
+  registerSlotTypeColors(
+    type: string,
+    colorOn: CanvasColour,
+    colorOff?: CanvasColour,
+  ): void {
+    this.slotTypeColors[type] = { colorOn, colorOff: colorOff ?? colorOn }
+  }
+
+  /** Clear all colours registered via `registerSlotTypeColors`. */
+  clearSlotTypeColors(): void {
+    for (const key of Object.keys(this.slotTypeColors)) {
+      delete this.slotTypeColors[key]
     }
   }
 
