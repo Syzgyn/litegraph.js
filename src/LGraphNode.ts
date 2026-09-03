@@ -63,6 +63,11 @@ import { clampWidgetValue, syncWidgetLabelsFromInputs } from "./utils/widget"
 import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
 
+/** Gap below each widget row in `#arrangeWidgets`. Matches `computeSize` per-widget `+ 4`. */
+const WIDGET_ARRANGE_GAP = 4
+/** Bottom padding below the last widget. Matches `computeSize` `widgetsHeight += 8`. */
+const WIDGET_ARRANGE_BOTTOM_MARGIN = 8
+
 // #region Types
 
 /** Unique identifier for a node within a graph. Numeric or UUID string depending on `LiteGraph.useUuids`. */
@@ -607,7 +612,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       (this.widgetsUp ? 0 : widgetStartY) + 2
     )
 
-    let freeSpace = bodyHeight - startY
+    let freeSpace = bodyHeight - startY - WIDGET_ARRANGE_BOTTOM_MARGIN
 
     // Collect fixed height widgets first
     let fixedWidgetHeight = 0
@@ -619,7 +624,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
     for (const w of this.widgets) {
       if (w.computeSize) {
-        const height = w.computeSize()[1] + 4
+        const height = w.computeSize()[1] + WIDGET_ARRANGE_GAP
         w.computedHeight = height
         fixedWidgetHeight += height
       } else if (w.computeLayoutSize) {
@@ -630,14 +635,15 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
           w,
         })
       } else {
-        const height = LiteGraph.NODE_WIDGET_HEIGHT + 4
+        const height = LiteGraph.NODE_WIDGET_HEIGHT + WIDGET_ARRANGE_GAP
         w.computedHeight = height
         fixedWidgetHeight += height
       }
     }
 
-    // Calculate remaining space for DOM widgets
+    // Calculate remaining space for growable widgets
     freeSpace -= fixedWidgetHeight
+    if (growableWidgets.length > 0) freeSpace -= WIDGET_ARRANGE_GAP
     this.freeWidgetSpace = freeSpace
 
     // Prepare space requests for distribution
@@ -646,12 +652,12 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       maxSize: d.prefHeight,
     }))
 
-    // Distribute space among DOM widgets
+    // Distribute space among growable widgets
     const allocations = distributeSpace(Math.max(0, freeSpace), spaceRequests)
 
     // Apply computed heights
     for (const [i, d] of growableWidgets.entries()) {
-      d.w.computedHeight = allocations[i]
+      d.w.computedHeight = allocations[i] + WIDGET_ARRANGE_GAP
     }
 
     // Position widgets
@@ -668,7 +674,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     // TODO: Move the layout logic before drawing of the node shape, so we don't
     // need to trigger extra round of rendering.
     if (y > bodyHeight) {
-      this.setSize([this.size[0], y])
+      this.setSize([this.size[0], y + WIDGET_ARRANGE_BOTTOM_MARGIN])
       this.graph.setDirtyCanvas(false, true)
     }
   }
