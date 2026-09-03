@@ -643,7 +643,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
 
     // Calculate remaining space for growable widgets
     freeSpace -= fixedWidgetHeight
-    if (growableWidgets.length > 0) freeSpace -= WIDGET_ARRANGE_GAP
+    if (growableWidgets.length > 0) freeSpace -= WIDGET_ARRANGE_GAP * growableWidgets.length
     this.freeWidgetSpace = freeSpace
 
     // Prepare space requests for distribution
@@ -2184,9 +2184,9 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
         } else {
           widgetHeight += LiteGraph.NODE_WIDGET_HEIGHT
         }
-        widgetsHeight += widgetHeight + 4
+        widgetsHeight += widgetHeight + WIDGET_ARRANGE_GAP
       }
-      widgetsHeight += 8
+      widgetsHeight += WIDGET_ARRANGE_BOTTOM_MARGIN
     }
 
     // compute height using widgets height
