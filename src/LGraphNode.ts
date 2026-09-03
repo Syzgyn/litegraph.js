@@ -2402,6 +2402,14 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   }
 
   /**
+   * Invokes `onRemove` on every widget so DOM overlays and other resources are released.
+   * Called when the node is removed from the graph; idempotent for widgets already disposed.
+   */
+  disposeWidgets(): void {
+    for (const widget of this.widgets ?? []) widget.onRemove?.()
+  }
+
+  /**
    * Removes a widget and clears any associated widget input slot references.
    * @param widget Widget instance to remove.
    * @throws If the node has no widgets or the widget is not on this node.

@@ -97,6 +97,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     const rect = canvas.canvas.getBoundingClientRect()
 
     const fontSize = LiteGraph.NODE_TEXT_SIZE * ds.scale
+    // TODO: Only update the style if it has changed
     Object.assign(textarea.style, {
       display: "block",
       position: "fixed",

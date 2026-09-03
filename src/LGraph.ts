@@ -112,6 +112,7 @@ function fireNodeRemovalLifecycle(node: LGraphNode): void {
   if (graph) {
     (graph.events as CustomEventTarget<LGraphEventMap>).dispatch("node:before-removed", { node })
   }
+  node.disposeWidgets()
   node.onRemoved?.()
   graph?.onNodeRemoved?.(node)
 }
@@ -1477,6 +1478,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     }
 
     // callback
+    node.disposeWidgets()
     node.onRemoved?.()
 
     node.graph = null

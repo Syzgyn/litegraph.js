@@ -173,6 +173,17 @@ describe("TextPreviewWidget", () => {
     expect(document.querySelector("textarea.litegraph-textpreview")).toBeNull()
   })
 
+  test("removing the node disposes the textarea", ({ canvas, graph, node }) => {
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(document.querySelector("textarea.litegraph-textpreview")).toBeTruthy()
+
+    graph.remove(node)
+    expect(document.querySelector("textarea.litegraph-textpreview")).toBeNull()
+  })
+
   test("setValue updates textarea content", ({ canvas, node }) => {
     const widget = node.widgets![0] as TextPreviewWidget
     widget.computedHeight = 120
