@@ -31,7 +31,7 @@ import type { SubgraphOutputNode } from "./subgraph/SubgraphOutputNode"
 import type { CanvasPointerEvent } from "./types/events"
 import type { NodeLike } from "./types/NodeLike"
 import type { ISerialisedNode, SubgraphIO } from "./types/serialisation"
-import type { IBaseWidget, IWidgetOptions, TWidgetType, TWidgetValue } from "./types/widgets"
+import type { IBaseWidget, IWidgetOptions, TWidgetType, TWidgetValue, WidgetOptionsFor } from "./types/widgets"
 
 import { SUBGRAPH_OUTPUT_ID } from "@/constants"
 
@@ -2303,24 +2303,26 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
     name: string,
     value: TValue,
     callback: IBaseWidget["callback"] | string | null,
-    options?: IWidgetOptions | string,
+    options?: WidgetOptionsFor<Type> | string,
   ): WidgetTypeMap[Type] | IBaseWidget {
     this.widgets ||= []
 
-    if (!options && callback && typeof callback === "object") {
-      options = callback
-      callback = null
+    let resolvedCallback = callback
+    let opts: IWidgetOptions
+
+    if (!options && resolvedCallback && typeof resolvedCallback === "object") {
+      opts = resolvedCallback as IWidgetOptions
+      resolvedCallback = null
+    } else if (typeof options === "string") {
+      opts = { property: options }
+    } else if (options && typeof options === "object") {
+      opts = { ...options }
+    } else {
+      opts = {}
     }
-
-    // options can be the property name
-    options ||= {}
-    if (typeof options === "string")
-      options = { property: options }
-
-    // callback can be the property name
-    if (callback && typeof callback === "string") {
-      options.property = callback
-      callback = null
+    if (resolvedCallback && typeof resolvedCallback === "string") {
+      opts.property = resolvedCallback
+      resolvedCallback = null
     }
 
     const w: IBaseWidget & { type: Type } = {
@@ -2328,8 +2330,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       type: type.toLowerCase(),
       name: name,
       value: value,
-      callback: typeof callback !== "function" ? undefined : callback,
-      options,
+      callback: typeof resolvedCallback !== "function" ? undefined : resolvedCallback,
+      options: opts,
       y: 0,
     }
 
