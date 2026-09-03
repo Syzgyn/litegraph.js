@@ -1,11 +1,11 @@
 import { zoomIdentity } from "d3-zoom"
 import { describe, expect, test } from "vitest"
 
-import { DragAndScale } from "@/DragAndScale"
 import {
   dragAndScaleToZoomTransform,
   zoomTransformToDragAndScale,
 } from "@/canvas/D3ZoomController"
+import { DragAndScale } from "@/DragAndScale"
 
 describe("D3ZoomController transform mapping", () => {
   test("round-trips offset and scale through d3-zoom transforms", () => {

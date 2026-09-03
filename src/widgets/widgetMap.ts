@@ -10,6 +10,7 @@ import type {
   INumericWidget,
   ISliderWidget,
   IStringWidget,
+  ITextPreviewWidget,
   IWidget,
   TWidgetType,
 } from "@/types/widgets"
@@ -25,6 +26,7 @@ import { KnobWidget } from "./KnobWidget"
 import { LegacyWidget } from "./LegacyWidget"
 import { NumberWidget } from "./NumberWidget"
 import { SliderWidget } from "./SliderWidget"
+import { TextPreviewWidget } from "./TextPreviewWidget"
 import { TextWidget } from "./TextWidget"
 
 /**
@@ -50,6 +52,8 @@ export type WidgetTypeMap = {
   string: TextWidget
   /** `TextWidget` (`type: "text"`) */
   text: TextWidget
+  /** `TextPreviewWidget` */
+  textpreview: TextPreviewWidget
   /** `ColorWidget` */
   color: ColorWidget
   /** `LegacyWidget` for unrecognized custom POJOs */
@@ -94,6 +98,7 @@ export function toConcreteWidget<TWidget extends IWidget | IBaseWidget>(
     case "number": return toClass(NumberWidget, narrowedWidget, node)
     case "string": return toClass(TextWidget, narrowedWidget, node)
     case "text": return toClass(TextWidget, narrowedWidget, node)
+    case "textpreview": return toClass(TextPreviewWidget, narrowedWidget, node)
     case "color": return toClass(ColorWidget, narrowedWidget, node)
     default: {
       if (wrapLegacyWidgets) return toClass(LegacyWidget, widget, node)
@@ -173,6 +178,10 @@ export function isStringWidget(widget: IBaseWidget): widget is IStringWidget {
  */
 export function isTextWidget(widget: IBaseWidget): widget is IStringWidget {
   return widget.type === "text"
+}
+
+export function isTextPreviewWidget(widget: IBaseWidget): widget is ITextPreviewWidget {
+  return widget.type === "textpreview"
 }
 
 /**

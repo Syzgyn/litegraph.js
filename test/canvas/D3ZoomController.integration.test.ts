@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 
-import { DragAndScale } from "@/DragAndScale"
 import { D3ZoomController } from "@/canvas/D3ZoomController"
+import { DragAndScale } from "@/DragAndScale"
 
 function createCanvas(): HTMLCanvasElement {
   const canvas = document.createElement("canvas")

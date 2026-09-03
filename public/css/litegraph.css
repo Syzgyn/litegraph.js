@@ -639,3 +639,20 @@
   border-radius: 20px;
   cursor: pointer;
 }
+
+textarea.litegraph-textpreview {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 5px;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  color: #999;
+  background: transparent;
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+  cursor: text;
+}

@@ -67,6 +67,20 @@ export interface IWidgetKnobOptions extends IWidgetOptions<number[]> {
   gradientStops?: string
 }
 
+/** Options for {@link ITextPreviewWidget}. */
+export interface ITextPreviewWidgetOptions extends IWidgetOptions {
+  /** Minimum widget height in graph pixels. Default: `20`. */
+  minHeight?: number
+  /** When `true`, the widget will grow vertically to fit the content. Default: `false`. */
+  growToFit?: boolean
+}
+
+/** Type of widget options for a given widget type. */
+export type WidgetOptionsFor<Type extends TWidgetType> =
+  Extract<IWidget, { type: Type }> extends { options: infer Options }
+    ? Options
+    : IWidgetOptions
+
 /**
  * A widget for a node.
  * All types are based on IBaseWidget - additions can be made there or directly on individual types.
@@ -79,6 +93,7 @@ export type IWidget =
   | IBooleanWidget |
   INumericWidget |
   IStringWidget |
+  ITextPreviewWidget |
   IComboWidget |
   IStringComboWidget |
   ICustomWidget |
@@ -150,6 +165,12 @@ export interface IComboWidget extends IBaseWidget<
 /** A single-line or multi-line text input widget. */
 export interface IStringWidget extends IBaseWidget<string, "string" | "text", IWidgetOptions<string[]>> {
   type: "string" | "text"
+  value: string
+}
+
+/** A read-only multiline text preview with selectable content. */
+export interface ITextPreviewWidget extends IBaseWidget<string, "textpreview", ITextPreviewWidgetOptions> {
+  type: "textpreview"
   value: string
 }
 
