@@ -47,6 +47,7 @@ import type { UUID } from "./utils/uuid"
 import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
+import { D3ZoomController } from "@/canvas/D3ZoomController"
 import { LinkConnector, type RenderLinkUnion } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { forEachNode } from "@/utils/graphTraversal"
@@ -248,6 +249,29 @@ const cursors = {
   NW: "nwse-resize",
 } as const
 
+function createD3ZoomController(canvas: LGraphCanvas): D3ZoomController {
+  return new D3ZoomController(canvas.canvas, canvas.ds, {
+    getZoomSpeed: () => canvas.zoomSpeed,
+    shouldZoomOnWheel: (e) => {
+      const isCtrlOrMacMeta =
+        e.ctrlKey || (e.metaKey && navigator.platform.includes("Mac"))
+      const isZoomModifier = isCtrlOrMacMeta && !e.altKey && !e.shiftKey
+      return isZoomModifier || LiteGraph.canvasNavigationMode === "legacy"
+    },
+    onZoom: () => {
+      canvas.graph?.change()
+      canvas.setDirty(true, true)
+    },
+  })
+}
+
+function bindD3Zoom(canvas: LGraphCanvas, controller?: D3ZoomController): D3ZoomController {
+  const d3Zoom = controller ?? createD3ZoomController(canvas)
+  d3Zoom.updateScaleExtent()
+  d3Zoom.bind()
+  return d3Zoom
+}
+
 /**
  * Renders and interacts with a single `LGraph` (or `Subgraph`) on an HTML canvas.
  *
@@ -382,6 +406,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   #mousedownCallback?: (e: PointerEvent) => void
   /** Bound wheel handler registered on `canvas`. */
   #mousewheelCallback?: (e: WheelEvent) => void
+  /** d3-zoom bridge for wheel/pinch zoom when {@link #useD3Zoom} is enabled. */
+  #d3ZoomController?: D3ZoomController
   /** Bound pointer-move handler registered on `canvas`. */
   #mousemoveCallback?: (e: PointerEvent) => void
   /** Bound pointer-up handler registered on `canvas`. */
@@ -398,6 +424,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   #blockClick?: boolean
   /** Stack of parent graphs for navigation. */
   #navStack: (LGraph | Subgraph)[] = []
+  /**
+   * When `true`, wheel/pinch zoom is handled by [d3-zoom](https://d3js.org/d3-zoom)
+   * instead of the built-in `processMouseWheel` zoom logic.
+   *
+   * Use {@link useD3Zoom} to set so listeners bind correctly.
+   * Panning behaviour is unchanged.
+   */
+  #useD3Zoom: boolean = false
 
   autoPan: AutoPanController | null = null
 
@@ -757,6 +791,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       // Only check LOD threshold if it's enabled
       if (this.#lowQualityZoomThreshold > 0) {
         this.#isLowQuality = scale < this.#lowQualityZoomThreshold
+      }
+
+      if (this.#useD3Zoom && !this.#d3ZoomController?.syncingFromD3) {
+        this.#d3ZoomController?.syncFromDragAndScale()
       }
     }
 
@@ -3713,7 +3751,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#subgraphOpenedCallback = this.processSubgraphOpened.bind(this)
 
     canvas.addEventListener("pointerdown", this.#mousedownCallback, { capture: true })
-    canvas.addEventListener("wheel", this.#mousewheelCallback, { capture: false })
+    canvas.addEventListener("wheel", this.#mousewheelCallback, { passive: false })
+
+    if (this.#useD3Zoom) {
+      this.#d3ZoomController = bindD3Zoom(this, this.#d3ZoomController)
+    }
 
     canvas.addEventListener("pointerup", this.#mouseupCallback, { capture: true })
     canvas.addEventListener("pointermove", this.#mousemoveCallback)
@@ -3760,6 +3802,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     canvas.removeEventListener("pointerup", this.#mouseupCallback!)
     canvas.removeEventListener("pointerdown", this.#mousedownCallback!)
     canvas.removeEventListener("wheel", this.#mousewheelCallback!)
+    this.#d3ZoomController?.unbind()
     canvas.removeEventListener("keydown", this.#keyCallback!)
     document.removeEventListener("keyup", this.#keyCallback!)
     canvas.removeEventListener("contextmenu", this.#doNothing)
@@ -3771,6 +3814,24 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#keyCallback = undefined
 
     this.#eventsBinded = false
+  }
+
+  /**
+   * Enables or disables d3-zoom for wheel/pinch zoom.
+   *
+   * When events are already bound, the d3-zoom listeners are attached or removed immediately.
+   */
+  useD3Zoom(enabled: boolean): void {
+    if (this.#useD3Zoom === enabled) return
+
+    this.#useD3Zoom = enabled
+    if (!this.#eventsBinded) return
+
+    if (enabled) {
+      this.#d3ZoomController = bindD3Zoom(this, this.#d3ZoomController)
+    } else {
+      this.#d3ZoomController?.unbind()
+    }
   }
 
   /**
@@ -4528,6 +4589,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const isZoomModifier = isCtrlOrMacMeta && !e.altKey && !e.shiftKey
 
     if (isZoomModifier || LiteGraph.canvasNavigationMode === "legacy") {
+      const d3HandlesZoom = this.#useD3Zoom && (this.#d3ZoomController?.isBound ?? false)
+
+      if (d3HandlesZoom) {
+        e.preventDefault()
+        return
+      }
+
       // Legacy mode or standard mode with ctrl - use wheel for zoom
       if (isTrackpad) {
         // Trackpad gesture - use smooth scaling
@@ -4541,6 +4609,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           scale *= 1 / this.zoomSpeed
         }
         this.ds.changeScale(scale, [e.clientX, e.clientY])
+      }
+
+      if (this.#useD3Zoom && this.#eventsBinded && !this.#d3ZoomController?.isBound) {
+        this.#d3ZoomController = bindD3Zoom(this, this.#d3ZoomController)
       }
     } else {
       // Standard mode without ctrl - use wheel / gestures to pan
