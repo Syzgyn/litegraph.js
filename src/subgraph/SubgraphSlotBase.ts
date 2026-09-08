@@ -66,7 +66,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
    * Set for slots materialised from the empty placeholder during editing; predefined
    * subgraph IO ports keep the default `false`.
    */
-  removeOnDisconnect = false
+  removeOnDisconnect = true
 
   /** Slot type string used for connection compatibility checks. */
   override type: string
