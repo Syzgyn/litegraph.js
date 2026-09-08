@@ -569,6 +569,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   renderExecutionOrder: boolean
   /** When `true`, shows a tooltip when hovering over link midpoints. */
   renderLinkTooltip: boolean
+  /** When `true`, new nodes will follow the cursor when being added. */
+  followCursorWhenAddingNodes: boolean
 
   /** Shape of the markers shown at the midpoint of links.  Default: Circle */
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
@@ -923,6 +925,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.renderCollapsedSlots = true
     this.renderExecutionOrder = false
     this.renderLinkTooltip = true
+    this.followCursorWhenAddingNodes = true
 
     this.linksRenderMode = LinkRenderType.SPLINE_LINK
 
@@ -4404,6 +4407,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     } else {
       node.pos[0] = this.graphMouse[0] - node.size[0] / 2
       node.pos[1] = this.graphMouse[1] + 10
+      this.lastMouse = [this.mouse[0], this.mouse[1]]
     }
 
     this.state.ghostNodeId = node.id
@@ -7258,9 +7262,19 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const { canvas } = graphcanvas
     const rootDocument = canvas.ownerDocument || document
 
+    const trackPointerWhileOpen = (e: PointerEvent) => {
+      that.mouse[0] = e.clientX
+      that.mouse[1] = e.clientY
+      const [canvasX, canvasY] = that.convertEventToCanvasOffset(e)
+      that.graphMouse[0] = canvasX
+      that.graphMouse[1] = canvasY
+    }
+    rootDocument.addEventListener("pointermove", trackPointerWhileOpen)
+
     const div = document.createElement("div")
     const dialog = Object.assign(div, {
       close(this: typeof div) {
+        rootDocument.removeEventListener("pointermove", trackPointerWhileOpen)
         that.searchBox = undefined
         this.blur()
         canvas.focus()
@@ -7469,18 +7483,23 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     })
     if (options.showAllOnOpen) refreshHelper()
 
-    function select(name: string) {
+    function select(name: string, selectionEvent?: MouseEvent) {
       if (name) {
         if (that.onSearchBoxSelection) {
           that.onSearchBoxSelection(name, event, graphcanvas)
         } else {
           if (!graphcanvas.graph) throw new NullGraphError()
 
+          const useGhost = graphcanvas.followCursorWhenAddingNodes
           graphcanvas.graph.beforeChange()
           const node = LiteGraph.createNode(name)
           if (node) {
-            node.pos = graphcanvas.convertEventToCanvasOffset(event)
-            graphcanvas.graph.add(node, false)
+            if (!useGhost) node.pos = graphcanvas.convertEventToCanvasOffset(event)
+            graphcanvas.graph.add(node, {
+              skipComputeOrder: true,
+              ghost: useGhost,
+              dragEvent: useGhost ? selectionEvent : undefined,
+            })
           }
 
           // join node after inserting
@@ -7725,8 +7744,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (className) {
           help.className += ` ${className}`
         }
-        help.addEventListener("click", function () {
-          select(unescape(String(this.dataset["type"])))
+        help.addEventListener("click", function (e) {
+          select(unescape(String(this.dataset["type"])), e)
         })
         helper.append(help)
       }
