@@ -3696,6 +3696,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // maybe detach events from oldCanvas
     if (!element && this.canvas && !skipEvents) this.unbindEvents()
 
+    const previous = element.data
+    if (previous instanceof LGraphCanvas && previous !== this) {
+      previous.pauseRendering = true
+      previous.stopRendering()
+      previous.unbindEvents()
+    }
+
     this.canvas = element
     this.ds.element = element
     this.pointer.element = element
