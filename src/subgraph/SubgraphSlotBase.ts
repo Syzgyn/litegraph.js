@@ -60,6 +60,14 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
   /** Whether the pointer is currently over this slot. */
   isPointerOver: boolean = false
 
+  /**
+   * When `true`, the slot is removed once it has no remaining connections.
+   *
+   * Set for slots materialised from the empty placeholder during editing; predefined
+   * subgraph IO ports keep the default `false`.
+   */
+  removeOnDisconnect = false
+
   /** Slot type string used for connection compatibility checks. */
   override type: string
   /** Axis-aligned bounds used for layout and hit-testing. */

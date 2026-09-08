@@ -53,6 +53,7 @@ export class EmptySubgraphInput extends SubgraphInput {
 
     const name = nextUniqueName(slot.name, existingNames)
     const input = subgraph.addInput(name, String(slot.type))
+    input.removeOnDisconnect = true
     return input.connect(slot, node, afterRerouteId)
   }
 

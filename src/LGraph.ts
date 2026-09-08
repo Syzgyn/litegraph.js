@@ -1973,6 +1973,7 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     const node = this.getNodeById(link.targetId)
     node?.disconnectInput(link.targetSlot, false)
 
+    if (!this.#linksStore.has(linkId)) return
     link.disconnect(this)
   }
 

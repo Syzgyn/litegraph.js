@@ -167,6 +167,7 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
       const existingNames = this.subgraph.inputs.map(input => input.name)
       const uniqueName = nextUniqueName(inputSlot.slot.name, existingNames)
       const newSubgraphInput = this.subgraph.addInput(uniqueName, String(inputSlot.slot.type ?? ""))
+      newSubgraphInput.removeOnDisconnect = true
       const newSlotIndex = this.slots.indexOf(newSubgraphInput)
       if (newSlotIndex === -1) {
         console.error("Could not find newly created subgraph input slot.")
@@ -246,6 +247,8 @@ export class SubgraphInputNode extends SubgraphIONodeBase<SubgraphInput> impleme
     subgraphInput.events.dispatch("input-disconnected", {
       input: subgraphInput,
     })
+
+    subgraph.removeDisconnectedEphemeralSlot(subgraphInput)
 
     node.onConnectionsChange?.(
       NodeSlotType.OUTPUT,

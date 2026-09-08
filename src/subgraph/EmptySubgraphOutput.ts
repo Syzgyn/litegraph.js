@@ -53,6 +53,7 @@ export class EmptySubgraphOutput extends SubgraphOutput {
 
     const name = nextUniqueName(slot.name, existingNames)
     const output = subgraph.addOutput(name, String(slot.type))
+    output.removeOnDisconnect = true
     return output.connect(slot, node, afterRerouteId)
   }
 

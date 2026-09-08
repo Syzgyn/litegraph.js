@@ -469,9 +469,18 @@ export class LLink implements LinkSegment, Serialisable<SerialisableLLink> {
 
     if (this.originIsIoNode && network instanceof Subgraph) {
       const subgraphInput = network.inputs.at(this.originSlot)
-      if (!subgraphInput) throw new Error("Invalid link - subgraph input not found")
+      if (!subgraphInput) return
 
       subgraphInput.events.dispatch("input-disconnected", { input: subgraphInput })
+    } else if (this.targetIsIoNode && network instanceof Subgraph) {
+      const subgraphOutput = network.outputs.at(this.targetSlot)
+      if (!subgraphOutput) return
+
+      const linkIndex = subgraphOutput.linkIds.indexOf(this.id)
+      if (linkIndex !== -1) subgraphOutput.linkIds.splice(linkIndex, 1)
+      else subgraphOutput.linkIds.length = 0
+
+      network.removeDisconnectedEphemeralSlot(subgraphOutput)
     }
   }
 

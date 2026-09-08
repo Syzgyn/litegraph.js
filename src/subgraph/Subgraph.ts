@@ -289,11 +289,26 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
   }
 
   /**
+   * Removes an ephemeral IO slot that no longer has any connections.
+   *
+   * Predefined subgraph ports are left in place; only slots created from the empty
+   * placeholder set `removeOnDisconnect`.
+   * @param slot The boundary slot to remove when disconnected and ephemeral.
+   */
+  removeDisconnectedEphemeralSlot(slot: SubgraphInput | SubgraphOutput): void {
+    if (!slot.removeOnDisconnect || slot.linkIds.length > 0) return
+
+    if (slot instanceof SubgraphInput) this.removeInput(slot, { disconnectLinks: false })
+    else this.removeOutput(slot, { disconnectLinks: false })
+  }
+
+  /**
    * Removes an input slot from the subgraph.
    * @param input The input slot to remove.
+   * @param options.disconnectLinks When `true` (default), disconnects all links first.
    */
-  removeInput(input: SubgraphInput): void {
-    input.disconnect()
+  removeInput(input: SubgraphInput, options: { disconnectLinks?: boolean } = {}): void {
+    if (options.disconnectLinks !== false) input.disconnect()
 
     const index = this.inputs.indexOf(input)
     if (index === -1) throw new Error("Input not found")
@@ -312,9 +327,10 @@ export class Subgraph extends LGraph implements BaseLGraph, Serialisable<Exporte
   /**
    * Removes an output slot from the subgraph.
    * @param output The output slot to remove.
+   * @param options.disconnectLinks When `true` (default), disconnects all links first.
    */
-  removeOutput(output: SubgraphOutput): void {
-    output.disconnect()
+  removeOutput(output: SubgraphOutput, options: { disconnectLinks?: boolean } = {}): void {
+    if (options.disconnectLinks !== false) output.disconnect()
 
     const index = this.outputs.indexOf(output)
     if (index === -1) throw new Error("Output not found")

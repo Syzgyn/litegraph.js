@@ -33,8 +33,6 @@ import type { NodeLike } from "./types/NodeLike"
 import type { ISerialisedNode, SubgraphIO } from "./types/serialisation"
 import type { IBaseWidget, IWidgetOptions, TWidgetType, TWidgetValue, WidgetOptionsFor } from "./types/widgets"
 
-import { SUBGRAPH_OUTPUT_ID } from "@/constants"
-
 import { getNodeInputOnPos, getNodeOutputOnPos } from "./canvas/measureSlots"
 import { NullGraphError } from "./infrastructure/NullGraphError"
 import { Rectangle } from "./infrastructure/Rectangle"
@@ -3359,18 +3357,6 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
       for (const linkId of links) {
         const linkInfo = graph.links.get(linkId)
         if (!linkInfo) continue
-        if (
-          linkInfo.targetId === SUBGRAPH_OUTPUT_ID &&
-          graph instanceof Subgraph
-        ) {
-          const targetSlot = graph.outputNode.slots[linkInfo.targetSlot]
-          if (targetSlot) {
-            targetSlot.linkIds.length = 0
-          } else {
-            console.error("Missing subgraphOutput slot when disconnecting link")
-          }
-        }
-
         const target = graph.getNodeById(linkInfo.targetId)
         graph.incrementVersion()
 
