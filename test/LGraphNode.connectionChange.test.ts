@@ -41,6 +41,39 @@ describe("LGraph connection notifications", () => {
   })
 })
 
+describe("LiteGraph link type colours", () => {
+  afterEach(() => {
+    LiteGraph.clearLinkTypeColors()
+  })
+
+  it("uses registered colours via resolveLinkTypeColor resolution order", () => {
+    LiteGraph.registerLinkTypeColors("buffer", "#ff0000")
+
+    const fallback = "#111111"
+    const canvasOverrides: Record<string, string> = {}
+
+    const resolve = (type: string) =>
+      canvasOverrides[type] ||
+      LiteGraph.linkTypeColors[type] ||
+      fallback
+
+    expect(resolve("buffer")).toBe("#ff0000")
+
+    canvasOverrides["buffer"] = "#aaaaaa"
+    expect(resolve("buffer")).toBe("#aaaaaa")
+  })
+
+  it("resolves through LGraphCanvas.resolveLinkTypeColor", () => {
+    LiteGraph.registerLinkTypeColors("buffer", "#ff0000")
+
+    expect(LGraphCanvas.resolveLinkTypeColor("buffer", "#111111")).toBe("#ff0000")
+
+    LGraphCanvas.linkTypeColors["buffer"] = "#222222"
+    expect(LGraphCanvas.resolveLinkTypeColor("buffer", "#111111")).toBe("#222222")
+    delete LGraphCanvas.linkTypeColors["buffer"]
+  })
+})
+
 describe("LiteGraph slot type colours", () => {
   afterEach(() => {
     LiteGraph.clearSlotTypeColors()

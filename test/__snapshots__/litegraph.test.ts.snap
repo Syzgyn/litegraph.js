@@ -164,6 +164,7 @@ LiteGraphGlobal {
   "doAddTriggersSlots": false,
   "highlightSelectedGroup": true,
   "isInsideRectangle": [Function],
+  "linkTypeColors": {},
   "macGesturesRequireMac": true,
   "macTrackpadGestures": false,
   "middleClickSlotAddDefaultNode": false,

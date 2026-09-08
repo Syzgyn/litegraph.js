@@ -303,7 +303,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /** Default colour for event-type links when no per-type override exists in `LGraphCanvas.linkTypeColors`. */
   static DEFAULT_EVENT_LINK_COLOR = "#A86"
 
-  /** Link type to colour dictionary. */
+  /**
+   * Per-type link colour overrides. Checked before `LiteGraph.linkTypeColors`.
+   * @see {@link LiteGraph.registerLinkTypeColors}
+   */
   static linkTypeColors: Dictionary<string> = {
     "-1": LGraphCanvas.DEFAULT_EVENT_LINK_COLOR,
     "number": "#AAA",
@@ -969,6 +972,19 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.autoresize = options.autoresize ?? false
 
     this.#updateLowQualityThreshold()
+  }
+
+  /**
+   * Resolves the colour for a link of the given slot type.
+   * @param type Slot type string from the link or slot.
+   * @param fallback Colour when no type-specific override exists.
+   */
+  static resolveLinkTypeColor(type: ISlotType | null | undefined, fallback: CanvasColour): CanvasColour {
+    if (type == null) return fallback
+    const key = String(type)
+    return LGraphCanvas.linkTypeColors[key] ||
+      LiteGraph.linkTypeColors[key] ||
+      fallback
   }
 
   /** Context-menu callback that creates a new `LGraphGroup` at the pointer position. */
@@ -3039,8 +3055,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           renderedPaths.add(reroute)
           visibleReroutes.push(reroute)
           reroute.colour = link.color ||
-            LGraphCanvas.linkTypeColors[link.type] ||
-            this.defaultLinkColor
+            LGraphCanvas.resolveLinkTypeColor(link.type, this.defaultLinkColor)
 
           const prevReroute = graph.getReroute(reroute.parentId)
           const rerouteStartPos = prevReroute?.pos ?? startPos
@@ -6241,8 +6256,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         ? "#FFF"
         : color ||
           link?.color ||
-          (link?.type != null && LGraphCanvas.linkTypeColors[link.type]) ||
-          this.defaultLinkColor
+          (link?.type != null
+            ? LGraphCanvas.resolveLinkTypeColor(link.type, this.defaultLinkColor)
+            : this.defaultLinkColor)
     startDir = startDir || LinkDirection.RIGHT
     endDir = endDir || LinkDirection.LEFT
 

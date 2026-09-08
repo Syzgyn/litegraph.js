@@ -299,6 +299,12 @@ export class LiteGraphGlobal {
    * after per-canvas `defaultConnectionColorByType` overrides.
    */
   slotTypeColors: Record<string, { colorOn: CanvasColour, colorOff: CanvasColour }> = {}
+  /**
+   * Global link colours keyed by slot type.
+   * Populated via `registerLinkTypeColors`; resolved after `LGraphCanvas.linkTypeColors`
+   * when rendering links.
+   */
+  linkTypeColors: Record<string, CanvasColour> = {}
   /** Default node type(s) suggested for each input slot type in search/create menus. */
   slotTypesDefaultIn: Record<string, string[]> = {}
   /** Default node type(s) suggested for each output slot type in search/create menus. */
@@ -598,6 +604,23 @@ export class LiteGraphGlobal {
   clearSlotTypeColors(): void {
     for (const key of Object.keys(this.slotTypeColors)) {
       delete this.slotTypeColors[key]
+    }
+  }
+
+  /**
+   * Register a global colour for links of the given slot type.
+   *
+   * Used when links have no explicit `color` and no override in
+   * `LGraphCanvas.linkTypeColors`.
+   */
+  registerLinkTypeColors(type: string, color: CanvasColour): void {
+    this.linkTypeColors[type] = color
+  }
+
+  /** Clear all colours registered via `registerLinkTypeColors`. */
+  clearLinkTypeColors(): void {
+    for (const key of Object.keys(this.linkTypeColors)) {
+      delete this.linkTypeColors[key]
     }
   }
 
