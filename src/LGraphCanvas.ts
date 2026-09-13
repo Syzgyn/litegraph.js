@@ -1481,8 +1481,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       } else if (item.type == "Boolean") {
         value = Boolean(value)
       }
+      if (!node.graph) throw new NullGraphError()
+
+      node.graph.beforeChange(node)
       // @ts-expect-error Requires refactor.
       node[property] = value
+      node.graph.afterChange(node)
       dialog.remove()
       canvas.setDirty(true, true)
     }
@@ -1676,6 +1680,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     function innerClicked(v: IContextMenuValue<string>) {
       if (!node) return
+      if (!node.graph) throw new NullGraphError()
+
+      node.graph.beforeChange()
 
       const fApplyColor = function (item: IColorable) {
         const colorOption = v.value ? LGraphCanvas.nodeColors[v.value] : null
@@ -1690,6 +1697,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           fApplyColor(canvas.selectedNodes[i])
         }
       }
+
+      node.graph.afterChange()
       canvas.setDirty(true, true)
     }
 

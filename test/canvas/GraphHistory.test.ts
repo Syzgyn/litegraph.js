@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, vi } from "vitest"
 
 import { GraphHistory } from "@/canvas/GraphHistory"
-import { LGraph, LGraphCanvas, LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphNode, LiteGraph, RenderShape } from "@/litegraph"
 
 import { test as baseTest } from "../testExtensions"
 
@@ -329,6 +329,66 @@ describe("GraphHistory", () => {
 
     expect(graph.nodes).toHaveLength(1)
     expect(graph.nodes[0].pos[0]).not.toBe(150)
+  })
+
+  test("undo restores title changes", async ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/HistoryNode")!
+    graph.add(node)
+    history.reset()
+
+    const nodeId = node.id
+    const originalTitle = node.title
+
+    graph.beforeChange(node)
+    node.title = "Renamed Node"
+    graph.afterChange()
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+
+    history.undo()
+
+    expect(graph.getNodeById(nodeId)!.title).toBe(originalTitle)
+  })
+
+  test("undo restores color changes", async ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/HistoryNode")!
+    graph.add(node)
+    history.reset()
+
+    const nodeId = node.id
+    const originalColor = node.color
+
+    graph.beforeChange()
+    node.setColorOption(LGraphCanvas.nodeColors.red)
+    graph.afterChange()
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+
+    history.undo()
+
+    expect(graph.getNodeById(nodeId)!.color).toBe(originalColor)
+  })
+
+  test("undo restores shape changes", async ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/HistoryNode")!
+    graph.add(node)
+    history.reset()
+
+    const nodeId = node.id
+    const originalShape = node.shape
+
+    graph.beforeChange()
+    node.shape = RenderShape.ROUND
+    graph.afterChange()
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+
+    history.undo()
+
+    expect(graph.getNodeById(nodeId)!.shape).toBe(originalShape)
   })
 
   test("undo and redo preserve widget values", ({ graph, history }) => {
