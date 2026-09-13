@@ -27,6 +27,7 @@ function lineHeight(): number {
  */
 export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements ITextPreviewWidget {
   #textarea: HTMLTextAreaElement | null = null
+  #graphChangeTarget: { canvas: LGraphCanvas, listener: () => void } | null = null
 
   constructor(widget: ITextPreviewWidget, node: LGraphNode) {
     super(widget, node)
@@ -48,9 +49,30 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     })
   }
 
-  #shouldShowElement(): boolean {
+  #shouldShowElement(canvas?: LGraphCanvas): boolean {
     const { node } = this
-    return !node.collapsed && !this.hidden && this.node.isWidgetVisible(this)
+    const activeCanvas = canvas ?? node.graph?.primaryCanvas
+    if (activeCanvas && node.graph !== activeCanvas.graph) return false
+    return !node.collapsed && !this.hidden && node.isWidgetVisible(this)
+  }
+
+  #bindGraphChangeListener(canvas: LGraphCanvas): void {
+    if (this.#graphChangeTarget) return
+
+    const listener = () => {
+      if (this.node.graph !== canvas.graph) this.#hideElement()
+    }
+
+    canvas.canvas.addEventListener("litegraph:set-graph", listener)
+    this.#graphChangeTarget = { canvas, listener }
+  }
+
+  #unbindGraphChangeListener(): void {
+    const target = this.#graphChangeTarget
+    if (!target) return
+
+    target.canvas.canvas.removeEventListener("litegraph:set-graph", target.listener)
+    this.#graphChangeTarget = null
   }
 
   #ensureTextarea(canvas: LGraphCanvas): HTMLTextAreaElement {
@@ -68,6 +90,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     textarea.addEventListener("wheel", e => e.stopPropagation(), { passive: true })
 
     canvas.getCanvasWindow().document.body.append(textarea)
+    this.#bindGraphChangeListener(canvas)
     this.#textarea = textarea
     return textarea
   }
@@ -77,7 +100,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
   }
 
   #syncElement(canvas: LGraphCanvas, width: number): void {
-    if (!this.#shouldShowElement()) {
+    if (!this.#shouldShowElement(canvas)) {
       this.#hideElement()
       return
     }
@@ -178,7 +201,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     this.drawWidgetShape(ctx, { width, showText })
 
     const canvas = this.node.graph?.primaryCanvas
-    if (!canvas || !showText || !this.#shouldShowElement()) {
+    if (!canvas || !showText || !this.#shouldShowElement(canvas)) {
       this.#hideElement()
       Object.assign(ctx, { textAlign, strokeStyle, fillStyle, globalAlpha })
       return
@@ -193,6 +216,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
   }
 
   onRemove(): void {
+    this.#unbindGraphChangeListener()
     this.#textarea?.remove()
     this.#textarea = null
   }

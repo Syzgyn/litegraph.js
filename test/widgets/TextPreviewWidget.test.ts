@@ -10,6 +10,8 @@ import { LGraph, LGraphCanvas, LGraphNode } from "@/litegraph"
 import { TextPreviewWidget } from "@/widgets/TextPreviewWidget"
 import { isTextPreviewWidget } from "@/widgets/widgetMap"
 
+import { createTestSubgraph, createTestSubgraphNode } from "../subgraph/fixtures/subgraphHelpers"
+
 interface TextPreviewWidgetFixtures {
   graph: LGraph
   node: LGraphNode
@@ -198,5 +200,44 @@ describe("TextPreviewWidget", () => {
 
     const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
     expect(textarea.value).toBe("Updated text")
+  })
+
+  test("hides textarea when navigating into a subgraph", ({ canvas, graph, node }) => {
+    const subgraph = createTestSubgraph({ nodeCount: 1 })
+    graph.add(createTestSubgraphNode(subgraph))
+
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+
+    canvas.openSubgraph(subgraph)
+    expect(textarea.style.display).toBe("none")
+  })
+
+  test("hides textarea when navigating out of a subgraph", ({ canvas, graph }) => {
+    const subgraph = createTestSubgraph({ nodeCount: 1 })
+    graph.add(createTestSubgraphNode(subgraph))
+
+    const innerNode = subgraph.nodes[0]
+    innerNode.widgets = [new TextPreviewWidget(createMockWidgetConfig({ value: "inner" }), innerNode)]
+    innerNode.setSize([240, 200])
+
+    canvas.openSubgraph(subgraph)
+
+    const innerWidget = innerNode.widgets[0] as TextPreviewWidget
+    innerWidget.computedHeight = 120
+    innerWidget.y = 40
+    innerWidget.drawWidget(canvas.ctx, { width: innerNode.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+    expect(textarea.value).toBe("inner")
+
+    canvas.setGraph(graph)
+    expect(textarea.style.display).toBe("none")
   })
 })
