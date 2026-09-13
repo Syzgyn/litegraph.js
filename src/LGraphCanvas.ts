@@ -8720,6 +8720,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             if (slotInfo) {
               slotInfo.label = input.value
             }
+            node.expandToFitContent()
+            node.setDirtyCanvas(true, true)
             setDirty()
           }
           dialog.close()
