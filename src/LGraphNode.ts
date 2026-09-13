@@ -436,8 +436,8 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   #getErrorStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
     if (this.hasErrors) {
       return {
-        padding: 12,
-        lineWidth: 10,
+        padding: 2,
+        lineWidth: 4,
         color: LiteGraph.NODE_ERROR_COLOUR,
       }
     }
@@ -446,7 +446,7 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
   #getSelectedStrokeStyle(this: LGraphNode): IDrawBoundingOptions | undefined {
     if (this.selected) {
       return {
-        padding: this.hasErrors ? 20 : undefined,
+        padding: undefined,
       }
     }
   }
