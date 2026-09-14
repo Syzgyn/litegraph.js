@@ -148,6 +148,46 @@ describe("LGraphCanvas hover APIs", () => {
     expect(graphY).toBeCloseTo(120)
   })
 
+  test("dispatches litegraph:viewport-change when the viewport transform changes", () => {
+    const handler = vi.fn()
+    canvas.canvas.addEventListener("litegraph:viewport-change", handler)
+
+    canvas.ds.scale = 2
+    canvas.ds.offset[0] = 10
+    canvas.ds.computeVisibleArea(canvas.viewport)
+
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(handler.mock.calls[0][0].detail.scale).toBe(2)
+    expect(handler.mock.calls[0][0].detail.offset).toEqual([10, 0])
+  })
+
+  test("getHoverClientPos converts hover anchor to viewport coordinates", () => {
+    const [x, y] = node.getInputSlotPos(node.inputs[0])
+    pointerMoveAt(canvas, x, y)
+
+    const target = canvas.getHoverTarget()
+    expect(target?.kind).toBe("input")
+
+    const [clientX, clientY] = canvas.getHoverClientPos(target!)!
+    expect(clientX).toBeCloseTo(x)
+    expect(clientY).toBeCloseTo(y)
+  })
+
+  test("getHoverClientRect tracks zoom for anchored tooltips", () => {
+    const [x, y] = node.getInputSlotPos(node.inputs[0])
+    pointerMoveAt(canvas, x, y)
+
+    const target = canvas.getHoverTarget()!
+    const rectBefore = canvas.getHoverClientRect(target)!
+
+    canvas.ds.scale = 2
+    canvas.ds.computeVisibleArea(canvas.viewport)
+
+    const rectAfter = canvas.getHoverClientRect(target)!
+    expect(rectAfter[2]).toBeCloseTo(rectBefore[2] * 2)
+    expect(rectAfter[3]).toBeCloseTo(rectBefore[3] * 2)
+  })
+
   test("updates hover target while panning the canvas", () => {
     const [x, y] = node.getInputSlotPos(node.inputs[0])
     pointerMoveAt(canvas, x, y)

@@ -1,4 +1,4 @@
-import type { LinkSegment, Point } from "@/interfaces"
+import type { LinkSegment, Point, ReadOnlyRect, Rect } from "@/interfaces"
 import type { LGraphNode } from "@/LGraphNode"
 import type { Reroute } from "@/Reroute"
 import type { Subgraph } from "@/subgraph/Subgraph"
@@ -7,10 +7,16 @@ import type { SubgraphInputNode } from "@/subgraph/SubgraphInputNode"
 import type { SubgraphOutput } from "@/subgraph/SubgraphOutput"
 import type { SubgraphOutputNode } from "@/subgraph/SubgraphOutputNode"
 import type { HoverTarget } from "@/types/hover"
+import type { IBaseWidget } from "@/types/widgets"
 
 import { getNodeInputOnPos, getNodeOutputOnPos } from "@/canvas/measureSlots"
 import { isInRectangle } from "@/measure"
 import { TitleMode } from "@/types/globalEnums"
+
+/** Default layout metrics; match `LiteGraphGlobal` defaults to avoid a circular import. */
+const NODE_TITLE_HEIGHT = 30
+const NODE_SLOT_HEIGHT = 20
+const NODE_WIDGET_HEIGHT = 20
 
 export interface ResolveHoverTargetOptions {
   x: number
@@ -143,6 +149,91 @@ export function resolveHoverTarget({
   return null
 }
 
+function rectCentre(rect: ReadOnlyRect): Point {
+  return [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2]
+}
+
+function copyReadOnlyRect(rect: ReadOnlyRect): Rect {
+  return [rect[0], rect[1], rect[2], rect[3]]
+}
+
+function getNodeTitleGraphRect(node: LGraphNode): Rect | undefined {
+  if (node.flags.collapsed) return
+
+  const titleMode = node.titleMode
+  if (titleMode === TitleMode.NO_TITLE) return
+
+  return [
+    node.pos[0],
+    node.pos[1] - NODE_TITLE_HEIGHT,
+    node.size[0],
+    NODE_TITLE_HEIGHT,
+  ]
+}
+
+function getWidgetGraphRect(node: LGraphNode, widget: IBaseWidget): Rect | undefined {
+  const y = widget.lastY
+  if (y == null) return
+
+  const width = widget.width || node.size[0]
+  const height = widget.computedHeight ??
+    widget.computeSize?.(node.size[0])?.[1] ??
+    NODE_WIDGET_HEIGHT
+
+  return [node.pos[0] + 6, node.pos[1] + y, width - 12, height]
+}
+
+function getLinkGraphRect(link: LinkSegment): Rect | undefined {
+  const centre = link.pathCentre
+  if (!centre) return
+
+  return [centre[0] - 4, centre[1] - 4, 8, 8]
+}
+
+/**
+ * Returns a graph-space bounding rectangle for a hover target, when one exists.
+ */
+export function getHoverAnchorRect(target: HoverTarget): Rect | undefined {
+  switch (target.kind) {
+    case "input":
+    case "output": {
+      const { boundingRect } = target.slot
+      if (boundingRect[2] > 0 && boundingRect[3] > 0)
+        return copyReadOnlyRect(boundingRect)
+
+      const pos = target.kind === "input"
+        ? target.node.getInputSlotPos(target.slot)
+        : target.node.getOutputPos(target.index)
+      const size = NODE_SLOT_HEIGHT
+      return [pos[0] - size / 2, pos[1] - size / 2, size, size]
+    }
+
+    case "widget":
+      return getWidgetGraphRect(target.node, target.widget)
+
+    case "title":
+      return getNodeTitleGraphRect(target.node)
+
+    case "subgraph-input":
+    case "subgraph-output":
+      return copyReadOnlyRect(target.slot.boundingRect)
+
+    case "link":
+      return getLinkGraphRect(target.link)
+
+    case "reroute":
+      return copyReadOnlyRect(target.reroute.boundingRect)
+  }
+}
+
+/**
+ * Returns a graph-space anchor point for a hover target (centre of the anchor rect).
+ */
+export function getHoverAnchorGraphPos(target: HoverTarget): Point | undefined {
+  const rect = getHoverAnchorRect(target)
+  return rect ? rectCentre(rect) : undefined
+}
+
 /**
  * Converts a graph-space point to viewport (`clientX` / `clientY`) coordinates.
  */
@@ -155,6 +246,35 @@ export function graphToClient(
   const canvasLocal = convertOffsetToCanvas(graphPos, out)
   out[0] = canvasRect.left + canvasLocal[0]
   out[1] = canvasRect.top + canvasLocal[1]
+  return out
+}
+
+/**
+ * Converts a graph-space rectangle to viewport (`clientX` / `clientY`) coordinates.
+ */
+export function graphRectToClient(
+  graphRect: ReadOnlyRect,
+  convertOffsetToCanvas: (pos: Point, out: Point) => Point,
+  canvasRect: DOMRect,
+  out: Rect = [0, 0, 0, 0],
+): Rect {
+  const topLeft = graphToClient(
+    [graphRect[0], graphRect[1]],
+    convertOffsetToCanvas,
+    canvasRect,
+    [0, 0],
+  )
+  const bottomRight = graphToClient(
+    [graphRect[0] + graphRect[2], graphRect[1] + graphRect[3]],
+    convertOffsetToCanvas,
+    canvasRect,
+    [0, 0],
+  )
+
+  out[0] = topLeft[0]
+  out[1] = topLeft[1]
+  out[2] = bottomRight[0] - topLeft[0]
+  out[3] = bottomRight[1] - topLeft[1]
   return out
 }
 

@@ -173,7 +173,13 @@ export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {
 
 export { D3ZoomController } from "./canvas/D3ZoomController"
 export { GraphHistory, type GraphHistoryEntry } from "./canvas/GraphHistory"
-export { isPointerOverNodeTitle, resolveHoverTarget } from "./canvas/hoverTarget"
+export {
+  getHoverAnchorGraphPos,
+  getHoverAnchorRect,
+  graphRectToClient,
+  isPointerOverNodeTitle,
+  resolveHoverTarget,
+} from "./canvas/hoverTarget"
 export { InputIndicators } from "./canvas/InputIndicators"
 export { LinkConnector } from "./canvas/LinkConnector"
 export { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"

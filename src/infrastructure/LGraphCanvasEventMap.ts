@@ -1,4 +1,5 @@
 import type { ConnectingLink } from "@/interfaces"
+import type { Point } from "@/interfaces"
 import type { LGraph } from "@/LGraph"
 import type { LGraphButton } from "@/LGraphButton"
 import type { LGraphGroup } from "@/LGraphGroup"
@@ -108,5 +109,19 @@ export interface LGraphCanvasEventMap {
     target: HoverTarget | null
     /** The previous hover target, or `null` if there was none. */
     previousTarget: HoverTarget | null
+  }
+
+  /**
+   * The canvas viewport transform changed (pan or zoom).
+   *
+   * Dispatched from `DragAndScale.onChanged` after `scale` or `offset` updates.
+   */
+  "litegraph:viewport-change": {
+    /** Current viewport zoom scale. */
+    scale: number
+    /** Graph-space pan offset. */
+    offset: Point
+    /** Graph-space pointer position after the transform. */
+    graphMouse: Point
   }
 }

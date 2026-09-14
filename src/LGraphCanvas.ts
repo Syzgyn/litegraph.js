@@ -48,7 +48,14 @@ import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
 import { D3ZoomController } from "@/canvas/D3ZoomController"
-import { clientToGraph, graphToClient, resolveHoverTarget } from "@/canvas/hoverTarget"
+import {
+  clientToGraph,
+  getHoverAnchorGraphPos,
+  getHoverAnchorRect,
+  graphRectToClient,
+  graphToClient,
+  resolveHoverTarget,
+} from "@/canvas/hoverTarget"
 import { LinkConnector, type RenderLinkUnion } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { forEachNode } from "@/utils/graphTraversal"
@@ -250,6 +257,13 @@ const cursors = {
   SW: "nesw-resize",
   NW: "nwse-resize",
 } as const
+
+function syncGraphMouseFromViewport(canvas: LGraphCanvas): void {
+  const rect = canvas.canvas.getBoundingClientRect()
+  const { scale, offset } = canvas.ds
+  canvas.graphMouse[0] = (canvas.mouse[0] - rect.left) / scale - offset[0]
+  canvas.graphMouse[1] = (canvas.mouse[1] - rect.top) / scale - offset[1]
+}
 
 function createD3ZoomController(canvas: LGraphCanvas): D3ZoomController {
   return new D3ZoomController(canvas.canvas, canvas.ds, {
@@ -796,7 +810,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.pointer = new CanvasPointer(canvas)
 
     // Set up zoom change handler for efficient LOD updates
-    this.ds.onChanged = (scale: number, _offset: Point) => {
+    this.ds.onChanged = (scale: number, offset: Point) => {
       // Only check LOD threshold if it's enabled
       if (this.#lowQualityZoomThreshold > 0) {
         this.#isLowQuality = scale < this.#lowQualityZoomThreshold
@@ -805,6 +819,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (this.#useD3Zoom && !this.#d3ZoomController?.syncingFromD3) {
         this.#d3ZoomController?.syncFromDragAndScale()
       }
+
+      this.#dispatchViewportChange(scale, offset)
     }
 
     this.linkConnector.events.addEventListener("link-created", () => this.#dirty())
@@ -1868,12 +1884,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       ds: this.ds,
       maxPanSpeed: this.autoPanSpeed,
       onPan: () => {
-        const rect = this.canvas.getBoundingClientRect()
-        const { scale } = this.ds
-        this.graphMouse[0] =
-          (this.mouse[0] - rect.left) / scale - this.ds.offset[0]
-        this.graphMouse[1] =
-          (this.mouse[1] - rect.top) / scale - this.ds.offset[1]
+        syncGraphMouseFromViewport(this)
         this.#dirty()
       },
     })
@@ -2640,6 +2651,15 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    *
    * Runs on every pointer move regardless of `readOnly` or canvas pan state.
    */
+  #dispatchViewportChange(scale: number, offset: Point): void {
+    syncGraphMouseFromViewport(this)
+    this.dispatch("litegraph:viewport-change", {
+      scale,
+      offset: [offset[0], offset[1]],
+      graphMouse: [this.graphMouse[0], this.graphMouse[1]],
+    })
+  }
+
   #updatePointerHover(
     e: CanvasPointerEvent,
     node: LGraphNode | undefined,
@@ -4683,6 +4703,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const d3HandlesZoom = this.#useD3Zoom && (this.#d3ZoomController?.isBound ?? false)
 
       if (d3HandlesZoom) {
+        this.mouse[0] = e.clientX
+        this.mouse[1] = e.clientY
         e.preventDefault()
         return
       }
@@ -4717,6 +4739,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.ds.offset[1] -= e.deltaY * (1 + factor) * (1 / scale)
       }
     }
+
+    this.mouse[0] = e.clientX
+    this.mouse[1] = e.clientY
 
     this.graph.change()
 
@@ -5297,6 +5322,45 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    */
   getHoverTarget(): HoverTarget | null {
     return this.hoverTarget ?? null
+  }
+
+  /**
+   * Returns a graph-space anchor point for a hover target (centre of the anchor rect).
+   */
+  getHoverAnchorGraphPos(target: HoverTarget): Point | undefined {
+    return getHoverAnchorGraphPos(target)
+  }
+
+  /**
+   * Returns a graph-space bounding rectangle for a hover target.
+   */
+  getHoverAnchorRect(target: HoverTarget): Rect | undefined {
+    return getHoverAnchorRect(target)
+  }
+
+  /**
+   * Returns a viewport anchor point for a hover target.
+   */
+  getHoverClientPos(target: HoverTarget, out: Point = [0, 0]): Point | undefined {
+    const anchor = getHoverAnchorGraphPos(target)
+    if (!anchor) return
+    return this.graphToClient(anchor, out)
+  }
+
+  /**
+   * Returns a viewport bounding rectangle for a hover target.
+   */
+  getHoverClientRect(target: HoverTarget, out: Rect = [0, 0, 0, 0]): Rect | undefined {
+    const anchorRect = getHoverAnchorRect(target)
+    if (!anchorRect) return
+
+    const rect = this.canvas.getBoundingClientRect()
+    return graphRectToClient(
+      anchorRect,
+      (pos, output) => this.convertOffsetToCanvas(pos, output),
+      rect,
+      out,
+    )
   }
 
   /**

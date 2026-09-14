@@ -22,7 +22,6 @@ import {
   type HoverTarget,
   hoverTargetsEqual,
   type LGraphCanvas,
-  type Point,
 } from "@comfyorg/litegraph"
 
 export interface DomTooltipOptions {
@@ -57,33 +56,11 @@ function defaultResolveText(target: HoverTarget): string | undefined {
   }
 }
 
-/** Returns a graph-space anchor for slot-, widget-, or title-based positioning. */
-export function getHoverAnchorPos(target: HoverTarget): Point | undefined {
-  switch (target.kind) {
-    case "input": {
-      const pos = target.node.getInputSlotPos(target.slot)
-      return [pos[0], pos[1]]
-    }
-    case "output": {
-      const pos = target.node.getOutputPos(target.index)
-      return [pos[0], pos[1]]
-    }
-    case "widget": {
-      const y = target.widget.lastY
-      if (y == null) return undefined
-      return [target.node.pos[0] + 20, target.node.pos[1] + y + 10]
-    }
-    case "title":
-      return [target.node.pos[0] + target.node.size[0] / 2, target.node.pos[1]]
-    default:
-      return undefined
-  }
-}
-
 /**
  * Manages a single fixed-position DOM element that shows tooltips for canvas hover targets.
  *
  * Listens to `litegraph:hover-change`, debounces display, and hides on interaction.
+ * Repositions on `litegraph:viewport-change` so anchored tooltips track zoom and pan.
  */
 export class LitegraphDomTooltip {
   readonly #canvas: LGraphCanvas
@@ -91,6 +68,7 @@ export class LitegraphDomTooltip {
   readonly #options: DomTooltipOptions
 
   #pendingTarget: HoverTarget | null = null
+  #visibleTarget: HoverTarget | null = null
   #showTimer: ReturnType<typeof setTimeout> | undefined
   #visible = false
 
@@ -115,10 +93,20 @@ export class LitegraphDomTooltip {
     }, this.#options.delayMs)
   }
 
+  #onViewportChange = (): void => {
+    if (!this.#visible || !this.#visibleTarget) return
+    if (!hoverTargetsEqual(this.#canvas.getHoverTarget(), this.#visibleTarget)) {
+      this.#hide()
+      return
+    }
+    this.#reposition()
+  }
+
   #hide = (): void => {
     clearTimeout(this.#showTimer)
     this.#showTimer = undefined
     this.#pendingTarget = null
+    this.#visibleTarget = null
     if (!this.#visible) return
     this.#el.style.display = "none"
     this.#el.textContent = ""
@@ -151,22 +139,26 @@ export class LitegraphDomTooltip {
     document.body.append(this.#el)
 
     canvas.canvas.addEventListener("litegraph:hover-change", this.#onHoverChange)
+    canvas.canvas.addEventListener("litegraph:viewport-change", this.#onViewportChange)
     window.addEventListener("pointerdown", this.#hide)
     window.addEventListener("click", this.#hide)
     canvas.canvas.addEventListener("pointerleave", this.#hide)
   }
 
   #show(text: string, target: HoverTarget): void {
+    this.#visibleTarget = target
     this.#el.textContent = text
     this.#el.style.display = "block"
     this.#visible = true
+    this.#reposition()
+  }
 
-    let [clientX, clientY] = this.#canvas.mouse
+  #reposition(): void {
+    const target = this.#visibleTarget
+    if (!target) return
 
-    const anchor = getHoverAnchorPos(target)
-    if (anchor)
-      [clientX, clientY] = this.#canvas.graphToClient(anchor)
-
+    const anchor = this.#canvas.getHoverClientPos(target)
+    const [clientX, clientY] = anchor ?? this.#canvas.mouse
     this.#positionAt(clientX, clientY)
   }
 
@@ -189,6 +181,7 @@ export class LitegraphDomTooltip {
     this.#hide()
     this.#el.remove()
     this.#canvas.canvas.removeEventListener("litegraph:hover-change", this.#onHoverChange)
+    this.#canvas.canvas.removeEventListener("litegraph:viewport-change", this.#onViewportChange)
     window.removeEventListener("pointerdown", this.#hide)
     window.removeEventListener("click", this.#hide)
     this.#canvas.canvas.removeEventListener("pointerleave", this.#hide)
