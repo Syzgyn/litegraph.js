@@ -154,6 +154,19 @@ describe("hover anchor geometry", () => {
     expect(rect).toEqual([node.pos[0] + 6, node.pos[1] + widget!.lastY!, width - 12, 20])
   })
 
+  test("getHoverAnchorRect excludes widget arrange gap from visual height", () => {
+    const node = new LGraphNode("test")
+    node.pos = [0, 100]
+    node.size = [200, 120]
+    node.addWidget("number", "amount", 0)
+    const widget = node.widgets?.[0]
+    widget!.lastY = 40
+    widget!.computedHeight = 24
+
+    const rect = getHoverAnchorRect({ kind: "widget", node, widget: widget! })
+    expect(rect?.[3]).toBe(20)
+  })
+
   test("graphRectToClient scales anchor rect with viewport transform", () => {
     const graphRect = [10, 20, 100, 50] as const
     const clientRect = graphRectToClient(

@@ -62,7 +62,7 @@ import { BaseWidget } from "./widgets/BaseWidget"
 import { toConcreteWidget, type WidgetTypeMap } from "./widgets/widgetMap"
 
 /** Gap below each widget row in `#arrangeWidgets`. Matches `computeSize` per-widget `+ 4`. */
-const WIDGET_ARRANGE_GAP = 4
+export const WIDGET_ARRANGE_GAP = 4
 /** Bottom padding below the last widget. Matches `computeSize` `widgetsHeight += 8`. */
 const WIDGET_ARRANGE_BOTTOM_MARGIN = 8
 

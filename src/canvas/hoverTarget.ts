@@ -1,5 +1,4 @@
 import type { LinkSegment, Point, ReadOnlyRect, Rect } from "@/interfaces"
-import type { LGraphNode } from "@/LGraphNode"
 import type { Reroute } from "@/Reroute"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { SubgraphInput } from "@/subgraph/SubgraphInput"
@@ -10,6 +9,7 @@ import type { HoverTarget } from "@/types/hover"
 import type { IBaseWidget } from "@/types/widgets"
 
 import { getNodeInputOnPos, getNodeOutputOnPos } from "@/canvas/measureSlots"
+import { type LGraphNode, WIDGET_ARRANGE_GAP } from "@/LGraphNode"
 import { isInRectangle } from "@/measure"
 import { TitleMode } from "@/types/globalEnums"
 
@@ -171,14 +171,26 @@ function getNodeTitleGraphRect(node: LGraphNode): Rect | undefined {
   ]
 }
 
+/** Visible widget row height for anchors; excludes the post-widget arrange gap. */
+function widgetVisualHeight(widget: IBaseWidget, nodeWidth: number): number {
+  if (widget.computeSize)
+    return widget.computeSize(nodeWidth)[1]
+
+  if (widget.computeLayoutSize)
+    return widget.computedHeight ?? NODE_WIDGET_HEIGHT
+
+  if (widget.computedHeight != null)
+    return widget.computedHeight - WIDGET_ARRANGE_GAP
+
+  return NODE_WIDGET_HEIGHT
+}
+
 function getWidgetGraphRect(node: LGraphNode, widget: IBaseWidget): Rect | undefined {
   const y = widget.lastY
   if (y == null) return
 
   const width = widget.width || node.size[0]
-  const height = widget.computedHeight ??
-    widget.computeSize?.(node.size[0])?.[1] ??
-    NODE_WIDGET_HEIGHT
+  const height = widgetVisualHeight(widget, node.size[0])
 
   return [node.pos[0] + 6, node.pos[1] + y, width - 12, height]
 }
