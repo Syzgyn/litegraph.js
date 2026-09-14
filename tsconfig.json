@@ -25,11 +25,12 @@
     /* AllowJs during migration phase */
     "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@comfyorg/litegraph": ["./src/litegraph.ts"]
     },
     "typeRoots": [],
     "outDir": "./dist",
     "rootDir": "./"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "examples/**/*.ts"]
 }
