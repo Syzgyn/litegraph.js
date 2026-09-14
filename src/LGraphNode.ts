@@ -2529,7 +2529,25 @@ export class LGraphNode implements NodeLike, Positionable, IPinnable, IColorable
    * checks if a point is inside the shape of a node
    */
   isPointInside(x: number, y: number): boolean {
-    return isInRect(x, y, this.boundingRect)
+    const { boundingRect, pos, size } = this
+    if (boundingRect[2] === 0 && boundingRect[3] === 0) {
+      const titleMode = this.titleMode
+      const renderTitle =
+        titleMode != TitleMode.TRANSPARENT_TITLE &&
+        titleMode != TitleMode.NO_TITLE
+      const titleHeight = renderTitle ? LiteGraph.NODE_TITLE_HEIGHT : 0
+      const top = pos[1] - titleHeight
+      const height = this.flags?.collapsed
+        ? LiteGraph.NODE_TITLE_HEIGHT
+        : size[1] + titleHeight
+      const width = this.flags?.collapsed
+        ? (this.collapsedWidth || LiteGraph.NODE_COLLAPSED_WIDTH)
+        : size[0]
+
+      return isInRectangle(x, y, pos[0], top, width, height)
+    }
+
+    return isInRect(x, y, boundingRect)
   }
 
   /**

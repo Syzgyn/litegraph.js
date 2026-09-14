@@ -48,6 +48,7 @@ import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
 import { D3ZoomController } from "@/canvas/D3ZoomController"
+import { clientToGraph, graphToClient, resolveHoverTarget } from "@/canvas/hoverTarget"
 import { LinkConnector, type RenderLinkUnion } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { forEachNode } from "@/utils/graphTraversal"
@@ -90,6 +91,7 @@ import {
   RenderShape,
   TitleMode,
 } from "./types/globalEnums"
+import { type HoverTarget, hoverTargetsEqual } from "./types/hover"
 import { alignNodes, distributeNodes, getBoundaryNodes } from "./utils/arrange"
 import { findFirstNode, getDraggedItems } from "./utils/collections"
 import { cachedMeasureText, clearTextMeasureCache } from "./utils/textMeasureCache"
@@ -666,6 +668,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   visibleNodes: LGraphNode[] = []
   /** The node currently under the pointer, if any. Cleared on pointer leave. */
   nodeOver?: LGraphNode
+  /** Resolved hover target from the latest pointer move, if any. */
+  hoverTarget?: HoverTarget
   /** Node that has captured keyboard/pointer input for widget editing, if any. */
   nodeCapturingInput?: LGraphNode | null
   /** Map of link IDs that should be rendered in a highlighted state (e.g. when their endpoint node is selected). */
@@ -2632,6 +2636,70 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   /**
+   * Updates `node.mouseOver`, reroute visibility, and the resolved `hoverTarget`.
+   *
+   * Runs on every pointer move regardless of `readOnly` or canvas pan state.
+   */
+  #updatePointerHover(
+    e: CanvasPointerEvent,
+    node: LGraphNode | undefined,
+    x: number,
+    y: number,
+  ): { enteredNode?: LGraphNode, hoverChanged: boolean } {
+    this.updateMouseOverNodes(node ?? null, e)
+
+    let enteredNode: LGraphNode | undefined
+    let hoverChanged = false
+
+    if (node) {
+      const inputId = isOverNodeInput(node, x, y)
+      const outputId = isOverNodeOutput(node, x, y)
+      const overWidget = node.getWidgetOnPos(x, y, true) ?? undefined
+
+      if (!node.mouseOver) {
+        node.mouseOver = {}
+        this.nodeOver = node
+        enteredNode = node
+      }
+
+      const { mouseOver } = node
+      if (
+        mouseOver.inputId !== inputId ||
+        mouseOver.outputId !== outputId ||
+        mouseOver.overWidget !== overWidget
+      ) {
+        mouseOver.inputId = inputId
+        mouseOver.outputId = outputId
+        mouseOver.overWidget = overWidget
+        hoverChanged = true
+        this.dirtyCanvas = true
+      }
+    }
+
+    if (!this.pointer.isDown) {
+      for (const reroute of this.#visibleReroutes)
+        reroute.updateVisibility(this.graphMouse)
+    }
+
+    const target = resolveHoverTarget({
+      x,
+      y,
+      node,
+      subgraph: this.subgraph,
+      renderedPaths: this.renderedPaths,
+      visibleReroutes: this.#visibleReroutes,
+    })
+
+    if (!hoverTargetsEqual(target, this.hoverTarget)) {
+      const previousTarget = this.hoverTarget ?? null
+      this.hoverTarget = target ?? undefined
+      this.dispatch("litegraph:hover-change", { target, previousTarget })
+    }
+
+    return { enteredNode, hoverChanged }
+  }
+
+  /**
    * Start dragging an item, optionally including all other selected items.
    *
    * ** This function sets the `CanvasPointer.finally`() callback. **
@@ -4173,12 +4241,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       }
     }
 
-    // get node over
-    const node = graph.getNodeOnPos(
-      x,
-      y,
-      this.visibleNodes,
-    )
+    // get node over — fall back to all nodes when the visible list has not been populated yet
+    const nodesForHitTest = this.visibleNodes.length ? this.visibleNodes : graph.nodes
+    const node = graph.getNodeOnPos(x, y, nodesForHitTest)
+
+    const { enteredNode, hoverChanged } = this.#updatePointerHover(e, node ?? undefined, x, y)
 
     const dragRect = this.draggingRectangle
     if (dragRect) {
@@ -4202,49 +4269,30 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         this.dirtyCanvas = true
       }
 
-      // remove mouseover flag
-      this.updateMouseOverNodes(node, e)
-
       // mouse over a node
       if (node) {
         underPointer |= CanvasItem.Node
 
         if (node.redrawOnMouse) this.dirtyCanvas = true
 
-        // For input/output hovering
-        // to store the output of isOverNodeInput
-        const pos: Point = [0, 0]
-        const inputId = isOverNodeInput(node, x, y, pos)
-        const outputId = isOverNodeOutput(node, x, y, pos)
-        const overWidget = node.getWidgetOnPos(x, y, true) ?? undefined
-
-        if (!node.mouseOver) {
-          // mouse enter
-          node.mouseOver = {}
-          this.nodeOver = node
-          this.dirtyCanvas = true
-
+        if (enteredNode) {
           for (const reroute of this.#visibleReroutes) {
             reroute.hideSlots()
             this.dirtyBgCanvas = true
           }
-          node.onMouseEnter?.(e)
+          enteredNode.onMouseEnter?.(e)
         }
 
         // in case the node wants to do something
         node.onMouseMove?.(e, [x - node.pos[0], y - node.pos[1]], this)
 
-        // The input the mouse is over has changed
-        const { mouseOver } = node
-        if (
-          mouseOver.inputId !== inputId ||
-          mouseOver.outputId !== outputId ||
-          mouseOver.overWidget !== overWidget
-        ) {
-          mouseOver.inputId = inputId
-          mouseOver.outputId = outputId
-          mouseOver.overWidget = overWidget
+        const mouseOver = node.mouseOver
+        const inputId = mouseOver?.inputId ?? -1
+        const outputId = mouseOver?.outputId ?? -1
+        const overWidget = mouseOver?.overWidget
+        const pos: Point = [0, 0]
 
+        if (hoverChanged) {
           // State reset
           linkConnector.overWidget = undefined
 
@@ -4284,6 +4332,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
                   node.inputs[inputId] != null &&
                   LiteGraph.isValidConnection(firstLink.fromSlot.type, node.inputs[inputId].type)
                 ) {
+                  isOverNodeInput(node, x, y, pos)
                   highlightPos = pos
                   // XXX CHECK THIS
                   highlightInput = node.inputs[inputId]
@@ -4309,6 +4358,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
                   node.outputs[outputId] !== null &&
                   LiteGraph.isValidConnection(firstLink.fromSlot.type, node.outputs[outputId].type)
                 ) {
+                  isOverNodeOutput(node, x, y, pos)
                   highlightPos = pos
                 }
               }
@@ -4596,6 +4646,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     // TODO: Check if document.contains(e.relatedTarget) - handle mouseover node textarea etc.
     this.adjustMouseEvent(e)
     this.updateMouseOverNodes(null, e)
+
+    if (this.hoverTarget != null) {
+      const previousTarget = this.hoverTarget
+      this.hoverTarget = undefined
+      this.dispatch("litegraph:hover-change", { target: null, previousTarget })
+    }
   }
 
   /** Handles pointer-cancel events (e.g. touch interruption), resetting drag and link state. */
@@ -5232,6 +5288,31 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       e.clientX - rect.left,
       e.clientY - rect.top,
     ])
+  }
+
+  /**
+   * Returns the resolved hover target from the latest pointer move.
+   *
+   * Updated on every `processMouseMove` and cleared on `processMouseOut`.
+   */
+  getHoverTarget(): HoverTarget | null {
+    return this.hoverTarget ?? null
+  }
+
+  /**
+   * Converts a graph-space point to viewport (`clientX` / `clientY`) coordinates.
+   */
+  graphToClient(graphPos: Point, out: Point = [0, 0]): Point {
+    const rect = this.canvas.getBoundingClientRect()
+    return graphToClient(graphPos, (pos, output) => this.convertOffsetToCanvas(pos, output), rect, out)
+  }
+
+  /**
+   * Converts viewport (`clientX` / `clientY`) coordinates to graph space.
+   */
+  clientToGraph(clientPos: Point, out?: Point): Point {
+    const rect = this.canvas.getBoundingClientRect()
+    return clientToGraph(clientPos, rect, (pos, output) => this.convertCanvasToOffset(pos, output), out)
   }
 
   /**

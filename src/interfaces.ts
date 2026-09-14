@@ -464,6 +464,9 @@ export interface INodeSlot extends HasBoundingRect {
    */
   label?: string
 
+  /** Optional tooltip text shown when the pointer hovers over this slot. */
+  tooltip?: string
+
   /** Data type accepted or produced by this slot. */
   type: ISlotType
   /** Direction the link leaves or enters this slot. */

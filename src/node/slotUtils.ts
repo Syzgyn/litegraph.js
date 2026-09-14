@@ -13,8 +13,8 @@ type CommonIoSlotProps = SharedIntersection<ISerialisableNodeInput, ISerialisabl
  * @returns A plain object containing only the common serialisable slot fields.
  */
 export function shallowCloneCommonProps(slot: CommonIoSlotProps): CommonIoSlotProps {
-  const { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, type } = slot
-  return { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, type }
+  const { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, tooltip, type } = slot
+  return { colorOff, colorOn, dir, label, localizedName, locked, name, nameLocked, removable, shape, tooltip, type }
 }
 
 /**

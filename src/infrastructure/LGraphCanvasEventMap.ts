@@ -5,6 +5,7 @@ import type { LGraphGroup } from "@/LGraphGroup"
 import type { LGraphNode, NodeId } from "@/LGraphNode"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { CanvasPointerEvent } from "@/types/events"
+import type { HoverTarget } from "@/types/hover"
 
 /**
  * Strongly-typed event map for `LGraphCanvas` lifecycle and pointer interactions.
@@ -95,5 +96,17 @@ export interface LGraphCanvasEventMap {
     active: boolean
     /** The node being placed. */
     nodeId: NodeId
+  }
+
+  /**
+   * The resolved hover target changed.
+   *
+   * Dispatched from `LGraphCanvas` during pointer moves and when the pointer leaves the canvas.
+   */
+  "litegraph:hover-change": {
+    /** The new hover target, or `null` when nothing is hovered. */
+    target: HoverTarget | null
+    /** The previous hover target, or `null` if there was none. */
+    previousTarget: HoverTarget | null
   }
 }

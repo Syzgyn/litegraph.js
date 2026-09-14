@@ -24,6 +24,9 @@ export abstract class SlotBase implements INodeSlot {
   /** Optional user-facing label override for rendering. */
   label?: string
 
+  /** Optional tooltip text shown when the pointer hovers over this slot. */
+  tooltip?: string
+
   /** Data type of this slot, used for connection compatibility checks. */
   type: ISlotType
 
