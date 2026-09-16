@@ -1,4 +1,4 @@
-import type { CanvasColour, Point, RequiredProps, Size } from "../interfaces"
+import type { CanvasColour, IContextMenuValue, Point, RequiredProps, Size } from "../interfaces"
 import type { CanvasPointer, LGraphCanvas, LGraphNode } from "../litegraph"
 import type { CanvasPointerEvent } from "./events"
 
@@ -145,8 +145,16 @@ export interface IStringComboWidget extends IBaseWidget<string, "combo", Require
   value: string
 }
 
+/** A single entry in a combo-box values list. */
+type ComboMenuEntry = string | number | IContextMenuValue<string | number>
+
 /** Allowed value sources for combo-box widgets. */
-type ComboWidgetValues = string[] | Record<string, string> | ((widget?: IComboWidget, node?: LGraphNode) => string[])
+type ComboWidgetValues =
+  string[] |
+  number[] |
+  Record<string, string> |
+  ComboMenuEntry[] |
+  ((widget?: IComboWidget, node?: LGraphNode) => ComboWidgetValues)
 
 /**
  * A combo-box widget (dropdown / select) accepting string or numeric values.
