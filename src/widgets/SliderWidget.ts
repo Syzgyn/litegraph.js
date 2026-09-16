@@ -22,6 +22,10 @@ export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWi
    */
   marker?: number
 
+  protected override formatDisplayValue(): string {
+    return Number(this.value).toFixed(this.options.precision ?? 3)
+  }
+
   /**
    * Draws the slider track, filled value bar, optional marker, outline, and centred label/value text.
    * @param ctx Canvas 2D context.
@@ -73,9 +77,8 @@ export class SliderWidget extends BaseWidget<ISliderWidget> implements ISliderWi
     if (showText) {
       ctx.textAlign = "center"
       ctx.fillStyle = this.textColor
-      const fixedValue = Number(this.value).toFixed(this.options.precision ?? 3)
       ctx.fillText(
-        `${this.label || this.name}  ${fixedValue}`,
+        `${this.label || this.name}  ${this.displayValue}`,
         width * 0.5,
         y + height * 0.7,
       )

@@ -142,7 +142,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     super.value = String(value)
   }
 
-  override get displayValue(): string {
+  protected override formatDisplayValue(): string {
     return String(this.value)
   }
 

@@ -23,6 +23,10 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
    */
   currentDragOffset = 0
 
+  protected override formatDisplayValue(): string {
+    return Number(this.value).toFixed(this.options.precision ?? 3)
+  }
+
   /**
    * Reports flexible min/max dimensions so layout can allocate a tall knob region.
    * @returns Minimum 60px height and 20px width with very large max bounds.
@@ -190,9 +194,8 @@ export class KnobWidget extends BaseWidget<IKnobWidget> implements IKnobWidget {
     if (showText) {
       ctx.textAlign = "center"
       ctx.fillStyle = this.textColor
-      const fixedValue = Number(this.value).toFixed(this.options.precision ?? 3)
       ctx.fillText(
-        `${this.label || this.name}\n${fixedValue}`,
+        `${this.label || this.name}\n${this.displayValue}`,
         width * 0.5,
         y + effectiveHeight * 0.5,
       )

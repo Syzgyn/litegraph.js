@@ -229,11 +229,22 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
   // TODO: Resolve this workaround. Ref: https://github.com/Comfy-Org/litegraph.js/issues/1022
   /**
    * String representation of `value` for canvas text rendering.
-   * @remarks Returns an empty string when `computedDisabled` is `true`. Subclasses override
-   * for formatted numbers, combo labels, etc.
+   * @remarks Returns an empty string when `computedDisabled` is `true`. Uses
+   * `options.displayCallback` when set; otherwise delegates to {@link formatDisplayValue}.
    */
   get displayValue(): string {
-    return this.computedDisabled ? "" : String(this.value)
+    if (this.computedDisabled) return ""
+    const { displayCallback } = this.options
+    if (displayCallback) return displayCallback(this)
+    return this.formatDisplayValue()
+  }
+
+  /**
+   * Default string formatting for canvas display when no `displayCallback` is set.
+   * @remarks Subclasses override for formatted numbers, combo labels, toggle on/off text, etc.
+   */
+  protected formatDisplayValue(): string {
+    return String(this.value ?? "")
   }
 
   /** Canvas Y coordinate for baseline-aligned label and value text within this widget row. */

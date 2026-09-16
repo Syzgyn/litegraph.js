@@ -13,6 +13,10 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
   /** Widget type discriminator; always `"toggle"`. */
   override type = "toggle" as const
 
+  protected override formatDisplayValue(): string {
+    return this.value ? this.options.on || "true" : this.options.off || "false"
+  }
+
   /**
    * Draws the toggle capsule, coloured status disc, label, and on/off text.
    * @param ctx Canvas 2D context.
@@ -65,8 +69,7 @@ export class BooleanWidget extends BaseWidget<IBooleanWidget> implements IBoolea
     // Draw value
     ctx.fillStyle = this.value ? this.textColor : this.secondaryTextColor
     ctx.textAlign = "right"
-    const value = this.value ? this.options.on || "true" : this.options.off || "false"
-    ctx.fillText(value, x, this.labelBaseline)
+    ctx.fillText(this.displayValue, x, this.labelBaseline)
   }
 
   /**

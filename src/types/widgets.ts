@@ -43,6 +43,11 @@ export interface IWidgetOptions<TValues = unknown[]> {
 
   /** Selectable values for combo-box widgets. */
   values?: TValues
+  /**
+   * Formats the widget value for canvas display.
+   * When set, replaces the default display value formatting for all widget types.
+   */
+  displayCallback?: (widget: IBaseWidget) => string
   /** Callback invoked when the widget value changes. */
   callback?: IWidget["callback"]
 }
