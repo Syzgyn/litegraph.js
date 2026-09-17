@@ -238,6 +238,14 @@ export interface IBaseWidget<
   value?: TValue
 
   /**
+   * The normalized value of the widget, automatically calculated.
+   *
+   * Undefined if the widget is not numeric or has no min/max.
+   * @readonly [Computed] This property is computed by the node.
+   */
+  normalizedValue?: number
+
+  /**
    * Whether the widget value should be serialised on node serialisation.
    * @default true
    */

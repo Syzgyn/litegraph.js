@@ -191,6 +191,19 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     this.#value = value
   }
 
+  /**
+   * The normalized value of the widget, automatically calculated when possible.
+   */
+  get normalizedValue(): number | undefined {
+    const numValue = Number(this.#value)
+    if (isNaN(numValue)) return undefined
+    if (this.options.min == undefined || this.options.max == undefined) return undefined
+
+    const range = this.options.max - this.options.min
+    const normalizedValue = (numValue - this.options.min) / range
+    return normalizedValue
+  }
+
   /** Stroke colour for the widget capsule outline; advanced widgets use a distinct palette entry. */
   get outlineColor() {
     return this.advanced ? LiteGraph.WIDGET_ADVANCED_OUTLINE_COLOR : LiteGraph.WIDGET_OUTLINE_COLOR
