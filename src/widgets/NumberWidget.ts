@@ -86,19 +86,10 @@ export class NumberWidget extends BaseSteppedWidget<INumericWidget> implements I
   }
 
   /**
-   * Horizontal drag away from arrow zones adjusts value by `deltaX * step`.
-   * @param options Pointer delta and node width for zone detection.
+   * Horizontal drag adjusts value by `deltaX * step`.
+   * @param options Pointer delta for scrubbing.
    */
   override onDrag({ e, node, canvas }: WidgetEventOptions) {
-    const width = this.width || node.width
-    const x = e.canvasX - node.pos[0]
-    const delta = x < 40
-      ? -1
-      : (x > width - 40
-        ? 1
-        : 0)
-
-    if (delta && (x > -3 && x < width + 3)) return
     this.setValue(this.value + (e.deltaX ?? 0) * getWidgetStep(this.options), { e, node, canvas })
   }
 }
