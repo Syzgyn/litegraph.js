@@ -60,6 +60,11 @@ import { LinkConnector, type RenderLinkUnion } from "@/canvas/LinkConnector"
 import { MovingInputLink } from "@/canvas/MovingInputLink"
 import { forEachNode } from "@/utils/graphTraversal"
 import { isMiddleButtonEvent } from "@/utils/pointerUtils"
+import {
+  getContextMenuDisplayContent,
+  getContextMenuWireValue,
+  isContextMenuValue,
+} from "@/utils/type"
 
 import { isOverNodeInput, isOverNodeOutput } from "./canvas/measureSlots"
 import { CanvasPointer } from "./CanvasPointer"
@@ -334,6 +339,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
   /** Maximum number of search results shown in the node search box. `-1` means unlimited. */
   static searchLimit = -1
+  /** Properties-panel colour combo value when no preset colour is applied. */
+  static nodeColorNone = "None"
+
   /** Named `ColorOption` presets available for nodes and groups via context menus. */
   static nodeColors: Record<string, ColorOption> = {
     red: { color: "#322", bgColor: "#533", groupColor: "#A88" },
@@ -8320,13 +8328,18 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         valueElement.addEventListener("click", function (event) {
           const values = options?.values || []
           const propname = this.parentElement?.dataset["property"]
-          const innerClicked = (v?: string) => {
-            this.textContent = v ?? null
-            innerChange(propname, v)
+          const innerClicked = (v?: string | IContextMenuValue<string>) => {
+            const wireValue = getContextMenuWireValue(v)
+            const displayValue = isContextMenuValue(v)
+              ? getContextMenuDisplayContent(v)
+              : (LGraphCanvas.getPropertyPrintableValue(wireValue, options.values) ?? String(wireValue ?? ""))
+
+            this.textContent = displayValue
+            innerChange(propname, wireValue ?? undefined)
             return false
           }
-          new LiteGraph.ContextMenu(
-            values,
+          new LiteGraph.ContextMenu<string>(
+            values as readonly (string | IContextMenuValue<string> | null)[],
             {
               event,
               className: "dark",
@@ -8392,7 +8405,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (!this.graph) throw new NullGraphError()
         if (!name) return
         this.graph.beforeChange(node)
-        const strValue: string = String(value)
+
         switch (name) {
           case "Title":
             if (typeof value !== "string") throw new TypeError("Attempting to set title to non-string value.")
@@ -8410,16 +8423,21 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             }
             break
           }
-          case "Color":
-            if (typeof value !== "string") throw new TypeError("Attempting to set colour to non-string value.")
+          case "Color": {
+            const colorValue = isContextMenuValue(value)
+              ? getContextMenuWireValue(value)
+              : value
+            if (typeof colorValue !== "string") throw new TypeError("Attempting to set colour to non-string value.")
 
-            if (LGraphCanvas.nodeColors[strValue] != null) {
-              node.color = LGraphCanvas.nodeColors[strValue].color
-              node.bgcolor = LGraphCanvas.nodeColors[strValue].bgColor
+            if (colorValue === LGraphCanvas.nodeColorNone) {
+              node.setColorOption(null)
+            } else if (LGraphCanvas.nodeColors[colorValue] != null) {
+              node.setColorOption(LGraphCanvas.nodeColors[colorValue])
             } else {
-              console.warn(`unexpected color: ${strValue}`)
+              console.warn(`unexpected color: ${colorValue}`)
             }
             break
+          }
           default:
             node.setProperty(name, value)
             LGraphCanvas.syncPanelPropertyWidget(panel, name, node.properties[name]!)
@@ -8434,11 +8452,30 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const mode = node.mode == null ? undefined : LiteGraph.NODE_MODES[node.mode]
       panel.addWidget("combo", "Mode", mode, { values: LiteGraph.NODE_MODES }, fUpdate)
 
-      const nodeCol = node.color !== undefined
-        ? Object.keys(LGraphCanvas.nodeColors).filter(function (nK) { return LGraphCanvas.nodeColors[nK].color == node.color })
-        : ""
+      const colorOption = node.getColorOption()
+      const nodeCol = colorOption
+        ? Object.keys(LGraphCanvas.nodeColors).find(key => LGraphCanvas.nodeColors[key] === colorOption)
+        : LGraphCanvas.nodeColorNone
 
-      panel.addWidget("combo", "Color", nodeCol, { values: Object.keys(LGraphCanvas.nodeColors) }, fUpdate)
+      // Format color keys from "camelCase" to "Title Case"
+      const formatKey = (str: string) =>
+        str
+          .replaceAll(/([A-Z])/g, " $1")
+          .trim()
+          .replace(/^./, c => c.toUpperCase())
+
+      const colorOptions = Object.keys(LGraphCanvas.nodeColors).map(key => ({
+        content: formatKey(key),
+        value: key,
+      }))
+
+      panel.addWidget(
+        "combo",
+        "Color",
+        nodeCol ?? LGraphCanvas.nodeColorNone,
+        { values: [{ value: LGraphCanvas.nodeColorNone, content: LGraphCanvas.nodeColorNone }, ...colorOptions] },
+        fUpdate,
+      )
 
       for (const pName in node.properties) {
         const value = node.properties[pName]

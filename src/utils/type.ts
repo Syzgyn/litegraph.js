@@ -1,4 +1,4 @@
-import type { IColorable, ISlotType } from "@/interfaces"
+import type { IColorable, IContextMenuValue, ISlotType } from "@/interfaces"
 
 /**
  * Converts a plain object to a class instance if it is not already an instance of the class.
@@ -49,4 +49,36 @@ function intersection(...sets: string[][]): string[] {
 
 function isStrings(types: unknown[]): types is string[] {
   return types.every(t => typeof t === "string")
+}
+
+/**
+ * Checks whether a value is a structured {@link IContextMenuValue} menu entry.
+ * Uses `"content"` as the discriminator (not `"value"`, which is too generic).
+ */
+export function isContextMenuValue<T = unknown>(
+  value: unknown,
+): value is IContextMenuValue<T> {
+  return value != null && typeof value === "object" && "content" in value
+}
+
+/**
+ * Returns the wire value from a context menu callback argument.
+ * Plain strings are returned as-is; structured entries return their `.value`.
+ */
+export function getContextMenuWireValue<T>(
+  selected: string | number | IContextMenuValue<T> | null | undefined,
+): T | string | number | undefined | null {
+  return isContextMenuValue(selected) ? selected.value : selected
+}
+
+/**
+ * Returns the display label for a context menu callback argument.
+ * Structured entries prefer `.content`, then fall back to stringifying `.value`.
+ */
+export function getContextMenuDisplayContent(selected: unknown): string {
+  if (isContextMenuValue(selected)) {
+    return selected.content ?? String(selected.value ?? "")
+  }
+  if (selected == null) return ""
+  return String(selected)
 }

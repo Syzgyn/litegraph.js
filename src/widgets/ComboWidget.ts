@@ -5,6 +5,7 @@ import type { IComboWidget, IStringComboWidget } from "@/types/widgets"
 
 import { clamp, LiteGraph } from "@/litegraph"
 import { warnDeprecated } from "@/utils/feedback"
+import { getContextMenuDisplayContent, getContextMenuWireValue, isContextMenuValue } from "@/utils/type"
 
 import { BaseSteppedWidget } from "./BaseSteppedWidget"
 
@@ -22,37 +23,31 @@ type Values =
   MenuEntry[] |
   ((widget?: ComboWidget, node?: LGraphNode) => Values)
 
-function isContextMenuEntry(value: unknown): value is IContextMenuValue<string | number> {
-  return value != null && typeof value === "object" && "content" in value
-}
-
 function isLabeledMenuList(values: unknown): values is MenuEntry[] {
-  return Array.isArray(values) && values.some(entry => isContextMenuEntry(entry))
+  return Array.isArray(values) && values.some(entry => isContextMenuValue(entry))
 }
 
 function entryWireValue(entry: MenuEntry): string | number {
-  if (isContextMenuEntry(entry)) {
-    return entry.value ?? ""
-  }
-  return entry
+  const wire = getContextMenuWireValue(entry)
+  if (wire === undefined || wire === null) return ""
+  return wire as string | number
 }
 
 function currentWireValue(current: unknown): string | number {
-  if (isContextMenuEntry(current)) {
-    return entryWireValue(current)
-  }
-  return current as string | number
+  const wire = getContextMenuWireValue(current as MenuEntry | null | undefined)
+  if (wire === undefined || wire === null) return current as string | number
+  return wire as string | number
 }
 
 function resolveSelectedValue(selected: unknown, values: Values): string | number {
-  if (isContextMenuEntry(selected)) {
+  if (isContextMenuValue<string | number>(selected)) {
     return entryWireValue(selected)
   }
 
   if (typeof selected === "string" || typeof selected === "number") {
     if (isLabeledMenuList(values)) {
       const byContent = values.find(
-        entry => isContextMenuEntry(entry) && entry.content === selected,
+        entry => isContextMenuValue(entry) && entry.content === selected,
       )
       if (byContent) return entryWireValue(byContent)
 
@@ -89,8 +84,8 @@ function resolveDisplayLabel(values: Values, current: unknown): string {
 
   if (isLabeledMenuList(values)) {
     const entry = values.find(item => entryWireValue(item) === wire)
-    if (entry && isContextMenuEntry(entry)) {
-      return entry.content ?? String(entry.value ?? "")
+    if (entry && isContextMenuValue(entry)) {
+      return getContextMenuDisplayContent(entry)
     }
   }
 
