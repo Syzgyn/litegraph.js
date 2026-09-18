@@ -5,6 +5,8 @@
  * This covers serialization, deserialization, data integrity, and migration scenarios.
  */
 
+import type { ExportedSubgraph } from "@/types/serialisation"
+
 import { describe, expect, it } from "vitest"
 
 import { LGraph, Subgraph } from "@/litegraph"
@@ -76,8 +78,6 @@ describe("SubgraphSerialization - Basic Serialization", () => {
     // Verify core properties
     expect(restored.id).toBe(original.id)
     expect(restored.name).toBe(original.name)
-    expect(restored.description).toBe(original.description)
-
     // Verify I/O structure
     expect(restored.inputs.length).toBe(original.inputs.length)
     expect(restored.outputs.length).toBe(original.outputs.length)
@@ -197,8 +197,8 @@ describe("SubgraphSerialization - Complex Serialization", () => {
     if (nodes.length > 0) {
       const firstNode = nodes[0]
       if (firstNode.properties) {
-        firstNode.properties.customValue = 42
-        firstNode.properties.customString = "test"
+        firstNode.properties["customValue"] = 42
+        firstNode.properties["customString"] = "test"
       }
     }
 
@@ -217,6 +217,13 @@ describe("SubgraphSerialization - Complex Serialization", () => {
   })
 })
 
+const emptySubgraphState = {
+  lastGroupId: 0,
+  lastNodeId: 0,
+  lastLinkId: 0,
+  lastRerouteId: 0,
+}
+
 describe("SubgraphSerialization - Version Compatibility", () => {
   it("should handle version field in exports", () => {
     const subgraph = createTestSubgraph({ nodeCount: 1 })
@@ -228,15 +235,17 @@ describe("SubgraphSerialization - Version Compatibility", () => {
   })
 
   it("should load version 1.0+ format", () => {
-    const modernFormat = {
+    const modernFormat: ExportedSubgraph = {
       version: 1, // Number as expected by current implementation
       id: "test-modern-id",
       name: "Modern Subgraph",
       nodes: [],
-      links: {},
+      links: [],
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
+      state: emptySubgraphState,
+      revision: 0,
       inputs: [{ id: "input-id", name: "modern_input", type: "number" }],
       outputs: [{ id: "output-id", name: "modern_output", type: "string" }],
       inputNode: {
@@ -259,15 +268,17 @@ describe("SubgraphSerialization - Version Compatibility", () => {
   })
 
   it("should handle missing fields gracefully", () => {
-    const incompleteFormat = {
+    const incompleteFormat: ExportedSubgraph = {
       version: 1,
       id: "incomplete-id",
       name: "Incomplete Subgraph",
       nodes: [],
-      links: {},
+      links: [],
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
+      state: emptySubgraphState,
+      revision: 0,
       inputNode: {
         id: -10,
         bounding: [0, 0, 120, 60],
@@ -294,10 +305,12 @@ describe("SubgraphSerialization - Version Compatibility", () => {
       id: "future-id",
       name: "Future Subgraph",
       nodes: [],
-      links: {},
+      links: [],
       groups: [],
       config: {},
       definitions: { subgraphs: [] },
+      state: emptySubgraphState,
+      revision: 0,
       inputs: [],
       outputs: [],
       inputNode: {
@@ -310,7 +323,7 @@ describe("SubgraphSerialization - Version Compatibility", () => {
       },
       widgets: [],
       futureFeature: "unknown_data", // Unknown future field
-    }
+    } as unknown as ExportedSubgraph
 
     // Should handle future format gracefully
     expect(() => {

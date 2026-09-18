@@ -61,7 +61,7 @@ describe("LGraphCanvas node panel property clamping", () => {
     const { canvas, parent } = createTestCanvas()
     parents.push(parent)
     const node = new BoundedPropertyNode()
-    canvas.graph.add(node)
+    canvas.graph!.add(node)
 
     canvas.showShowNodePanel(node)
 
@@ -75,7 +75,7 @@ describe("LGraphCanvas node panel property clamping", () => {
     valueElement.textContent = "5"
     valueElement.dispatchEvent(new FocusEvent("blur"))
 
-    expect(node.properties.strength).toBe(1)
+    expect(node.properties["strength"]).toBe(1)
     expect(valueElement.textContent).toBe("1.000")
   })
 
@@ -84,7 +84,7 @@ describe("LGraphCanvas node panel property clamping", () => {
     parents.push(parent)
     const node = new BoundedPropertyNode()
     node.setProperty("strength", 1)
-    canvas.graph.add(node)
+    canvas.graph!.add(node)
 
     canvas.showShowNodePanel(node)
 
@@ -95,7 +95,7 @@ describe("LGraphCanvas node panel property clamping", () => {
     valueElement.textContent = "99"
     valueElement.dispatchEvent(new FocusEvent("blur"))
 
-    expect(node.properties.strength).toBe(1)
+    expect(node.properties["strength"]).toBe(1)
     expect(valueElement.textContent).toBe("1.000")
   })
 })

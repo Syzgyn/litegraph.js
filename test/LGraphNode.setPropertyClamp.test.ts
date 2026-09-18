@@ -60,11 +60,11 @@ describe("setProperty clamps bounded widgets", () => {
     const node = new BoundedPropertyNode()
 
     node.setProperty("strength", 5)
-    expect(node.properties.strength).toBe(1)
+    expect(node.properties["strength"]).toBe(1)
     expect(node.widgets![0].value).toBe(1)
 
     node.setProperty("strength", -2)
-    expect(node.properties.strength).toBe(0)
+    expect(node.properties["strength"]).toBe(0)
     expect(node.widgets![0].value).toBe(0)
   })
 
@@ -79,7 +79,7 @@ describe("setProperty clamps bounded widgets", () => {
       properties: { strength: 99 },
     }))
 
-    expect(node.properties.strength).toBe(1)
+    expect(node.properties["strength"]).toBe(1)
     expect(node.widgets![0].value).toBe(1)
   })
 

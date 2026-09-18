@@ -16,7 +16,7 @@ describe("resolveHoverTarget", () => {
     node.pos = [0, 100]
     node.size = [200, 120]
     const input = node.addInput("value", "number", { tooltip: "Input tooltip" })
-    node.addWidget("number", "value", 0)
+    node.addWidget("number", "value", 0, null)
 
     const [x, y] = node.getInputSlotPos(input)
     const target = resolveHoverTarget({
@@ -38,7 +38,7 @@ describe("resolveHoverTarget", () => {
     const node = new LGraphNode("test")
     node.pos = [0, 100]
     node.size = [200, 120]
-    node.addWidget("number", "amount", 0)
+    node.addWidget("number", "amount", 0, null)
     const widget = node.widgets?.[0]
     expect(widget).toBeDefined()
     widget!.tooltip = "Widget tooltip"
@@ -77,7 +77,7 @@ describe("resolveHoverTarget", () => {
 
   test("skips title hover when title mode is NO_TITLE", () => {
     class NoTitleNode extends LGraphNode {
-      static override titleMode = TitleMode.NO_TITLE
+      static titleMode = TitleMode.NO_TITLE
     }
 
     const node = new NoTitleNode("test")
@@ -112,7 +112,7 @@ describe("hoverTargetsEqual", () => {
   test("compares targets by kind and identity fields", () => {
     const node = new LGraphNode("test")
     const input = node.addInput("a", "number")
-    const widget = node.addWidget("number", "a", 0)
+    const widget = node.addWidget("number", "a", 0, null)
 
     expect(hoverTargetsEqual(
       { kind: "input", node, slot: input, index: 0 },
@@ -145,7 +145,7 @@ describe("hover anchor geometry", () => {
     const node = new LGraphNode("test")
     node.pos = [0, 100]
     node.size = [200, 120]
-    node.addWidget("number", "amount", 0)
+    node.addWidget("number", "amount", 0, null)
     const widget = node.widgets?.[0]
     widget!.lastY = 40
 

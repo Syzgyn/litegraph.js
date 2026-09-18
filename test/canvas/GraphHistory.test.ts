@@ -369,7 +369,7 @@ describe("GraphHistory", () => {
     const originalColor = node.color
 
     graph.beforeChange()
-    node.setColorOption(LGraphCanvas.nodeColors.red)
+    node.setColorOption(LGraphCanvas.nodeColors["red"])
     graph.afterChange()
     await new Promise<void>(resolve => queueMicrotask(resolve))
 

@@ -5,7 +5,7 @@ import { LGraph, LGraphCanvas, LGraphNode, LiteGraph } from "@/litegraph"
 const NODE_TYPE = "test/searchboxGhost"
 
 class SearchboxGhostNode extends LGraphNode {
-  static title = "Searchbox Ghost"
+  static override title = "Searchbox Ghost"
 }
 
 function createMockContext(): CanvasRenderingContext2D {
@@ -84,7 +84,7 @@ describe("LGraphCanvas showSearchbox ghost placement", () => {
   })
 
   afterEach(() => {
-    canvas.searchBox?.close()
+    ;(canvas.searchBox as { close?: () => void } | undefined)?.close?.()
     if (canvas.state.ghostNodeId != null) canvas.finalizeGhostPlacement(true)
     LiteGraph.unregisterNodeType(NODE_TYPE)
     canvasElement.remove()
