@@ -36,7 +36,7 @@ describe("LGraphCanvas d3 zoom", () => {
     const element = createCanvas()
     const canvas = new LGraphCanvas(element, graph, { skipRender: true })
 
-    canvas.#useD3Zoom = true
+    canvas.useD3Zoom(true)
 
     const startScale = canvas.ds.scale
     element.dispatchEvent(new WheelEvent("wheel", {

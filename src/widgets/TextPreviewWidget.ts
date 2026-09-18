@@ -158,9 +158,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
   } {
     const minHeight = Math.max(
       this.options.minHeight ?? DEFAULT_MIN_HEIGHT,
-      this.options.growToFit ? this.#measureContentHeight(node.size[0]) : 0,
-      // TODO: uncomment this when the widget is ready
-      // this.#measureContentHeight(node.size[0]),
+      this.#measureContentHeight(node.size[0]),
     )
 
     return {
