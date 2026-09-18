@@ -19,6 +19,19 @@ function lineHeight(): number {
   return LiteGraph.NODE_TEXT_SIZE * 1.35
 }
 
+/** Whether the canvas element is connected and shown (not aria-hidden / zero-size). */
+function isCanvasDisplayed(canvas: LGraphCanvas): boolean {
+  const element = canvas.canvas
+  if (!element.isConnected) return false
+
+  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+    if (node.getAttribute("aria-hidden") === "true") return false
+  }
+
+  const rect = element.getBoundingClientRect()
+  return rect.width > 0 && rect.height > 0
+}
+
 /**
  * Read-only multiline text preview (`type: "textpreview"`).
  *
@@ -53,6 +66,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     const { node } = this
     const activeCanvas = canvas ?? node.graph?.primaryCanvas
     if (activeCanvas && node.graph !== activeCanvas.graph) return false
+    if (activeCanvas && !isCanvasDisplayed(activeCanvas)) return false
     return !node.collapsed && !this.hidden && node.isWidgetVisible(this)
   }
 

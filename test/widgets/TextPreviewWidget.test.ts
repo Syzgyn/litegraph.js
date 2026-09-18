@@ -218,6 +218,30 @@ describe("TextPreviewWidget", () => {
     expect(textarea.style.display).toBe("none")
   })
 
+  test("hides textarea when canvas host is aria-hidden", ({ canvas, node }) => {
+    const host = document.createElement("div")
+    host.setAttribute("aria-hidden", "false")
+    const element = canvas.canvas
+    element.remove()
+    host.append(element)
+    document.body.append(host)
+
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+
+    host.setAttribute("aria-hidden", "true")
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(textarea.style.display).toBe("none")
+
+    host.remove()
+    document.body.append(element)
+  })
+
   test("hides textarea when navigating out of a subgraph", ({ canvas, graph }) => {
     const subgraph = createTestSubgraph({ nodeCount: 1 })
     graph.add(createTestSubgraphNode(subgraph))
