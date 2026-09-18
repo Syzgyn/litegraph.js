@@ -2290,7 +2290,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       return { subgraph, node: subgraphNode as SubgraphNode }
     } finally {
       this.afterChange()
-      this.canvasAction(c => c.emitAfterChange())
+      this.canvasAction((c) => {
+        c.emitAfterChange()
+        c.refocus()
+      })
     }
   }
 
@@ -2315,7 +2318,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       this.rootGraph.events.dispatch("subgraph-unpacked", { subgraphId })
     } finally {
       this.afterChange()
-      this.canvasAction(c => c.emitAfterChange())
+      this.canvasAction((c) => {
+        c.emitAfterChange()
+        c.refocus()
+      })
     }
   }
 

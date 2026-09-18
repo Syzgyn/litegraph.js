@@ -4888,6 +4888,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     })
   }
 
+  /** Return keyboard focus to the canvas so undo/redo shortcuts work. */
+  refocus(): void {
+    const { canvas } = this
+    if (!canvas) return
+    canvas.focus()
+    setTimeout(() => canvas.focus(), 20)
+  }
+
   /**
    * Pastes the items from the canvas "clipbaord" - a local storage variable.
    */
