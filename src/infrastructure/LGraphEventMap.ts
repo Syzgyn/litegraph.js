@@ -4,6 +4,7 @@ import type { LGraphNode } from "@/LGraphNode"
 import type { LLink, ResolvedConnection } from "@/LLink"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { ExportedSubgraph, ISerialisedGraph, SerialisableGraph } from "@/types/serialisation"
+import type { UUID } from "@/utils/uuid"
 
 /**
  * Strongly-typed event map for `LGraph` configuration and subgraph lifecycle.
@@ -50,6 +51,16 @@ export interface LGraphEventMap {
    * parent graph. Carries both the exported subgraph data and the resolved boundary links used
    * to reconnect external wiring.
    */
+  /**
+   * A `SubgraphNode` was expanded back into interior nodes on the parent graph.
+   *
+   * Dispatched after boundary links are rewired and the subgraph node is removed.
+   */
+  "subgraph-unpacked": {
+    /** UUID of the subgraph definition that was unpacked. */
+    subgraphId: UUID
+  }
+
   "convert-to-subgraph": {
     /** The newly created subgraph. */
     subgraph: Subgraph

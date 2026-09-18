@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, vi } from "vitest"
 
 import { GraphHistory } from "@/canvas/GraphHistory"
-import { LGraph, LGraphCanvas, LGraphNode, LiteGraph, RenderShape } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphNode, LiteGraph, type Positionable, RenderShape, SubgraphNode } from "@/litegraph"
 
 import { test as baseTest } from "../testExtensions"
 
@@ -20,8 +20,17 @@ class WidgetNode extends LGraphNode {
   }
 }
 
+class PackableNode extends LGraphNode {
+  constructor() {
+    super("test/PackableNode")
+    this.addOutput("out", "number")
+    this.addInput("in", "number")
+  }
+}
+
 LiteGraph.registerNodeType("test/HistoryNode", TestNode)
 LiteGraph.registerNodeType("test/WidgetNode", WidgetNode)
+LiteGraph.registerNodeType("test/PackableNode", PackableNode)
 
 function createMockContext(): CanvasRenderingContext2D {
   return {
@@ -431,6 +440,43 @@ describe("GraphHistory", () => {
 
     history.undo()
     expect(graph.getNodeById(nodeId)!.widgets![0].value).toBe(42)
+  })
+
+  test("captures convertToSubgraph as an undo step", async ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/PackableNode")!
+    graph.add(node)
+    history.reset()
+
+    graph.convertToSubgraph(new Set<Positionable>([node]))
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+    expect(graph.nodes[0]).toBeInstanceOf(SubgraphNode)
+
+    history.undo()
+
+    expect(graph.nodes[0]).not.toBeInstanceOf(SubgraphNode)
+    expect(graph.subgraphs.size).toBe(0)
+  })
+
+  test("captures unpackSubgraph as an undo step", async ({ graph, history }) => {
+    const node = LiteGraph.createNode("test/PackableNode")!
+    graph.add(node)
+    const { node: subgraphNode } = graph.convertToSubgraph(new Set<Positionable>([node]))
+    history.reset()
+
+    graph.unpackSubgraph(subgraphNode)
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+    expect(graph.nodes.some(n => n instanceof SubgraphNode)).toBe(false)
+
+    history.undo()
+
+    expect(graph.nodes.some(n => n instanceof SubgraphNode)).toBe(true)
+    expect(graph.subgraphs.size).toBe(1)
   })
 
   test("dispose stops keyboard undo", ({ graph, history, canvas }) => {

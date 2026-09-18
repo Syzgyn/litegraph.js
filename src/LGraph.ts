@@ -2305,12 +2305,17 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
     if (!(subgraphNode instanceof SubgraphNode))
       throw new Error("Can only unpack Subgraph Nodes")
 
+    const subgraphId = subgraphNode.subgraph.id
+
     this.beforeChange()
+    this.canvasAction(c => c.emitBeforeChange())
 
     try {
       this.#unpackSubgraphImpl(subgraphNode, options)
+      this.rootGraph.events.dispatch("subgraph-unpacked", { subgraphId })
     } finally {
       this.afterChange()
+      this.canvasAction(c => c.emitAfterChange())
     }
   }
 

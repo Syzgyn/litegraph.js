@@ -152,6 +152,20 @@ export class GraphHistory implements Disposable {
     this.#scheduleCapture()
   }
 
+  /**
+   * Pack/unpack runs nested graph mutations; balance any leftover changeCount and
+   * capture once the operation's finally block has finished.
+   */
+  #onStructuralGraphChange = (): void => {
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        if (this.#restoring || this.#settling) return
+        if (this.changeCount > 0) this.changeCount = 0
+        this.#scheduleCapture()
+      })
+    })
+  }
+
   activeState: GraphHistoryEntry
   undoQueue: GraphHistoryEntry[] = []
   redoQueue: GraphHistoryEntry[] = []
@@ -237,13 +251,16 @@ export class GraphHistory implements Disposable {
   }
 
   #attachToRootGraph(): void {
-    this.#rootGraph.events.addEventListener("configured", this.#onConfigured, {
-      signal: this.#controller.signal,
-    })
+    const { signal } = this.#controller
+    this.#rootGraph.events.addEventListener("configured", this.#onConfigured, { signal })
+    this.#rootGraph.events.addEventListener("convert-to-subgraph", this.#onStructuralGraphChange, { signal })
+    this.#rootGraph.events.addEventListener("subgraph-unpacked", this.#onStructuralGraphChange, { signal })
   }
 
   #detachFromRootGraph(): void {
     this.#rootGraph.events.removeEventListener("configured", this.#onConfigured)
+    this.#rootGraph.events.removeEventListener("convert-to-subgraph", this.#onStructuralGraphChange)
+    this.#rootGraph.events.removeEventListener("subgraph-unpacked", this.#onStructuralGraphChange)
   }
 
   #attachToActiveGraph(): void {
