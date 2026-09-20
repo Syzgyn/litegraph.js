@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, vi } from "vitest"
 
 import { GraphHistory } from "@/canvas/GraphHistory"
-import { LGraph, LGraphCanvas, LGraphNode, LiteGraph, type Positionable, RenderShape, SubgraphNode } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphGroup, LGraphNode, LiteGraph, type Positionable, RenderShape, SubgraphNode } from "@/litegraph"
 
 import { test as baseTest } from "../testExtensions"
 
@@ -378,6 +378,29 @@ describe("GraphHistory", () => {
     history.undo()
 
     expect(graph.getNodeById(nodeId)!.color).toBe(originalColor)
+  })
+
+  test("undo restores group resize", async ({ graph, history }) => {
+    const group = new LGraphGroup("Group")
+    group.pos = [0, 0]
+    group.size = [140, 80]
+    graph.add(group)
+    history.reset()
+
+    const groupId = group.id
+    const originalSize = [...group.size]
+
+    graph.beforeChange()
+    group.resize(200, 150)
+    graph.afterChange()
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+    expect(group.size).not.toEqual(originalSize)
+
+    history.undo()
+
+    expect([...graph.groups.find(g => g.id === groupId)!.size]).toEqual(originalSize)
   })
 
   test("undo restores shape changes", async ({ graph, history }) => {

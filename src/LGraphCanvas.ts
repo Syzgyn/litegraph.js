@@ -2073,7 +2073,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
           const offsetX = x - (b[0] + b[2])
           const offsetY = y - (b[1] + b[3])
 
-          pointer.onDragStart = () => this.resizingGroup = group
+          pointer.onDragStart = () => {
+            graph.beforeChange()
+            this.resizingGroup = group
+          }
           pointer.onDrag = (eMove) => {
             if (this.readOnly) return
 
@@ -2088,7 +2091,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             const resized = group.resize(pos[0], pos[1])
             if (resized) this.dirtyBgCanvas = true
           }
-          pointer.finally = () => this.resizingGroup = null
+          pointer.onDragEnd = () => {
+            graph.afterChange()
+          }
+          pointer.finally = () => {
+            this.resizingGroup = null
+          }
         } else {
           const headerHeight = LiteGraph.NODE_TITLE_HEIGHT
           if (
