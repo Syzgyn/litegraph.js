@@ -77,14 +77,22 @@ export class ColorWidget extends BaseWidget<IColorWidget> implements IColorWidge
     input.style.left = `${e.clientX}px`
     input.style.top = `${e.clientY}px`
 
-    input.addEventListener(
-      "change",
-      () => {
-        this.setValue(input.value, { e, node, canvas })
-        canvas.setDirty(true)
-      },
-      { once: true },
-    )
+    const applyValue = () => {
+      this.setValue(input.value, { e, node, canvas })
+      canvas.setDirty(true)
+    }
+
+    if (canvas.colorWidgetUpdateOnInput) {
+      const onInput = () => applyValue()
+      input.addEventListener("input", onInput)
+      input.addEventListener(
+        "change",
+        () => input.removeEventListener("input", onInput),
+        { once: true },
+      )
+    } else {
+      input.addEventListener("change", applyValue, { once: true })
+    }
 
     // Wait for next frame else Chrome doesn't render the color picker at the mouse
     requestAnimationFrame(() => input.click())

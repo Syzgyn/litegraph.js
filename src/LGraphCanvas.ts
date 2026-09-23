@@ -595,6 +595,11 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   renderLinkTooltip: boolean
   /** When `true`, new nodes will follow the cursor when being added. */
   followCursorWhenAddingNodes: boolean
+  /**
+   * When `true`, native colour picker widgets call `setValue` on `input` events while the picker
+   * is open. When `false` (default), the widget updates only on `change` when the picker closes.
+   */
+  colorWidgetUpdateOnInput: boolean
 
   /** Shape of the markers shown at the midpoint of links.  Default: Circle */
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
@@ -954,6 +959,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.renderExecutionOrder = false
     this.renderLinkTooltip = true
     this.followCursorWhenAddingNodes = true
+    this.colorWidgetUpdateOnInput = false
 
     this.linksRenderMode = LinkRenderType.SPLINE_LINK
 

@@ -37,7 +37,10 @@ const test = baseTest.extend<ColorWidgetFixtures>({
     await use(new ColorWidget(createMockWidgetConfig(), node))
   },
   canvas: async ({}, use) => {
-    await use({ setDirty: vi.fn() } as unknown as LGraphCanvas)
+    await use({
+      setDirty: vi.fn(),
+      colorWidgetUpdateOnInput: false,
+    } as unknown as LGraphCanvas)
   },
   event: async ({}, use) => {
     await use({ clientX: 100, clientY: 200 } as CanvasPointerEvent)
@@ -163,5 +166,68 @@ describe("ColorWidget", () => {
 
     expect(setValueSpy).toHaveBeenCalledTimes(1)
     expect(setValueSpy).toHaveBeenCalledWith("#00ff00", expect.any(Object))
+  })
+
+  test("onClick calls setValue on each input when colorWidgetUpdateOnInput is enabled", ({
+    widget,
+    node,
+    canvas,
+    event,
+  }) => {
+    canvas.colorWidgetUpdateOnInput = true
+    const setValueSpy = vi.spyOn(widget, "setValue")
+
+    widget.onClick({ e: event, node, canvas })
+
+    const input = document.querySelector("input[type=\"color\"]") as HTMLInputElement
+    input.value = "#00ff00"
+    input.dispatchEvent(new Event("input"))
+    input.value = "#0000ff"
+    input.dispatchEvent(new Event("input"))
+
+    expect(setValueSpy).toHaveBeenCalledTimes(2)
+    expect(setValueSpy).toHaveBeenLastCalledWith("#0000ff", {
+      e: event,
+      node,
+      canvas,
+    })
+  })
+
+  test("onClick does not call setValue on input when colorWidgetUpdateOnInput is disabled", ({
+    widget,
+    node,
+    canvas,
+    event,
+  }) => {
+    const setValueSpy = vi.spyOn(widget, "setValue")
+
+    widget.onClick({ e: event, node, canvas })
+
+    const input = document.querySelector("input[type=\"color\"]") as HTMLInputElement
+    input.value = "#00ff00"
+    input.dispatchEvent(new Event("input"))
+
+    expect(setValueSpy).not.toHaveBeenCalled()
+  })
+
+  test("removes input listener after change when colorWidgetUpdateOnInput is enabled", ({
+    widget,
+    node,
+    canvas,
+    event,
+  }) => {
+    canvas.colorWidgetUpdateOnInput = true
+    const setValueSpy = vi.spyOn(widget, "setValue")
+
+    widget.onClick({ e: event, node, canvas })
+
+    const input = document.querySelector("input[type=\"color\"]") as HTMLInputElement
+    input.value = "#00ff00"
+    input.dispatchEvent(new Event("input"))
+    input.dispatchEvent(new Event("change"))
+    input.value = "#0000ff"
+    input.dispatchEvent(new Event("input"))
+
+    expect(setValueSpy).toHaveBeenCalledTimes(1)
   })
 })
