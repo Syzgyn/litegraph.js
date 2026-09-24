@@ -5579,6 +5579,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       const { visibleNodes } = this
       const drawSnapGuides = this.#snapToGrid && this.isDragging
 
+      this.dispatch("litegraph:before-draw-nodes")
+
       for (const node of visibleNodes) {
         ctx.save()
 

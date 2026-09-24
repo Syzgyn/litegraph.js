@@ -29,6 +29,14 @@ export interface LGraphCanvasEventMap {
   }
 
   /**
+   * Dispatched at the start of each front-canvas node pass, before visible nodes are drawn.
+   *
+   * DOM overlays that track canvas widgets should hide on this event and show again when
+   * their widget is drawn for the current frame.
+   */
+  "litegraph:before-draw-nodes": never
+
+  /**
    * Canvas-level pointer and edit lifecycle events.
    *
    * The `subType` field discriminates the specific interaction. Listeners typically switch on
