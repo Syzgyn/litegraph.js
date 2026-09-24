@@ -264,4 +264,70 @@ describe("TextPreviewWidget", () => {
     canvas.setGraph(graph)
     expect(textarea.style.display).toBe("none")
   })
+
+  test("before-draw-nodes hides textarea until drawWidget runs again", ({ canvas, node }) => {
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+
+    canvas.dispatch("litegraph:before-draw-nodes")
+    expect(textarea.style.display).toBe("none")
+
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(textarea.style.display).toBe("block")
+  })
+
+  test("hides textarea when node is collapsed", ({ canvas, node }) => {
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+
+    node.flags.collapsed = true
+    canvas.dispatch("litegraph:before-draw-nodes")
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(textarea.style.display).toBe("none")
+  })
+
+  test("hides textarea when node is outside the visible area", ({ canvas, node }) => {
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    expect(textarea.style.display).toBe("block")
+
+    node.pos = [10_000, 10_000]
+    node.updateArea(canvas.ctx)
+    canvas.dispatch("litegraph:before-draw-nodes")
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(textarea.style.display).toBe("none")
+  })
+
+  test("appends textarea to the canvas parent when present", ({ canvas, node }) => {
+    const host = document.createElement("div")
+    const element = canvas.canvas
+    element.remove()
+    host.append(element)
+    document.body.append(host)
+
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.computedHeight = 120
+    widget.y = 40
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+
+    const textarea = host.querySelector(":scope textarea.litegraph-textpreview")
+    expect(textarea).toBeTruthy()
+
+    host.remove()
+    document.body.append(element)
+  })
 })

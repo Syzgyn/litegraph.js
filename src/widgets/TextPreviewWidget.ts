@@ -2,6 +2,7 @@ import type { LGraphNode } from "@/LGraphNode"
 import type { ITextPreviewWidget } from "@/types/widgets"
 
 import { type LGraphCanvas, LiteGraph } from "@/litegraph"
+import { overlapBounding } from "@/measure"
 import { measureWrappedTextHeight } from "@/utils/wrapText"
 
 import { BaseWidget, type DrawWidgetOptions, type WidgetEventOptions } from "./BaseWidget"
@@ -39,13 +40,34 @@ function isCanvasDisplayed(canvas: LGraphCanvas): boolean {
  * wrapped content and expands further when the node is resized vertically.
  */
 export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements ITextPreviewWidget {
+  static #activeByCanvas = new WeakMap<LGraphCanvas, Set<TextPreviewWidget>>()
+  static #frameListenerByCanvas = new WeakMap<LGraphCanvas, () => void>()
+
   #textarea: HTMLTextAreaElement | null = null
+  #ownerCanvas: LGraphCanvas | null = null
   #graphChangeTarget: { canvas: LGraphCanvas, listener: () => void } | null = null
 
   constructor(widget: ITextPreviewWidget, node: LGraphNode) {
     super(widget, node)
     this.type ??= "textpreview"
     this.value = widget.value?.toString() ?? ""
+  }
+
+  static #hideOverlaysForCanvas(canvas: LGraphCanvas): void {
+    const widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
+    if (!widgets) return
+
+    for (const widget of widgets) widget.#hideElement()
+  }
+
+  static #ensureFrameListener(canvas: LGraphCanvas): void {
+    if (TextPreviewWidget.#frameListenerByCanvas.has(canvas)) return
+
+    const listener = () => {
+      TextPreviewWidget.#hideOverlaysForCanvas(canvas)
+    }
+    canvas.canvas.addEventListener("litegraph:before-draw-nodes", listener)
+    TextPreviewWidget.#frameListenerByCanvas.set(canvas, listener)
   }
 
   #measureContentHeight(nodeWidth: number): number {
@@ -67,7 +89,31 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     const activeCanvas = canvas ?? node.graph?.primaryCanvas
     if (activeCanvas && node.graph !== activeCanvas.graph) return false
     if (activeCanvas && !isCanvasDisplayed(activeCanvas)) return false
+    if (
+      activeCanvas &&
+      !overlapBounding(activeCanvas.visibleArea, node.renderArea)
+    ) { return false }
     return !node.collapsed && !this.hidden && node.isWidgetVisible(this)
+  }
+
+  #trackCanvas(canvas: LGraphCanvas): void {
+    if (this.#ownerCanvas === canvas) return
+
+    if (this.#ownerCanvas) this.#untrackCanvas(this.#ownerCanvas)
+    this.#ownerCanvas = canvas
+
+    let widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
+    if (!widgets) {
+      widgets = new Set()
+      TextPreviewWidget.#activeByCanvas.set(canvas, widgets)
+    }
+    widgets.add(this)
+    TextPreviewWidget.#ensureFrameListener(canvas)
+  }
+
+  #untrackCanvas(canvas: LGraphCanvas): void {
+    TextPreviewWidget.#activeByCanvas.get(canvas)?.delete(this)
+    if (this.#ownerCanvas === canvas) this.#ownerCanvas = null
   }
 
   #bindGraphChangeListener(canvas: LGraphCanvas): void {
@@ -103,7 +149,11 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     textarea.addEventListener("pointerup", e => e.stopPropagation())
     textarea.addEventListener("wheel", e => e.stopPropagation(), { passive: true })
 
-    canvas.getCanvasWindow().document.body.append(textarea)
+    const { canvas: canvasEl } = canvas
+    const parent = canvasEl.parentNode
+    if (parent) parent.append(textarea)
+    else canvas.getCanvasWindow().document.body.append(textarea)
+    this.#trackCanvas(canvas)
     this.#bindGraphChangeListener(canvas)
     this.#textarea = textarea
     return textarea
@@ -144,7 +194,6 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
       height: `${widgetHeight * ds.scale}px`,
       font: `${fontSize}px ${LiteGraph.NODE_FONT}`,
       lineHeight: `${fontSize * 1.35}px`,
-      zIndex: "10",
     })
   }
 
@@ -229,6 +278,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
 
   onRemove(): void {
     this.#unbindGraphChangeListener()
+    if (this.#ownerCanvas) this.#untrackCanvas(this.#ownerCanvas)
     this.#textarea?.remove()
     this.#textarea = null
   }
