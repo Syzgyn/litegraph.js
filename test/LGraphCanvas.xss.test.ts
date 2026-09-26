@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import { LGraphCanvas } from "@/LGraphCanvas"
-import { LGraph, LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphNode, LiteGraph } from "@/litegraph"
 
 const xssPayload = "<img src=x onerror=window.__xss=1>"
 

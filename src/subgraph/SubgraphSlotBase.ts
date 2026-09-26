@@ -9,10 +9,10 @@ import type { RerouteId } from "@/Reroute"
 import type { CanvasPointerEvent } from "@/types/events"
 import type { Serialisable, SubgraphIO } from "@/types/serialisation"
 
+import { canvasMeasureText } from "@/canvas/canvasMeasureText"
 import { SlotShape } from "@/draw"
 import { ConstrainedSize } from "@/infrastructure/ConstrainedSize"
 import { Rectangle } from "@/infrastructure/Rectangle"
-import { LGraphCanvas } from "@/LGraphCanvas"
 import { LiteGraph } from "@/litegraph"
 import { SlotBase } from "@/node/SlotBase"
 import { createUuidv4, type UUID } from "@/utils/uuid"
@@ -165,7 +165,7 @@ export abstract class SubgraphSlot extends SlotBase implements SubgraphIO, Hover
    * @returns `[width, height]` in canvas units.
    */
   measure(): ReadOnlySize {
-    const width = LGraphCanvas.measureText?.(this.displayName) ?? 0
+    const width = canvasMeasureText(this.displayName)
 
     const { defaultHeight } = SubgraphSlot
     this.measurement.setValues(width + defaultHeight, defaultHeight)

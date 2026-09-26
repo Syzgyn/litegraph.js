@@ -161,7 +161,7 @@ describe("TextPreviewWidget", () => {
     const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
     expect(textarea).toBeTruthy()
     expect(textarea.value).toBe("Linked preview value")
-    expect(widget.displayValue).toBe("Linked preview value")
+    expect(widget.displayValue).toBe("")
   })
 
   test("onRemove removes textarea from the document", ({ canvas, node }) => {

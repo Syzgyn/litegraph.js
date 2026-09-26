@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { LGraphButton } from "@/LGraphButton"
-import { LGraphCanvas } from "@/LGraphCanvas"
+import { LGraphCanvas } from "@/litegraph"
 
 import { handleTitleButtonClick } from "../utils/canvasTitleButton"
 import { createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphHelpers"

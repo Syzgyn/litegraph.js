@@ -3,8 +3,7 @@
  */
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import { LGraphCanvas } from "@/LGraphCanvas"
-import { LGraph, LGraphNode, LiteGraph } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphNode, LiteGraph } from "@/litegraph"
 
 class BoundedPropertyNode extends LGraphNode {
   static override type = "test/panel_bounded_property"

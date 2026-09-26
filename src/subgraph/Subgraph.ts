@@ -6,12 +6,13 @@ import type { ExportedSubgraph, ExportedSubgraphInstance, ExposedWidget, ISerial
 import { SUBGRAPH_INPUT_ID, SUBGRAPH_OUTPUT_ID } from "@/constants"
 import { CustomEventTarget } from "@/infrastructure/CustomEventTarget"
 import { type BaseLGraph, LGraph } from "@/LGraph"
-import { LiteGraph, SubgraphNode } from "@/litegraph"
+import { LiteGraph } from "@/litegraph"
 import { type LinkId, LLink } from "@/LLink"
 import { createUuidv4 } from "@/utils/uuid"
 
 import { SubgraphInput } from "./SubgraphInput"
 import { SubgraphInputNode } from "./SubgraphInputNode"
+import { SubgraphNode } from "./SubgraphNode"
 import { SubgraphOutput } from "./SubgraphOutput"
 import { SubgraphOutputNode } from "./SubgraphOutputNode"
 

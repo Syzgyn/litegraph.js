@@ -47,6 +47,7 @@ import type { UUID } from "./utils/uuid"
 import DOMPurify from "dompurify"
 
 import { AutoPanController } from "@/canvas/AutoPanController"
+import { setCanvasMeasureText } from "@/canvas/canvasMeasureText"
 import { D3ZoomController } from "@/canvas/D3ZoomController"
 import {
   clientToGraph,
@@ -74,7 +75,7 @@ import { strokeShape } from "./draw"
 import { NullGraphError } from "./infrastructure/NullGraphError"
 import { LGraphGroup } from "./LGraphGroup"
 import { LGraphNode, type NodeId, type NodeProperty } from "./LGraphNode"
-import { createUuidv4, LiteGraph, Rectangle, SubgraphNode } from "./litegraph"
+import { createUuidv4, LiteGraph, Rectangle } from "./litegraph"
 import { type LinkId, LLink } from "./LLink"
 import {
   containsRect,
@@ -93,6 +94,7 @@ import { stringOrEmpty } from "./strings"
 import { Subgraph } from "./subgraph/Subgraph"
 import { SubgraphInputNode } from "./subgraph/SubgraphInputNode"
 import { SubgraphIONodeBase } from "./subgraph/SubgraphIONodeBase"
+import { SubgraphNode } from "./subgraph/SubgraphNode"
 import { SubgraphOutputNode } from "./subgraph/SubgraphOutputNode"
 import {
   CanvasItem,
@@ -1001,6 +1003,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         ctx.font = font
       }
     }
+    setCanvasMeasureText(LGraphCanvas.measureText)
 
     if (!options.skipRender) {
       this.startRendering()
