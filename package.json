@@ -14,6 +14,8 @@
       "require": "./dist/litegraph.umd.js"
     },
     "./style.css": "./dist/css/litegraph.css",
+    "./fonts/*": "./dist/css/fonts/*",
+    "./dist/css/fonts/*": "./dist/css/fonts/*",
     "./dist/*": "./dist/*.d.ts"
   },
   "directories": {
@@ -40,7 +42,8 @@
   "author": "comfyorg",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "bugs": {
     "url": "https://github.com/Comfy-Org/litegraph.js/issues"

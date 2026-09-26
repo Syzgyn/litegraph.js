@@ -1,5 +1,31 @@
 /* this CSS contains only the basic CSS needed to run the app and use it */
 
+/*
+ * PrimeIcons v7.0.0 (MIT) — https://github.com/primefaces/primeicons (archived)
+ * Font binaries: ./fonts/ — see NOTICE in the package root for license text.
+ */
+@font-face {
+  font-family: "PrimeIcons";
+  font-display: block;
+  src:
+    url("./fonts/primeicons.woff2") format("woff2"),
+    url("./fonts/primeicons.woff") format("woff"),
+    url("./fonts/primeicons.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "primeicons";
+  font-display: block;
+  src:
+    url("./fonts/primeicons.woff2") format("woff2"),
+    url("./fonts/primeicons.woff") format("woff"),
+    url("./fonts/primeicons.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
 .lgraphcanvas {
   /*cursor: crosshair;*/
   user-select: none;
