@@ -1,4 +1,5 @@
 import type { LinkSegment, Point, ReadOnlyRect, Rect } from "@/interfaces"
+import type { LGraphNode } from "@/LGraphNode"
 import type { Reroute } from "@/Reroute"
 import type { Subgraph } from "@/subgraph/Subgraph"
 import type { SubgraphInput } from "@/subgraph/SubgraphInput"
@@ -9,14 +10,14 @@ import type { HoverTarget } from "@/types/hover"
 import type { IBaseWidget } from "@/types/widgets"
 
 import { getNodeInputOnPos, getNodeOutputOnPos } from "@/canvas/measureSlots"
-import { type LGraphNode, WIDGET_ARRANGE_GAP } from "@/LGraphNode"
 import { isInRectangle } from "@/measure"
 import { TitleMode } from "@/types/globalEnums"
 
-/** Default layout metrics; match `LiteGraphGlobal` defaults to avoid a circular import. */
+/** Default layout metrics; match `LiteGraphGlobal` / `LGraphNode` defaults to avoid a circular import. */
 const NODE_TITLE_HEIGHT = 30
 const NODE_SLOT_HEIGHT = 20
 const NODE_WIDGET_HEIGHT = 20
+const WIDGET_ARRANGE_GAP = 4
 
 export interface ResolveHoverTargetOptions {
   x: number
