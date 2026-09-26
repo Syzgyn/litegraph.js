@@ -16,19 +16,28 @@ jobs:
     if: >
       github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'Release')
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: npm
 
       - name: Get current version
         id: current_version
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build and pack
+        run: |
+          npm ci
+          npm run build
+          npm pack
 
       - name: Create release
         id: create_release
@@ -41,6 +50,9 @@ jobs:
           prerelease: false
           generate_release_notes: true
           make_latest: "true"
+          files: |
+            dist/**
+            *.tgz
 
   publish:
     runs-on: ubuntu-latest
@@ -50,9 +62,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: npm
           registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
