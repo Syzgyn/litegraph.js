@@ -5,7 +5,7 @@
  * store, i18n layer, and settings. Not published as part of the package build.
  * @example
  * ```ts
- * import { LGraphCanvas } from "@comfyorg/litegraph"
+ * import { LGraphCanvas } from "@syzgyn/litegraph"
  * import { LitegraphDomTooltip } from "./dom-tooltips"
  *
  * const canvas = new LGraphCanvas(canvasEl, graph)
@@ -22,7 +22,7 @@ import {
   type HoverTarget,
   hoverTargetsEqual,
   type LGraphCanvas,
-} from "@comfyorg/litegraph"
+} from "@syzgyn/litegraph"
 
 export interface DomTooltipOptions {
   /** Delay before showing a tooltip after hover settles. ComfyUI default: 500ms. */

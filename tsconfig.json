@@ -26,7 +26,7 @@
     "allowJs": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@comfyorg/litegraph": ["./src/litegraph.ts"]
+      "@syzgyn/litegraph": ["./src/litegraph.ts"]
     },
     "typeRoots": [],
     "outDir": "./dist",

@@ -1,6 +1,6 @@
 {
-  "name": "@comfyorg/litegraph",
-  "version": "0.17.2",
+  "name": "@syzgyn/litegraph",
+  "version": "0.2.0",
   "type": "module",
   "description": "A graph node editor similar to PD or UDK Blueprints. It works in an HTML5 Canvas and allows to export graphs to be included in applications.",
   "main": "./dist/litegraph.umd.js",
@@ -37,18 +37,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:Comfy-Org/litegraph.js.git"
+    "url": "git@github.com:Syzgyn/litegraph.js.git"
   },
-  "author": "comfyorg",
+  "author": "syzgyn",
   "license": "MIT",
   "files": [
     "dist",
     "NOTICE"
   ],
   "bugs": {
-    "url": "https://github.com/Comfy-Org/litegraph.js/issues"
+    "url": "https://github.com/Syzgyn/litegraph.js/issues"
   },
-  "homepage": "https://github.com/Comfy-Org/litegraph.js",
+  "homepage": "https://github.com/Syzgyn/litegraph.js",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.9.0",

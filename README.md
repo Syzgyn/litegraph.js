@@ -1,103 +1,103 @@
-# ⛔ ARCHIVED - Comfy-Org/litegraph.js has been merged into ComfyUI Frontend
+# @syzgyn/litegraph
 
-> **This repository is archived and no longer maintained. The code has been integrated directly into the ComfyUI Frontend repository.**
+A TypeScript graph node editor for the browser (Canvas2D), similar to Unreal Blueprints or Pure Data. This repository is a **standalone fork** of the final [Comfy-Org/litegraph.js](https://github.com/Comfy-Org/litegraph.js) release (`v0.17.2`, August 2025).
 
-## 🚀 New Location
+The official Comfy package was [archived](https://github.com/Comfy-Org/litegraph.js) and merged into [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend/tree/main/src/lib/litegraph). Active Comfy development no longer ships as a separate npm library. **This fork is a zero–ComfyUI-app-dependency package** while selectively porting bug fixes and features from the frontend subtree.
 
-As of August 5, 2025, Comfy-Org/litegraph.js is now part of the ComfyUI Frontend monorepo:
-
-- **Source Code**: https://github.com/Comfy-Org/ComfyUI_frontend/tree/main/src/lib/litegraph
-- **Repository**: https://github.com/Comfy-Org/ComfyUI_frontend
-- **Pull Request**: https://github.com/Comfy-Org/ComfyUI_frontend/pull/4667
-- **Architecture Decision**: https://github.com/Comfy-Org/ComfyUI_frontend/blob/main/docs/adr/0001-merge-litegraph-into-frontend.md
-
-## 📝 For Developers
-
-- **Report Issues**: Please report any issues at https://github.com/Comfy-Org/ComfyUI_frontend/issues
-- **Contribute**: All contributions should be made to the ComfyUI Frontend repository
-- **Import Path**: Changed from `@comfyorg/litegraph` to `@/lib/litegraph` within ComfyUI
-
-## 🔄 Migration Details
-
-The complete git history has been preserved using git subtree merge. All commits, authors, and timestamps remain intact in the new location.
-
-## ❓ Why Was This Archived?
-
-Comfy-Org/litegraph.js was only used by ComfyUI, and maintaining it as a separate package created unnecessary complexity. The integration enables:
-- Faster development cycles
-- Better architectural refactoring
-- Simplified maintenance
-- No more version mismatch issues
-
-For more details, see the [Architecture Decision Record](https://github.com/Comfy-Org/ComfyUI_frontend/blob/main/docs/adr/0001-merge-litegraph-into-frontend.md).
-
-# @ComfyOrg/litegraph
-
-This is the litegraph version used in [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend).
-
-It is a fork of the original `litegraph.js`. Some APIs may by unchanged, however it is largely incompatible with the original.
-
-Some early highlights:
-
-- Accumulated comfyUI custom changes (2024-01 ~ 2024-05) (https://github.com/Comfy-Org/litegraph.js/pull/1)
-- Type schema change for ComfyUI_frontend TS migration (https://github.com/Comfy-Org/litegraph.js/pull/3)
-- Zoom fix (https://github.com/Comfy-Org/litegraph.js/pull/7)
-- Emit search box triggering custom events (<https://github.com/Comfy-Org/litegraph.js/pull/10>)
-- Truncate overflowing combo widget text (<https://github.com/Comfy-Org/litegraph.js/pull/17>)
-- Sort node based on ID on graph serialization (<https://github.com/Comfy-Org/litegraph.js/pull/21>)
-- Fix empty input not used when connecting links (<https://github.com/Comfy-Org/litegraph.js/pull/24>)
-- Batch output connection move/disconnect (<https://github.com/Comfy-Org/litegraph.js/pull/39>)
-- And now with hundreds more...
-
-# Install
-
-`npm i @comfyorg/litegraph`
-
-# litegraph.js
-
-A TypeScript library to create graphs in the browser similar to Unreal Blueprints.
-
-<details>
-
-<summary>Description of the original litegraph.js</summary>
-
-A library in Javascript to create graphs in the browser similar to Unreal Blueprints. Nodes can be programmed easily and it includes an editor to construct and tests the graphs.
-
-It can be integrated easily in any existing web applications and graphs can be run without the need of the editor.
-
-</details>
+- **This repo:** [https://github.com/Syzgyn/litegraph.js](https://github.com/Syzgyn/litegraph.js)  
+- **Historical baseline:** `v0.17.2` (`a7aa83b`) — last Comfy standalone release  
+- **Upstream for ports:** ComfyUI_frontend `src/lib/litegraph/`
+- **Port log:** [docs/PORTED.md](./docs/PORTED.md) (~90 PRs)
+- **Gap analysis:** [docs/upstream-comparison.md](./docs/upstream-comparison.md)
 
 ![Node Graph](imgs/node_graph_example.png "Node graph example")
 
+## How this fork differs from Comfy-Org `v0.17.2`
+
+Roughly **190 commits** since the archived release: **~98 upstream PR imports** plus **~80 fork-specific** changes (features, fixes, tooling, and tests).
+
+### Upstream ports (ComfyUI_frontend)
+
+Patches are transplanted without Pinia, Vue, or Comfy app stores. Highlights by area:
+
+
+| Area                 | Examples of what was ported                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Security**         | Context menu and properties-panel XSS fixes; `eval()` removed from widget math (`[mathParser](./src/utils/mathParser.ts)`)                         |
+| **Subgraphs**        | Unpacking, nested configure order, duplicate link removal, promoted-widget stability, IO slot UX, clipboard ID remapping, navigation fixes         |
+| **Canvas & input**   | Ghost node placement (with cleanup/autopan), high-DPI reroutes, d3-friendly wheel zoom, group drag fixes, link hit-testing, autopan while dragging |
+| **Serialization**    | `widgets_values_named`, zero-UUID graphs, stale widget labels on reload, `node:before-removed` lifecycle                                           |
+| **Nodes & widgets**  | Dynamic widgets, rename sync, growable inputs, slot APIs, muted execution behavior                                                                 |
+| **Groups & drawing** | Contrasting titles, grid snap, `cachedMeasureText`, cursor cache, multitype link colors                                                            |
+
+
+See [docs/PORTED.md](./docs/PORTED.md) for the full PR table with local file mappings and tests.
+
+**Intentionally not ported** (require ComfyUI infrastructure or a different architecture): Pinia widget/link stores, Vue node renderer, link-only widget promotion (ADR 0009), ECS migration, and Comfy-specific widget types. Details in [docs/upstream-comparison.md](./docs/upstream-comparison.md).
+
+### Fork-only enhancements
+
+Features and fixes added on top of the port baseline:
+
+- `GraphHistory` — undo/redo for graph edits (including widget values, group resize, subgraph pack/unpack, context-menu title/color changes)
+- `TextPreviewWidget` — multiline text preview with correct DOM visibility across graphs and hidden canvas
+- **Hover & viewport APIs** — `litegraph:hover-change`, `litegraph:viewport-change`, hover anchor geometry for DOM overlays (`[examples/dom-tooltips.ts](./examples/dom-tooltips.ts)`)
+- **Placement & canvas options** — `followCursorWhenAddingNodes`, `colorWidgetUpdateOnInput`, global link colors, optional **d3-zoom** wheel/pinch handler
+- **Widgets** — Color widget (from upstream Comfy), `displayCallback`, `BaseWidget.normalizedValue`, Combo labeled entries and numeric values, panel/property precision and clamping
+- **Subgraphs** — back navigation, boundary slot removal when links disconnect, canvas refocus and history entries on create/unpack
+- **Events** — `litegraph:before-draw-nodes`, connection-change notifications with gesture deferral
+- **Quality** — high-DPI canvas scaling fix, camelCase API cleanup, TypeScript 6 / ESLint 10 toolchain, expanded Vitest coverage under `test/`
+
+
+
+### Dependencies
+
+The archived `v0.17.2` release had **no runtime dependencies**. This fork adds small, focused runtime deps:
+
+
+| Package                   | Role                                                              |
+| ------------------------- | ----------------------------------------------------------------- |
+| `dompurify`               | Sanitize HTML in context menus and the properties panel           |
+| `d3-selection`, `d3-zoom` | Optional high-quality wheel/pinch zoom (`LGraphCanvas.useD3Zoom`) |
+
+
+**PrimeIcons** font files are bundled for slot/input indicators ([NOTICE](./NOTICE)).
+
+## Inherited from the Comfy fork (pre–`v0.17.2`)
+
+This line of development already diverged from [jagenjo/litegraph.js](https://github.com/jagenjo/litegraph.js) before archival: full TypeScript rewrite, ComfyUI workflow features, subgraph support, and many API changes. It is **not** drop-in compatible with the original library. Early Comfy-Org changelog items (custom events, combo truncation, serialization ordering, batch link moves, etc.) remain part of the baseline.
+
 ## Features
 
-- Renders on Canvas2D (zoom in/out and panning, easy to render complex interfaces, can be used inside a WebGLTexture)
-- Easy to use editor (searchbox, keyboard shortcuts, multiple selection, context menu, ...)
-- Optimized to support hundreds of nodes per graph (on editor but also on execution)
-- Customizable theme (colors, shapes, background)
-- Callbacks to personalize every action/drawing/event of nodes
-- Graphs can be executed in NodeJS
-- Highly customizable nodes (color, shape, widgets, custom rendering)
-- Easy to integrate in any JS application (one single file, no dependencies)
-- Typescript support
+- Renders on Canvas2D (zoom, pan, hundreds of nodes)
+- Editor: search box, shortcuts, multi-select, context menus
+- Customizable theme, node shapes, widgets, and draw callbacks
+- Subgraph editing with pack/unpack
+- Graph execution usable in Node.js (minus browser-only nodes)
+- TypeScript types and barrel export from `litegraph`
+
+
 
 ## Installation
 
-You can install it using npm
-
 ```bash
-npm install @comfyorg/litegraph
+npm install @syzgyn/litegraph
 ```
 
-## How to code a new Node type
-
-Here is an example of how to build a node that sums two inputs:
+CSS and fonts:
 
 ```ts
-import { LiteGraph, LGraphNode } from "./litegraph"
+import "@syzgyn/litegraph/style.css"
+```
+
+
+
+## How to code a new node type
+
+```ts
+import { LiteGraph, LGraphNode } from "@syzgyn/litegraph"
 
 class MyAddNode extends LGraphNode {
-  // Name to show
   title = "Sum"
 
   constructor() {
@@ -107,51 +107,45 @@ class MyAddNode extends LGraphNode {
     this.properties.precision = 1
   }
 
-  // Function to call when the node is executed
   onExecute() {
-    var A = this.getInputData(0)
-    if (A === undefined) A = 0
-    var B = this.getInputData(1)
-    if (B === undefined) B = 0
+    const A = this.getInputData(0) ?? 0
+    const B = this.getInputData(1) ?? 0
     this.setOutputData(0, A + B)
   }
 }
 
-// Register the node type
 LiteGraph.registerNodeType("basic/sum", MyAddNode)
 ```
 
+
+
 ## Server side
 
-It also works server-side using NodeJS although some nodes do not work in server (audio, graphics, input, etc).
+Works in Node.js for graph logic; audio/graphics/input nodes may require a browser.
 
 ```ts
-import { LiteGraph, LGraph } from "./litegraph.js"
+import { LiteGraph, LGraph } from "@syzgyn/litegraph"
 
 const graph = new LGraph()
-
 const firstNode = LiteGraph.createNode("basic/sum")
 graph.add(firstNode)
-
 const secondNode = LiteGraph.createNode("basic/sum")
 graph.add(secondNode)
-
 firstNode.connect(0, secondNode, 1)
-
 graph.start()
 ```
 
-## Projects using it
+
+
+## Projects using litegraph
+
+
 
 ### [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
 
-![ComfyUI default workflow](https://github.com/comfyanonymous/ComfyUI/blob/6efe561c2a7321501b1b27f47039c7616dda1860/comfyui_screenshot.png "ComfyUI default workflow")
+ComfyUI historically consumed `@comfyorg/litegraph`; current Comfy builds embed litegraph from ComfyUI_frontend instead.
 
-### Projects using the original litegraph.js
-
-<details>
-
-<summary>Click to expand</summary>
+Projects using the original jagenjo/litegraph.js
 
 ### [webglstudio.org](http://webglstudio.org)
 
@@ -165,36 +159,43 @@ graph.start()
 
 ![MyNodes](imgs/mynodes.png "MyNodes")
 
-</details>
+## Development
+
+Runtime dependencies are listed above; dev tooling uses Node.js 20+.
+
+```bash
+npm install
+npm run build      # tsc + vite
+npm run test       # vitest
+npm run typecheck
+npm run lint:fix
+```
+
+
+
+### Porting from ComfyUI_frontend
+
+Use the [comfy-port skill](./.cursor/skills/comfy-port/SKILL.md) workflow: patch-port PRs from `src/lib/litegraph/`, reimplement Comfy-only pieces in local classes, and record the result in [docs/PORTED.md](./docs/PORTED.md). Do not merge `comfyui/main` wholesale.
+
+### Releasing
+
+GitHub Actions can publish npm versions (see existing release workflow on the repository). Bump version in `package.json` per semver when cutting releases.
 
 ## Feedback
 
-Please [open an issue](https://github.com/Comfy-Org/litegraph.js/issues/) on the GitHub repo.
+Open an issue on [https://github.com/Syzgyn/litegraph.js/issues](https://github.com/Syzgyn/litegraph.js/issues).
 
-# Development
+For bugs that also affect embedded ComfyUI litegraph, [ComfyUI_frontend issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues) remain relevant upstream.
 
-Litegraph has no runtime dependencies. The build tooling has been tested on Node.JS 20.18.x
+## License
 
-## Releasing
+MIT — see [LICENSE](./LICENSE). Third-party notices: [NOTICE](./NOTICE).
 
-Use GitHub actions to release normal versions.
+### Contributors
 
-1. Run the `Release a New Version` action, selecting the version incrment type
-1. Merge the resultion PR
-1. A GitHub release is automatically published on merge
+[Comfy-Org/litegraph.js contributors](https://github.com/Comfy-Org/litegraph.js/graphs/contributors) and fork contributors on GitHub.
 
-### Pre-release
-
-The action directly translates `Version increment type` to the npm version command. `Pre-release ID (suffix)` is the option for the `--preid` argument.
-
-e.g. Use `prerelease` increment type to automatically bump the patch version and create a pre-release version. Subsequent runs of prerelease will update the prerelease version only.
-Use `patch` when ready to remove the pre-release suffix.
-
-## Contributors
-
-You can find the [current list of contributors](https://github.com/Comfy-Org/litegraph.js/graphs/contributors) on GitHub.
-
-### Contributors (pre-fork)
+Contributors to the original jagenjo/litegraph.js
 
 - atlasan
 - kriffe
@@ -204,3 +205,4 @@ You can find the [current list of contributors](https://github.com/Comfy-Org/lit
 - coderofsalvation
 - ilyabesk
 - gausszhou
+
