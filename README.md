@@ -1,5 +1,3 @@
-# @syzgyn/litegraph
-
 A TypeScript graph node editor for the browser (Canvas2D), similar to Unreal Blueprints or Pure Data. This repository is a **standalone fork** of the final [Comfy-Org/litegraph.js](https://github.com/Comfy-Org/litegraph.js) release (`v0.17.2`, August 2025).
 
 The official Comfy package was [archived](https://github.com/Comfy-Org/litegraph.js) and merged into [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend/tree/main/src/lib/litegraph). Active Comfy development no longer ships as a separate npm library. **This fork is a zero–ComfyUI-app-dependency package** while selectively porting bug fixes and features from the frontend subtree.
@@ -138,29 +136,11 @@ firstNode.connect(0, secondNode, 1)
 graph.start()
 ```
 
-
-
 ## Projects using litegraph
-
-
 
 ### [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
 
 ComfyUI historically consumed `@comfyorg/litegraph`; current Comfy builds embed litegraph from ComfyUI_frontend instead.
-
-Projects using the original jagenjo/litegraph.js
-
-### [webglstudio.org](http://webglstudio.org)
-
-![WebGLStudio](imgs/webglstudio.gif "WebGLStudio")
-
-### [MOI Elephant](http://moiscript.weebly.com/elephant-systegraveme-nodal.html)
-
-![MOI Elephant](imgs/elephant.gif "MOI Elephant")
-
-### Mynodes
-
-![MyNodes](imgs/mynodes.png "MyNodes")
 
 ## Development
 
