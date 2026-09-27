@@ -10,6 +10,9 @@ The official Comfy package was [archived](https://github.com/Comfy-Org/litegraph
 - **Port log:** [docs/PORTED.md](./docs/PORTED.md) (~90 PRs)
 - **Gap analysis:** [docs/upstream-comparison.md](./docs/upstream-comparison.md)
 
+## Backwards compatibility
+**Not** drop-in compatible with [jagenjo/litegraph.js](https://github.com/jagenjo/litegraph.js) or a straight rename of `@comfyorg/litegraph`. Scope and package name changed, many variables have been renamed; expect API and behavior differences, but core library is largely the same.
+
 ![Node Graph](imgs/node_graph_example.png "Node graph example")
 
 ## How this fork differs from Comfy-Org `v0.17.2`
