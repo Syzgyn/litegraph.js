@@ -33,11 +33,12 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build and pack
+      - name: Build and pack release artifacts
         run: |
           npm ci
           npm run build
           npm pack
+          zip -r "litegraph-dist-v${{ steps.current_version.outputs.version }}.zip" dist NOTICE
 
       - name: Create release
         id: create_release
@@ -51,8 +52,8 @@ jobs:
           generate_release_notes: true
           make_latest: "true"
           files: |
-            dist/**
             *.tgz
+            litegraph-dist-v*.zip
 
   publish:
     runs-on: ubuntu-latest
