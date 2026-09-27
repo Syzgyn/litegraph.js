@@ -38,7 +38,6 @@ jobs:
           npm ci
           npm run build
           npm pack
-          zip -r "litegraph-dist-v${{ steps.current_version.outputs.version }}.zip" dist NOTICE
 
       - name: Create release
         id: create_release
@@ -53,7 +52,6 @@ jobs:
           make_latest: "true"
           files: |
             *.tgz
-            litegraph-dist-v*.zip
 
   publish:
     runs-on: ubuntu-latest
