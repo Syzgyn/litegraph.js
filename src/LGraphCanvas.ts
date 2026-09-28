@@ -5600,6 +5600,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         ctx.restore()
       }
 
+      this.dispatch("litegraph:after-draw-nodes")
+
       // Draw subgraph IO nodes
       this.subgraph?.draw(ctx, this.colourGetter, this.linkConnector.renderLinks[0]?.fromSlot, this.editorAlpha)
 

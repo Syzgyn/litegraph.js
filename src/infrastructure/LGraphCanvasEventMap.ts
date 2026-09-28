@@ -31,10 +31,17 @@ export interface LGraphCanvasEventMap {
   /**
    * Dispatched at the start of each front-canvas node pass, before visible nodes are drawn.
    *
-   * DOM overlays that track canvas widgets should hide on this event and show again when
-   * their widget is drawn for the current frame.
+   * DOM overlays that track canvas widgets should reset per-frame visibility state on this
+   * event and show again when their widget is drawn for the current frame.
    */
   "litegraph:before-draw-nodes": never
+
+  /**
+   * Dispatched after visible nodes are drawn for the current front-canvas pass.
+   *
+   * DOM overlays that were not updated during the node pass should be hidden on this event.
+   */
+  "litegraph:after-draw-nodes": never
 
   /**
    * Canvas-level pointer and edit lifecycle events.

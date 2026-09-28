@@ -116,19 +116,36 @@ describe("TextPreviewWidget", () => {
     expect((widget as ITextPreviewWidget).value).toBe("hello")
   })
 
-  test("computeLayoutSize grows with wrapped content", ({ widget, node }) => {
+  test("computeLayoutSize grows with wrapped content when growToFit is enabled", ({ node }) => {
+    const widget = new TextPreviewWidget(
+      createMockWidgetConfig({ options: { growToFit: true } }),
+      node,
+    )
     widget.value = "A very long line of text that should wrap when the node is narrow"
     const { minHeight } = widget.computeLayoutSize!(node)
     expect(minHeight).toBeGreaterThan(60)
   })
 
-  test("computeLayoutSize minHeight decreases as node width increases", ({ widget, node }) => {
+  test("computeLayoutSize minHeight decreases as node width increases when growToFit is enabled", ({ node }) => {
+    const widget = new TextPreviewWidget(
+      createMockWidgetConfig({ options: { growToFit: true } }),
+      node,
+    )
     widget.value = "A very long line of text that should wrap when the node is narrow"
     node.size = [120, 200]
     const narrow = widget.computeLayoutSize!(node).minHeight
     node.size = [400, 200]
     const wide = widget.computeLayoutSize!(node).minHeight
     expect(wide).toBeLessThan(narrow)
+  })
+
+  test("computeLayoutSize uses minHeight only when growToFit is disabled", ({ node }) => {
+    const widget = new TextPreviewWidget(
+      createMockWidgetConfig({ options: { growToFit: false, minHeight: 40 } }),
+      node,
+    )
+    widget.value = "A very long line of text that should wrap when the node is narrow"
+    expect(widget.computeLayoutSize!(node).minHeight).toBe(40)
   })
 
   test("onClick does not change value", ({ widget, node, canvas, event }) => {
@@ -265,7 +282,7 @@ describe("TextPreviewWidget", () => {
     expect(textarea.style.display).toBe("none")
   })
 
-  test("before-draw-nodes hides textarea until drawWidget runs again", ({ canvas, node }) => {
+  test("after-draw-nodes hides textarea when drawWidget did not run this frame", ({ canvas, node }) => {
     const widget = node.widgets![0] as TextPreviewWidget
     widget.computedHeight = 120
     widget.y = 40
@@ -275,10 +292,21 @@ describe("TextPreviewWidget", () => {
     expect(textarea.style.display).toBe("block")
 
     canvas.dispatch("litegraph:before-draw-nodes")
+    canvas.dispatch("litegraph:after-draw-nodes")
     expect(textarea.style.display).toBe("none")
+  })
 
+  test("drawWidget preserves textarea scroll position across layout sync", ({ canvas, node }) => {
+    const widget = node.widgets![0] as TextPreviewWidget
+    widget.value = Array.from({ length: 40 }, (_, i) => `Line ${i + 1}`).join("\n")
+    widget.computedHeight = 80
+    widget.y = 40
     widget.drawWidget(canvas.ctx, { width: node.size[0] })
-    expect(textarea.style.display).toBe("block")
+
+    const textarea = document.querySelector("textarea.litegraph-textpreview") as HTMLTextAreaElement
+    textarea.scrollTop = 200
+    widget.drawWidget(canvas.ctx, { width: node.size[0] })
+    expect(textarea.scrollTop).toBe(200)
   })
 
   test("hides textarea when node is collapsed", ({ canvas, node }) => {
@@ -291,7 +319,6 @@ describe("TextPreviewWidget", () => {
     expect(textarea.style.display).toBe("block")
 
     node.flags.collapsed = true
-    canvas.dispatch("litegraph:before-draw-nodes")
     widget.drawWidget(canvas.ctx, { width: node.size[0] })
     expect(textarea.style.display).toBe("none")
   })
@@ -307,7 +334,6 @@ describe("TextPreviewWidget", () => {
 
     node.pos = [10_000, 10_000]
     node.updateArea(canvas.ctx)
-    canvas.dispatch("litegraph:before-draw-nodes")
     widget.drawWidget(canvas.ctx, { width: node.size[0] })
     expect(textarea.style.display).toBe("none")
   })

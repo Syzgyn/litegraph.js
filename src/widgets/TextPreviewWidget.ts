@@ -36,16 +36,17 @@ function isCanvasDisplayed(canvas: LGraphCanvas): boolean {
 /**
  * Read-only multiline text preview (`type: "textpreview"`).
  *
- * Renders a selectable DOM textarea that tracks node size and zoom. The widget grows with
- * wrapped content and expands further when the node is resized vertically.
+ * Renders a selectable DOM textarea that tracks node size and zoom. With `growToFit`, the widget
+ * grows with wrapped content; otherwise it uses `minHeight` and expands when the node is resized.
  */
 export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements ITextPreviewWidget {
   static #activeByCanvas = new WeakMap<LGraphCanvas, Set<TextPreviewWidget>>()
-  static #frameListenerByCanvas = new WeakMap<LGraphCanvas, () => void>()
+  static #drawFrameListenersByCanvas = new WeakMap<LGraphCanvas, { begin: () => void, end: () => void }>()
 
   #textarea: HTMLTextAreaElement | null = null
   #ownerCanvas: LGraphCanvas | null = null
   #graphChangeTarget: { canvas: LGraphCanvas, listener: () => void } | null = null
+  #syncedThisFrame = false
 
   constructor(widget: ITextPreviewWidget, node: LGraphNode) {
     super(widget, node)
@@ -53,21 +54,55 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     this.value = widget.value?.toString() ?? ""
   }
 
-  static #hideOverlaysForCanvas(canvas: LGraphCanvas): void {
-    const widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
-    if (!widgets) return
+  static #ensureDrawFrameListeners(canvas: LGraphCanvas): void {
+    if (TextPreviewWidget.#drawFrameListenersByCanvas.has(canvas)) return
 
-    for (const widget of widgets) widget.#hideElement()
+    const begin = () => {
+      const widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
+      if (!widgets) return
+      for (const widget of widgets) widget.#beginDrawFrame()
+    }
+    const end = () => {
+      const widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
+      if (!widgets) return
+      for (const widget of widgets) widget.#finalizeDrawFrame()
+    }
+
+    canvas.canvas.addEventListener("litegraph:before-draw-nodes", begin)
+    canvas.canvas.addEventListener("litegraph:after-draw-nodes", end)
+    TextPreviewWidget.#drawFrameListenersByCanvas.set(canvas, { begin, end })
   }
 
-  static #ensureFrameListener(canvas: LGraphCanvas): void {
-    if (TextPreviewWidget.#frameListenerByCanvas.has(canvas)) return
+  #beginDrawFrame(): void {
+    this.#syncedThisFrame = false
+  }
 
-    const listener = () => {
-      TextPreviewWidget.#hideOverlaysForCanvas(canvas)
+  #finalizeDrawFrame(): void {
+    if (!this.#syncedThisFrame) this.#hideElement()
+  }
+
+  #markDrawnThisFrame(): void {
+    this.#syncedThisFrame = true
+  }
+
+  #trackCanvas(canvas: LGraphCanvas): void {
+    if (this.#ownerCanvas === canvas) return
+
+    if (this.#ownerCanvas) this.#untrackCanvas(this.#ownerCanvas)
+    this.#ownerCanvas = canvas
+
+    let widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
+    if (!widgets) {
+      widgets = new Set()
+      TextPreviewWidget.#activeByCanvas.set(canvas, widgets)
     }
-    canvas.canvas.addEventListener("litegraph:before-draw-nodes", listener)
-    TextPreviewWidget.#frameListenerByCanvas.set(canvas, listener)
+    widgets.add(this)
+    TextPreviewWidget.#ensureDrawFrameListeners(canvas)
+  }
+
+  #untrackCanvas(canvas: LGraphCanvas): void {
+    TextPreviewWidget.#activeByCanvas.get(canvas)?.delete(this)
+    if (this.#ownerCanvas === canvas) this.#ownerCanvas = null
   }
 
   #measureContentHeight(nodeWidth: number): number {
@@ -94,26 +129,6 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
       !overlapBounding(activeCanvas.visibleArea, node.renderArea)
     ) { return false }
     return !node.collapsed && !this.hidden && node.isWidgetVisible(this)
-  }
-
-  #trackCanvas(canvas: LGraphCanvas): void {
-    if (this.#ownerCanvas === canvas) return
-
-    if (this.#ownerCanvas) this.#untrackCanvas(this.#ownerCanvas)
-    this.#ownerCanvas = canvas
-
-    let widgets = TextPreviewWidget.#activeByCanvas.get(canvas)
-    if (!widgets) {
-      widgets = new Set()
-      TextPreviewWidget.#activeByCanvas.set(canvas, widgets)
-    }
-    widgets.add(this)
-    TextPreviewWidget.#ensureFrameListener(canvas)
-  }
-
-  #untrackCanvas(canvas: LGraphCanvas): void {
-    TextPreviewWidget.#activeByCanvas.get(canvas)?.delete(this)
-    if (this.#ownerCanvas === canvas) this.#ownerCanvas = null
   }
 
   #bindGraphChangeListener(canvas: LGraphCanvas): void {
@@ -184,6 +199,8 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     const rect = canvas.canvas.getBoundingClientRect()
 
     const fontSize = LiteGraph.NODE_TEXT_SIZE * ds.scale
+    const scrollTop = textarea.scrollTop
+    const scrollLeft = textarea.scrollLeft
     // TODO: Only update the style if it has changed
     Object.assign(textarea.style, {
       display: "block",
@@ -195,6 +212,8 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
       font: `${fontSize}px ${LiteGraph.NODE_FONT}`,
       lineHeight: `${fontSize * 1.35}px`,
     })
+    textarea.scrollTop = scrollTop
+    textarea.scrollLeft = scrollLeft
   }
 
   override get value(): string {
@@ -221,7 +240,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
   } {
     const minHeight = Math.max(
       this.options.minHeight ?? DEFAULT_MIN_HEIGHT,
-      this.#measureContentHeight(node.size[0]),
+      this.options.growToFit ? this.#measureContentHeight(node.size[0]) : 0,
     )
 
     return {
@@ -264,11 +283,11 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
     const canvas = this.node.graph?.primaryCanvas
     if (!canvas || !showText || !this.#shouldShowElement(canvas)) {
       this.#hideElement()
-      Object.assign(ctx, { textAlign, strokeStyle, fillStyle, globalAlpha })
-      return
+    } else {
+      this.#syncElement(canvas, width)
     }
 
-    this.#syncElement(canvas, width)
+    this.#markDrawnThisFrame()
     Object.assign(ctx, { textAlign, strokeStyle, fillStyle, globalAlpha })
   }
 
