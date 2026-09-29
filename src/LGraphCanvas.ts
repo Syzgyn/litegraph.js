@@ -602,6 +602,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * is open. When `false` (default), the widget updates only on `change` when the picker closes.
    */
   colorWidgetUpdateOnInput: boolean
+  /** Truncate numeric widget values to the widget's `precision` decimal places. */
+  truncateNumericWidgetValues: boolean
 
   /** Shape of the markers shown at the midpoint of links.  Default: Circle */
   linkMarkerShape: LinkMarkerShape = LinkMarkerShape.Circle
@@ -961,7 +963,9 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.renderExecutionOrder = false
     this.renderLinkTooltip = true
     this.followCursorWhenAddingNodes = true
+
     this.colorWidgetUpdateOnInput = false
+    this.truncateNumericWidgetValues = false
 
     this.linksRenderMode = LinkRenderType.SPLINE_LINK
 

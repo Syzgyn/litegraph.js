@@ -391,7 +391,18 @@ export abstract class BaseWidget<TWidget extends IBaseWidget = IBaseWidget> impl
     if (value === this.value) return
     const oldValue = this.value
 
-    const v = this.type === "number" ? Number(value) : value
+    const v = (() => {
+      if (this.type === "number") {
+        let v = Number(value)
+
+        if (canvas.truncateNumericWidgetValues) {
+          v = Number(v.toFixed(this.options.precision ?? 3))
+        }
+        return v
+      }
+      return value
+    })()
+
     this.value = v
     if (
       this.options?.property &&
