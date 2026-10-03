@@ -219,7 +219,7 @@ export interface LGraphCanvasState {
  * The items created by a clipboard paste operation.
  * Includes maps of original copied IDs to newly created items.
  */
-interface ClipboardPasteResult {
+export interface ClipboardPasteResult {
   /** All successfully created items */
   created: Positionable[]
   /** Map: original node IDs to newly created nodes */
@@ -232,8 +232,8 @@ interface ClipboardPasteResult {
   subgraphs: Map<UUID, Subgraph>
 }
 
-/** Options for `LGraphCanvas.pasteFromClipboard`. */
-interface IPasteFromClipboardOptions {
+/** Options for `LGraphCanvas.deserializeItems` and `LGraphCanvas.pasteFromClipboard`. */
+export interface DeserializeItemsOptions {
   /** If `true`, always attempt to connect inputs of pasted nodes - including to nodes that were not pasted. */
   connectInputs?: boolean
   /** The position to paste the items at. */
@@ -1813,7 +1813,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       if (item.pos[1] < offsetY) offsetY = item.pos[1]
     }
 
-    canvas.#deserializeItems(canvas.#serializeItems(nodes), {
+    canvas.deserializeItems(canvas.serializeItems(nodes), {
       position: [offsetX + 5, offsetY + 5],
     })
   }
@@ -1960,7 +1960,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
 
     // clone node ALT dragging
     if (LiteGraph.altDragDoCloneNodes && e.altKey && !e.ctrlKey && node && this.allowInteraction) {
-      const items = this.#deserializeItems(this.#serializeItems([node]), {
+      const items = this.deserializeItems(this.serializeItems([node]), {
         position: node.pos,
       })
       const cloned = items?.created[0] as LGraphNode | undefined
@@ -3307,12 +3307,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     }
   }
 
+  /** Captures an event and prevents default - returns false. */
+  #doNothing(e: Event): boolean {
+    // console.log("pointerevents: _doNothing "+e.type);
+    e.preventDefault()
+    return false
+  }
+
+  /** Captures an event and prevents default - returns true. */
+  #doReturnTrue(e: Event): boolean {
+    e.preventDefault()
+    return true
+  }
+
   /**
-   * Copies canvas items to an internal, app-specific clipboard backed by local storage.
-   * When called without parameters, it copies `selectedItems`.
-   * @param items The items to copy.  If nullish, all selected items are copied.
+   * Serialises canvas items for clipboard paste, clone, or host-app import.
+   * When called without parameters, it serialises `selectedItems`.
+   * @param items The items to serialise. If nullish, all selected items are used.
    */
-  #serializeItems(items?: Iterable<Positionable>): ClipboardItems {
+  serializeItems(items?: Iterable<Positionable>): ClipboardItems {
     const serialisable: Required<ClipboardItems> = {
       nodes: [],
       groups: [],
@@ -3376,9 +3389,14 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     return serialisable
   }
 
-  #deserializeItems(
+  /**
+   * Creates graph items from serialised clipboard data (same pipeline as paste and clone).
+   * @param parsed Clipboard payload, e.g. from {@link serializeItems} or a host-built `ClipboardItems` object.
+   * @param options Paste position and optional link connection behaviour.
+   */
+  deserializeItems(
     parsed: ClipboardItems,
-    options: IPasteFromClipboardOptions = {},
+    options: DeserializeItemsOptions = {},
   ): ClipboardPasteResult | undefined {
     const {
       connectInputs = false,
@@ -3549,19 +3567,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     graph.afterChange()
 
     return results
-  }
-
-  /** Captures an event and prevents default - returns false. */
-  #doNothing(e: Event): boolean {
-    // console.log("pointerevents: _doNothing "+e.type);
-    e.preventDefault()
-    return false
-  }
-
-  /** Captures an event and prevents default - returns true. */
-  #doReturnTrue(e: Event): boolean {
-    e.preventDefault()
-    return true
   }
 
   get minFontSizeForLod(): number {
@@ -4890,7 +4895,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   copyToClipboard(items?: Iterable<Positionable>): void {
     localStorage.setItem(
       "litegraphEditorClipboard",
-      JSON.stringify(this.#serializeItems(items)),
+      JSON.stringify(this.serializeItems(items)),
     )
   }
 
@@ -4928,12 +4933,12 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   /**
    * Pastes the items from the canvas "clipbaord" - a local storage variable.
    */
-  pasteFromClipboard(options: IPasteFromClipboardOptions = {}): ClipboardPasteResult | undefined {
+  pasteFromClipboard(options: DeserializeItemsOptions = {}): ClipboardPasteResult | undefined {
     this.emitBeforeChange()
     try {
       const data = localStorage.getItem("litegraphEditorClipboard")
       if (!data) return
-      return this.#deserializeItems(JSON.parse(data), options)
+      return this.deserializeItems(JSON.parse(data), options)
     } finally {
       this.emitAfterChange()
     }

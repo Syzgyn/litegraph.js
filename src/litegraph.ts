@@ -227,7 +227,12 @@ export type {
 } from "./interfaces"
 export { LGraph } from "./LGraph"
 export { BadgePosition, LGraphBadge, type LGraphBadgeOptions } from "./LGraphBadge"
-export { LGraphCanvas, type LGraphCanvasState } from "./LGraphCanvas"
+export {
+  type ClipboardPasteResult,
+  LGraphCanvas,
+  type LGraphCanvasState,
+  type DeserializeItemsOptions,
+} from "./LGraphCanvas"
 export { LGraphGroup } from "./LGraphGroup"
 export { LGraphNode, type NodeId } from "./LGraphNode"
 export { type LinkId, LLink } from "./LLink"
@@ -258,6 +263,7 @@ export type {
 } from "./types/hover"
 export { hoverTargetsEqual } from "./types/hover"
 export type {
+  ClipboardItems,
   ExportedSubgraph,
   ExportedSubgraphInstance,
   ExportedSubgraphIONode,
