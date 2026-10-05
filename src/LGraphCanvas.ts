@@ -1450,7 +1450,10 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const dialog = Object.assign(document.createElement("div"), {
       isModified: false,
       className: "graphdialog",
-      close: () => dialog.remove(),
+      close: () => {
+        dialog.remove()
+        canvas.refocus()
+      },
     })
     dialog.append(title, input, button)
 
@@ -1528,7 +1531,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
       // @ts-expect-error Requires refactor.
       node[property] = value
       node.graph.afterChange(node)
-      dialog.remove()
+      dialog.close()
       canvas.setDirty(true, true)
     }
   }
@@ -7307,6 +7310,7 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         if (dialog.parentNode) {
           dialog.remove()
         }
+        that.refocus()
       },
     } satisfies Partial<IDialog>
 

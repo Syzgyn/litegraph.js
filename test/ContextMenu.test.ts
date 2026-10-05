@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, test } from "vitest"
+import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { ContextMenu } from "@/ContextMenu"
+import { LGraphCanvas } from "@/LGraphCanvas"
 
 describe("ContextMenu XSS", () => {
   const menus: ContextMenu[] = []
@@ -84,5 +85,71 @@ describe("ContextMenu XSS", () => {
     const title = menu.root.querySelector(":scope .litemenu-title")
     expect(title?.textContent).toBe(payload)
     expect(title?.innerHTML).not.toContain("<b")
+  })
+})
+
+describe("ContextMenu focus", () => {
+  test("returns focus to the canvas after the root menu closes", async () => {
+    const canvasElement = document.createElement("canvas")
+    const refocus = vi.fn(() => canvasElement.focus())
+    LGraphCanvas.activeCanvas = {
+      canvas: canvasElement,
+      refocus,
+    } as LGraphCanvas
+
+    const focusSpy = vi.spyOn(canvasElement, "focus")
+
+    const menu = new ContextMenu(
+      [{ title: "Action", callback: () => {} }],
+      { event: new MouseEvent("contextmenu", { clientX: 10, clientY: 10 }) },
+    )
+
+    menu.root.querySelector(":scope .litemenu-entry")?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    )
+
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(refocus).toHaveBeenCalled()
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
+  test("does not steal focus from a graph dialog opened by a menu item", async () => {
+    const canvasElement = document.createElement("canvas")
+    LGraphCanvas.activeCanvas = {
+      canvas: canvasElement,
+      refocus: () => canvasElement.focus(),
+    } as LGraphCanvas
+
+    const focusSpy = vi.spyOn(canvasElement, "focus")
+
+    const dialog = document.createElement("div")
+    dialog.className = "graphdialog"
+    const input = document.createElement("input")
+    dialog.append(input)
+    document.body.append(dialog)
+
+    const menu = new ContextMenu(
+      [
+        {
+          title: "Edit",
+          callback: () => {
+            input.focus()
+          },
+        },
+      ],
+      { event: new MouseEvent("contextmenu", { clientX: 10, clientY: 10 }) },
+    )
+
+    menu.root.querySelector(":scope .litemenu-entry")?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    )
+
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(document.activeElement).toBe(input)
+    expect(focusSpy).not.toHaveBeenCalled()
+
+    dialog.remove()
   })
 })
