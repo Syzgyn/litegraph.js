@@ -167,7 +167,7 @@ interface HasShowSearchCallback {
 }
 
 interface ICloseable {
-  close(): void
+  close(refocusCanvas?: boolean): void
 }
 
 interface IDialogExtensions extends ICloseable {
@@ -4929,8 +4929,22 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   refocus(): void {
     const { canvas } = this
     if (!canvas) return
+
+    const shouldDeferToOverlay = (): boolean => {
+      const active = document.activeElement
+      if (!(active instanceof Element)) return false
+      if (active.closest(".graphdialog, .litecontextmenu")) return true
+      const tag = active.tagName
+      return tag === "INPUT" || tag === "TEXTAREA"
+    }
+
+    if (shouldDeferToOverlay()) return
+
     canvas.focus()
-    setTimeout(() => canvas.focus(), 20)
+    setTimeout(() => {
+      if (shouldDeferToOverlay()) return
+      canvas.focus()
+    }, 20)
   }
 
   /**
@@ -7299,18 +7313,20 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     const that = this
     title = title || ""
 
+    this.promptBox?.close(false)
+
     const customProperties = {
       isModified: false,
       className: "graphdialog rounded",
       innerHTML: multiline
         ? "<span class='name'></span> <textarea autofocus class='value'></textarea><button class='rounded'>OK</button>"
         : "<span class='name'></span> <input autofocus type='text' class='value'/><button class='rounded'>OK</button>",
-      close() {
+      close(refocusCanvas = true) {
         that.promptBox = null
         if (dialog.parentNode) {
           dialog.remove()
         }
-        that.refocus()
+        if (refocusCanvas) that.refocus()
       },
     } satisfies Partial<IDialog>
 
@@ -7356,7 +7372,6 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
         })
       }
     }
-    this.promptBox?.close()
     this.promptBox = dialog
 
     const nameElement: HTMLSpanElement | null = dialog.querySelector(":scope .name")

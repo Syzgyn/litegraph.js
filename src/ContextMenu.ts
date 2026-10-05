@@ -6,15 +6,7 @@ import { LGraphCanvas } from "./LGraphCanvas"
 import { LiteGraph } from "./litegraph"
 
 function refocusCanvasAfterMenuClosed(): void {
-  queueMicrotask(() => {
-    const active = document.activeElement
-    if (active instanceof Element) {
-      if (active.closest(".graphdialog, .litecontextmenu")) return
-      const tag = active.tagName
-      if (tag === "INPUT" || tag === "TEXTAREA") return
-    }
-    LGraphCanvas.activeCanvas?.refocus()
-  })
+  queueMicrotask(() => LGraphCanvas.activeCanvas?.refocus())
 }
 
 const ALLOWED_TAGS = ["span", "b", "i", "em", "strong"]

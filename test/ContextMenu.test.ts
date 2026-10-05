@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { ContextMenu } from "@/ContextMenu"
+import { LGraph } from "@/LGraph"
 import { LGraphCanvas } from "@/LGraphCanvas"
 
 describe("ContextMenu XSS", () => {
@@ -115,13 +116,17 @@ describe("ContextMenu focus", () => {
   })
 
   test("does not steal focus from a graph dialog opened by a menu item", async () => {
-    const canvasElement = document.createElement("canvas")
-    LGraphCanvas.activeCanvas = {
-      canvas: canvasElement,
-      refocus: () => canvasElement.focus(),
-    } as LGraphCanvas
+    vi.useFakeTimers()
 
-    const focusSpy = vi.spyOn(canvasElement, "focus")
+    const canvasElement = document.createElement("canvas")
+    canvasElement.getContext = vi.fn().mockReturnValue({}) as typeof canvasElement.getContext
+
+    const graph = new LGraph()
+    const canvas = new LGraphCanvas(canvasElement, graph, {
+      skipEvents: true,
+      skipRender: true,
+    })
+    LGraphCanvas.activeCanvas = canvas
 
     const dialog = document.createElement("div")
     dialog.className = "graphdialog"
@@ -145,11 +150,39 @@ describe("ContextMenu focus", () => {
       new MouseEvent("click", { bubbles: true }),
     )
 
-    await new Promise<void>(resolve => queueMicrotask(resolve))
+    await vi.runAllTimersAsync()
 
     expect(document.activeElement).toBe(input)
-    expect(focusSpy).not.toHaveBeenCalled()
 
     dialog.remove()
+    vi.useRealTimers()
+  })
+
+  test("delayed refocus does not override graph dialog inputs", () => {
+    vi.useFakeTimers()
+
+    const canvasElement = document.createElement("canvas")
+    canvasElement.getContext = vi.fn().mockReturnValue({}) as typeof canvasElement.getContext
+
+    const graph = new LGraph()
+    const canvas = new LGraphCanvas(canvasElement, graph, {
+      skipEvents: true,
+      skipRender: true,
+    })
+
+    const dialog = document.createElement("div")
+    dialog.className = "graphdialog"
+    const input = document.createElement("input")
+    dialog.append(input)
+    document.body.append(dialog)
+    input.focus()
+
+    canvas.refocus()
+    vi.advanceTimersByTime(20)
+
+    expect(document.activeElement).toBe(input)
+
+    dialog.remove()
+    vi.useRealTimers()
   })
 })
