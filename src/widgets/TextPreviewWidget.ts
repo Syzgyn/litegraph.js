@@ -33,6 +33,19 @@ function isCanvasDisplayed(canvas: LGraphCanvas): boolean {
   return rect.width > 0 && rect.height > 0
 }
 
+function stripFloatingPointNoise(input: unknown): string {
+  const number = Number(input)
+  if (!Number.isFinite(number)) {
+    return String(input)
+  }
+  // Using 14 significant digits safely discards the 1e-16 binary roundoff
+  // noise while keeping the remaining valid precision.
+  const normalizedString = number.toPrecision(14)
+
+  // Parse it back to a float and stringify to automatically drop trailing zeros
+  return Number(normalizedString).toString()
+}
+
 /**
  * Read-only multiline text preview (`type: "textpreview"`).
  *
@@ -221,7 +234,7 @@ export class TextPreviewWidget extends BaseWidget<ITextPreviewWidget> implements
   }
 
   override set value(value: unknown) {
-    super.value = String(value)
+    super.value = stripFloatingPointNoise(value)
   }
 
   protected override formatDisplayValue(): string {
