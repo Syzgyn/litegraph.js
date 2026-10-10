@@ -3814,9 +3814,25 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
     this.#dirty()
   }
 
+  /**
+   * When the canvas already shows a subgraph definition but drill-in metadata was
+   * cleared (e.g. by `attachCanvas` during `goBack`), restore it without navigation.
+   */
+  syncSubgraphContext(subgraph?: Subgraph): void {
+    if (subgraph == null) {
+      this.#subgraph = undefined
+      return
+    }
+    if (this.graph === subgraph) this.#subgraph = subgraph
+  }
+
   openSubgraph(subgraph: Subgraph): void {
     const { graph } = this
     if (!graph) throw new NullGraphError()
+    if (graph === subgraph) {
+      if (this.#subgraph !== subgraph) this.#subgraph = subgraph
+      return
+    }
 
     const options = { bubbles: true, detail: { subgraph, closingGraph: graph }, cancelable: true }
     const mayContinue = this.canvas.dispatchEvent(new CustomEvent("subgraph-opening", options))
@@ -4787,9 +4803,13 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
   }
 
   goBack() {
-    console.log("going back")
     const parent = this.#navStack.pop()
-    if (parent) this.setGraph(parent)
+    if (!parent) return
+
+    this.setGraph(parent)
+    // attachCanvas clears subgraph; restore drill-in context without dispatching
+    // litegraph:set-graph (the subgraph setter would re-wrap GraphHistory hooks).
+    this.#subgraph = parent instanceof Subgraph ? parent : undefined
   }
 
   /**
@@ -4885,8 +4905,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
    * @param e The event object.
    */
   processSubgraphOpened(e: CustomEvent) {
-    // Subgraph nav stack, to allow for going back to the parent graph
-    const { closingGraph } = e.detail
+    const { closingGraph, subgraph } = e.detail
+    if (closingGraph === subgraph) return
     this.#navStack.push(closingGraph)
   }
 
@@ -8674,7 +8694,8 @@ export class LGraphCanvas implements CustomEventDispatcher<LGraphCanvasEventMap>
             {
               content: "Unpack Subgraph",
               callback: () => {
-                this.ensureGraph.unpackSubgraph(node)
+                const hostGraph = node.graph ?? this.ensureGraph
+                hostGraph.unpackSubgraph(node)
               },
             },
           ]

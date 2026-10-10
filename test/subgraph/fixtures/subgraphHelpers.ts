@@ -24,6 +24,8 @@ export interface TestSubgraphOptions {
   outputCount?: number
   inputs?: Array<{ name: string, type: ISlotType }>
   outputs?: Array<{ name: string, type: ISlotType }>
+  /** Root graph that owns this subgraph definition (defaults to a new `LGraph`). */
+  rootGraph?: LGraph
 }
 
 export interface TestSubgraphNodeOptions {
@@ -82,7 +84,7 @@ export function createTestSubgraph(options: TestSubgraphOptions = {}): Subgraph 
   if (options.outputs && options.outputCount) {
     throw new Error(`Cannot specify both 'outputs' array and 'outputCount'. Choose one approach. Received options: ${JSON.stringify(options)}`)
   }
-  const rootGraph = new LGraph()
+  const rootGraph = options.rootGraph ?? new LGraph()
 
   // Create the base subgraph data
   const subgraphData: ExportedSubgraph = {

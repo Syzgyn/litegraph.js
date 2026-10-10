@@ -172,7 +172,11 @@ export interface LGraphNodeConstructor<T extends LGraphNode = LGraphNode> {
 // End backwards compat
 
 export { D3ZoomController } from "./canvas/D3ZoomController"
-export { GraphHistory, type GraphHistoryEntry } from "./canvas/GraphHistory"
+export {
+  GraphHistory,
+  type GraphHistoryEntry,
+  unwrapGraphHistoryHook,
+} from "./canvas/GraphHistory"
 export {
   getHoverAnchorGraphPos,
   getHoverAnchorRect,
@@ -229,9 +233,9 @@ export { LGraph } from "./LGraph"
 export { BadgePosition, LGraphBadge, type LGraphBadgeOptions } from "./LGraphBadge"
 export {
   type ClipboardPasteResult,
+  type DeserializeItemsOptions,
   LGraphCanvas,
   type LGraphCanvasState,
-  type DeserializeItemsOptions,
 } from "./LGraphCanvas"
 export { LGraphGroup } from "./LGraphGroup"
 export { LGraphNode, type NodeId } from "./LGraphNode"

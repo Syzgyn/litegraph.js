@@ -7,6 +7,34 @@ import type { UUID } from "@/utils/uuid"
 
 import { forEachNode } from "@/utils/graphTraversal"
 
+const graphHistoryHookMarker = Symbol.for("litegraph.graphHistoryHook")
+
+type GraphChangeHook = LGraph["onAfterChange"]
+
+type HistoryHook = GraphChangeHook & {
+  [graphHistoryHookMarker]?: true
+  graphHistoryDownstream?: GraphChangeHook
+}
+
+/** Strip `GraphHistory` wrappers so app hooks can chain safely. */
+export function unwrapGraphHistoryHook(
+  hook: GraphChangeHook | undefined,
+): GraphChangeHook | undefined {
+  let current = hook
+  while (current && Object.hasOwn(current as object, graphHistoryHookMarker)) {
+    current = (current as HistoryHook).graphHistoryDownstream
+  }
+  return current
+}
+
+function unwrapHistoryHook(hook: GraphChangeHook | undefined): GraphChangeHook | undefined {
+  return unwrapGraphHistoryHook(hook)
+}
+
+function isHistoryHook(hook: GraphChangeHook | undefined): boolean {
+  return Boolean(hook && Object.hasOwn(hook as object, graphHistoryHookMarker))
+}
+
 /** Live widget values keyed by node id, retained across undo/redo restores. */
 type WidgetValueStore = Map<NodeId, Map<string, TWidgetValue>>
 
@@ -94,6 +122,7 @@ export class GraphHistory implements Disposable {
   #widgetValues: WidgetValueStore = new Map()
   #prevGraphBeforeChange?: LGraph["onBeforeChange"]
   #prevGraphAfterChange?: LGraph["onAfterChange"]
+  #afterChangeDepth = 0
 
   #onSetGraph = (e: Event): void => {
     const { newGraph } = (e as CustomEvent<{ newGraph: LGraph }>).detail
@@ -222,7 +251,11 @@ export class GraphHistory implements Disposable {
     if (subgraphId) {
       const subgraph = this.#rootGraph.subgraphs.get(subgraphId)
       if (subgraph) {
-        this.#canvas.openSubgraph(subgraph)
+        if (this.#canvas.graph === subgraph) {
+          this.#canvas.syncSubgraphContext(subgraph)
+        } else {
+          this.#canvas.openSubgraph(subgraph)
+        }
         return
       }
     }
@@ -264,30 +297,59 @@ export class GraphHistory implements Disposable {
   }
 
   #attachToActiveGraph(): void {
+    const graph = this.#canvas.graph
+    if (!graph) {
+      this.#detachFromActiveGraph()
+      return
+    }
+    if (graph === this.#activeGraph && isHistoryHook(graph.onAfterChange)) return
+
     this.#detachFromActiveGraph()
 
-    const graph = this.#canvas.graph
-    if (!graph) return
-
     this.#activeGraph = graph
-    this.#prevGraphBeforeChange = graph.onBeforeChange
-    this.#prevGraphAfterChange = graph.onAfterChange
+    this.#prevGraphBeforeChange = unwrapHistoryHook(graph.onBeforeChange)
+    this.#prevGraphAfterChange = unwrapHistoryHook(graph.onAfterChange)
 
-    graph.onBeforeChange = (g, info) => {
-      this.#prevGraphBeforeChange?.(g, info)
+    const downstreamBefore = this.#prevGraphBeforeChange
+    const downstreamAfter = this.#prevGraphAfterChange
+
+    const beforeWrapper: HistoryHook = (g, info) => {
+      downstreamBefore?.(g, info ?? undefined)
       this.#onBeforeChange()
     }
-    graph.onAfterChange = (g, info) => {
-      this.#onAfterChange()
-      this.#prevGraphAfterChange?.(g, info)
+    beforeWrapper[graphHistoryHookMarker] = true
+    beforeWrapper.graphHistoryDownstream = downstreamBefore
+
+    const afterWrapper: HistoryHook = (g, info) => {
+      if (this.#afterChangeDepth > 0) {
+        downstreamAfter?.(g, info)
+        return
+      }
+      this.#afterChangeDepth++
+      try {
+        this.#onAfterChange()
+        downstreamAfter?.(g, info)
+      } finally {
+        this.#afterChangeDepth--
+      }
     }
+    afterWrapper[graphHistoryHookMarker] = true
+    afterWrapper.graphHistoryDownstream = downstreamAfter
+
+    graph.onBeforeChange = beforeWrapper
+    graph.onAfterChange = afterWrapper
   }
 
   #detachFromActiveGraph(): void {
     if (!this.#activeGraph) return
 
-    this.#activeGraph.onBeforeChange = this.#prevGraphBeforeChange
-    this.#activeGraph.onAfterChange = this.#prevGraphAfterChange
+    const graph = this.#activeGraph
+    if (isHistoryHook(graph.onAfterChange)) {
+      graph.onAfterChange = unwrapHistoryHook(graph.onAfterChange)
+    }
+    if (isHistoryHook(graph.onBeforeChange)) {
+      graph.onBeforeChange = unwrapHistoryHook(graph.onBeforeChange)
+    }
     this.#activeGraph = undefined
     this.#prevGraphBeforeChange = undefined
     this.#prevGraphAfterChange = undefined

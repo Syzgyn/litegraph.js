@@ -1,9 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
+import type { IContextMenuValue } from "@/interfaces"
+
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import type { IContextMenuValue } from "@/interfaces"
 import { LGraph, LGraphCanvas, LGraphNode, LiteGraph } from "@/litegraph"
 import { getContextMenuWireValue } from "@/utils/type"
 

@@ -2166,7 +2166,10 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
       alignOutsideContainer(outputRect, Alignment.MidRight, boundingRect, [50, 0])
 
       // Remove items converted to subgraph
-      for (const resolved of resolvedInputLinks) resolved.inputNode?.disconnectInput(resolved.inputNode.inputs.indexOf(resolved.input!), true)
+      for (const resolved of resolvedInputLinks) {
+        if (resolved.link.originId === SUBGRAPH_INPUT_ID) continue
+        resolved.inputNode?.disconnectInput(resolved.inputNode.inputs.indexOf(resolved.input!), true)
+      }
       for (const resolved of resolvedOutputLinks) resolved.outputNode?.disconnectOutput(resolved.outputNode.outputs.indexOf(resolved.output!), resolved.inputNode)
 
       for (const node of nodes) this.remove(node)
@@ -2216,12 +2219,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
         if (link.originId === SUBGRAPH_INPUT_ID) {
           link.targetId = subgraphNode.id
           link.targetSlot = i - 1
+          this.links.set(link.id, link)
           if (subgraphInput instanceof SubgraphInput) {
             subgraphInput.connect(subgraphNode.findInputSlotByType(link.type, true, true), subgraphNode, link.parentId)
           } else {
             throw new TypeError("Subgraph input node is not a SubgraphInput")
           }
-          console.debug("Reconnect input links in parent graph", { ...link }, this.links.get(link.id), this.links.get(link.id) === link)
 
           for (const resolved of others) {
             resolved.link.disconnect(this)
@@ -2307,6 +2310,12 @@ export class LGraph implements LinkNetwork, BaseLGraph, Serialisable<Serialisabl
   ): void {
     if (!(subgraphNode instanceof SubgraphNode))
       throw new Error("Can only unpack Subgraph Nodes")
+
+    const hostGraph = subgraphNode.graph
+    if (hostGraph != null && hostGraph !== this) {
+      hostGraph.unpackSubgraph(subgraphNode, options)
+      return
+    }
 
     const subgraphId = subgraphNode.subgraph.id
 

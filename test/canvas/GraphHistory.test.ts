@@ -1,9 +1,22 @@
 import { afterEach, beforeEach, describe, expect, vi } from "vitest"
 
-import { GraphHistory } from "@/canvas/GraphHistory"
+import { GraphHistory, unwrapGraphHistoryHook } from "@/canvas/GraphHistory"
 import { LGraph, LGraphCanvas, LGraphGroup, LGraphNode, LiteGraph, type Positionable, RenderShape, SubgraphNode } from "@/litegraph"
 
+import { createTestSubgraph } from "../subgraph/fixtures/subgraphHelpers"
 import { test as baseTest } from "../testExtensions"
+
+const graphHistoryHookMarker = Symbol.for("litegraph.graphHistoryHook")
+
+function countGraphHistoryWrappers(hook: LGraph["onAfterChange"] | undefined): number {
+  let count = 0
+  let current = hook
+  while (current && Object.hasOwn(current as object, graphHistoryHookMarker)) {
+    count++
+    current = (current as { graphHistoryDownstream?: LGraph["onAfterChange"] }).graphHistoryDownstream
+  }
+  return count
+}
 
 class TestNode extends LGraphNode {
   constructor() {
@@ -77,6 +90,7 @@ const test = baseTest.extend<HistoryFixtures>({
   },
   canvas: async ({ graph }, use) => {
     const container = document.createElement("div")
+    document.body.append(container)
     const canvasElement = document.createElement("canvas")
     container.append(canvasElement)
     canvasElement.width = 800
@@ -88,6 +102,7 @@ const test = baseTest.extend<HistoryFixtures>({
       skipRender: true,
     })
     await use(canvas)
+    container.remove()
   },
   history: async ({ canvas }, use) => {
     const history = new GraphHistory(canvas)
@@ -500,6 +515,92 @@ describe("GraphHistory", () => {
 
     expect(graph.nodes.some(n => n instanceof SubgraphNode)).toBe(true)
     expect(graph.subgraphs.size).toBe(1)
+  })
+
+  test("installs a single GraphHistory wrapper on the active graph", ({ graph, history: _history }) => {
+    expect(countGraphHistoryWrappers(graph.onAfterChange)).toBe(1)
+  })
+
+  test("unwrapGraphHistoryHook strips nested GraphHistory wrappers", () => {
+    const user = vi.fn()
+    const inner = Object.assign(
+      vi.fn(),
+      { [graphHistoryHookMarker]: true as const, graphHistoryDownstream: user },
+    )
+    const outer = Object.assign(
+      vi.fn(),
+      { [graphHistoryHookMarker]: true as const, graphHistoryDownstream: inner },
+    )
+
+    expect(unwrapGraphHistoryHook(outer)).toBe(user)
+    expect(unwrapGraphHistoryHook(inner)).toBe(user)
+    expect(unwrapGraphHistoryHook(user)).toBe(user)
+    expect(unwrapGraphHistoryHook(undefined)).toBeUndefined()
+  })
+
+  test("subgraph drill-in and goBack do not stack onAfterChange wrappers", ({ graph, canvas }) => {
+    const parentSubgraph = createTestSubgraph({
+      outputs: [{ name: "value", type: "number" }],
+      rootGraph: graph,
+    })
+    graph.subgraphs.set(parentSubgraph.id, parentSubgraph)
+
+    const packable = LiteGraph.createNode("test/PackableNode")!
+    parentSubgraph.add(packable)
+    const { node: nestedNode } = parentSubgraph.convertToSubgraph(new Set<Positionable>([packable]))
+
+    canvas.bindEvents()
+    canvas.openSubgraph(parentSubgraph)
+
+    const userAfterChange = vi.fn()
+    parentSubgraph.onAfterChange = userAfterChange
+    const history = new GraphHistory(canvas)
+
+    try {
+      canvas.openSubgraph((nestedNode as SubgraphNode).subgraph)
+      canvas.goBack()
+
+      expect(countGraphHistoryWrappers(parentSubgraph.onAfterChange)).toBe(1)
+      parentSubgraph.afterChange()
+      expect(userAfterChange).toHaveBeenCalled()
+    } finally {
+      history.dispose()
+    }
+  })
+
+  test("undo works after subgraph drill-in and goBack", async ({ graph, canvas, history }) => {
+    const parentSubgraph = createTestSubgraph({
+      outputs: [{ name: "value", type: "number" }],
+      rootGraph: graph,
+    })
+    graph.subgraphs.set(parentSubgraph.id, parentSubgraph)
+
+    const packed = LiteGraph.createNode("test/PackableNode")!
+    parentSubgraph.add(packed)
+    const { node: nestedNode } = parentSubgraph.convertToSubgraph(new Set<Positionable>([packed]))
+
+    const rootNode = LiteGraph.createNode("test/HistoryNode")!
+    graph.add(rootNode)
+    history.reset()
+
+    graph.beforeChange()
+    rootNode.title = "edited"
+    graph.afterChange()
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(resolve))
+
+    expect(history.canUndo).toBe(true)
+
+    canvas.bindEvents()
+    canvas.openSubgraph(parentSubgraph)
+    canvas.openSubgraph((nestedNode as SubgraphNode).subgraph)
+    canvas.goBack()
+    canvas.goBack()
+
+    expect(history.canUndo).toBe(true)
+
+    history.undo()
+    expect(graph.getNodeById(rootNode.id)!.title).not.toBe("edited")
   })
 
   test("dispose stops keyboard undo", ({ graph, history, canvas }) => {

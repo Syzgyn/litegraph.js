@@ -1,8 +1,8 @@
 import type { ISlotType, Positionable } from "@/litegraph"
 
-import { afterEach, assert, describe, expect, test } from "vitest"
+import { afterEach, assert, describe, expect, test, vi } from "vitest"
 
-import { LGraph, LGraphNode, LiteGraph, SubgraphNode } from "@/litegraph"
+import { LGraph, LGraphCanvas, LGraphNode, LiteGraph, SubgraphNode } from "@/litegraph"
 
 import { createTestSubgraph, createTestSubgraphNode } from "./fixtures/subgraphHelpers"
 
@@ -220,6 +220,114 @@ describe("SubgraphConversion", () => {
         linkRefCount += reroute.linkIds.size
       }
       expect(linkRefCount).toBe(4)
+    })
+
+    test("keeps outer links after nested drill-in, goBack, and unpack", () => {
+      const root = new LGraph()
+      const parentSubgraph = createTestSubgraph({
+        outputs: [{ name: "value", type: "number" }],
+      })
+      root.subgraphs.set(parentSubgraph.id, parentSubgraph)
+
+      const source = createInteriorNode(parentSubgraph, [], ["number"])
+      const target = createInteriorNode(parentSubgraph, ["number"])
+      source.connect(0, target, 0)
+
+      const { node: nestedNode } = parentSubgraph.convertToSubgraph(
+        new Set<Positionable>([source]),
+      )
+      expect(target.inputs[0].link).not.toBeNull()
+
+      const canvasElement = document.createElement("canvas")
+      canvasElement.width = 800
+      canvasElement.height = 600
+      canvasElement.getContext = vi.fn().mockReturnValue({
+        fillRect: vi.fn(),
+        clearRect: vi.fn(),
+        measureText: vi.fn(() => ({ width: 0 })),
+        save: vi.fn(),
+        restore: vi.fn(),
+      } as unknown as CanvasRenderingContext2D)
+
+      const canvas = new LGraphCanvas(canvasElement, root, {
+        skipEvents: true,
+        skipRender: true,
+      })
+      canvas.openSubgraph(parentSubgraph)
+      canvas.openSubgraph((nestedNode as SubgraphNode).subgraph)
+      canvas.goBack()
+
+      parentSubgraph.unpackSubgraph(nestedNode as SubgraphNode)
+
+      expect(parentSubgraph.links.size).toBe(1)
+      expect(target.inputs[0].link).not.toBeNull()
+    })
+
+    test("keeps parent subgraph boundary input after nested drill-in, goBack, and unpack", () => {
+      const root = new LGraph()
+      const parentSubgraph = createTestSubgraph({
+        inputs: [{ name: "value", type: "number" }],
+        outputs: [{ name: "value", type: "number" }],
+      })
+      root.subgraphs.set(parentSubgraph.id, parentSubgraph)
+
+      const inner = createInteriorNode(parentSubgraph, ["number"], ["number"])
+      const outer = createInteriorNode(parentSubgraph, ["number"])
+      parentSubgraph.inputNode.slots[0].connect(inner.inputs[0], inner)
+      inner.connect(0, outer, 0)
+
+      const { node: nestedNode } = parentSubgraph.convertToSubgraph(
+        new Set<Positionable>([inner]),
+      )
+
+      const canvasElement = document.createElement("canvas")
+      canvasElement.width = 800
+      canvasElement.height = 600
+      canvasElement.getContext = vi.fn().mockReturnValue({
+        fillRect: vi.fn(),
+        clearRect: vi.fn(),
+        measureText: vi.fn(() => ({ width: 0 })),
+        save: vi.fn(),
+        restore: vi.fn(),
+      } as unknown as CanvasRenderingContext2D)
+
+      const canvas = new LGraphCanvas(canvasElement, root, {
+        skipEvents: true,
+        skipRender: true,
+      })
+      canvas.openSubgraph(parentSubgraph)
+      canvas.openSubgraph((nestedNode as SubgraphNode).subgraph)
+      canvas.goBack()
+
+      parentSubgraph.unpackSubgraph(nestedNode as SubgraphNode)
+
+      expect(outer.inputs[0].link).not.toBeNull()
+      const restoredInner = parentSubgraph.nodes.find(
+        node => node !== outer && node.inputs[0]?.link != null,
+      )
+      expect(restoredInner).toBeDefined()
+    })
+
+    test("keeps parent subgraph boundary input when packing a nested node", () => {
+      const root = new LGraph()
+      const parentSubgraph = createTestSubgraph({
+        inputs: [{ name: "value", type: "number" }],
+        outputs: [{ name: "value", type: "number" }],
+      })
+      root.subgraphs.set(parentSubgraph.id, parentSubgraph)
+
+      const inner = createInteriorNode(parentSubgraph, ["number"], ["number"])
+      const outer = createInteriorNode(parentSubgraph, ["number"])
+      parentSubgraph.inputNode.slots[0].connect(inner.inputs[0], inner)
+      inner.connect(0, outer, 0)
+
+      const { node: nestedNode } = parentSubgraph.convertToSubgraph(
+        new Set<Positionable>([inner]),
+      )
+
+      expect(nestedNode.inputs[0]?.link).not.toBeNull()
+      expect(outer.inputs[0].link).not.toBeNull()
+      expect(parentSubgraph.links.size).toBeGreaterThan(0)
     })
   })
 })
